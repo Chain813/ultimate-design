@@ -1,4 +1,8 @@
 import streamlit as st
+import folium
+from streamlit_folium import st_folium
+import json
+import os
 
 # 🌟 强制隐藏侧边栏，设定宽屏模式
 st.set_page_config(page_title="系统主页", layout="wide", initial_sidebar_state="collapsed")
@@ -106,9 +110,16 @@ st.markdown("""
         background: radial-gradient(circle, rgba(139, 92, 246, 0.08), transparent);
     }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: rgba(15,23,42,0.5); }
     ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.3); border-radius: 3px; }
+
+    /* 地图容器样式 */
+    .map-container {
+        border-radius: 18px;
+        overflow: hidden;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        margin: 20px 0;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -166,6 +177,52 @@ st.markdown("""
     </p>
 </div>
 """, unsafe_allow_html=True)
+
+# ==========================================
+# 🗺️ 区域全景看板 (Interactive Map)
+# ==========================================
+st.markdown("### 🗺️ 街区范围及改造红线 (Project Boundary)")
+
+# 载入 GeoJSON 并渲染地图
+def render_project_map():
+    # 中心点：长春伪满皇宫
+    m = folium.Map(
+        location=[43.903, 125.337],
+        zoom_start=15,
+        tiles='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        attr='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    )
+    
+    geojson_path = "data/空间数据/Boundary_Scope.geojson"
+    try:
+        if os.path.exists(geojson_path):
+            with open(geojson_path, 'r', encoding='utf-8') as f:
+                geo_data = json.load(f)
+            
+            # 使用自定义样式渲染 GeoJSON
+            folium.GeoJson(
+                geo_data,
+                style_function=lambda feature: {
+                    'fillColor': feature['properties'].get('color', '#6366f1'),
+                    'color': feature['properties'].get('color', '#6366f1'),
+                    'weight': 2,
+                    'fillOpacity': 0.35,
+                },
+                tooltip=folium.GeoJsonTooltip(fields=['name', 'description'], labels=True)
+            ).add_to(m)
+        else:
+            st.error(f"❌ 未找到边界数据文件: {geojson_path}")
+    except Exception as e:
+        st.error(f"⚠️ 地图加载失败: {e}")
+
+    # 渲染到 Streamlit 页面
+    with st.container():
+        st.markdown('<div class="map-container">', unsafe_allow_html=True)
+        st_folium(m, width="100%", height=500, returned_objects=[])
+        st.markdown('</div>', unsafe_allow_html=True)
+
+render_project_map()
+
 st.page_link("pages/2_AIGC风貌管控.py", label="🚀 立即进入 AIGC 实时推理工作站", use_container_width=True)
 
 st.markdown("---")

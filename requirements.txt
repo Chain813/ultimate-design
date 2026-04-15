@@ -13,3 +13,6 @@ jieba
 playwright
 beautifulsoup4
 streamlit-lottie
+folium
+streamlit-folium
+geopandas
