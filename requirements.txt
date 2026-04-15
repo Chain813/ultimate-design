@@ -1,0 +1,15 @@
+streamlit
+pandas
+pydeck
+openpyxl
+requests
+plotly
+pillow
+torch
+torchvision
+transformers
+numpy
+jieba
+playwright
+beautifulsoup4
+streamlit-lottie

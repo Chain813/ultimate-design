@@ -1,0 +1,13 @@
+# Project environment
+venv/
+.venv/
+__pycache__/
+.idea/
+.vscode/
+
+# Ignored Data and Documents
+data/
+thesis_documents/
+
+# Environment configurations
+.env
