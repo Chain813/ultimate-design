@@ -1,7 +1,7 @@
 import streamlit as st
 import time
-from core_engine import call_llm_engine, is_demo_mode
-from ui_components import render_top_nav, render_engine_status_alert
+from src.engines.core_engine import call_llm_engine, call_llm_engine_stream, is_demo_mode
+from src.ui.ui_components import render_top_nav, render_engine_status_alert
 
 st.set_page_config(page_title="LLM 多方参与决策 - 数字议事厅", layout="wide")
 render_top_nav()
@@ -38,7 +38,7 @@ if is_demo_mode():
 # --- 侧边栏配置 ---
 with st.sidebar:
     st.header("⚙️ 决策引擎设置")
-    model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e4b-it-q4_K_M")
+    model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M")
     temp = st.slider("决策倾向 (Temperature)", 0.0, 1.0, 0.7)
     st.markdown("---")
     st.markdown("### 👥 当前席位：")
@@ -76,46 +76,45 @@ if st.button("🚀 开启多方协商推演", use_container_width=True, type="pr
         chat_container = st.container()
         results = {}
 
-        for name, config in roles.items():
-            with st.spinner(f"{name} 正在审议方案..."):
-                resp = call_llm_engine(
+        for name, role_cfg in roles.items():
+            with chat_container:
+                st.markdown(f"""
+                <div class="chat-card {role_cfg['class']}">
+                    <div class="role-label">{name}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                
+                # 🚀 V3.0 流式打字机输出
+                stream = call_llm_engine_stream(
                     prompt=f"针对以下城市更新提案，请发表你的真实看法和建议：\n提案内容：{proposal}",
-                    system_prompt=config["system"],
+                    system_prompt=role_cfg["system"],
                     model=model_tag
                 )
+                resp = st.write_stream(stream)
                 results[name] = resp
 
                 # 解析思维链与正式回复
-                cot_text = ""
-                display_text = resp
-                if "【思考过程】" in resp and "【正式回复】" in resp:
+                if isinstance(resp, str) and "【思考过程】" in resp and "【正式回复】" in resp:
                     parts = resp.split("【正式回复】")
                     cot_text = parts[0].replace("【思考过程】", "").strip()
-                    display_text = parts[1].strip() if len(parts) > 1 else resp
-
-                with chat_container:
-                    st.markdown(f"""
-                    <div class="chat-card {config['class']}">
-                        <div class="role-label">{name}</div>
-                        <div>{display_text}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-
                     if cot_text:
                         with st.expander(f"🧠 {name} 思维链展示"):
                             st.markdown(cot_text)
 
-                time.sleep(0.5)
+                time.sleep(0.3)
 
         st.markdown("---")
         st.subheader("📋 数字化多方协商报告 (预览)")
         summary_prompt = f"请总结以下三方的观点冲突点与潜在共识，并给出最终的政策建议：\n{str(results)}"
-        with st.spinner("AI 正在生成综合评估报告..."):
-            summary = call_llm_engine(
-                prompt=summary_prompt,
-                system_prompt="你是一位高级城市更新政策研究员。",
-                model=model_tag
-            )
-            st.markdown(summary)
-            
+        
+        # 🚀 V3.0 综合报告也使用流式输出
+        summary_stream = call_llm_engine_stream(
+            prompt=summary_prompt,
+            system_prompt="你是一位高级城市更新政策研究员。",
+            model=model_tag
+        )
+        summary = st.write_stream(summary_stream)
+        
+        st.toast("🎉 多方博弈评估报告已生成！请审阅下载。", icon="🤝")
+        if isinstance(summary, str):
             st.download_button("📥 导出协商报告 (TXT)", f"协商议题：{proposal}\n\n评估总结：\n{summary}", file_name="consultation_report.txt")

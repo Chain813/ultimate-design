@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>High Performance 3D Digital Twin</title>
+    <!-- 引入原生 WebGL 渲染组件 (Deck.GL) 以及无 Token 基础地图 (Carto) -->
+    <script src="https://unpkg.com/deck.gl@8.9.0/dist.min.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #0d1321; }
+        #map-container { width: 100vw; height: 100vh; position: absolute; }
+        /* 定制化 Tooltip 样式，保持沉浸感 */
+        .deck-tooltip {
+            font-family: 'Inter', sans-serif;
+            background: rgba(15, 23, 42, 0.85) !important;
+            backdrop-filter: blur(10px) !important;
+            border: 1px solid rgba(99, 102, 241, 0.4) !important;
+            border-radius: 8px !important;
+            color: #e2e8f0 !important;
+            font-size: 13px !important;
+            padding: 10px 15px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="map-container"></div>
+    <script>
+        // 📥 接管从 Python 后端泵入的 JSON 数据 (无序列化损耗)
+        const b_data = /*__BUILDING_DATA__*/null/*__END_BUILDING__*/;
+        const bound_data = /*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/;
+        const plots_data = /*__PLOTS_DATA__*/null/*__END_PLOTS__*/;
+        const poi_data = /*__POI_DATA__*/null/*__END_POI__*/;
+        const traffic_data = /*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/;
+        // 🚀 接收 3D/2D 模式配置
+        const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
+
+        // 🔬 高级分析图层数据链路 (Page 2 全息诊断专属)
+        const hex_payload = /*__HEX_PAYLOAD__*/null/*__END_HEX_PAY__*/;
+        const col_payload = /*__COL_PAYLOAD__*/null/*__END_COL_PAY__*/;
+        const heat_payload = /*__HEAT_PAYLOAD__*/null/*__END_HEAT_PAY__*/;
+
+        // 🚀 接收光照开关与时间配置
+        const show_lighting = /*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/;
+        const sun_time = /*__SUN_TIME__*/10/*__END_SUN_TIME__*/;
+
+        const renderedLayers = [];
+
+        // ==========================================
+        // 🏙️ 建筑层配置 (支持内联 JSON 和 URL 异步流加载双模式)
+        // ==========================================
+        const BUILDING_LAYER_CONFIG = {
+            id: 'building-layer',
+            opacity: 0.6,
+            stroked: true,
+            filled: true,
+            extruded: is_3d,
+            wireframe: is_3d,
+            getElevation: d => (d.properties.Floor || 1) * 3.5,
+            getFillColor: [173, 216, 230, 200],
+            getLineColor: [255, 255, 255, 120],
+            lineWidthMinPixels: 1,
+            pickable: false,
+            transitions: {
+                getElevation: 500,
+                getFillColor: 500
+            }
+        };
+
+        // 内联 JSON 模式：直接加入渲染队列
+        if (b_data && typeof b_data === 'object') {
+            renderedLayers.push(new deck.GeoJsonLayer({
+                ...BUILDING_LAYER_CONFIG,
+                data: b_data
+            }));
+        }
+
+        // 🔲 图层 2：规划红线
+        if (bound_data) {
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'boundary-layer',
+                data: bound_data,
+                stroked: true,
+                filled: true,
+                getFillColor: [239, 68, 68, 60],
+                getLineColor: [239, 68, 68, 150],
+                getLineWidth: 3,
+                pickable: false
+            }));
+        }
+
+        // ✴️ 图层 3：重点地块
+        if (plots_data) {
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'plots-layer',
+                data: plots_data,
+                stroked: true,
+                filled: true,
+                extruded: false,
+                getFillColor: [220, 38, 38, 100],
+                getLineColor: [220, 38, 38, 255],
+                getLineWidth: 5,
+                lineWidthMinPixels: 2,
+                parameters: {
+                    depthTest: false
+                },
+                pickable: true
+            }));
+        }
+
+        // 📍 图层 4：POI 散点层
+        if (poi_data && poi_data.length > 0) {
+            renderedLayers.push(new deck.ScatterplotLayer({
+                id: 'poi-layer',
+                data: poi_data,
+                getPosition: d => [d.Lng, d.Lat],
+                getFillColor: [129, 140, 248, 200],
+                getRadius: 6,
+                radiusMinPixels: 4,
+                radiusMaxPixels: 20,
+                pickable: true
+            }));
+        }
+
+        // 🚦 图层 5：交通拥堵热力簇
+        if (traffic_data && traffic_data.length > 0) {
+            renderedLayers.push(new deck.ScatterplotLayer({
+                id: 'traffic-layer',
+                data: traffic_data,
+                getPosition: d => [d.Lng, d.Lat],
+                getFillColor: [239, 68, 68, 200],
+                getRadius: 12,
+                radiusMinPixels: 5,
+                radiusMaxPixels: 30,
+                pickable: true
+            }));
+        }
+
+        // 🔬 图层 6：空间指标 3D 柱体
+        if (col_payload && col_payload.data && col_payload.data.length > 0) {
+            renderedLayers.push(new deck.ColumnLayer({
+                id: 'col-layer',
+                data: col_payload.data,
+                diskResolution: 12,
+                radius: col_payload.radius,
+                extruded: true,
+                pickable: true,
+                elevationScale: col_payload.elevationScale,
+                getPosition: d => [d.Lng, d.Lat],
+                getFillColor: d => d.Dynamic_Color || [99, 102, 241, 200],
+                getElevation: d => d[col_payload.metric] || 0
+            }));
+        }
+
+        // 🔬 图层 7：空间指标 2D 热力云图
+        if (heat_payload && heat_payload.data && heat_payload.data.length > 0) {
+            renderedLayers.push(new deck.HeatmapLayer({
+                id: 'heat-layer',
+                data: heat_payload.data,
+                getPosition: d => [d.Lng, d.Lat],
+                getWeight: d => d[heat_payload.metric] || 0,
+                radiusPixels: heat_payload.radius,
+                opacity: 0.8
+            }));
+        }
+
+        // 🔬 图层 8：交通与活力聚合蜂窝
+        if (hex_payload && hex_payload.data && hex_payload.data.length > 0) {
+            renderedLayers.push(new deck.HexagonLayer({
+                id: 'hex-layer',
+                data: hex_payload.data,
+                getPosition: d => [d.Lng, d.Lat],
+                radius: hex_payload.radius,
+                elevationScale: hex_payload.elevationScale,
+                extruded: true,
+                colorRange: [
+                    [241, 238, 246, 200],
+                    [208, 209, 230, 200],
+                    [166, 189, 219, 200],
+                    [116, 169, 207, 200],
+                    [43, 140, 190, 200],
+                    [4, 90, 141, 200]
+                ],
+                pickable: true
+            }));
+        }
+
+        // 🚀 初始化 GPU 加速 3D 渲染引擎
+        document.getElementById('map-container').addEventListener('contextmenu', e => e.preventDefault());
+
+        // 🌅 V3.0 光影增强：环境光 + 定向光源 (模拟上午 10 点长春日照角)
+        const ambientLight = new deck.AmbientLight({
+            color: [255, 255, 255],
+            intensity: 1.0
+        });
+        const directionalLight = new deck._SunLight({
+            timestamp: Date.UTC(2026, 3, 20, (sun_time - 8 + 24) % 24, 0, 0),  // 转换为 UTC 以匹配本地时间投射效果
+            color: [255, 245, 230],
+            intensity: 2.2,
+            _shadow: is_3d  // 仅 3D 模式下启用实时阴影
+        });
+        const lightingEffect = new deck.LightingEffect({ ambientLight, directionalLight });
+        
+        const deckInstance = new deck.DeckGL({
+            container: 'map-container',
+            mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+            effects: (is_3d && show_lighting) ? [lightingEffect] : [],
+            initialViewState: {
+                latitude: 43.903,
+                longitude: 125.337,
+                zoom: 15,
+                pitch: is_3d ? 45 : 0,
+                bearing: is_3d ? -15 : 0
+            },
+            controller: {
+                dragRotate: is_3d,
+                dragPan: true,
+                scrollZoom: true
+            },
+            layers: renderedLayers,
+            getTooltip: ({object, layer}) => {
+                if (!object || !layer) return null;
+                const name = (object.properties ? (object.properties.Name || object.properties.name) : (object.Name || object.name));
+                
+                if (layer.id === 'poi-layer') {
+                    return { html: `<b>📍 POI点位: ${name || '未知设施'}</b>` };
+                }
+                if (layer.id === 'traffic-layer') {
+                    return { html: `<b>🚥 交通点位: ${name || '拥堵热域'}</b>` };
+                }
+                if (layer.id === 'plots-layer') {
+                    return { html: `<b>🏗️ 重点更新地块: ${name || '未命名'}</b>` };
+                }
+                if (layer.id === 'col-layer') {
+                    return { html: `<b>📊 指标采集点 (ID: ${object.ID || 'N/A'})</b><br>数值水平: ${object[col_payload?.metric] ? parseFloat(object[col_payload.metric]).toFixed(3) : '未知'}` };
+                }
+                if (layer.id === 'hex-layer') {
+                    return { html: `<b>🔮 蜂窝密度聚合区</b><br>聚合强度: ${object.points ? object.points.length : '未知'} 活跃单元` };
+                }
+                
+                if (name) return { html: `<b>📡 ${name}</b>` };
+                return { html: `<b>🌐 空间探测点</b>` };
+            }
+        });
+
+        // ==========================================
+        // 🌐 URL 异步流式加载建筑层 (大场景分流渲染核心)
+        // ==========================================
+        if (b_data && typeof b_data === 'string') {
+            let fetchUrl = b_data;
+            let logCtx = '[Building Loader]';
+            
+            // 尝试通过 referrer 或 window 对象解析父级 origin
+            try {
+                const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                // 如果 b_data 是以 / 开头的路径，且不包含 origin，则动态补全
+                if (b_data.startsWith('/') && !b_data.startsWith('//')) {
+                    fetchUrl = parentOrigin + b_data;
+                    console.log(`${logCtx} 解析到父级域名: ${parentOrigin}, 拼接路径: ${fetchUrl}`);
+                }
+            } catch(e) {
+                console.warn(`${logCtx} URL 解析异常，将尝试原始路径:`, b_data);
+            }
+
+            console.log(`${logCtx} 🚀 开始流式加载建筑轮廓数据:`, fetchUrl);
+            
+            fetch(fetchUrl)
+                .then(response => {
+                    console.log(`${logCtx} 📡 网络响应状态: ${response.status} ${response.statusText}`);
+                    if (!response.ok) {
+                        throw new Error(`无法获取建筑数据: ${response.status} ${response.statusText} (路径: ${fetchUrl})`);
+                    }
+                    return response.json();
+                })
+                .then(geojson => {
+                    console.log(`${logCtx} 📦 数据解析成功, 正在挂载图层...`);
+                    const buildingLayer = new deck.GeoJsonLayer({
+                        ...BUILDING_LAYER_CONFIG,
+                        data: geojson
+                    });
+                    
+                    // 将建筑层插入到图层栈底部（其他高优先级层叠加在上方）
+                    deckInstance.setProps({
+                        layers: [buildingLayer, ...deckInstance.props.layers]
+                    });
+                    console.log(`${logCtx} ✅ 建筑轮廓加载完毕，共渲染 ${geojson.features?.length || 0} 栋建筑`);
+                    
+                    // 发送加载成功消息给父页面（可选）
+                    window.parent.postMessage({ type: 'BUILDING_LOADED', count: geojson.features?.length }, '*');
+                })
+                .catch(err => {
+                    console.error(`${logCtx} ❌ 建筑加载失败:`, err.message);
+                    console.error(`${logCtx} 💡 排查建议: 
+1. 检查浏览器 F12 网络面板中 ${fetchUrl} 是否 404
+2. 确认 .streamlit/config.toml 中 enableStaticServing = true 且配置已生效
+3. 若为本地运行，请尝试直接访问 http://localhost:<port>/static/buildings.geojson`);
+                });
+        }
+    </script>
+
+    <!-- 🖱️ 鼠标交互引导 HUD -->
+    <div style="position: absolute; top: 15px; right: 15px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 12px 18px; color: rgba(248, 250, 252, 0.9); font-family: 'Inter', sans-serif; font-size: 13px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100;">
+        <div style="margin-bottom: 6px; font-weight: 700; color: #818cf8; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">视角控制</div>
+        <div style="display: flex; gap: 10px; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                <span>🖱️ 左键拖动</span>
+                <span style="font-size: 11px; opacity: 0.7;">平移视角</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                <span>🖱️ 右键拖动 / Ctrl+左键</span>
+                <span style="font-size: 11px; opacity: 0.7;">转动/倾斜</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
+                <span>⚙️ 滑动滚轮</span>
+                <span style="font-size: 11px; opacity: 0.7;">缩放远近</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

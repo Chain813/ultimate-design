@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
+import json
 import os
 import numpy as np
 import plotly.express as px
 from markitdown import MarkItDown
 from pathlib import Path
-from ui_components import render_top_nav
+from src.ui.ui_components import render_top_nav
 
 # ==========================================
 # 💎 页面配置
@@ -33,13 +34,42 @@ st.markdown("---")
 # 🌌 模块 A: 资产综合评估 (专家决策模拟版)
 # ==========================================
 if selected_sub == "📊 资产综合评估":
-    # 🧪 --- 核心 AHP 动态权重数据库 ---
-    base_data = pd.DataFrame({
-        "地块名称": ["中车老厂区", "光复路历史街区", "铁北断头路节点", "伪满皇宫周边绿轴", "大马路商业节点", "东站铁路线带"],
-        "空间潜力原分": [0.89, 0.82, 0.74, 0.45, 0.68, 0.55],
-        "社会需求原分": [0.92, 0.95, 0.65, 0.88, 0.75, 0.42],
-        "环境现状评分": [0.35, 0.42, 0.28, 0.91, 0.56, 0.15] # 分数越高代表环境越好（更新优先级越低）
-    })
+    # 🧪 --- 核心 AHP 动态权重数据库 (从底层 GeoJSON 资产同步) ---
+    json_path = "data/shp/Key_Plots_District.json"
+    if os.path.exists(json_path):
+        try:
+            with open(json_path, "r", encoding="utf-8") as f:
+                geo_data = json.load(f)
+            plot_list = []
+            for feat in geo_data.get("features", []):
+                props = feat.get("properties", {})
+                name = props.get("name", props.get("Name", f"地块_{props.get('OBJECTID', '??')}"))
+                area = props.get("Shape_Area", 50000)
+                # 核心修正：确保即使面积较小的地块也有基础可见分 (base score 0.5)
+                # 这样在默认权重下，所有地块都会倾向于出现在排行榜中
+                pot = min(0.95, 0.5 + (area / 150000) * 0.4)
+                # 其余维度使用伪随机种子生成稳定的模拟值
+                seed_id = props.get("OBJECTID", 0)
+                np.random.seed(seed_id)
+                plot_list.append({
+                    "地块名称": name,
+                    "空间潜力原分": round(pot, 2),
+                    "社会需求原分": round(0.5 + 0.4 * np.random.rand(), 2),
+                    "环境现状评分": round(0.1 + 0.6 * np.random.rand(), 2)
+                })
+            base_data = pd.DataFrame(plot_list)
+        except Exception:
+            base_data = pd.DataFrame({
+                "地块名称": ["中车老厂区", "光复路历史街区", "铁北断头路节点"],
+                "空间潜力原分": [0.89, 0.82, 0.74],
+                "社会需求原分": [0.92, 0.95, 0.65],
+                "环境现状评分": [0.35, 0.42, 0.28]
+            })
+    else:
+        base_data = pd.DataFrame({
+            "地块名称": ["数据资产缺失", "请检查 data/shp", "配置文件引用无误"],
+            "空间潜力原分": [0, 0, 0], "社会需求原分": [0, 0, 0], "环境现状评分": [1, 1, 1]
+        })
 
     with st.sidebar:
         st.markdown("### 🎚️ 专家决策模拟 (AHP)")
@@ -56,7 +86,7 @@ if selected_sub == "📊 资产综合评估":
         
         st.markdown("---")
         st.markdown("#### 🎯 潜力筛选阈值")
-        threshold = st.slider("仅展示得分高于:", 0, 100, 50, key="p1_threshold")
+        threshold = st.slider("仅展示得分高于:", 0, 100, 0, key="p1_threshold")
         
         st.markdown("---")
         st.markdown("#### 📂 成果报告输出")

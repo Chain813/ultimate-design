@@ -1,21 +1,67 @@
-# Project environment
+# --- Project Environment ---
 venv/
 .venv/
 __pycache__/
 **/__pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
 
-# IDEs
+# --- IDEs & OS ---
 .idea/
 .vscode/
+.history/
+.DS_Store
+Thumbs.db
+desktop.ini
 
-# Ignored Data and Documents
-data/
-temp/
-thesis_documents/
+# --- Data & Media (The Heavy Stuff) ---
+# Ignore large image datasets
+data/streetview/
+**/StreetViews/
+**/media/streetview/
+**/static/temp_images/
 
-# Environment configurations
+# Ignore local temporary inventory/analysis files
+project_inventory.csv
+
+# Note: Core GeoJSON/JSON/CSV in data/ will BE INCLUDED by default 
+# unless specified above. This ensures the dashboard stays functional on GitHub.
+
+# --- Environment Configurations (Sensitive) ---
 .env
 *.env
 .env.local
 .env.production
+.env.development
+.env.test
+
+# --- Documents ---
+# Large thesis documents should be handled via LFS or external links
+docs/*.pdf
+docs/*.docx
+docs/*.xlsx
+
+# --- Temporary Files ---
+temp/
+*.log
+*.tmp
