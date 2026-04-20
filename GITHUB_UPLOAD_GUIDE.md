@@ -32,7 +32,7 @@
 **方式 B - 使用 Git 命令行**:
 ```bash
 # 进入项目目录
-cd c:\Users\23902\ultimateDESIGN
+cd <你的项目目录>
 
 # 初始化 Git 仓库
 git init
@@ -61,7 +61,7 @@ git push -u origin main
 
 ```bash
 # 1. 进入项目目录
-cd c:\Users\23902\ultimateDESIGN
+cd <你的项目目录>
 
 # 2. 初始化 Git 仓库
 git init
@@ -87,7 +87,7 @@ git push -u origin main
 1. 下载并安装 [GitHub Desktop](https://desktop.github.com/)
 2. 登录 GitHub 账号
 3. 点击 "File" → "Add local repository" → "Choose..."
-4. 选择 `c:\Users\23902\ultimateDESIGN` 文件夹
+4. 选择 `<你的项目目录>\ultimateDESIGN` 文件夹
 5. 如果是第一次，点击 "Create a repository"
 6. 填写信息后点击 "Publish repository"
 
