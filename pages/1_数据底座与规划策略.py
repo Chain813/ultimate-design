@@ -108,28 +108,62 @@ if selected_sub == "📊 资产综合评估":
             use_container_width=True
         )
 
-    # --- MPI 计算公式与 AHP 权重矩阵 ---
-    with st.expander("📐 MPI 计算公式与 AHP 权重矩阵", expanded=False):
-        st.markdown("#### 多维更新潜力指数 (MPI) 计算公式")
-        st.latex(r"MPI_i = \frac{w_{space} \cdot S_i + w_{social} \cdot D_i + w_{env} \cdot (1 - E_i)}{w_{space} + w_{social} + w_{env}} \times 100")
-        st.markdown("""
-        - $S_i$ — 空间潜力原分 (POI密度、容积率、可达性)
-        - $D_i$ — 社会需求原分 (人口密度、设施缺口、投诉频率)
-        - $E_i$ — 环境现状评分 (绿视率、天空开阔度)，取反为紧迫度 $(1-E_i)$
-        - $w$ — AHP 层次分析法确定的专家权重
-        """)
-        st.markdown("#### AHP 判断矩阵 (当前权重配置)")
-        w_arr = np.array([w_poi, w_soc, w_env], dtype=float)
-        w_norm = w_arr / (w_arr.sum() + 0.001)
-        ahp_matrix = pd.DataFrame(
-            [[1, round(w_norm[0]/(w_norm[1]+0.001), 2), round(w_norm[0]/(w_norm[2]+0.001), 2)],
-             [round(w_norm[1]/(w_norm[0]+0.001), 2), 1, round(w_norm[1]/(w_norm[2]+0.001), 2)],
-             [round(w_norm[2]/(w_norm[0]+0.001), 2), round(w_norm[2]/(w_norm[1]+0.001), 2), 1]],
-            columns=["空间潜力", "社会需求", "环境紧迫"],
-            index=["空间潜力", "社会需求", "环境紧迫"]
-        )
-        st.dataframe(ahp_matrix, use_container_width=True)
-        st.caption(f"归一化权重向量: [{w_norm[0]:.3f}, {w_norm[1]:.3f}, {w_norm[2]:.3f}]")
+    # --- MPI 计算公式与 AHP 权重矩阵 (常驻显示 + 融合面板) ---
+    st.markdown("""
+    <style>
+    .mpi-card {
+        background: rgba(99, 102, 241, 0.06);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .mpi-header {
+        color: #a5b4fc;
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .mpi-desc-inline {
+        color: #94a3b8;
+        font-size: 0.8rem;
+        margin-top: 15px;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        padding-top: 12px;
+        line-height: 1.6;
+    }
+    </style>
+    <div class="mpi-card">
+        <div class="mpi-header">🧪 多维更新潜力指数 (MPI) 测度模型</div>
+    """, unsafe_allow_html=True)
+    
+    st.latex(r"\color{#a5b4fc} MPI_i = \frac{w_{space} \cdot S_i + w_{social} \cdot D_i + w_{env} \cdot (1 - E_i)}{w_{space} + w_{social} + w_{env}} \times 100")
+    
+    st.markdown("""
+        <div class="mpi-desc-inline">
+            <b>指标项:</b> $S_i$ 空间潜力 | $D_i$ 社会需求 | $E_i$ 环境现状评分<br>
+            <b>权重项:</b> $w$ AHP 层次分析法专家权重系数
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- AHP 判断矩阵 ---
+    st.markdown("#### AHP 判断矩阵 (当前权重配置)")
+    w_arr = np.array([w_poi, w_soc, w_env], dtype=float)
+    w_norm = w_arr / (w_arr.sum() + 0.001)
+    ahp_matrix = pd.DataFrame(
+        [[1, round(w_norm[0]/(w_norm[1]+0.001), 2), round(w_norm[0]/(w_norm[2]+0.001), 2)],
+         [round(w_norm[1]/(w_norm[0]+0.001), 2), 1, round(w_norm[1]/(w_norm[2]+0.001), 2)],
+         [round(w_norm[2]/(w_norm[0]+0.001), 2), round(w_norm[2]/(w_norm[1]+0.001), 2), 1]],
+        columns=["空间潜力", "社会需求", "环境紧迫"],
+        index=["空间潜力", "社会需求", "环境紧迫"]
+    )
+    st.dataframe(ahp_matrix, use_container_width=True)
+    st.caption(f"归一化权重向量: [{w_norm[0]:.3f}, {w_norm[1]:.3f}, {w_norm[2]:.3f}]")
 
     # --- 主视图：动态排行榜 ---
     st.markdown("### 🏆 更新优先级排行榜 (实时计算结果)")

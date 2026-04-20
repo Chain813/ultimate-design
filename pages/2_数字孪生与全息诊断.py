@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import pandas as pd
 import pydeck as pdk
 import os
@@ -108,6 +108,44 @@ st.markdown("---")
 # 🌌 模块 A: 3D 空间全景 (原 Page 3 全量还原)
 # ==========================================
 if selected_sub == "🏙️ 3D 空间全景":
+    # 📐 核心算法支撑：MPI 计算公式 (融合演示面板)
+    st.markdown("""
+    <style>
+    .mpi-card-p2 {
+        background: rgba(99, 102, 241, 0.05);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 12px;
+        padding: 18px;
+        margin-bottom: 25px;
+    }
+    .mpi-label-p2 {
+        color: #a5b4fc;
+        font-size: 0.85rem;
+        font-weight: 700;
+        margin-bottom: 12px;
+        display: block;
+    }
+    .mpi-desc-p2 {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin-top: 12px;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+        padding-top: 10px;
+    }
+    </style>
+    <div class="mpi-card-p2">
+        <span class="mpi-label-p2">🧪 多维更新潜力指数 (MPI) 测度深度模型</span>
+    """, unsafe_allow_html=True)
+    
+    st.latex(r"\color{#a5b4fc} MPI_i = \frac{w_{space} \cdot S_i + w_{social} \cdot D_i + w_{env} \cdot (1 - E_i)}{w_{space} + w_{social} + w_{env}} \times 100")
+    
+    st.markdown("""
+        <div class="mpi-desc-p2">
+            <b>变量定义:</b> $S_i$ 空间潜力 | $D_i$ 社会需求 | $E_i$ 环境现状 | $w$ 专家权重
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     # --- 100% 还原 Page 3 侧边栏 ---
     with st.sidebar:
         st.markdown("### 🧬 02-3D 沙盘控制台")
