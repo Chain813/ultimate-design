@@ -1,0 +1,397 @@
+/* ==========================================
+   🎨 PREMIUM DESIGN SYSTEM v3.0
+   Multi-modal Micro-renewal Decision Platform
+   Integrated & Optimized CSS
+========================================== */
+
+/* --- Google Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* --- Global Base --- */
+html, body, .stApp {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+}
+
+/* 🛡️ 图标系统防崩坏补丁 */
+/* 强制隐藏由于样式冲突可能泄露的图标标识文字，同时允许 SVG 图标正常显示 */
+.stIcon svg, .stIcon path {
+    visibility: visible !important;
+}
+
+/* 针对部分版本 Streamlit 泄露 arrow_down 文字的精准打击 */
+.stExpander summary span:not(:has(svg)) {
+    display: none !important;
+}
+
+/* --- Hide Streamlit Framework Elements --- */
+[data-testid="stHeader"] { display: none !important; }
+[data-testid="stSidebarNav"] { display: none !important; }
+[data-testid="collapsedControl"] { display: none !important; }
+footer { display: none !important; }
+#MainMenu { display: none !important; }
+
+/* --- Layout & Background --- */
+.block-container {
+    padding-top: 1rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 1500px;
+}
+
+.stApp {
+    background: linear-gradient(135deg, #0a0f1e 0%, #0f172a 40%, #131b2e 70%, #0d1321 100%) !important;
+    background-attachment: fixed !important;
+}
+
+/* --- Typography --- */
+h1 {
+    background: linear-gradient(135deg, #ffffff, #9396ff, #c084fc) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 900 !important;
+    letter-spacing: -0.02em !important;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+h2 {
+    color: #f8fafc !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid rgba(99, 102, 241, 0.4);
+    padding-bottom: 8px;
+    letter-spacing: -0.01em !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4) !important;
+}
+
+h3 { color: #f1f5f9 !important; font-weight: 700 !important; text-shadow: 0 1px 3px rgba(0,0,0,0.5) !important; }
+h4, h5 { color: #e2e8f0 !important; font-weight: 700 !important; text-shadow: 0 1px 2px rgba(0,0,0,0.5) !important; }
+
+label, .stMarkdown p {
+    color: #cbd5e1 !important;
+    line-height: 1.7 !important;
+}
+
+/* --- Navigation Links --- */
+a[data-testid="stPageLink-NavLink"] {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8)) !important;
+    border: 1px solid rgba(99, 102, 241, 0.15) !important;
+    border-radius: 10px !important;
+    padding: 0.55rem 0.8rem !important;
+    display: flex !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+a[data-testid="stPageLink-NavLink"]:hover {
+    background: linear-gradient(145deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.12)) !important;
+    border-color: rgba(99, 102, 241, 0.5) !important;
+    transform: translateY(-3px) !important;
+    box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2), 0 0 15px rgba(139, 92, 246, 0.1) !important;
+}
+
+a[data-testid="stPageLink-NavLink"] p,
+a[data-testid="stPageLink-NavLink"] span {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: #e2e8f0 !important;
+    margin: 0 !important;
+    letter-spacing: 0.02em !important;
+}
+
+/* --- Glass Hero Section --- */
+.glass-hero {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6));
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+    border-radius: 20px;
+    padding: 50px 40px;
+    margin: 10px 0 30px 0;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05);
+    position: relative;
+    overflow: hidden;
+    animation: fadeIn 0.8s ease-out;
+}
+
+.glass-hero::before {
+    content: '';
+    position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background: radial-gradient(circle at 30% 40%, rgba(99,102,241,0.06) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(139,92,246,0.04) 0%, transparent 50%);
+    animation: heroGlow 8s ease-in-out infinite alternate;
+}
+
+@keyframes heroGlow { 0% { opacity: 0.5; } 100% { opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* --- Module Cards (Improved HTML wrapping) --- */
+.module-container {
+    margin-bottom: 25px;
+}
+
+.module-card {
+    background: linear-gradient(145deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.4));
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: 16px;
+    padding: 20px; /* 缩减内边距 */
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 360px; /* 随着宽度缩小同步减小高度 */
+}
+
+.module-container:hover .module-card {
+    border-color: rgba(99, 102, 241, 0.4);
+    transform: translateY(-8px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4), 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+.module-card h4 {
+    margin-top: 8px;
+    margin-bottom: 6px;
+    color: #f8fafc !important;
+    font-size: 1.05rem !important; /* 字体略微缩小 */
+}
+
+/* 模拟 Streamlit 按钮样式 */
+.module-btn-mock {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.15));
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-weight: 600;
+    padding: 8px 24px;
+    text-align: center;
+    margin-top: auto; /* 将按钮推至卡片底部对齐 */
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+}
+
+.module-container:hover .module-btn-mock {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(139, 92, 246, 0.3));
+    border-color: rgba(99, 102, 241, 0.6);
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+}
+
+.module-card img {
+    border-radius: 12px;
+    margin-bottom: 16px;
+    width: 100% !important;
+    height: auto !important; /* 🌟 物理回归 1:1 原生比例 */
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.module-container:hover .module-card img { transform: scale(1.04); }
+
+/* --- Banner & Containers --- */
+.aigc-banner {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.06));
+    border: 1px solid rgba(99, 102, 241, 0.25);
+    border-radius: 14px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    position: relative;
+}
+
+/* ==========================================
+   🗺️ Big Screen Map Mode (沉浸式大屏优化)
+========================================== */
+
+/* 1. 针对 PyDeck (st.pydeck_chart) */
+[data-testid="stDeckGlJsonChart"] {
+    height: 78vh !important;
+    min-height: 550px !important;
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(99, 102, 241, 0.25) !important;
+    box-shadow: 0 15px 45px rgba(0, 0, 0, 0.45) !important;
+    margin: 1.5rem 0 !important;
+    transition: all 0.3s ease;
+}
+
+/* 2. 针对 Folium (st_folium 容器) - 移除所有可能导致页面截断的强制高度与隐藏规则 */
+.folium-map-anchor {
+    display: none !important;
+}
+
+/* ==========================================
+   🔄 SYSTEM WORKFLOW LOGIC ANIMATIONS
+   ========================================== */
+.workflow-container {
+    padding: 40px;
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(99, 102, 241, 0.1);
+    border-radius: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+    position: relative;
+    width: 100%;
+    overflow: visible !important;
+}
+
+.node-label {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    fill: #f8fafc;
+    font-size: 14px;
+}
+
+.node-subtext {
+    fill: #94a3b8;
+    font-size: 10px;
+}
+
+.flow-line {
+    fill: none;
+    stroke: #6366f1;
+    stroke-width: 2;
+    stroke-dasharray: 8, 8;
+    animation: dataFlow 10s linear infinite;
+    opacity: 0.5;
+}
+
+@keyframes dataFlow {
+    from { stroke-dashoffset: 100; }
+    to { stroke-dashoffset: 0; }
+}
+
+.node-circle {
+    fill: rgba(15, 23, 42, 0.8);
+    stroke: rgba(99, 102, 241, 0.4);
+    stroke-width: 2;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.node-group:hover .node-circle {
+    stroke: #818cf8;
+    fill: rgba(30, 41, 59, 0.9);
+    r: 40;
+    filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.6));
+}
+
+.node-group {
+    cursor: pointer;
+}
+
+/* 强制让 Folium 内部的 iframe 撑满捕捉到的容器 */
+div[data-testid="stVerticalBlock"]:has(> div.element-container > .folium-map-anchor) iframe {
+    height: 100% !important;
+    width: 100% !important;
+    border: none !important;
+}
+
+/* 3. 响应式适配：移动端自动回退以优化滚动体验 */
+@media (max-width: 768px) {
+    [data-testid="stDeckGlJsonChart"], 
+    .map-container {
+        height: 450px !important;
+        min-height: 350px !important;
+    }
+}
+
+/* 4. 地图控制层优化 (增强图层切换的可读性) */
+.leaflet-control-layers {
+    background: rgba(15, 23, 42, 0.85) !important;
+    color: #e2e8f0 !important;
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+    backdrop-filter: blur(10px);
+    border-radius: 8px !important;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(10, 15, 30, 0.98)) !important;
+    border-right: 1px solid rgba(99, 102, 241, 0.15) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+hr {
+    border: none !important;
+    height: 1px !important;
+    background: linear-gradient(90deg, transparent, rgba(99,102,241,0.3), transparent) !important;
+    margin: 1.5rem 0 !important;
+}
+
+/* ==========================================
+   🚨 ENGINE STATUS ALERT SYSTEM (Apple/Cyber)
+   ========================================== */
+.engine-alert-banner {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.1));
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 16px;
+    padding: 18px 25px;
+    margin: 30px 0 30px 0; /* 增加顶部间距以避开导航栏 */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 0 20px rgba(239, 68, 68, 0.05);
+    backdrop-filter: blur(20px) saturate(180%);
+    animation: alert-slide-down 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 999;
+}
+.engine-alert-banner::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    background: #ef4444; box-shadow: 0 0 15px #ef4444;
+}
+@keyframes alert-slide-down {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+.alert-icon { 
+    font-size: 26px; 
+    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.5));
+}
+.alert-text strong { 
+    color: #fca5a5; 
+    font-size: 15px; 
+    display: block; 
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+.alert-text p { 
+    color: rgba(248, 250, 252, 0.85); 
+    font-size: 13px; 
+    margin: 4px 0 0 0; 
+    line-height: 1.4;
+}
+.alert-text code { 
+    background: rgba(0,0,0,0.4); 
+    padding: 2px 6px; 
+    border-radius: 6px; 
+    color: #f87171; 
+    font-family: 'JetBrains Mono', monospace;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ==========================================
+   🎭 DEMO MODE INDICATOR
+   ========================================== */
+.demo-mode-badge {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 10px;
+    padding: 10px 18px;
+    margin-top: 8px;
+    animation: demoPulse 2s ease-in-out infinite;
+}
+@keyframes demoPulse {
+    0%, 100% { border-color: rgba(74, 222, 128, 0.3); }
+    50% { border-color: rgba(74, 222, 128, 0.6); }
+}
+
+/* ==========================================
+   🎬 PRESENTATION MODE OVERRIDES
+   ========================================== */
+.presentation-active .block-container {
+    max-width: 100% !important;
+    padding: 0.5rem 2rem !important;
+}

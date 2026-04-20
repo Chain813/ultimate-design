@@ -1,13 +1,16 @@
+import os
 import pandas as pd
 import requests
-import os
 import time
-import sys  # 引入 sys 用于强制熔断程序
+import sys
+from dotenv import load_dotenv
 
-# ==========================================
-# 1. 核心参数配置
-# ==========================================
-AK = "eLrBxr1ejZoTkUy0FuTS36W5WIcHolGI"  # <--- 必须填入你的真实AK
+load_dotenv()
+
+AK = os.getenv("Baidu_Map_AK")
+if not AK:
+    raise ValueError("请设置环境变量 Baidu_Map_AK，参考 .env.example 文件")
+
 INPUT_EXCEL = r"data/Changchun_Precise_Points.xlsx"
 SAVE_DIR = r"data/StreetViews"
 

@@ -2,12 +2,20 @@
 venv/
 .venv/
 __pycache__/
+**/__pycache__/
+*.pyc
+
+# IDEs
 .idea/
 .vscode/
 
 # Ignored Data and Documents
 data/
+temp/
 thesis_documents/
 
 # Environment configurations
 .env
+*.env
+.env.local
+.env.production

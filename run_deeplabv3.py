@@ -31,10 +31,10 @@ def evaluate_gvi(image_path):
     # 提取像素级特征矩阵
     mask = torch.argmax(output, dim=1).squeeze().cpu().numpy()
     
-    # 💡 教官批注：默认 COCO 权重下，potted plant (盆栽植物) 通常是 class 16
-    # 为了演示系统的完整闭环，我们暂时用你原来的 `mask > 0` 逻辑，
-    # 或者用 `mask == 16` 来模拟提取。这里为了确保有数据返回，沿用你的宽松测度逻辑。
-    green_pixels = np.sum((mask > 0)) 
+    # Pascal VOC class 16 = potted plant (唯一植被类别)
+    # 注意：VOC 仅含盆栽类，无法识别行道树/草坪，GVI 会偏低
+    # 如需精确街景绿视率，推荐使用 cv_semantic_engine.py (Cityscapes class 8 = Vegetation)
+    green_pixels = np.sum(mask == 16)
     return round((green_pixels / mask.size) * 100, 1)
 
 # 🌟 核心对接：将路径换成我们刚刚抓取成功的绝对路径

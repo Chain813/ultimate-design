@@ -14,54 +14,48 @@
 
 ## ✨ 核心功能模块
 
-### 1. 🌳 数字孪生沙盘平台 (`1_数字孪生沙盘.py`)
-- 基于 PyDeck 构建高质量的城市三维场景交互底座。
-- 自动化测度：通过 DeepLabV3+ / Segformer 实现大规模街景的三维空间指标计算（绿视率、天空开阔度、围合度、视觉杂乱度）。
-- POI 与路网多层次叠加渲染。
+### 1. 🔬 数据底座与规划策略实验室 (`1_数据底座与规划策略.py`)
+- 基于 AHP 层次分析法的多维度更新潜力指标体系 (MPI)，支持专家权重动态调节与实时排行。
+- 集成 MarkItDown 跨模态语义萃取引擎，批量解析 PDF/Word/PPT 规划文档。
+- 后台地理数据资产管理，支持 POI、交通、CV 分析结果、情感数据的在线预览与覆盖上传。
 
-### 2. 🎨 AIGC 历史街区风貌管控 (`2_AIGC风貌管控.py`)
-- 结合 Stable Diffusion 与 ControlNet 技术的工业遗产/历史建筑风貌定向修复方案生成。
-- 支持四种微更新设计风格迁移：工业遗产保护、生态绿色融合、现代艺术创意、历史文化复兴。
-- 交互式效果对比与评估。
+### 2. 🏙️ 数字孪生与全息诊断实验室 (`2_数字孪生与全息诊断.py`)
+- 基于 PyDeck 构建高质量城市三维场景交互底座，支持 GVI/SVF 等空间指标的 3D 柱体与热力渲染。
+- 24H 交通潮汐动态推演，POI 密度蜂窝聚合、实测散点与交通拥堵脉冲多图层叠加。
+- 社会情感评价模块：基于 HuggingFace 多语言模型的真实情感分类，支持多平台数据源筛选与情感分布可视化。
 
-### 3. 🚥 交通、人口与活力 (`3_交通与人口.py`)
-- 利用路网数据、交通站点数据构建多模态交通耦合分析。
-- 基于 POI 密度进行商业活力潮汐时间推演。
-- 探索街道活力点与居民/游客分布的时空特征。
+### 3. 🎨 AIGC 创意生成推演实验室 (`3_AIGC设计推演.py`)
+- 结合 Stable Diffusion 与 ControlNet 技术的历史街区风貌定向修复方案生成。
+- 支持五大更新方向、十种设计策略，含景观介入度、历史锚定力等规划算子实时调控。
+- 交互式图像几何校正、前后对比与成果导出。
 
-### 4. 💬 大语言模型情感计算 (`5_LLM 情感分析.py`)
-- 引入前沿的大语言模型 (如 Qwen / DeepSeek) 替代传统词典法，提供对小红书、微博等长文本隐含情绪和空间口碑的精准挖掘分析。
-- 城市空间情绪倾向（喜爱、愤怒、悲伤等）的可视化热力分布。
-- 社媒数据多维指标穿透分析，自动生成“舆情决策报告”。
-
-### 5. 🕷️ 深度渗透舆情采集引擎 (`spider_engine.py`)
-- 基于 Playwright 自动化框架构建的高级浏览态网络爬虫，支持突破反爬机制，深度抓取主流社交媒体用户评价。
-- 自带长文本分词、结构化处理、去重和脏数据清洗机制。
-
-### 6. 📊 空间数据管理体系 (`4_数据管理中心.py` & `6_数据总览.py`)
-- 支持对所有接入的 CSV / Excel 源数据进行缓存管理、动态清洗和可视化预览。
-- 沉浸式的空间数据全景看板大屏概览。
+### 4. ⚖️ LLM 智慧决策博弈实验室 (`4_LLM博弈决策.py`)
+- 基于 Gemma 4 离线大模型的多利益相关者协商平台（居民/开发商/规划专家三方角色）。
+- 多轮博弈推演与自动生成综合评估报告。
 
 ## 📁 核心目录结构
 
 ```text
 ultimateDESIGN/
-├── app.py                      # 平台主入口文件 (Streamlit)
-├── pages/                      # 左侧导航栏界面体系模块
-│   ├── 1_数字孪生沙盘.py       
-│   ├── 2_AIGC风貌管控.py       
-│   ├── 3_交通与人口.py         
-│   ├── 4_数据管理中心.py       
-│   ├── 5_LLM 情感分析.py       
-│   └── 6_数据总览.py       
-├── spider_engine.py            # 社交舆情数据深度抓取底层架构
-├── cv_semantic_engine.py       # CV Segformer 语义级理解与评估引擎
-├── core_engine.py              # 数据核心调度和图表方法封装
-├── run_deeplabv3.py            # DeepLab 模型推理处理层
-├── ui_components.py            # 界面玻璃拟物化通用UI组件与CSS样式池
-├── requirements.txt            # 系统全局环境依赖清单
-├── 空间数据/                   # 原始空间要素 (SHP/GeoJSON/OSM) 底图
-└── StreetViews/                # 分发和用于图像推理的街景集合
+├── app.py                          # 平台主入口文件 (Streamlit)
+├── pages/                          # 左侧导航栏界面体系模块
+│   ├── 1_数据底座与规划策略.py      # 01 MPI评估 + MarkItDown萃取 + 数据管理
+│   ├── 2_数字孪生与全息诊断.py      # 02 3D沙盘 + 交通诊断 + 社会情感
+│   ├── 3_AIGC设计推演.py           # 03 Stable Diffusion + ControlNet 风貌推演
+│   └── 4_LLM博弈决策.py            # 04 Gemma 4 多主体协商
+├── core_engine.py                  # 数据核心调度：空间测度/NLP情感/交通/SD/LLM
+├── cv_semantic_engine.py           # Segformer 语义分割与四维空间指标计算
+├── run_deeplabv3.py                # DeepLabV3 备选 CV 推理方案
+├── spider_engine.py                # 多源舆情采集引擎 (微博/小红书/抖音)
+├── ui_components.py                # 全局导航栏与 CSS 样式组件
+├── utils/geo_transform.py          # BD09→GCJ02→WGS84 坐标转换
+├── check_env.py                    # 环境依赖与文件完整性自检
+├── requirements.txt                # 系统全局环境依赖清单
+├── assets/                         # 静态资源 (模块封面图 + style.css)
+├── data/                           # 数据目录
+│   ├── 空间数据/                   # 原始空间要素 (GeoJSON/SHP)
+│   └── StreetViews/                # 街景图像集合 (Point_xxx/)
+└── temp/                           # 参考文献 PDF
 ```
 
 ## 🚀 快速安装构建
@@ -71,7 +65,7 @@ ultimateDESIGN/
 ### 1. 克隆与进入目录
 ```bash
 git clone https://github.com/yourusername/ultimateDESIGN.git
-cd ultimateDESIGN
+cd <你的项目目录>
 ```
 
 ### 2. 建立虚拟环境并激活
@@ -105,7 +99,7 @@ streamlit run app.py
 - **前端与可视化底座**: Streamlit, Plotly, PyDeck (结合 deck.gl 构建数字高程与点云映射)
 - **计算机视觉 (CV)**: PyTorch, Transformers (Hugging Face 提供基础支持), DeepLabV3+ / SegFormer
 - **生成式 AI (AIGC)**: Stable Diffusion 模型底层架构 / ControlNet 结构控制器
-- **自然语言处理 (NLP)**: 集成国产大规模语言模型 (Qwen) 处理分析计算任务
+- **自然语言处理 (NLP)**: HuggingFace Transformers 多语言情感分类模型 + Ollama 本地大模型 (Gemma 4) 博弈推理
 - **数据工程体系**: Pandas, GeoPandas, Playwright (异步结构采集)
 
 ## 📄 许可证与使用声明
