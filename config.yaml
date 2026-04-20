@@ -1,0 +1,25 @@
+﻿# ==========================================
+# ⚙️ UltimateDESIGN V2.0 终极全局配置文件
+# ==========================================
+
+engines:
+  llm:
+    ollama_url: "http://127.0.0.1:11434/api/chat"
+    default_model: "gemma4:e2b-it-q4_K_M"
+    timeout: 120
+  
+  aigc:
+    sd_webui_url: "http://127.0.0.1:7860/sdapi/v1/img2img"
+    timeout: 120
+
+data:
+  rag_knowledge_path: "data/rag_knowledge.json"
+  building_footprints: "data/shp/Building_Footprints.geojson"
+  boundary_scope: "data/shp/Boundary_Scope.geojson"
+  key_plots: "data/shp/Key_Plots_District.json"
+  poi_data: "data/Changchun_POI_Real.csv"
+  traffic_data: "data/Changchun_Traffic_Real.csv"
+  nlp_raw_data: "data/CV_NLP_RawData.csv"
+  precise_points: "data/Changchun_Precise_Points.xlsx"
+  gvi_results: "data/GVI_Results_Analysis.csv"
+

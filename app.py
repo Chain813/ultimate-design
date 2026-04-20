@@ -1,13 +1,11 @@
-import streamlit as st
-import folium
-from streamlit_folium import st_folium
+﻿import streamlit as st
 import json
 import os
 import socket
 from pathlib import Path
 import base64
-from ui_components import render_top_nav, render_engine_status_alert, check_engine_status
-from core_engine import get_hud_statistics
+from src.ui.ui_components import render_top_nav, render_engine_status_alert, check_engine_status
+from src.engines.core_engine import get_hud_statistics
 import urllib.parse
 import pandas as pd
 import streamlit.components.v1 as components
@@ -136,88 +134,88 @@ def render_status_hud():
     gemma_color = "#4ADE80" if gemma_online else "#EF4444"
 
     st.markdown(f"""
-    <style>
-    .hud-v-bar {{
-        position: fixed; top: 75px; bottom: 30px; width: 235px; padding: 25px 20px;
-        background: rgba(10, 15, 30, 0.45); backdrop-filter: blur(25px) saturate(180%);
-        border: 1px solid rgba(99, 102, 241, 0.25); z-index: 999;
-        font-family: 'Inter', 'JetBrains Mono', monospace; color: rgba(248, 250, 252, 0.95);
-        pointer-events: none; transition: all 0.5s ease; overflow: hidden;
-    }}
-    .hud-v-bar::after {{
-        content: '';
-        position: absolute; top: 0; left: 0; width: 100%; height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.6), transparent);
-        animation: hudScanLine 3s linear infinite;
-    }}
-    @keyframes hudScanLine {{
-        0% {{ top: 0; opacity: 0; }}
-        10% {{ opacity: 1; }}
-        90% {{ opacity: 1; }}
-        100% {{ top: 100%; opacity: 0; }}
-    }}
-    .hud-left {{ left: 0; border-radius: 0 20px 20px 0; border-left: 4px solid #6366f1; }}
-    .hud-right {{ right: 0; border-radius: 20px 0 0 20px; border-right: 4px solid #6366f1; text-align: right; }}
-    .hud-header {{ font-size: 14px; color: #818cf8; margin-bottom: 22px; font-weight: 800; border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 10px; }}
-    .hud-item {{ margin-bottom: 20px; }}
-    .hud-label {{ font-size: 10px; color: rgba(148, 163, 184, 0.8); display: block; margin-bottom: 4px; }}
-    .hud-value {{ font-size: 12px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }}
-    .hud-right .hud-value {{ justify-content: flex-end; }}
-    .hud-meta {{ font-size: 9px; color: rgba(99, 102, 241, 0.7); margin-top: 5px; font-style: italic; }}
-    .status-dot-sd {{ width: 8px; height: 8px; border-radius: 50%; background: {sd_color}; box-shadow: 0 0 15px {sd_color}; }}
-    .status-dot-gemma {{ width: 8px; height: 8px; border-radius: 50%; background: {gemma_color}; box-shadow: 0 0 15px {gemma_color}; }}
-    .status-dot-static {{ width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 10px #4ADE80; }}
-    @media (max-width: 1450px) {{ .hud-v-bar {{ display: none; }} }}
-    </style>
+<style>
+.hud-v-bar {{
+    position: fixed; top: 75px; bottom: 30px; width: 235px; padding: 25px 20px;
+    background: rgba(10, 15, 30, 0.45); backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(99, 102, 241, 0.25); z-index: 999;
+    font-family: 'Inter', 'JetBrains Mono', monospace; color: rgba(248, 250, 252, 0.95);
+    pointer-events: none; transition: all 0.5s ease;
+}}
+.hud-v-bar::after {{
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.6), transparent);
+    animation: hudScanLine 3s linear infinite;
+}}
+@keyframes hudScanLine {{
+    0% {{ top: 0; opacity: 0; }}
+    10% {{ opacity: 1; }}
+    90% {{ opacity: 1; }}
+    100% {{ top: 100%; opacity: 0; }}
+}}
+.hud-left {{ left: 0; border-radius: 0 20px 20px 0; border-left: 4px solid #6366f1; }}
+.hud-right {{ right: 0; border-radius: 20px 0 0 20px; border-right: 4px solid #6366f1; text-align: right; }}
+.hud-header {{ font-size: 14px; color: #818cf8; margin-bottom: 22px; font-weight: 800; border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 10px; }}
+.hud-item {{ margin-bottom: 20px; }}
+.hud-label {{ font-size: 10px; color: rgba(148, 163, 184, 0.8); display: block; margin-bottom: 4px; }}
+.hud-value {{ font-size: 12px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 8px; }}
+.hud-right .hud-value {{ justify-content: flex-end; }}
+.hud-meta {{ font-size: 9px; color: rgba(99, 102, 241, 0.7); margin-top: 5px; font-style: italic; }}
+.status-dot-sd {{ width: 8px; height: 8px; border-radius: 50%; background: {sd_color}; box-shadow: 0 0 15px {sd_color}; }}
+.status-dot-gemma {{ width: 8px; height: 8px; border-radius: 50%; background: {gemma_color}; box-shadow: 0 0 15px {gemma_color}; }}
+.status-dot-static {{ width: 8px; height: 8px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 10px #4ADE80; }}
+@media (max-width: 1450px) {{ .hud-v-bar {{ display: none; }} }}
+</style>
 
-    <div class="hud-v-bar hud-left">
-        <div class="hud-header">系统内核基础设施</div>
-        <div class="hud-item">
-            <span class="hud-label">[决策推理模型]</span>
-            <div class="hud-value"><span class="status-dot-gemma"></span>{gemma_status}</div>
-            <div class="hud-meta">环境依托: Ollama / gemma4</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[视觉特征修复]</span>
-            <div class="hud-value"><span class="status-dot-sd"></span>{sd_status}</div>
-            <div class="hud-meta">后端引擎: Stable Diffusion WebUI</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[多源数据蜘蛛]</span>
-            <div class="hud-value"><span class="status-dot-static"></span>CONNECTED</div>
-            <div class="hud-meta">代码框架: Selenium / Requests</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[空间计算内核]</span>
-            <div class="hud-value"><span class="status-dot-static"></span>READY</div>
-            <div class="hud-meta">物理逻辑: AHP-MPI Engine</div>
-        </div>
+<div class="hud-v-bar hud-left">
+    <div class="hud-header">系统内核基础设施</div>
+    <div class="hud-item">
+        <span class="hud-label">[决策推理模型]</span>
+        <div class="hud-value"><span class="status-dot-gemma"></span>{gemma_status}</div>
+        <div class="hud-meta">环境依托: Ollama / gemma4</div>
     </div>
+    <div class="hud-item">
+        <span class="hud-label">[视觉特征修复]</span>
+        <div class="hud-value"><span class="status-dot-sd"></span>{sd_status}</div>
+        <div class="hud-meta">后端引擎: Stable Diffusion WebUI</div>
+    </div>
+    <div class="hud-item">
+        <span class="hud-label">[多源数据蜘蛛]</span>
+        <div class="hud-value"><span class="status-dot-static"></span>CONNECTED</div>
+        <div class="hud-meta">代码框架: Selenium / Requests</div>
+    </div>
+    <div class="hud-item">
+        <span class="hud-label">[空间计算内核]</span>
+        <div class="hud-value"><span class="status-dot-static"></span>READY</div>
+        <div class="hud-meta">物理逻辑: AHP-MPI Engine</div>
+    </div>
+</div>
 
-    <div class="hud-v-bar hud-right">
-        <div class="hud-header">循证科研数据底座</div>
-        <div class="hud-item">
-            <span class="hud-label">[POI 真实点位]</span>
-            <div class="hud-value">{hud_stats['poi_count']} AUTHENTICATED<span class="status-dot-static" style="background:#818cf8;"></span></div>
-            <div class="hud-meta">本地数据库: Changchun_POI_Real.csv</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[社会感知识别]</span>
-            <div class="hud-value">{hud_stats['nlp_count']} NLP SAMPLES<span class="status-dot-static" style="background:#818cf8;"></span></div>
-            <div class="hud-meta">核心算法: NLP Sentiment Logic</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[空间界限规模]</span>
-            <div class="hud-value">~{hud_stats['boundary_ha']} HA BOUNDARY<span class="status-dot-static" style="background:#818cf8;"></span></div>
-            <div class="hud-meta">地理坐标: WGS84 / EPSG:4326</div>
-        </div>
-        <div class="hud-item">
-            <span class="hud-label">[街景风貌指数]</span>
-            <div class="hud-value">{hud_stats['gvi_count']} GVI ANALYZED<span class="status-dot-static" style="background:#818cf8;"></span></div>
-            <div class="hud-meta">数据来源: GVI_Results_Analysis.csv</div>
-        </div>
+<div class="hud-v-bar hud-right">
+    <div class="hud-header">循证科研数据底座</div>
+    <div class="hud-item">
+        <span class="hud-label">[POI 真实点位]</span>
+        <div class="hud-value">{hud_stats['poi_count']} AUTHENTICATED<span class="status-dot-static" style="background:#818cf8;"></span></div>
+        <div class="hud-meta">本地数据库: Changchun_POI_Real.csv</div>
     </div>
-    """, unsafe_allow_html=True)
+    <div class="hud-item">
+        <span class="hud-label">[社会感知识别]</span>
+        <div class="hud-value">{hud_stats['nlp_count']} NLP SAMPLES<span class="status-dot-static" style="background:#818cf8;"></span></div>
+        <div class="hud-meta">核心算法: NLP Sentiment Logic</div>
+    </div>
+    <div class="hud-item">
+        <span class="hud-label">[空间界限规模]</span>
+        <div class="hud-value">~{hud_stats['boundary_ha']} HA BOUNDARY<span class="status-dot-static" style="background:#818cf8;"></span></div>
+        <div class="hud-meta">地理坐标: WGS84 / EPSG:4326</div>
+    </div>
+    <div class="hud-item">
+        <span class="hud-label">[街景风貌指数]</span>
+        <div class="hud-value">{hud_stats['gvi_count']} GVI ANALYZED<span class="status-dot-static" style="background:#818cf8;"></span></div>
+        <div class="hud-meta">数据来源: GVI_Results_Analysis.csv</div>
+    </div>
+</div>
+""", unsafe_allow_html=True)
 
 # ==========================================
 # 🔄 循证决策工作流 (Academic Roadmap)
@@ -471,46 +469,81 @@ def load_map_data(file_path):
         return json.load(f)
 
 def render_project_map():
-    layer_cols = st.columns(3)
+    # 🎨 视图模式选择器 (置于显眼位置)
+    view_mode = st.radio(
+        "🗺️ 视图模式", 
+        ["🦅 3D 仿真视角", "🗺️ 2D 空间肌理"], 
+        index=0, 
+        horizontal=True, 
+        key="global_map_view_mode"
+    )
+
+    # 🚀 --- 统一高性能渲染链路 (Deck.GL 分离组件加速版) ---
+    is_3d_mode = "3D" in view_mode
+    import streamlit.components.v1 as components
+
+    layer_cols = st.columns(6)
     with layer_cols[0]:
         show_boundary = st.checkbox("🔲 规划红线", value=True, key="map_boundary")
     with layer_cols[1]:
-        show_poi = st.checkbox("📍 POI 设施分布", value=False, key="map_poi")
+        show_plots = st.checkbox("✴️ 重点更新单元", value=True, key="map_plots")
     with layer_cols[2]:
+        show_buildings = st.checkbox("🏢 建筑轮廓", value=True, key="map_buildings")
+    with layer_cols[3]:
+        show_poi = st.checkbox("📍 POI 设施分布", value=False, key="map_poi")
+    with layer_cols[4]:
         show_traffic = st.checkbox("🚦 交通拥堵热点", value=False, key="map_traffic")
+    with layer_cols[5]:
+        show_lighting = st.checkbox("☀️ 开启光照", value=is_3d_mode, key="map_lighting")
 
-    m = folium.Map(location=[43.903, 125.337], zoom_start=15, tiles='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr='&copy; CARTO')
+    # 🛠️ 仿真时间控制
+    sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key="map_sun_time")
 
-    if show_boundary:
-        geo_data = load_map_data("data/空间数据/Boundary_Scope.geojson")
-        if geo_data:
-            folium.GeoJson(geo_data, style_function=lambda f: {'fillColor': '#6366f1', 'color': '#6366f1', 'weight': 2, 'fillOpacity': 0.35}).add_to(m)
-
+    # 1. 独立获取并 JSON 序列化数据（建筑大模型使用流媒体路由，规避渲染引擎强行注入导致的假死）
+    b_data_json = "'/app/static/buildings.geojson'" if show_buildings else "null"
+    bound_data_json = json.dumps(load_map_data("data/shp/Boundary_Scope.geojson")) if show_boundary else "null"
+    plots_data_json = json.dumps(load_map_data("data/shp/Key_Plots_District.json")) if show_plots else "null"
+    
+    poi_data_json = "null"
     if show_poi:
         try:
-            df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig')
-            for _, row in df_poi.iterrows():
-                folium.CircleMarker(
-                    location=[row['Lat'], row['Lng']], radius=4,
-                    color='#818cf8', fill=True, fill_color='#818cf8', fill_opacity=0.7,
-                    popup=row.get('Name', ''),
-                ).add_to(m)
-        except Exception:
-            pass
-
+            df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig').fillna("")
+            poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+        except: pass
+        
+    traffic_data_json = "null"
     if show_traffic:
         try:
-            df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig')
-            for _, row in df_tr.iterrows():
-                folium.CircleMarker(
-                    location=[row['Lat'], row['Lng']], radius=8,
-                    color='#EF4444', fill=True, fill_color='#EF4444', fill_opacity=0.8,
-                    popup=row.get('Name', ''),
-                ).add_to(m)
-        except Exception:
-            pass
+            df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
+            traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+        except: pass
 
-    st_folium(m, width="100%", height=800, returned_objects=[])
+    # 2. 读取纯粹的高性能 WebGL HTML 骨架
+    try:
+        with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
+            html_template = f.read()
+            
+        # 3. 外科手术式闪电替换，将百万级节点数据直接输送入前端内存
+        html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
+        html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)
+        html_template = html_template.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data_json)
+        html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
+        html_template = html_template.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
+        # 注入模式切换标志
+        html_template = html_template.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d_mode else "false")
+        # 注入光照显示与时间标志
+        html_template = html_template.replace("/*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/", "true" if show_lighting else "false")
+        html_template = html_template.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))
+        
+        # 4. 定制化组件外观，保持科技感一致性，防范滚动渗透
+        st.markdown("""<style>
+            iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        </style>""", unsafe_allow_html=True)
+        
+        # 以非滚动组件形式释放
+        components.html(html_template, height=650, scrolling=False)
+    except Exception as e:
+        st.error(f"地图组件核心加载失败: {str(e)}")
 
 render_project_map()
 
@@ -531,3 +564,4 @@ for i, m in enumerate(MODULES):
 # 🔄 流程路线
 render_workflow_logic()
 st.markdown("<br><br>", unsafe_allow_html=True)
+

@@ -5,8 +5,8 @@ import os
 import base64
 from PIL import Image
 from io import BytesIO
-from core_engine import run_realtime_sd, is_demo_mode
-from ui_components import render_top_nav, render_engine_status_alert
+from src.engines.core_engine import run_realtime_sd, is_demo_mode
+from src.ui.ui_components import render_top_nav, render_engine_status_alert
 
 st.set_page_config(page_title="风貌管控 | 微更新平台", layout="wide", initial_sidebar_state="expanded")
 
@@ -210,7 +210,6 @@ with result_col:
                 "Seg (城市语义分割掩码)": "seg"
             }
             
-            # 映射 ControlNet Model (假设本地模型包含这些关键字)
             cn_model_map = {
                 "Canny (精细边缘特征提取)": "control_v11p_sd15_canny",
                 "MLSD (建筑直线/透视提取)": "control_v11p_sd15_mlsd",
@@ -218,19 +217,21 @@ with result_col:
                 "Seg (城市语义分割掩码)": "control_v11p_sd15_seg"
             }
 
-            res_img = run_realtime_sd(
-                work_img, prompt, neg_prompt, steps, cfg, strength,
-                cn_module=cn_map.get(cn_mode, "none"),
-                cn_model=cn_model_map.get(cn_mode, "none"),
-                cn_weight=cn_weight,
-                sampler_name=sampler.split(" (")[0],
-                seed=seed
-            )
+            with st.spinner("⏳ 量子计算集群正高速重构空间特征图谱 ..."):
+                res_img = run_realtime_sd(
+                    work_img, prompt, neg_prompt, steps, cfg, strength,
+                    cn_module=cn_map.get(cn_mode, "none"),
+                    cn_model=cn_model_map.get(cn_mode, "none"),
+                    cn_weight=cn_weight,
+                    sampler_name=sampler.split(" (")[0],
+                    seed=seed
+                )
 
             if res_img:
                 st.session_state['aigc_result_img'] = res_img # 持久化结果
                 progress_bar.progress(100)
-                status_text.success("✅ 渲染成功！空间特征匹配完毕。")
+                status_text.success("✅ 渲染成功！引擎算力已全部释放。")
+                st.toast("✅ 街区风貌更新图层已生成！", icon="🎨")
 
     # 👁️ 结果展示逻辑 (持久化) — Image Compare Slider
     active_img = st.session_state.get('aigc_result_img')

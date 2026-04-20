@@ -154,9 +154,9 @@ echo.
 
 REM Start Streamlit with detected port
 if defined PYTHON_PATH (
-    %PYTHON_PATH% -m streamlit run "%~dp0app.py" --server.headless true --server.port !SERVER_PORT!
+    %PYTHON_PATH% -m streamlit run "%~dp0app.py" --server.headless true --server.enableStaticServing=true --server.port !SERVER_PORT!
 ) else (
-    streamlit run "%~dp0app.py" --server.headless true --server.port !SERVER_PORT!
+    streamlit run "%~dp0app.py" --server.headless true --server.enableStaticServing=true --server.port !SERVER_PORT!
 )
 
 echo.

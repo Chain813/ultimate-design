@@ -1,21 +1,80 @@
-import streamlit as st
+﻿import streamlit as st
 import pandas as pd
 import pydeck as pdk
 import os
 import numpy as np
 import math
 import plotly.express as px
-from ui_components import render_top_nav
+from src.ui.ui_components import render_top_nav
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils.geo_transform import bd09_to_wgs84
-from core_engine import get_traffic_data
+from src.utils.geo_transform import bd09_to_wgs84
+from src.engines.core_engine import get_traffic_data
 
 # ==========================================
 # 💎 页面配置
 # ==========================================
 st.set_page_config(page_title="数字孪生与全息诊断 | 02 实验室", layout="wide", initial_sidebar_state="expanded")
 render_top_nav()
+
+import json
+import streamlit.components.v1 as components
+
+@st.cache_data
+def load_base_map_data():
+    def load_json(fp):
+        with open(fp, 'r', encoding='utf-8') as f: return f.read()
+    
+    # [性能更新] 针对建筑巨量轮廓数据采取前端分流加载，不在此进行字符串序列化
+    b_data = "'/app/static/buildings.geojson'" if os.path.exists("static/buildings.geojson") else "null"
+    bound_data = load_json("data/shp/Boundary_Scope.geojson") if os.path.exists("data/shp/Boundary_Scope.geojson") else "null"
+    plots_data = load_json("data/shp/Key_Plots_District.json") if os.path.exists("data/shp/Key_Plots_District.json") else "null"
+    return b_data, bound_data, plots_data
+
+def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=False, show_traffic=False, show_lighting=True, sun_time=10, hex_payload="null", col_payload="null", heat_payload="null"):
+    b_data, bound_data, plots_data = load_base_map_data()
+    if not show_build: b_data = "null"
+    
+    # 动态支持由于交互开关触发的数据表加载
+    poi_data_json = "null"
+    if show_poi:
+        try:
+            df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig').fillna("")
+            poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+        except: pass
+        
+    traffic_data_json = "null"
+    if show_traffic:
+        try:
+            df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
+            traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+        except: pass
+
+    with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
+        html = f.read()
+    
+    html = html.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data)
+    html = html.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data)
+    html = html.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data)
+    html = html.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
+    html = html.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
+    html = html.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d else "false")
+    # 注入光照显示与时间标志
+    html = html.replace("/*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/", "true" if show_lighting else "false")
+    html = html.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))
+    
+    # 注入高级分析图层荷载
+    html = html.replace("/*__HEX_PAYLOAD__*/null/*__END_HEX_PAY__*/", hex_payload)
+    html = html.replace("/*__COL_PAYLOAD__*/null/*__END_COL_PAY__*/", col_payload)
+    html = html.replace("/*__HEAT_PAYLOAD__*/null/*__END_HEAT_PAY__*/", heat_payload)
+    
+    # 修正相机视角
+    html = html.replace("pitch: is_3d ? 45 : 0", f"pitch: {view_pitch}")
+    
+    st.markdown("""<style>
+        iframe[title="st.iframe"] { border-radius: 12px !important; overflow: hidden !important; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+    </style>""", unsafe_allow_html=True)
+    components.html(html, height=720, scrolling=False)
 
 @st.cache_data
 def _load_3d_data():
@@ -66,6 +125,8 @@ if selected_sub == "🏙️ 3D 空间全景":
         st.markdown("---")
         st.markdown("#### 🗼 渲染引擎参数")
         l_mode_p3 = st.radio("引擎模式", ["🗼 3D柱体", "🔥 2D热力", "🌌 双模融合"], key="p3_engine")
+        show_light_p3 = st.checkbox("☀️ 开启仿真光照", value=True, key="p3_light")
+        sun_time_p3 = st.slider("🕐 日照推演 (0-23)", 0, 23, 10, key="p3_sun_time")
         elev_p3 = st.slider("柱体拉伸倍数", 1, 150, 40, key="p3_elev")
         rad_p3 = st.slider("柱体覆盖半径", 5, 80, 25, key="p3_rad")
 
@@ -82,18 +143,35 @@ if selected_sub == "🏙️ 3D 空间全景":
             max_v = min_v + 1
         df_3d["Dynamic_Color"] = df_3d[cur_m].apply(lambda v: [int(255*(1-(v-min_v)/(max_v-min_v))), int(200*math.sin((v-min_v)/(max_v-min_v)*math.pi)), int(255*((v-min_v)/(max_v-min_v))), 210])
 
-        layers_3d = []
+        col_payload = "null"
         if l_mode_p3 in ("🗼 3D柱体", "🌌 双模融合"):
-            layers_3d.append(pdk.Layer("ColumnLayer", data=df_3d, get_position=["Lng", "Lat"], get_elevation=cur_m, elevation_scale=elev_p3, radius=rad_p3, extruded=True, get_fill_color="Dynamic_Color", pickable=True))
+            col_payload = json.dumps({
+                "data": df_3d[['Lng', 'Lat', cur_m, 'Dynamic_Color', 'ID']].to_dict(orient='records'),
+                "metric": cur_m,
+                "elevationScale": elev_p3,
+                "radius": rad_p3
+            })
+            
+        heat_payload = "null"
         if l_mode_p3 in ("🔥 2D热力", "🌌 双模融合"):
-            layers_3d.append(pdk.Layer("HeatmapLayer", data=df_3d, get_position=["Lng", "Lat"], get_weight=cur_m, radius_pixels=rad_p3, opacity=0.6))
+            heat_payload = json.dumps({
+                "data": df_3d[['Lng', 'Lat', cur_m]].to_dict(orient='records'),
+                "metric": cur_m,
+                "radius": rad_p3
+            })
 
         pitch_3d = 45 if v_mode_p3 == "🦅 3D鸟瞰" else (60 if "漫游" in v_mode_p3 else 0)
-        st.pydeck_chart(pdk.Deck(
-            layers=layers_3d,
-            initial_view_state=pdk.ViewState(latitude=43.91, longitude=125.35, zoom=14.8, pitch=pitch_3d),
-            map_style="light"
-        ))
+        render_advanced_deckgl(
+            is_3d=(v_mode_p3 != "🗺️ 2D平面"),
+            view_pitch=pitch_3d,
+            show_build=True, 
+            show_poi=False, 
+            show_traffic=False,
+            show_lighting=show_light_p3,
+            sun_time=sun_time_p3,
+            col_payload=col_payload,
+            heat_payload=heat_payload
+        )
 
 # ==========================================
 # 🌌 模块 B: 交通与活力诊断 (原 Page 4 全量还原)
@@ -111,6 +189,9 @@ elif selected_sub == "🚦 交通与活力诊断":
         st.markdown("---")
         st.markdown("#### 📊 图层叠加开关")
         show_hex_p4 = st.checkbox("🔮 开启宏观蜂窝柱 (密度聚合)", value=True, key="p4_hex")
+        show_build_p4 = st.checkbox("🏢 3D 建筑仿真模型", value=True, key="p4_build")
+        show_light_p4 = st.checkbox("☀️ 开启仿真光照", value=True, key="p4_light")
+        sun_time_p4 = st.slider("🕐 日照推演 (0-23)", 0, 23, 10, key="p4_sun_time")
         show_poi_p4 = st.checkbox("🔍 透视实测 POI 点", value=False, key="p4_poi")
         show_traffic_p4 = st.checkbox("🚌 交通枢纽脉冲点", value=True, key="p4_traffic")
         
@@ -124,35 +205,27 @@ elif selected_sub == "🚦 交通与活力诊断":
     except Exception as e:
         st.error(f"POI 数据加载失败: {e}")
         df_poi = pd.DataFrame()
+    
     if not df_poi.empty:
-        layers_p4 = []
+        hex_payload = "null"
         if show_hex_p4:
-            layers_p4.append(pdk.Layer("HexagonLayer", data=df_poi, get_position=["Lng", "Lat"], radius=h_rad_p4, elevation_scale=h_elev_p4, extruded=True, color_range=[[241, 238, 246], [43, 140, 190], [4, 90, 141]]))
-
-        if show_poi_p4:
-            layers_p4.append(pdk.Layer(
-                "ScatterplotLayer",
-                data=df_poi,
-                get_position=["Lng", "Lat"],
-                get_radius=30,
-                get_fill_color=[99, 102, 241, 180],
-                pickable=True,
-            ))
-
-        if show_traffic_p4:
-            df_traffic = get_traffic_data()
-            layers_p4.append(pdk.Layer(
-                "ScatterplotLayer",
-                data=df_traffic,
-                get_position=["Lng", "Lat"],
-                get_radius="Weight",
-                radius_scale=3,
-                get_fill_color=[239, 68, 68, 200],
-                pickable=True,
-            ))
-
+            hex_payload = json.dumps({
+                "data": df_poi[['Lng', 'Lat']].to_dict(orient='records'),
+                "radius": h_rad_p4,
+                "elevationScale": h_elev_p4
+            })
+            
         pitch_p4 = 45 if "鸟瞰" in v_mode_p4 else (60 if "漫游" in v_mode_p4 else 0)
-        st.pydeck_chart(pdk.Deck(layers=layers_p4, initial_view_state=pdk.ViewState(latitude=43.91, longitude=125.35, zoom=14.2, pitch=pitch_p4), map_style="light"))
+        render_advanced_deckgl(
+            is_3d=(v_mode_p4 != "🗺️ 上帝视角"),
+            view_pitch=pitch_p4,
+            show_build=show_build_p4, 
+            show_poi=show_poi_p4, 
+            show_traffic=show_traffic_p4,
+            show_lighting=show_light_p4,
+            sun_time=sun_time_p4,
+            hex_payload=hex_payload
+        )
 
 # ==========================================
 # 🌌 模块 C: 社会情感评价 (原 Page 8 全量还原)
@@ -197,4 +270,18 @@ elif selected_sub == "🗳️ 评价数据与社会感知":
             valid_texts = df_nlp['Text'].dropna().astype(str).tolist()
             _, scores = classify_sentiment(valid_texts)
             df_nlp['Score'] = scores[:len(df_nlp)]
-        st.plotly_chart(px.histogram(df_nlp, x="Score", title="情感分布直方图 (基于当前筛选数据)", color_discrete_sequence=['#fb7185']))
+        
+        fig = px.histogram(df_nlp, x="Score", title="社会情感分布态势 (情感值范围 -1 至 1)", color_discrete_sequence=['#818cf8'])
+        fig.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            bargap=0.1,
+            margin=dict(l=40, r=40, t=60, b=40),
+            xaxis=dict(showgrid=True, gridcolor='rgba(99, 102, 241, 0.1)', title="情感极值 (Score)"),
+            yaxis=dict(showgrid=True, gridcolor='rgba(99, 102, 241, 0.1)', title="频次数 (Count)"),
+            font=dict(color="#94a3b8")
+        )
+        fig.update_traces(marker_line_width=0, opacity=0.85, marker=dict(color='#818cf8'))
+        st.plotly_chart(fig, use_container_width=True)
+
