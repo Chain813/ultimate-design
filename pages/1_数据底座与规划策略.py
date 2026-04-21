@@ -5,8 +5,8 @@ import os
 import numpy as np
 import plotly.express as px
 from markitdown import MarkItDown
-from pathlib import Path
 from src.ui.ui_components import render_top_nav
+from src.config import DATA_FILES, SHP_FILES
 
 # ==========================================
 # 💎 页面配置
@@ -35,10 +35,10 @@ st.markdown("---")
 # ==========================================
 if selected_sub == "📊 资产综合评估":
     # 🧪 --- 核心 AHP 动态权重数据库 (从底层 GeoJSON 资产同步) ---
-    json_path = "data/shp/Key_Plots_District.json"
-    if os.path.exists(json_path):
+    json_path = SHP_FILES["plots"]
+    if json_path.exists():
         try:
-            with open(json_path, "r", encoding="utf-8") as f:
+            with json_path.open("r", encoding="utf-8") as f:
                 geo_data = json.load(f)
             plot_list = []
             for feat in geo_data.get("features", []):
@@ -244,12 +244,18 @@ elif selected_sub == "⚙️ 物理底座管理":
         "📊 CV分析结果": "GVI_Results_Analysis.csv",
         "💬 情感分析数据": "CV_NLP_RawData.csv"
     }
-    target_csv = f"data/{f_map[obj_sel]}"
-    if os.path.exists(target_csv):
+    file_key_map = {
+        "🏪 POI数据": "poi",
+        "🚥 交通数据": "traffic",
+        "📊 CV分析结果": "gvi",
+        "💬 情感分析数据": "nlp",
+    }
+    target_csv = DATA_FILES[file_key_map[obj_sel]]
+    if target_csv.exists():
         st.dataframe(pd.read_csv(target_csv).head(30), use_container_width=True)
         uploaded_csv = st.file_uploader("覆盖上传最新的物理副本", key="p7_csv_up")
         if uploaded_csv is not None:
-            with open(target_csv, "wb") as f:
+            with target_csv.open("wb") as f:
                 f.write(uploaded_csv.getbuffer())
-            st.success(f"文件已覆盖写入: {target_csv}")
+            st.success(f"文件已覆盖写入: {target_csv.as_posix()}")
             st.rerun()

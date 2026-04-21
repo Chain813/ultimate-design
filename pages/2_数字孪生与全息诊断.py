@@ -7,9 +7,9 @@ import math
 import plotly.express as px
 from src.ui.ui_components import render_top_nav
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from src.utils.geo_transform import bd09_to_wgs84
 from src.engines.core_engine import get_traffic_data
+from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR
 
 # ==========================================
 # 💎 页面配置
@@ -26,9 +26,11 @@ def load_base_map_data():
         with open(fp, 'r', encoding='utf-8') as f: return f.read()
     
     # [性能更新] 针对建筑巨量轮廓数据采取前端分流加载，不在此进行字符串序列化
-    b_data = "'/app/static/buildings.geojson'" if os.path.exists("static/buildings.geojson") else "null"
-    bound_data = load_json("data/shp/Boundary_Scope.geojson") if os.path.exists("data/shp/Boundary_Scope.geojson") else "null"
-    plots_data = load_json("data/shp/Key_Plots_District.json") if os.path.exists("data/shp/Key_Plots_District.json") else "null"
+    b_data = "'/app/static/buildings.geojson'" if (STATIC_DIR / "buildings.geojson").exists() else "null"
+    bound_path = SHP_FILES["boundary"]
+    plots_path = SHP_FILES["plots"]
+    bound_data = load_json(str(bound_path)) if bound_path.exists() else "null"
+    plots_data = load_json(str(plots_path)) if plots_path.exists() else "null"
     return b_data, bound_data, plots_data
 
 def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=False, show_traffic=False, show_lighting=True, sun_time=10, hex_payload="null", col_payload="null", heat_payload="null"):
@@ -39,18 +41,18 @@ def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=
     poi_data_json = "null"
     if show_poi:
         try:
-            df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig').fillna("")
+            df_poi = pd.read_csv(DATA_FILES["poi"], encoding='utf-8-sig').fillna("")
             poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
         except: pass
         
     traffic_data_json = "null"
     if show_traffic:
         try:
-            df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
+            df_tr = pd.read_csv(DATA_FILES["traffic"], encoding='utf-8-sig').fillna("")
             traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
         except: pass
 
-    with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
+    with (ASSETS_DIR / "map3d_standalone.html").open("r", encoding="utf-8") as f:
         html = f.read()
     
     html = html.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data)
@@ -78,8 +80,8 @@ def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=
 
 @st.cache_data
 def _load_3d_data():
-    df_pts = pd.read_excel("data/Changchun_Precise_Points.xlsx")
-    df_ana = pd.read_csv("data/GVI_Results_Analysis.csv")
+    df_pts = pd.read_excel(DATA_FILES["points"])
+    df_ana = pd.read_csv(DATA_FILES["gvi"])
     if 'Folder' in df_ana.columns:
         df_ana['ID'] = df_ana['Folder'].str.replace('Point_', '').astype(int)
         df_ana = df_ana.groupby('ID').mean(numeric_only=True).reset_index()
@@ -92,11 +94,13 @@ def _load_3d_data():
 if 'lab02_active_sub' not in st.session_state:
     st.session_state.lab02_active_sub = "🏙️ 3D 空间全景"
 
+TAB_OPTIONS = ["🏙️ 3D 空间全景", "🚦 交通与活力诊断", "🗳️ 评价数据与社会感知", "📍 地块级诊断面板"]
+
 # 顶部水平导航 (核心逻辑切换点)
 selected_sub = st.radio(
     "功能选择",
-    ["🏙️ 3D 空间全景", "🚦 交通与活力诊断", "🗳️ 评价数据与社会感知"],
-    index=["🏙️ 3D 空间全景", "🚦 交通与活力诊断", "🗳️ 评价数据与社会感知"].index(st.session_state.lab02_active_sub),
+    TAB_OPTIONS,
+    index=TAB_OPTIONS.index(st.session_state.lab02_active_sub) if st.session_state.lab02_active_sub in TAB_OPTIONS else 0,
     horizontal=True,
     key="lab02_switcher"
 )
@@ -162,11 +166,11 @@ if selected_sub == "🏙️ 3D 空间全景":
         
         st.markdown("---")
         st.markdown("#### 🗼 渲染引擎参数")
-        l_mode_p3 = st.radio("引擎模式", ["🗼 3D柱体", "🔥 2D热力", "🌌 双模融合"], key="p3_engine")
         show_light_p3 = st.checkbox("☀️ 开启仿真光照", value=True, key="p3_light")
         sun_time_p3 = st.slider("🕐 日照推演 (0-23)", 0, 23, 10, key="p3_sun_time")
-        elev_p3 = st.slider("柱体拉伸倍数", 1, 150, 40, key="p3_elev")
-        rad_p3 = st.slider("柱体覆盖半径", 5, 80, 25, key="p3_rad")
+        elev_p3 = st.slider("柱体拉伸倍数", 1, 20, 10, key="p3_elev")
+        rad_p3 = st.slider("覆盖半径 (覆盖广度)", 1, 50, 25, key="p3_rad")
+
 
     # --- 100% 还原 Page 3 主内容 (数据链路) ---
     try:
@@ -181,22 +185,14 @@ if selected_sub == "🏙️ 3D 空间全景":
             max_v = min_v + 1
         df_3d["Dynamic_Color"] = df_3d[cur_m].apply(lambda v: [int(255*(1-(v-min_v)/(max_v-min_v))), int(200*math.sin((v-min_v)/(max_v-min_v)*math.pi)), int(255*((v-min_v)/(max_v-min_v))), 210])
 
-        col_payload = "null"
-        if l_mode_p3 in ("🗼 3D柱体", "🌌 双模融合"):
-            col_payload = json.dumps({
-                "data": df_3d[['Lng', 'Lat', cur_m, 'Dynamic_Color', 'ID']].to_dict(orient='records'),
-                "metric": cur_m,
-                "elevationScale": elev_p3,
-                "radius": rad_p3
-            })
+        col_payload = json.dumps({
+            "data": df_3d[['Lng', 'Lat', cur_m, 'Dynamic_Color', 'ID']].to_dict(orient='records'),
+            "metric": cur_m,
+            "elevationScale": elev_p3,
+            "radius": rad_p3
+        })
             
         heat_payload = "null"
-        if l_mode_p3 in ("🔥 2D热力", "🌌 双模融合"):
-            heat_payload = json.dumps({
-                "data": df_3d[['Lng', 'Lat', cur_m]].to_dict(orient='records'),
-                "metric": cur_m,
-                "radius": rad_p3
-            })
 
         pitch_3d = 45 if v_mode_p3 == "🦅 3D鸟瞰" else (60 if "漫游" in v_mode_p3 else 0)
         render_advanced_deckgl(
@@ -225,32 +221,51 @@ elif selected_sub == "🚦 交通与活力诊断":
         v_mode_p4 = st.radio("诊断模式", ["🦅 鸟瞰视角", "🗺️ 上帝视角", "🚶 漫游视角"], key="p4_view")
         
         st.markdown("---")
-        st.markdown("#### 📊 图层叠加开关")
-        show_hex_p4 = st.checkbox("🔮 开启宏观蜂窝柱 (密度聚合)", value=True, key="p4_hex")
+        st.markdown("#### 🗼 渲染引擎参数")
+        l_mode_p4 = st.radio("引擎模式", ["🔮 3D蜂窝", "🔥 2D热力", "🌌 双模融合"], key="p4_engine")
         show_build_p4 = st.checkbox("🏢 3D 建筑仿真模型", value=True, key="p4_build")
         show_light_p4 = st.checkbox("☀️ 开启仿真光照", value=True, key="p4_light")
         sun_time_p4 = st.slider("🕐 日照推演 (0-23)", 0, 23, 10, key="p4_sun_time")
         show_poi_p4 = st.checkbox("🔍 透视实测 POI 点", value=False, key="p4_poi")
         show_traffic_p4 = st.checkbox("🚌 交通枢纽脉冲点", value=True, key="p4_traffic")
         
-        if show_hex_p4:
-            h_rad_p4 = st.slider("蜂窝半径 (米)", 20, 150, 60, key="p4_rad")
-            h_elev_p4 = st.slider("活力拉伸倍数", 1.0, 15.0, 5.0, key="p4_elev")
+        h_rad_p4 = st.slider("🔥 热力扩散半径", 5, 250, 100, key="p4_rad")
+        h_elev_p4 = st.slider("🔮 蜂窝拉伸倍数", 0.1, 1.0, 0.5, key="p4_elev")
 
     # --- 100% 还原 Page 4 数据内容 ---
     try:
-        df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig')
+        df_poi = pd.read_csv(DATA_FILES["poi"], encoding='utf-8-sig')
     except Exception as e:
         st.error(f"POI 数据加载失败: {e}")
         df_poi = pd.DataFrame()
     
     if not df_poi.empty:
+        # 🧪 模拟 24H 城市活力潮汐函数 (早晚高峰双峰模型)
+        import math
+        def get_tide_factor(hour):
+            # 基础背景值 0.3 + 早高峰 (8-9点) + 晚高峰 (17-19点)
+            morning_rush = math.exp(-((hour - 8.5) ** 2) / 2) 
+            evening_rush = math.exp(-((hour - 18.0) ** 2) / 3) * 1.2
+            return 0.3 + morning_rush + evening_rush
+
+        tide_f = get_tide_factor(cur_hr_p4)
+        
         hex_payload = "null"
-        if show_hex_p4:
+        if l_mode_p4 in ("🔮 3D蜂窝", "🌌 双模融合"):
             hex_payload = json.dumps({
                 "data": df_poi[['Lng', 'Lat']].to_dict(orient='records'),
-                "radius": h_rad_p4,
-                "elevationScale": h_elev_p4
+                "radius": 25,              # 💡 固定为标准的 25 米精度
+                "elevationScale": h_elev_p4  # 💡 移除潮汐联动，保持诊断稳定性
+            })
+            
+        heat_payload = "null"
+        if l_mode_p4 in ("🔥 2D热力", "🌌 双模融合"):
+            # 🧪 热力图保留潮汐联动：强度随时间轴平滑变化
+            heat_data = df_poi[['Lng', 'Lat']].assign(Vitality=tide_f).to_dict(orient='records')
+            heat_payload = json.dumps({
+                "data": heat_data,
+                "metric": "Vitality",
+                "radius": h_rad_p4        # 💡 使用滑块控制热力半径
             })
             
         pitch_p4 = 45 if "鸟瞰" in v_mode_p4 else (60 if "漫游" in v_mode_p4 else 0)
@@ -262,7 +277,8 @@ elif selected_sub == "🚦 交通与活力诊断":
             show_traffic=show_traffic_p4,
             show_lighting=show_light_p4,
             sun_time=sun_time_p4,
-            hex_payload=hex_payload
+            hex_payload=hex_payload,
+            heat_payload=heat_payload
         )
 
 # ==========================================
@@ -289,9 +305,9 @@ elif selected_sub == "🗳️ 评价数据与社会感知":
 
     # --- 100% 还原 Page 8 主内容 ---
     try:
-        df_nlp = pd.read_csv("data/CV_NLP_RawData.csv", encoding='utf-8-sig')
+        df_nlp = pd.read_csv(DATA_FILES["nlp"], encoding='utf-8-sig')
     except:
-        df_nlp = pd.read_csv("data/CV_NLP_RawData.csv", encoding='gbk')
+        df_nlp = pd.read_csv(DATA_FILES["nlp"], encoding='gbk')
     
     if not df_nlp.empty:
         # 🧪 100% 激活平台过滤与全量内容展示
@@ -304,7 +320,7 @@ elif selected_sub == "🗳️ 评价数据与社会感知":
         st.dataframe(df_nlp[["Text", "Keyword", "Source"]], use_container_width=True) # 移除 head()
         
         if 'Score' not in df_nlp.columns:
-            from core_engine import classify_sentiment
+            from src.engines.core_engine import classify_sentiment
             valid_texts = df_nlp['Text'].dropna().astype(str).tolist()
             _, scores = classify_sentiment(valid_texts)
             df_nlp['Score'] = scores[:len(df_nlp)]
@@ -322,4 +338,100 @@ elif selected_sub == "🗳️ 评价数据与社会感知":
         )
         fig.update_traces(marker_line_width=0, opacity=0.85, marker=dict(color='#818cf8'))
         st.plotly_chart(fig, use_container_width=True)
+
+# ==========================================
+# 📍 模块 D: 地块级诊断面板 (Phase 2 新增)
+# ==========================================
+elif selected_sub == "📍 地块级诊断面板":
+    import plotly.graph_objects as go
+    from src.engines.core_engine import get_plot_diagnostics
+
+    with st.sidebar:
+        st.markdown("### 📍 地块诊断控制台")
+        st.info("💡 此面板基于 Key_Plots_District.json 中的 5 个重点更新单元，自动计算多维指标并生成雷达图。")
+
+    st.markdown("### 📍 重点地块多维诊断面板")
+    st.markdown("基于 GVI、SVF、POI、情感等多源数据，对 5 个重点更新单元进行循证体检。")
+
+    diagnostics = get_plot_diagnostics()
+
+    if not diagnostics:
+        st.warning("⚠️ 无法加载地块诊断数据，请检查 `data/shp/Key_Plots_District.json` 是否存在。")
+    else:
+        # --- 总览排行榜 ---
+        df_diag = pd.DataFrame(diagnostics)
+        df_diag_sorted = df_diag.sort_values("mpi_score", ascending=False)
+        
+        st.markdown("#### 🏆 更新潜力排行榜 (MPI 自动评分)")
+        st.dataframe(
+            df_diag_sorted[["name", "area_ha", "poi_count", "gvi_mean", "mpi_score"]].rename(columns={
+                "name": "地块名称", "area_ha": "面积(ha)", "poi_count": "POI数",
+                "gvi_mean": "GVI均值", "mpi_score": "MPI得分"
+            }),
+            column_config={
+                "MPI得分": st.column_config.ProgressColumn("MPI得分", format="%.1f", min_value=0, max_value=100)
+            },
+            use_container_width=True, hide_index=True
+        )
+
+        st.markdown("---")
+
+        # --- 每地块的雷达图 & 指标卡 ---
+        st.markdown("#### 🧬 逐地块多维指标雷达")
+        
+        cols = st.columns(min(len(diagnostics), 3))
+        for i, diag in enumerate(diagnostics):
+            with cols[i % len(cols)]:
+                # 雷达图
+                categories = ['GVI', 'SVF', '围合度', '杂乱度(反)', 'POI密度', 'MPI']
+                # 归一化到 0-1 范围
+                gvi_n = min(1.0, diag["gvi_mean"] / 50) if diag["gvi_mean"] > 0 else 0.3
+                svf_n = min(1.0, diag["svf_mean"] / 50) if diag["svf_mean"] > 0 else 0.3
+                enc_n = min(1.0, diag["enclosure_mean"] / 50) if diag["enclosure_mean"] > 0 else 0.3
+                clu_n = 1.0 - min(1.0, diag["clutter_mean"] / 50) if diag["clutter_mean"] > 0 else 0.5
+                poi_n = min(1.0, diag["poi_count"] / 15)
+                mpi_n = diag["mpi_score"] / 100.0
+
+                values = [gvi_n, svf_n, enc_n, clu_n, poi_n, mpi_n]
+
+                fig_radar = go.Figure(data=go.Scatterpolar(
+                    r=values + [values[0]],
+                    theta=categories + [categories[0]],
+                    fill='toself',
+                    fillcolor='rgba(129, 140, 248, 0.2)',
+                    line=dict(color='#818cf8', width=2),
+                    name=diag["name"]
+                ))
+                fig_radar.update_layout(
+                    polar=dict(
+                        bgcolor='rgba(0,0,0,0)',
+                        radialaxis=dict(visible=True, range=[0, 1], showticklabels=False, gridcolor='rgba(99,102,241,0.15)'),
+                        angularaxis=dict(gridcolor='rgba(99,102,241,0.15)', color='#94a3b8'),
+                    ),
+                    showlegend=False,
+                    title=dict(text=f"📍 {diag['name']}", font=dict(size=14, color='#a5b4fc')),
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    margin=dict(l=50, r=50, t=50, b=30),
+                    height=280,
+                    font=dict(color='#94a3b8')
+                )
+                st.plotly_chart(fig_radar, use_container_width=True)
+                
+                # 关键指标
+                mc1, mc2, mc3 = st.columns(3)
+                mc1.metric("MPI", f"{diag['mpi_score']}")
+                mc2.metric("POI", f"{diag['poi_count']}")
+                mc3.metric("GVI", f"{diag['gvi_mean']}")
+
+        # --- 导出功能 ---
+        st.markdown("---")
+        csv_export = df_diag.to_csv(index=False).encode("utf-8-sig")
+        st.download_button(
+            "📥 导出地块诊断报告 (CSV)",
+            csv_export,
+            "Plot_Diagnostics_Report.csv",
+            "text/csv",
+            use_container_width=True
+        )
 

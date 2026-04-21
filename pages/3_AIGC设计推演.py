@@ -5,7 +5,7 @@ import os
 import base64
 from PIL import Image
 from io import BytesIO
-from src.engines.core_engine import run_realtime_sd, is_demo_mode
+from src.engines.core_engine import run_realtime_sd, is_demo_mode, get_plot_diagnostics
 from src.ui.ui_components import render_top_nav, render_engine_status_alert
 
 st.set_page_config(page_title="风貌管控 | 微更新平台", layout="wide", initial_sidebar_state="expanded")
@@ -14,6 +14,45 @@ render_top_nav()
 render_engine_status_alert()
 
 st.markdown("<h2>基于 Stable Diffusion + ControlNet 的街区风貌修缮推演</h2>", unsafe_allow_html=True)
+
+# ==========================================
+# 📍 地块导向推演模式 (Phase 3 新增)
+# ==========================================
+if 'aigc_history' not in st.session_state:
+    st.session_state['aigc_history'] = []
+
+plot_col, mode_col = st.columns([1, 1])
+with plot_col:
+    diagnostics = get_plot_diagnostics()
+    if diagnostics:
+        plot_names = ["🔧 自由模式 (手动选择)"] + [f"📍 {d['name']} (MPI:{d['mpi_score']})" for d in diagnostics]
+        plot_sel = st.selectbox("🎯 地块导向推演", plot_names, key="aigc_plot_sel")
+    else:
+        plot_sel = "🔧 自由模式 (手动选择)"
+        st.caption("未检测到地块数据，使用自由模式")
+
+with mode_col:
+    if plot_sel != "🔧 自由模式 (手动选择)" and diagnostics:
+        sel_name = plot_sel.split(" (MPI:")[0].replace("📍 ", "")
+        sel_diag = next((d for d in diagnostics if d['name'] == sel_name), None)
+        if sel_diag:
+            mc1, mc2, mc3, mc4 = st.columns(4)
+            mc1.metric("面积", f"{sel_diag['area_ha']}ha")
+            mc2.metric("MPI", f"{sel_diag['mpi_score']}")
+            mc3.metric("POI", f"{sel_diag['poi_count']}")
+            mc4.metric("GVI", f"{sel_diag['gvi_mean']}")
+
+            # 自动匹配策略方向
+            if sel_diag['gvi_mean'] > 0 and sel_diag['gvi_mean'] < 15:
+                st.info(f"💡 {sel_name} 绿视率偏低 ({sel_diag['gvi_mean']}%)，推荐 **方向四：生活圈品质与环境**")
+            elif sel_diag['poi_count'] > 5:
+                st.info(f"💡 {sel_name} POI密度高 ({sel_diag['poi_count']})，推荐 **方向三：新旧共生与空间衔接**")
+            elif sel_diag['mpi_score'] > 70:
+                st.info(f"💡 {sel_name} 更新潜力高 ({sel_diag['mpi_score']})，推荐 **方向二：工业遗产活化与再生**")
+            else:
+                st.info(f"💡 {sel_name} 建议采用 **方向一：历史风貌保护与修复**")
+
+st.markdown("---")
 
 with st.sidebar:
     st.markdown("### ⚙️ 专家级渲染参数")
@@ -313,9 +352,50 @@ with result_col:
         buf = BytesIO()
         active_img.save(buf, format="JPEG")
         st.download_button("📥 下载渲染成果", buf.getvalue(), "result.jpg", "image/jpeg", use_container_width=True)
+
+        # 保存到推演历史 (Phase 3 新增)
+        if generate_btn and active_img:
+            hist_entry = {
+                "plot": plot_sel if plot_sel != "🔧 自由模式 (手动选择)" else "自由模式",
+                "strategy": style_mode,
+                "direction": direction_mode,
+                "prompt_excerpt": prompt[:80] + "...",
+                "strength": strength,
+            }
+            # 保存缩略图
+            thumb = active_img.copy()
+            thumb.thumbnail((300, 300))
+            thumb_buf = BytesIO()
+            thumb.save(thumb_buf, format="JPEG", quality=70)
+            hist_entry["thumb_b64"] = base64.b64encode(thumb_buf.getvalue()).decode()
+            st.session_state['aigc_history'].append(hist_entry)
     else:
         if generate_btn:
             if is_demo_mode():
                 st.info("🎭 演示模式：显示预置占位图。请替换 assets/demo_aigc_result.png 为真实渲染成果。")
             else:
                 st.error("❌ 渲染失败，请检查您的 SD API 服务是否开启。")
+
+# ==========================================
+# 🖼️ 推演历史对比画廊 (Phase 3 新增)
+# ==========================================
+if st.session_state.get('aigc_history'):
+    st.markdown("---")
+    st.markdown("### 🖼️ 推演历史对比画廊")
+    st.caption(f"共 {len(st.session_state['aigc_history'])} 次推演记录 (本次会话)")
+
+    gallery_cols = st.columns(min(len(st.session_state['aigc_history']), 4))
+    for i, entry in enumerate(st.session_state['aigc_history'][-8:]):  # 最多展示最近 8 条
+        with gallery_cols[i % len(gallery_cols)]:
+            st.markdown(f"""
+            <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.15);
+                        border-radius:10px; padding:10px; margin-bottom:8px; text-align:center;">
+                <img src="data:image/jpeg;base64,{entry['thumb_b64']}" style="width:100%; border-radius:8px; margin-bottom:6px;">
+                <p style="color:#a5b4fc; font-size:12px; font-weight:700; margin:0;">{entry['strategy']}</p>
+                <p style="color:#64748b; font-size:11px; margin:2px 0;">{entry['plot']} | 重绘: {entry['strength']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+
+    if st.button("🗑️ 清空推演历史", key="clear_history"):
+        st.session_state['aigc_history'] = []
+        st.rerun()

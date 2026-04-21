@@ -33,6 +33,7 @@
         const plots_data = /*__PLOTS_DATA__*/null/*__END_PLOTS__*/;
         const poi_data = /*__POI_DATA__*/null/*__END_POI__*/;
         const traffic_data = /*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/;
+        const landuse_data = /*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/;
         // 🚀 接收 3D/2D 模式配置
         const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
 
@@ -58,10 +59,20 @@
             extruded: is_3d,
             wireframe: is_3d,
             getElevation: d => (d.properties.Floor || 1) * 3.5,
-            getFillColor: [173, 216, 230, 200],
-            getLineColor: [255, 255, 255, 120],
+            getFillColor: d => {
+                const s = d.properties.prop_style;
+                if (s === 'historical') return [153, 0, 255, 255];
+                if (s === 'park') return [0, 190, 0, 230];
+                return [173, 216, 230, 200];
+            },
+            getLineColor: d => {
+                const s = d.properties.prop_style;
+                if (s === 'historical') return [255, 255, 255, 255];
+                if (s === 'park') return [200, 255, 200, 200];
+                return [255, 255, 255, 120];
+            },
             lineWidthMinPixels: 1,
-            pickable: false,
+            pickable: true,
             transitions: {
                 getElevation: 500,
                 getFillColor: 500
@@ -87,6 +98,39 @@
                 getLineColor: [239, 68, 68, 150],
                 getLineWidth: 3,
                 pickable: false
+            }));
+        }
+
+        // 🧬 图层 2.5：规划用地底色 (EULUC / GB/T 50337-2018)
+        if (landuse_data) {
+            const LANDUSE_COLORS = {
+                0: [255, 255, 0, 160],       // R 居住用地 (亮黄)
+                1: [191, 0, 0, 160],         // C2 商务办公 (深红)
+                2: [255, 0, 0, 160],         // C1 商业服务 (大红)
+                3: [165, 82, 45, 160],       // M 工业用地 (棕色)
+                4: [190, 190, 190, 160],     // S/U 交通场站 (灰色)
+                5: [150, 150, 150, 160],     // S/U 机场设施 (深灰)
+                6: [255, 127, 127, 160],     // A1 行政办公 (浅红)
+                7: [255, 191, 255, 160],     // A3 教育科研 (粉紫)
+                8: [255, 127, 212, 160],     // A5 医疗卫生 (粉红)
+                9: [153, 0, 255, 160],       // A2 体育文化 (紫色)
+                10: [0, 190, 0, 160]         // G 公园绿地 (翠绿)
+            };
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'landuse-layer',
+                data: landuse_data,
+                stroked: true,
+                filled: true,
+                extruded: false,
+                getFillColor: d => LANDUSE_COLORS[d.properties.Class] || [80, 80, 80, 100],
+                getLineColor: d => {
+                    const c = LANDUSE_COLORS[d.properties.Class] || [80, 80, 80, 100];
+                    return [c[0], c[1], c[2], 200];
+                },
+                getLineWidth: 1,
+                lineWidthMinPixels: 1,
+                parameters: { depthTest: false },
+                pickable: true
             }));
         }
 
@@ -123,17 +167,21 @@
             }));
         }
 
-        // 🚦 图层 5：交通拥堵热力簇
+        // 🚦 图层 5：交通拥堵热力簇 (增加动画过渡)
         if (traffic_data && traffic_data.length > 0) {
             renderedLayers.push(new deck.ScatterplotLayer({
                 id: 'traffic-layer',
                 data: traffic_data,
                 getPosition: d => [d.Lng, d.Lat],
-                getFillColor: [239, 68, 68, 200],
-                getRadius: 12,
-                radiusMinPixels: 5,
-                radiusMaxPixels: 30,
-                pickable: true
+                getFillColor: [244, 63, 94, 230], // 玫瑰红 (Rose-500)
+                getRadius: 15,
+                radiusMinPixels: 6,
+                radiusMaxPixels: 50,
+                pickable: true,
+                transitions: {
+                    getRadius: 800,
+                    getFillColor: 800
+                }
             }));
         }
 
@@ -165,7 +213,7 @@
             }));
         }
 
-        // 🔬 图层 8：交通与活力聚合蜂窝
+        // 🔬 图层 8：交通与活力聚合蜂窝 (活力能量配色: 黄->橙->红)
         if (hex_payload && hex_payload.data && hex_payload.data.length > 0) {
             renderedLayers.push(new deck.HexagonLayer({
                 id: 'hex-layer',
@@ -175,14 +223,17 @@
                 elevationScale: hex_payload.elevationScale,
                 extruded: true,
                 colorRange: [
-                    [241, 238, 246, 200],
-                    [208, 209, 230, 200],
-                    [166, 189, 219, 200],
-                    [116, 169, 207, 200],
-                    [43, 140, 190, 200],
-                    [4, 90, 141, 200]
+                    [255, 255, 178], // 浅黄
+                    [254, 217, 118],
+                    [254, 178, 76],
+                    [253, 141, 60],
+                    [240, 59, 32],
+                    [189, 0, 38]     // 深红 (能量最高)
                 ],
-                pickable: true
+                pickable: true,
+                transitions: {
+                    elevationScale: 1000
+                }
             }));
         }
 
@@ -221,6 +272,39 @@
             layers: renderedLayers,
             getTooltip: ({object, layer}) => {
                 if (!object || !layer) return null;
+                
+                // 🏷️ 特殊逻辑：历史建筑增强提示
+                if (layer.id === 'building-layer' && object.properties.is_historical) {
+                    return {
+                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🏛️ 重点历史建筑</div>
+                               <b>${object.properties.hist_name}</b><br>
+                               <span style="font-size: 11px; opacity: 0.8;">名录批次: ${object.properties.hist_batch}</span>`
+                    };
+                }
+
+                // 🧬 用地规划提示
+                if (layer.id === 'landuse-layer') {
+                    const LANDUSE_NAMES = {
+                        0: '居住用地 (R)', 
+                        1: '商业办公用地 (C2)', 
+                        2: '商业服务业用地 (C1)',
+                        3: '工业用地 (M)', 
+                        4: '交通场站用地 (S)', 
+                        5: '机场设施用地 (S)',
+                        6: '行政办公用地 (A1)', 
+                        7: '教育科研用地 (A3)', 
+                        8: '医疗卫生用地 (A5)',
+                        9: '体育文化用地 (A2)', 
+                        10: '公园与绿地 (G)'
+                    };
+                    const cls = object.properties.Class;
+                    return {
+                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🧬 规划用地</div>
+                               <b>${LANDUSE_NAMES[cls] || '未知类型'}</b><br>
+                               <span style="font-size: 11px; opacity: 0.8;">EULUC Code: ${cls}</span>`
+                    };
+                }
+
                 const name = (object.properties ? (object.properties.Name || object.properties.name) : (object.Name || object.name));
                 
                 if (layer.id === 'poi-layer') {

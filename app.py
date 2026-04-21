@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 import json
 import os
 import socket
@@ -494,7 +494,10 @@ def render_project_map():
     with layer_cols[4]:
         show_traffic = st.checkbox("🚦 交通拥堵热点", value=False, key="map_traffic")
     with layer_cols[5]:
-        show_lighting = st.checkbox("☀️ 开启光照", value=is_3d_mode, key="map_lighting")
+        show_landuse = st.checkbox("🧬 规划用地底色", value=False, key="map_landuse")
+
+    # ☀️ 光照控制 (单独一行)
+    show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key="map_lighting")
 
     # 🛠️ 仿真时间控制
     sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key="map_sun_time")
@@ -518,6 +521,9 @@ def render_project_map():
             traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
         except: pass
 
+    # 🧬 用地数据层 (采用 URL 异步流模式加载，规避大文件注入导致的假死)
+    landuse_data_json = '"/app/static/landuse.geojson"' if show_landuse else "null"
+
     # 2. 读取纯粹的高性能 WebGL HTML 骨架
     try:
         with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
@@ -529,6 +535,7 @@ def render_project_map():
         html_template = html_template.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data_json)
         html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
         html_template = html_template.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
+        html_template = html_template.replace("/*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/", landuse_data_json)
         # 注入模式切换标志
         html_template = html_template.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d_mode else "false")
         # 注入光照显示与时间标志
