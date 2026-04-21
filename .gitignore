@@ -24,3 +24,6 @@ archive/
 .idea/
 .DS_Store
 Thumbs.db
+
+# 排除所有 PDF (防止 GitHub 大文件限制)
+*.pdf
