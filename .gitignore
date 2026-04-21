@@ -1,67 +1,26 @@
-# --- Project Environment ---
-venv/
-.venv/
+# Python 缓存
 __pycache__/
-**/__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-build/
-develop-eggs/
+*.py[cod]
+*$py.class
 dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
+build/
 *.egg-info/
-.installed.cfg
-*.egg
-.ipynb_checkpoints/
-**/.ipynb_checkpoints/
 
-# --- IDEs & OS ---
-.idea/
+# Streamlit 缓存与配置
+.streamlit/
+
+# 本地环境变量
+.env
+
+# 离线大数据 (由 static/geojson 替代)
+data/
+archive/
+
+# 日志
+*.log
+
+# IDE & 系统文件
 .vscode/
-.history/
+.idea/
 .DS_Store
 Thumbs.db
-desktop.ini
-
-# --- Data & Media (The Heavy Stuff) ---
-# Ignore large image datasets
-data/streetview/
-**/StreetViews/
-**/media/streetview/
-**/static/temp_images/
-
-# Ignore local temporary inventory/analysis files
-project_inventory.csv
-
-# Note: Core GeoJSON/JSON/CSV in data/ will BE INCLUDED by default 
-# unless specified above. This ensures the dashboard stays functional on GitHub.
-
-# --- Environment Configurations (Sensitive) ---
-.env
-*.env
-.env.local
-.env.production
-.env.development
-.env.test
-
-# --- Documents ---
-# Large thesis documents should be handled via LFS or external links
-docs/*.pdf
-docs/*.docx
-docs/*.xlsx
-
-# --- Temporary Files ---
-temp/
-*.log
-*.tmp

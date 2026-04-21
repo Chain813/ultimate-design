@@ -1,6 +1,7 @@
 import os
 import sys
 import importlib.util
+from pathlib import Path
 
 def check_package(package_name):
     spec = importlib.util.find_spec(package_name)
@@ -9,6 +10,7 @@ def check_package(package_name):
     return True
 
 def main():
+    project_root = Path(__file__).resolve().parents[1]
     print("="*50)
     print("  --- Project Runtime Diagnostics")
     print("="*50)
@@ -21,10 +23,10 @@ def main():
         print("[OK] Python version is compatible.")
 
     print(f"\n[2/3] Checking core dependencies...")
-    requirements_path = "requirements.txt"
+    requirements_path = project_root / "requirements.txt"
     missing = []
-    if os.path.exists(requirements_path):
-        with open(requirements_path, "r") as f:
+    if requirements_path.exists():
+        with requirements_path.open("r", encoding="utf-8") as f:
             for line in f:
                 pkg = line.split("==")[0].strip()
                 if not pkg or pkg.startswith("#"):
@@ -65,21 +67,21 @@ def main():
     print(f"\n[3/3] Checking critical data files...")
     critical_files = [
         "app.py",
-        "core_engine.py",
-        "ui_components.py",
-        "spider_engine.py",
-        "cv_semantic_engine.py",
-        "run_deeplabv3.py",
+        "src/engines/core_engine.py",
+        "src/ui/ui_components.py",
+        "src/engines/spider_engine.py",
+        "src/engines/cv_semantic_engine.py",
+        "tools/run_deeplabv3.py",
         "pages/1_数据底座与规划策略.py",
         "pages/2_数字孪生与全息诊断.py",
         "pages/3_AIGC设计推演.py",
         "pages/4_LLM博弈决策.py",
-        "utils/geo_transform.py",
+        "src/utils/geo_transform.py",
     ]
     
     missing_files = []
     for f in critical_files:
-        if not os.path.exists(f):
+        if not (project_root / f).exists():
             missing_files.append(f)
             
     if missing_files:

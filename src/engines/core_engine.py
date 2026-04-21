@@ -1,4 +1,4 @@
-﻿import pandas as pd
+import pandas as pd
 import numpy as np
 import os
 import math
@@ -13,6 +13,7 @@ from PIL import Image, ImageDraw
 import streamlit as st
 import jieba
 from src.utils.geo_transform import bd09_to_wgs84
+from src.config import resolve_path
 
 # ==========================================
 # ⚙️ 配置文件及本地 RAG 知识库装载器
@@ -20,7 +21,7 @@ from src.utils.geo_transform import bd09_to_wgs84
 @st.cache_resource
 def load_global_config():
     try:
-        with open("config.yaml", "r", encoding="utf-8") as f:
+        with resolve_path("config.yaml").open("r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except Exception:
         return {}
@@ -30,7 +31,7 @@ def load_rag_knowledge():
     config = load_global_config()
     rag_path = config.get("data", {}).get("rag_knowledge_path", "data/rag_knowledge.json")
     try:
-        with open(rag_path, "r", encoding="utf-8") as f:
+        with resolve_path(rag_path).open("r", encoding="utf-8") as f:
             return json.load(f)
     except Exception:
         return {}
@@ -415,3 +416,141 @@ def call_llm_engine_stream(prompt, system_prompt="你是一位专业的城市规
             yield f"LLM 引擎异常: {str(e)}"
 
     return _stream_gen()
+
+
+# ==========================================
+# 📍 模块 6：地块级诊断引擎 (Phase 2 新增)
+# ==========================================
+@st.cache_data
+def get_plot_diagnostics():
+    """
+    对 Key_Plots_District.json 中的每个重点地块进行多维诊断。
+    返回 list[dict]，每个 dict 包含: name, area_ha, gvi_mean, svf_mean,
+    enclosure_mean, clutter_mean, poi_count, sentiment_mean, mpi_score
+    """
+    from src.config import SHP_FILES, DATA_FILES
+
+    plots_path = SHP_FILES["plots"]
+    if not plots_path.exists():
+        return []
+
+    with plots_path.open("r", encoding="utf-8") as f:
+        geo = json.load(f)
+
+    # 加载辅助数据
+    try:
+        df_poi = pd.read_csv(str(DATA_FILES["poi"]), encoding="utf-8-sig")
+    except Exception:
+        df_poi = pd.DataFrame()
+
+    try:
+        df_pts = pd.read_excel(str(DATA_FILES["points"]))
+        df_gvi = pd.read_csv(str(DATA_FILES["gvi"]))
+        if "Folder" in df_gvi.columns:
+            df_gvi["ID"] = df_gvi["Folder"].str.replace("Point_", "").astype(int)
+            df_gvi = df_gvi.groupby("ID").mean(numeric_only=True).reset_index()
+        df_spatial = pd.merge(df_pts, df_gvi, on="ID", how="inner")
+    except Exception:
+        df_spatial = pd.DataFrame()
+
+    try:
+        df_nlp = pd.read_csv(str(DATA_FILES["nlp"]), encoding="utf-8-sig")
+    except Exception:
+        df_nlp = pd.DataFrame()
+
+    results = []
+    for feat in geo.get("features", []):
+        props = feat.get("properties", {})
+        name = props.get("name", f"地块_{props.get('OBJECTID', '?')}")
+        area_sqm = props.get("Shape_Area", 0)
+        coords = feat["geometry"]["coordinates"][0]
+
+        lngs = [c[0] for c in coords]
+        lats = [c[1] for c in coords]
+        bbox = (min(lngs), max(lngs), min(lats), max(lats))
+
+        # POI 覆盖计数
+        poi_count = 0
+        if not df_poi.empty and "Lng" in df_poi.columns:
+            in_bbox = df_poi[
+                (df_poi["Lng"] >= bbox[0]) & (df_poi["Lng"] <= bbox[1]) &
+                (df_poi["Lat"] >= bbox[2]) & (df_poi["Lat"] <= bbox[3])
+            ]
+            poi_count = len(in_bbox)
+
+        # GVI/SVF/Enclosure/Clutter 均值
+        gvi_mean = svf_mean = enc_mean = clu_mean = 0.0
+        if not df_spatial.empty and "Lng" in df_spatial.columns:
+            in_bbox_sp = df_spatial[
+                (df_spatial["Lng"] >= bbox[0]) & (df_spatial["Lng"] <= bbox[1]) &
+                (df_spatial["Lat"] >= bbox[2]) & (df_spatial["Lat"] <= bbox[3])
+            ]
+            if not in_bbox_sp.empty:
+                gvi_mean = round(in_bbox_sp["GVI"].mean(), 2) if "GVI" in in_bbox_sp.columns else 0
+                svf_mean = round(in_bbox_sp["SVF"].mean(), 2) if "SVF" in in_bbox_sp.columns else 0
+                enc_mean = round(in_bbox_sp["Enclosure"].mean(), 2) if "Enclosure" in in_bbox_sp.columns else 0
+                clu_mean = round(in_bbox_sp["Clutter"].mean(), 2) if "Clutter" in in_bbox_sp.columns else 0
+
+        # 情感均值 (简化：使用整体得分)
+        sentiment_mean = 0.0
+        if not df_nlp.empty and "Score" in df_nlp.columns:
+            sentiment_mean = round(df_nlp["Score"].mean(), 3)
+
+        # MPI 简化计算 (默认权重 40/30/30)
+        s_i = min(1.0, area_sqm / 150000)
+        d_i = min(1.0, poi_count / 20) if poi_count > 0 else 0.3
+        e_i = gvi_mean / 100.0 if gvi_mean > 0 else 0.3
+        mpi = (0.4 * s_i + 0.3 * d_i + 0.3 * (1 - e_i)) / 1.0 * 100
+
+        results.append({
+            "name": name,
+            "area_ha": round(area_sqm / 10000, 2),
+            "gvi_mean": gvi_mean,
+            "svf_mean": svf_mean,
+            "enclosure_mean": enc_mean,
+            "clutter_mean": clu_mean,
+            "poi_count": poi_count,
+            "sentiment_mean": sentiment_mean,
+            "mpi_score": round(mpi, 1),
+        })
+
+    return results
+
+
+# ==========================================
+# 📜 模块 7：政策合规矩阵生成器 (Phase 4 新增)
+# ==========================================
+def generate_policy_matrix(proposal: str) -> list:
+    """
+    基于 RAG 知识库，检索与提案最相关的政策条文，
+    返回 list[dict]，每个 dict: {clause, source, relevance_score, compliance_note}
+    """
+    rag_db = load_rag_knowledge()
+    if not rag_db:
+        return []
+
+    words = [w for w in jieba.cut(proposal) if len(w) > 1]
+    scored_chunks = []
+    for cid, p_info in rag_db.items():
+        content = p_info["content"]
+        score = sum(1 for w in words if w in content)
+        if score > 0:
+            scored_chunks.append({
+                "clause": content[:200],
+                "source": p_info["source"],
+                "relevance_score": score,
+            })
+
+    scored_chunks.sort(key=lambda x: x["relevance_score"], reverse=True)
+    top_clauses = scored_chunks[:8]
+
+    # 添加合规性初步标注
+    for clause in top_clauses:
+        if any(kw in clause["clause"] for kw in ["禁止", "不得", "严格控制"]):
+            clause["compliance_note"] = "⚠️ 约束性条款 — 需核查合规"
+        elif any(kw in clause["clause"] for kw in ["鼓励", "支持"]):
+            clause["compliance_note"] = "✅ 支持性条款 — 可引用"
+        else:
+            clause["compliance_note"] = "📋 参考性条款"
+
+    return top_clauses

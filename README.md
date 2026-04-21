@@ -75,6 +75,29 @@ playwright install chromium
 streamlit run app.py
 ```
 
+### 4. 环境变量
+请先复制 `.env.example` 为 `.env`，并填写本地密钥（不要提交 `.env`）。
+
+### 5. 贡献流程（开发 -> 检查 -> 提交）
+```bash
+# 1) 安装依赖
+pip install -r requirements.txt
+
+# 2) 启用本地提交前检查（仅需一次）
+pre-commit install
+
+# 3) 开发并本地验证
+ruff check .
+pytest -q
+python tools/startup_smoke.py
+
+# 4) 提交（会自动触发 pre-commit）
+git add .
+git commit -m "your message"
+```
+
+CI 会在远端并行执行 `lint`、`test`、`smoke` 三项检查，请确保本地先通过。
+
 ---
 
 ## ⚠️ 开发者注意事项
@@ -86,6 +109,12 @@ streamlit run app.py
 > [!TIP]
 > **3D 地图 Token**: 
 > 3D 模型渲染依赖 Mapbox/PyDeck 基础样式，请确保本地网络能够访问相应的基础底图服务。
+
+> [!NOTE]
+> 更完整的开发规范、数据目录约定、模型服务依赖与排障流程见 `docs/DEVELOPER_GUIDE.md`。
+> 项目结构优化说明见 `docs/PROJECT_STRUCTURE.md`。
+> 逐公式逐流程的详细技术说明见 `docs/PROJECT_DETAILED_SPEC.md`。
+> 论文附录版（符号表、参数表、复现实验、失败案例）见 `docs/PROJECT_APPENDIX.md`。
 
 ---
 
