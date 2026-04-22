@@ -1,3 +1,12 @@
+import sys
+import os
+from pathlib import Path
+
+# Add project root to sys.path
+root = Path(__file__).resolve().parents[1]
+if str(root) not in sys.path:
+    sys.path.append(str(root))
+
 import src.engines.core_engine as core_engine
 
 

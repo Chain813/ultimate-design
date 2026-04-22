@@ -15,7 +15,7 @@ def sync_building_landuse():
 
     # 1. Load data
     print("  Loading full Jilin landuse (97MB)...")
-    landuse = gpd.read_file("data/shp/landuse_jilin.geojson")
+    landuse = gpd.read_file("static/landuse.geojson")
     print(f"  Landuse polygons: {len(landuse)}")
 
     print("  Loading buildings...")

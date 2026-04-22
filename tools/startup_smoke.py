@@ -8,9 +8,10 @@ import sys
 TARGETS = [
     "app.py",
     "pages/1_数据底座与规划策略.py",
-    "pages/2_数字孪生与全息诊断.py",
+    "pages/2_现状空间全景诊断.py",
     "pages/3_AIGC设计推演.py",
     "pages/4_LLM博弈决策.py",
+    "pages/5_更新设计成果展示.py",
 ]
 
 

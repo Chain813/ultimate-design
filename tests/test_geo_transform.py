@@ -1,3 +1,12 @@
+import sys
+import os
+from pathlib import Path
+
+# Add project root to sys.path
+root = Path(__file__).resolve().parents[1]
+if str(root) not in sys.path:
+    sys.path.append(str(root))
+
 from src.utils.geo_transform import bd09_to_gcj02, bd09_to_wgs84
 
 
