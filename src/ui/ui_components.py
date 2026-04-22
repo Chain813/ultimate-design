@@ -23,12 +23,13 @@ def render_top_nav():
     """下一代全景悬停导航栏 (Multi-level Hover Dropdown)"""
     load_global_css()
     
-    # 🧪 4 大实验室导航架构
+    # 🧪 5 大核心实验室导航架构
     nav_data = [
-        {"lab": "01 数据策略", "path": "pages/1_数据底座与规划策略.py", "subs": ["MPI 资产评估", "规划策略萃取", "底座文件管理"]},
-        {"lab": "02 全息诊断", "path": "pages/2_数字孪生与全息诊断.py", "subs": ["3D 区域全景", "交通潮汐诊断", "社会情感评价"]},
-        {"lab": "03 方案推演", "path": "pages/3_AIGC设计推演.py", "subs": ["AIGC 影像生成"]},
-        {"lab": "04 决策博弈", "path": "pages/4_LLM博弈决策.py", "subs": ["LLM 多方协商"]},
+        {"lab": "01 资产测度", "path": "pages/1_数据底座与规划策略.py", "subs": ["MPI 更新潜力测度", "策略语义与红线", "多源异构底座"]},
+        {"lab": "02 全息诊断", "path": "pages/2_现状空间全景诊断.py", "subs": ["3D 现状全息底座", "地块级诊断面板"]},
+        {"lab": "03 方案模拟", "path": "pages/3_AIGC设计推演.py", "subs": ["AIGC 视觉图景衍生", "本地算力调度"]},
+        {"lab": "04 博弈决策", "path": "pages/4_LLM博弈决策.py", "subs": ["多主体利益协商", "动态共识雷达"]},
+        {"lab": "05 成果展示", "path": "pages/5_更新设计成果展示.py", "subs": ["3D 更新设计全景", "规划文本成果", "重点效果展示"]},
     ]
 
     # 💎 CSS3 悬停交互引擎
@@ -209,7 +210,7 @@ def render_top_nav():
         name = os.path.basename(p).replace(".py", "")
         if "_" in name and name.split("_")[0].isdigit():
             name = name.split("_", 1)[1]
-        return urllib.parse.quote(name)
+        return name
 
     nav_html = '<div class="nav-bar"><div class="nav-container">'
     nav_html += '<a href="/" target="_self" class="nav-item" style="text-decoration: none !important; color: rgba(245, 245, 247, 0.95) !important; font-weight: 900 !important; font-size: 24px !important;">主页</a>'

@@ -24,3 +24,19 @@ SHP_FILES = {
     "plots": SHP_DIR / "Key_Plots_District.json",
     "buildings": SHP_DIR / "Building_Footprints.geojson",
 }
+
+# ==========================================
+# 🌐 Web Static Routing Configuration
+# ==========================================
+# WARNING: When Streamlit is run with --server.enableStaticServing=true,
+# it HARDCODES the internal web endpoint for the local 'static/' folder to '/app/static/'.
+# Please DO NOT interpret '/app/' as a Docker-specific path and attempt to remove it.
+# Deleting '/app/' will cause all frontend 3D rendering to fail with 404 errors!
+STATIC_URL_PREFIX = "/app/static/"
+
+def get_static_url(filename: str) -> str:
+    """
+    Safely generates the internal URL routing path for a static asset.
+    Example: get_static_url('buildings.geojson') -> '/app/static/buildings.geojson'
+    """
+    return f"{STATIC_URL_PREFIX}{filename}"

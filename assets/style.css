@@ -395,3 +395,72 @@ hr {
     max-width: 100% !important;
     padding: 0.5rem 2rem !important;
 }
+
+/* ==========================================
+   🛡️ GLOBAL VIEWPORT SAFETY BUFFER
+   防止页面底部内容被浏览器状态栏遮挡
+   ========================================== */
+.block-container::after {
+    content: '';
+    display: block;
+    height: 15vh;
+    min-height: 120px;
+    pointer-events: none;
+}
+
+/* 底部梯度遮罩：优雅的视口渐隐 */
+.stApp::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to bottom, transparent, rgba(13, 19, 33, 0.95));
+    pointer-events: none;
+    z-index: 998;
+}
+
+/* ==========================================
+   ⚡ DAEMON CONTROL PANEL STYLES
+   算力指挥中心控制面板
+   ========================================== */
+.daemon-panel {
+    background: rgba(10, 15, 30, 0.6);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+.daemon-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #a5b4fc;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.daemon-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #cbd5e1;
+}
+.dot-online {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #4ade80; box-shadow: 0 0 12px #4ade80;
+}
+.dot-offline {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: #ef4444; box-shadow: 0 0 12px #ef4444;
+    animation: pulse-red 1.5s infinite;
+}
+@keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
