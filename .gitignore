@@ -18,8 +18,14 @@ data/streetview/
 data/raw_images/
 archive/
 
-# 日志
+# 日志与临时元数据
 *.log
+data/rag_knowledge.json
+config_daemon.json
+
+# 内部文档与代理运行痕迹
+docs/
+.agents/
 
 # IDE & 系统文件
 .vscode/
@@ -29,6 +35,3 @@ Thumbs.db
 
 # 排除所有 PDF (防止 GitHub 大文件限制)
 *.pdf
-
-# 排除代理运行产生的中间文件
-.agents/

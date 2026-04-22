@@ -1,6 +1,0 @@
-{
-  "ollama_model": "gemma4:e2b-it-q4_K_M",
-  "sd_webui_path": "E:\\SDstablediffusion\\sd-webui-aki\\sd-webui-aki-v4.11.1-cu128\\sd-webui-aki-v4.11.1-cu128",
-  "sd_launch_file": "webui-user.bat",
-  "sd_extra_args": "--api --xformers"
-}
