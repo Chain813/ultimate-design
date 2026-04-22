@@ -51,39 +51,108 @@
         // ==========================================
         // 🏙️ 建筑层配置 (支持内联 JSON 和 URL 异步流加载双模式)
         // ==========================================
+        // 🚀 4D Morphing & X-Ray Flags
+        const IS_XRAY = /*__IS_XRAY__*/false/*__END_IS_XRAY__*/;
+        const IS_DEMO = /*__IS_DEMO__*/false/*__END_IS_DEMO__*/;
+
+        // 纯函数缓存计算：在 accessor 中实时打标，保证无论谁先调用，结果绝对一致
+        function ensureBuildingState(props) {
+            if (props._baseHeight !== undefined) return; // 已计算过，复用缓存
+
+            let baseHeight = 1;
+            if (props.floor || props.Floor || props.levels || props['building:levels']) {
+                baseHeight = parseFloat(props.floor || props.Floor || props.levels || props['building:levels']) * 3.5;
+            } else if (props.height || props.Height) {
+                baseHeight = parseFloat(props.height || props.Height);
+            }
+            props._baseHeight = baseHeight;
+
+            // 仅对研究范围内的建筑（in_scope）分配拆改留动作，范围外作为上下文白膜保留
+            if (!props.action && props.in_scope) {
+                if (props.prop_style === 'historical' || baseHeight >= 18) props.action = 'retain';
+                else if (props.prop_style === 'park') props.action = 'retain_park'; // 保护绿地
+                else if (baseHeight <= 7) props.action = 'demolish';
+                else props.action = 'renovate';
+            }
+        }
+
         const BUILDING_LAYER_CONFIG = {
             id: 'building-layer',
-            opacity: 0.6,
+            opacity: IS_XRAY ? 0.2 : 0.85,
             stroked: true,
-            filled: true,
+            filled: !IS_XRAY,
             extruded: is_3d,
-            wireframe: is_3d,
-            getElevation: d => (d.properties.Floor || 1) * 3.5,
+            wireframe: true,
+            getElevation: d => {
+                const props = d.properties || {};
+                ensureBuildingState(props);
+                // 4D Morphing: 塌缩拆除建筑到 0.2m 防止 Z-fighting，同时保留视觉反馈
+                if (IS_DEMO && props.action === 'demolish') {
+                    return 0.2; 
+                }
+                return props._baseHeight;
+            },
             getFillColor: d => {
-                const s = d.properties.prop_style;
+                const props = d.properties || {};
+                ensureBuildingState(props);
+                const s = props.prop_style;
+                if (IS_DEMO) {
+                    if (props.action === 'demolish') return [244, 63, 94, IS_XRAY ? 40 : 230]; // 拆: Rose
+                    if (props.action === 'renovate') return [250, 204, 21, IS_XRAY ? 40 : 230]; // 改: Yellow
+                    if (props.action === 'retain' || s === 'historical') return [168, 85, 247, IS_XRAY ? 40 : 230]; // 留: Purple
+                    if (props.action === 'retain_park' || s === 'park') return [0, 190, 0, IS_XRAY ? 40 : 230]; // 保护绿地: Green
+                }
                 if (s === 'historical') return [153, 0, 255, 255];
                 if (s === 'park') return [0, 190, 0, 230];
-                return [173, 216, 230, 200];
+                return [173, 216, 230, IS_XRAY ? 40 : 200];
             },
             getLineColor: d => {
-                const s = d.properties.prop_style;
+                const props = d.properties || {};
+                ensureBuildingState(props);
+                if (IS_XRAY) {
+                    if (IS_DEMO && props.action === 'demolish') return [244, 63, 94, 255];
+                    if (IS_DEMO && props.action === 'renovate') return [250, 204, 21, 255];
+                    if (IS_DEMO && (props.action === 'retain' || props.prop_style === 'historical')) return [168, 85, 247, 255];
+                    if (IS_DEMO && (props.action === 'retain_park' || props.prop_style === 'park')) return [0, 190, 0, 255];
+                    return [51, 65, 85, 200]; // Dark grey outline for normal buildings in X-Ray
+                }
+                const s = props.prop_style;
                 if (s === 'historical') return [255, 255, 255, 255];
                 if (s === 'park') return [200, 255, 200, 200];
                 return [255, 255, 255, 120];
             },
-            lineWidthMinPixels: 1,
+            lineWidthMinPixels: IS_XRAY ? 1.5 : 1,
             pickable: true,
             transitions: {
-                getElevation: 500,
-                getFillColor: 500
+                getElevation: { duration: 2500, easing: t => t*t*(3 - 2*t) }, // Smooth 2.5s morphing
+                getFillColor: { duration: 1500 },
+                getLineColor: { duration: 1500 }
             }
         };
 
-        // 内联 JSON 模式：直接加入渲染队列
+        // 模式 1：内联 JSON 模式 (直接加入渲染队列)
         if (b_data && typeof b_data === 'object') {
             renderedLayers.push(new deck.GeoJsonLayer({
                 ...BUILDING_LAYER_CONFIG,
                 data: b_data
+            }));
+        }
+        // 模式 2：URL 异步流加载模式 (利用 Deck.GL 原生异步能力)
+        else if (b_data && typeof b_data === 'string') {
+            let fetchUrl = b_data;
+            try {
+                const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                if (b_data.startsWith('/') && !b_data.startsWith('//')) {
+                    fetchUrl = parentOrigin + b_data;
+                }
+            } catch(e) {}
+            
+            renderedLayers.push(new deck.GeoJsonLayer({
+                ...BUILDING_LAYER_CONFIG,
+                id: 'building-layer-async',
+                data: fetchUrl,
+                onDataLoad: (data) => console.log(`[Building] Loaded ${data.features?.length} features from ${fetchUrl}`),
+                onError: (err) => console.error(`[Building] Load Failed: ${err.message}`)
             }));
         }
 
@@ -116,9 +185,17 @@
                 9: [153, 0, 255, 160],       // A2 体育文化 (紫色)
                 10: [0, 190, 0, 160]         // G 公园绿地 (翠绿)
             };
+            let luUrl = landuse_data;
+            if (typeof landuse_data === 'string' && landuse_data.startsWith('/') && !landuse_data.startsWith('//')) {
+                try {
+                    const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                    luUrl = parentOrigin + landuse_data;
+                } catch(e) {}
+            }
+
             renderedLayers.push(new deck.GeoJsonLayer({
                 id: 'landuse-layer',
-                data: landuse_data,
+                data: luUrl,
                 stroked: true,
                 filled: true,
                 extruded: false,
@@ -190,14 +267,25 @@
             renderedLayers.push(new deck.ColumnLayer({
                 id: 'col-layer',
                 data: col_payload.data,
-                diskResolution: 12,
+                diskResolution: 64,  // 圆润的柱体
                 radius: col_payload.radius,
+                coverage: 0.95,      // 轻微内收边距增加质感
                 extruded: true,
                 pickable: true,
                 elevationScale: col_payload.elevationScale,
                 getPosition: d => [d.Lng, d.Lat],
-                getFillColor: d => d.Dynamic_Color || [99, 102, 241, 200],
-                getElevation: d => d[col_payload.metric] || 0
+                getFillColor: d => d.Dynamic_Color || [99, 102, 241, 230],
+                getElevation: d => d[col_payload.metric] || 0,
+                material: {
+                    ambient: 0.5,
+                    diffuse: 0.8,
+                    shininess: 32,
+                    specularColor: [255, 255, 255]
+                },
+                transitions: {
+                    getElevation: 600,
+                    getFillColor: 600
+                }
             }));
         }
 
@@ -233,6 +321,24 @@
                 pickable: true,
                 transitions: {
                     elevationScale: 1000
+                }
+            }));
+        }
+
+        // 🔬 图层 8：地下基础设施 X 光管网 (Subsurface X-Ray)
+        const pipe_payload = /*__PIPE_PAYLOAD__*/null/*__END_PIPE__*/;
+        if (IS_XRAY && pipe_payload && pipe_payload.length > 0) {
+            renderedLayers.push(new deck.PathLayer({
+                id: 'underground-pipes-layer',
+                data: pipe_payload,
+                widthScale: 2,
+                widthMinPixels: 2,
+                getPath: d => d.path,
+                getColor: d => d.type === 'water' ? [56, 189, 248, 255] : [250, 204, 21, 255], // Blue for water, Yellow for power
+                getWidth: d => d.type === 'water' ? 3 : 2,
+                pickable: true,
+                parameters: {
+                    depthTest: false // Ensure it glows through the ground
                 }
             }));
         }
@@ -329,57 +435,10 @@
         });
 
         // ==========================================
-        // 🌐 URL 异步流式加载建筑层 (大场景分流渲染核心)
+        // 🌐 建筑层异步状态监控 (仅保留日志，渲染由上层 GeoJsonLayer 托管)
         // ==========================================
         if (b_data && typeof b_data === 'string') {
-            let fetchUrl = b_data;
-            let logCtx = '[Building Loader]';
-            
-            // 尝试通过 referrer 或 window 对象解析父级 origin
-            try {
-                const parentOrigin = new URL(document.referrer || window.location.href).origin;
-                // 如果 b_data 是以 / 开头的路径，且不包含 origin，则动态补全
-                if (b_data.startsWith('/') && !b_data.startsWith('//')) {
-                    fetchUrl = parentOrigin + b_data;
-                    console.log(`${logCtx} 解析到父级域名: ${parentOrigin}, 拼接路径: ${fetchUrl}`);
-                }
-            } catch(e) {
-                console.warn(`${logCtx} URL 解析异常，将尝试原始路径:`, b_data);
-            }
-
-            console.log(`${logCtx} 🚀 开始流式加载建筑轮廓数据:`, fetchUrl);
-            
-            fetch(fetchUrl)
-                .then(response => {
-                    console.log(`${logCtx} 📡 网络响应状态: ${response.status} ${response.statusText}`);
-                    if (!response.ok) {
-                        throw new Error(`无法获取建筑数据: ${response.status} ${response.statusText} (路径: ${fetchUrl})`);
-                    }
-                    return response.json();
-                })
-                .then(geojson => {
-                    console.log(`${logCtx} 📦 数据解析成功, 正在挂载图层...`);
-                    const buildingLayer = new deck.GeoJsonLayer({
-                        ...BUILDING_LAYER_CONFIG,
-                        data: geojson
-                    });
-                    
-                    // 将建筑层插入到图层栈底部（其他高优先级层叠加在上方）
-                    deckInstance.setProps({
-                        layers: [buildingLayer, ...deckInstance.props.layers]
-                    });
-                    console.log(`${logCtx} ✅ 建筑轮廓加载完毕，共渲染 ${geojson.features?.length || 0} 栋建筑`);
-                    
-                    // 发送加载成功消息给父页面（可选）
-                    window.parent.postMessage({ type: 'BUILDING_LOADED', count: geojson.features?.length }, '*');
-                })
-                .catch(err => {
-                    console.error(`${logCtx} ❌ 建筑加载失败:`, err.message);
-                    console.error(`${logCtx} 💡 排查建议: 
-1. 检查浏览器 F12 网络面板中 ${fetchUrl} 是否 404
-2. 确认 .streamlit/config.toml 中 enableStaticServing = true 且配置已生效
-3. 若为本地运行，请尝试直接访问 http://localhost:<port>/static/buildings.geojson`);
-                });
+             console.log(`[System] Building layer will be loaded asynchronously from: ${b_data}`);
         }
     </script>
 
@@ -401,5 +460,84 @@
             </div>
         </div>
     </div>
+
+    <!-- 🗺️ 动态图例面板 -->
+    <div id="map-legend" style="position: absolute; bottom: 35px; right: 15px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 15px; color: rgba(248, 250, 252, 0.9); font-family: 'Inter', sans-serif; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; min-width: 180px; max-height: calc(100vh - 150px); overflow-y: auto;">
+        <div style="margin-bottom: 12px; font-weight: 800; color: #a5b4fc; font-size: 13.5px; letter-spacing: 0.05em; border-bottom: 1px solid rgba(99,102,241,0.3); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>📋</span> 空间资产图例 (Legend)
+        </div>
+        <div id="legend-content" style="display: flex; flex-direction: column; gap: 9px;">
+            <!-- 由 JS 动态注入 -->
+        </div>
+    </div>
+
+    <script>
+        // === 图例生成逻辑 ===
+        const lc = document.getElementById("legend-content");
+        let lHtml = "";
+        const addItem = (cssBg, text) => {
+            lHtml += `<div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 14px; height: 14px; border-radius: 3px; background: ${cssBg}; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0;"></div>
+                <span style="font-size: 11.5px; color: rgba(248, 250, 252, 0.95); white-space: nowrap;">${text}</span>
+            </div>`;
+        };
+        const addGradientItem = (gradient, text, minText="低", maxText="高") => {
+            lHtml += `<div style="margin-top: 4px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-size: 11.5px; color: rgba(248, 250, 252, 0.95);">${text}</span>
+                <div style="height: 10px; width: 100%; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: ${gradient};"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: rgba(148, 163, 184, 0.8); line-height: 1;">
+                    <span>${minText}</span><span>${maxText}</span>
+                </div>
+            </div>`;
+        };
+
+        if (bound_data) addItem("rgba(239, 68, 68, 0.25)", "空间研究红线边界");
+        if (plots_data) addItem("rgba(220, 38, 38, 0.5)", "重点微更新锚点地块");
+        
+        if (b_data) {
+            if (IS_DEMO) {
+                addItem("rgba(139, 92, 246, 0.9)", "修缮保护 (保留锚定)");
+                addItem("rgba(250, 204, 21, 0.8)", "功能置换 (综合改造)");
+                addItem("rgba(239, 68, 68, 0.9)", "拆除腾退 (塌缩消隐)");
+            } else {
+                addItem("rgba(153, 0, 255, 1)", "受保护历史风貌建筑");
+                addItem("rgba(173, 216, 230, 0.78)", "现状一般建筑肌理");
+            }
+        }
+        
+        if (IS_XRAY) {
+            addItem("rgba(56, 189, 248, 1)", "地下给排水干管 (Water/Sewer)");
+            addItem("rgba(250, 204, 21, 1)", "地下电力通讯线网 (Power/Comm)");
+        }
+
+        if (poi_data && poi_data.length > 0) addItem("rgba(129, 140, 248, 0.78)", "公共服务与商业设施散点");
+        if (traffic_data && traffic_data.length > 0) addItem("rgba(244, 63, 94, 0.9)", "职住交通与活跃能量分布");
+        if (hex_payload) addItem("rgba(245, 158, 11, 0.9)", "多模态能量网格聚合簇");
+        
+        // 使用渐变色带替代单点颜色
+        if (col_payload) addGradientItem("linear-gradient(90deg, rgb(6,182,212), rgb(139,92,246), rgb(244,63,94))", "空间截面量化测度数值分布 (3D柱体)");
+        if (heat_payload) addGradientItem("linear-gradient(90deg, rgba(59,130,246,0.6), rgba(16,185,129,0.8), rgba(239,68,68,1))", "社会感知诉求能量场 (2D热力)");
+        
+        if (landuse_data) {
+            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #818cf8; font-size: 11px; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 4px;">法定用地性质配置 (GB/T 50337-2018)</div>`;
+            addItem("rgba(255, 255, 0, 0.62)", "R 城乡居住用地");
+            addItem("rgba(191, 0, 0, 0.62)", "C2 商务办公用地");
+            addItem("rgba(255, 0, 0, 0.62)", "C1 商业服务业用地");
+            addItem("rgba(165, 82, 45, 0.62)", "M 城市工业用地");
+            addItem("rgba(190, 190, 190, 0.62)", "S/U 交通场站用地");
+            addItem("rgba(150, 150, 150, 0.62)", "S/U 机场设施用地");
+            addItem("rgba(255, 127, 127, 0.62)", "A1 行政办公用地");
+            addItem("rgba(255, 191, 255, 0.62)", "A3 教育科研用地");
+            addItem("rgba(255, 127, 212, 0.62)", "A5 医疗卫生用地");
+            addItem("rgba(153, 0, 255, 0.62)", "A2 体育文化用地");
+            addItem("rgba(0, 190, 0, 0.62)", "G 城市公园与生态绿地");
+        }
+
+        if (lHtml === "") {
+            document.getElementById("map-legend").style.display = "none";
+        } else {
+            lc.innerHTML = lHtml;
+        }
+    </script>
 </body>
 </html>

@@ -1,79 +1,56 @@
-# 项目结构优化说明
+# 系统工程架构与模块职能说明
 
-## 1. 目标
+> **文档定位**：阐述长春铁北微更新循证决策系统的工程架构设计，重点说明各层级间的逻辑耦合度、数据流向标准及系统可扩展性规范。
 
-本轮结构优化聚焦“在不破坏现有功能的前提下，提升可读性与可维护性”：
+---
 
-- 统一路径管理，避免页面和脚本散落硬编码路径
-- 收敛导入链路，减少运行目录依赖（cwd 依赖）
-- 明确工程分层，降低后续重构成本
+## 1. 架构设计原则
 
-## 2. 当前推荐目录分层
+本系统的工程优化遵循“高内聚、低耦合”的模块化准则，旨在支撑多源异构数据在不确定环境下的稳定调度：
+
+- **统一路径映射**：建立全局路径抽象层，消除逻辑层与物理存储间的硬编码依赖。
+- **功能分层分发**：确立“配置-引擎-视图”的三层架构，保障算法组件的学术复现性。
+- **环境无关隔离**：通过动态路径解析，确保系统在不同算力环境（Local/Server）下的快速迁移。
+
+---
+
+## 2. 规范化目录拓扑架构
 
 ```text
 ultimateDESIGN/
-├── app.py                         # Streamlit 主页入口
-├── pages/                         # 业务页面
-├── src/
-│   ├── config/                    # 配置与路径抽象层
-│   │   ├── runtime.py             # project_root/resolve_path
-│   │   ├── paths.py               # 统一数据/资源路径常量
+├── app.py                         # 系统控制总台 (逻辑调度与全景视图)
+├── pages/                         # 业务功能模块群 (按更新研究阶段划分)
+├── src/                           # 核心算力引擎包
+│   ├── config/                    # 环境与路径配置抽象层
+│   │   ├── runtime.py             # 运行时环境自检逻辑
+│   │   ├── paths.py               # 统一底座资产/资源路径映射
 │   │   └── __init__.py
-│   ├── engines/                   # 业务引擎（NLP/CV/LLM/AIGC/Spider）
-│   ├── ui/                        # UI 组件层
-│   └── utils/                     # 通用工具层
-├── tools/                         # 运维与离线任务脚本
-├── tests/                         # pytest 测试
-├── docs/                          # 项目文档
-└── .github/workflows/             # CI 流水线
+│   ├── engines/                   # 空间测度引擎 (CV/LLM/NLP/AIGC/RAG)
+│   ├── ui/                        # 统一交互层与 CSS 全局样式定义
+│   └── utils/                     # 投影转换、地理脱敏等通用数学组件
+├── tools/                         # 数据清洗与质量冒烟测试工具集
+├── tests/                         # 基于逻辑断言的功能正确性验证
+├── docs/                          # 技术规格书、学术报告与政策汇编
+└── .github/workflows/             # 自动化集成与工程审计流水线
 ```
 
-## 3. 本次已落地的结构改造
+---
 
-### 3.1 新增统一路径模块
+## 3. 已落地的架构核心优化
 
-- 新增 `src/config/paths.py`
-  - `ROOT_DIR`, `DATA_DIR`, `SHP_DIR`, `ASSETS_DIR`, `STATIC_DIR`
-  - `DATA_FILES`（POI/Traffic/NLP/GVI/Points/RAG）
-  - `SHP_FILES`（Boundary/Plots/Buildings）
-- `src/config/__init__.py` 统一导出，供页面/引擎直接引用
+### 3.1 资产路径的中心化调度 (src/config/paths.py)
+系统已实现对 `Boundary_Scope.geojson`、`Key_Plots_District.json` 等关键物理红线的中心化管理。页面逻辑层不再直接接触存储地址，而是通过 `SHP_FILES` 等高阶对象进行引用，极大提升了多规合一数据的维护效率。
 
-### 3.2 页面路径硬编码收敛
+### 3.2 业务计算与界面渲染的解耦 (src/engines/)
+所有涉及 CV 语义分割计算（绿视率评价）、NLP 情感特征提取以及 AIGC 图景衍生生成的核心逻辑，均已下沉至 `src/engines/` 独立的底层类中。这种分层确保了即便调整了 Streamlit 前端交互展示，背后的学术测度逻辑依然保持原子性与一致性。
 
-- `pages/1_数据底座与规划策略.py`
-  - 地块 JSON 读取切换为 `SHP_FILES["plots"]`
-  - 物理底座管理 CSV 路径切换为 `DATA_FILES[...]`
-- `pages/2_数字孪生与全息诊断.py`
-  - 地图模板改为 `ASSETS_DIR / "map3d_standalone.html"`
-  - 数据读取改为 `DATA_FILES[...]`
-  - shp 路径改为 `SHP_FILES[...]`
-  - 修复本地导入错误：`from core_engine` -> `from src.engines.core_engine`
-  - 去除 `sys.path.append(...)` 的隐式路径注入依赖
+### 3.3 部署环境的稳定性增强 (src/config/runtime.py)
+引入 `resolve_path` 机制，自动对本地目录偏移量进行动态补正。针对本地大模型与 Stable Diffusion API 的接入，系统内嵌了心跳检测与服务降维逻辑，确保在外部引擎缺失时依然能维持“无死角交互”。
 
-### 3.3 配置读取路径稳定化
+---
 
-- `src/engines/core_engine.py` 已采用 `resolve_path(...)` 读取 `config.yaml` 与 RAG 文件，避免 cwd 漂移问题
+## 4. 后续扩展建议
 
-## 4. 结构规范（后续建议遵循）
-
-1. **路径规范**
-   - 页面/引擎内禁止再写 `data/...`、`assets/...` 字面路径
-   - 一律从 `src.config` 导入路径常量
-
-2. **导入规范**
-   - 使用绝对导入（`from src....`）
-   - 禁止 `sys.path.append` 临时注入
-
-3. **脚本规范**
-   - `tools/` 内脚本以仓库根为基准路径
-   - 读写路径优先通过 `Path` 对象处理
-
-4. **文档规范**
-   - 业务说明放 `docs/PROJECT_DETAILED_SPEC.md`
-   - 开发/运维流程放 `docs/DEVELOPER_GUIDE.md`
-
-## 5. 后续可继续执行的结构化升级（可选）
-
-- 将 `pages/` 内数据处理逻辑进一步下沉至 `src/engines/`（页面只做编排和渲染）
-- 将 `tools/` 中与业务强耦合脚本逐步改造成可导入服务模块
-- 引入 `src/domain/`（数据模型）和 `src/services/`（应用服务）实现更严格分层
+1. **测度逻辑进一步下沉**：将 `pages/` 内残留的地块 MPI 计算公式迁移至专用服务模块。
+2. **引入领域驱动模型 (Domain-Driven)**：为“更新单元”和“规划导则”建立结构化的 Pydantic 数据规范。
+3. **实验版本回溯**：在 `tools/` 中增加对不同专家权重系数下的 MPI 结果集版本化记录工具。

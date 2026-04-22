@@ -1,6 +1,6 @@
 """Shared runtime configuration helpers."""
 
-from .paths import ASSETS_DIR, DATA_DIR, DATA_FILES, ROOT_DIR, SHP_DIR, SHP_FILES, STATIC_DIR
+from .paths import ASSETS_DIR, DATA_DIR, DATA_FILES, ROOT_DIR, SHP_DIR, SHP_FILES, STATIC_DIR, get_static_url
 from .runtime import project_root, resolve_path
 
 __all__ = [
@@ -13,4 +13,5 @@ __all__ = [
     "STATIC_DIR",
     "DATA_FILES",
     "SHP_FILES",
+    "get_static_url",
 ]

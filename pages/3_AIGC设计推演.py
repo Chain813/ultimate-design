@@ -13,7 +13,11 @@ st.set_page_config(page_title="风貌管控 | 微更新平台", layout="wide", i
 render_top_nav()
 render_engine_status_alert()
 
-st.markdown("<h2>基于 Stable Diffusion + ControlNet 的街区风貌修缮推演</h2>", unsafe_allow_html=True)
+# 🚀 算力管家：自动检测并提供一键启动 SD/Ollama
+from src.utils.daemon_manager import render_daemon_control_panel
+render_daemon_control_panel()
+
+st.markdown("<h2>基于先验路网约束的街区风貌推演系统</h2>", unsafe_allow_html=True)
 
 # ==========================================
 # 📍 地块导向推演模式 (Phase 3 新增)
@@ -54,12 +58,21 @@ with mode_col:
 
 st.markdown("---")
 
+# ==========================================
+# 📍 AIGC 制图视阈切换 (Phase 5 新增)
+# ==========================================
+aigc_mode = st.radio("⬇️ 选择空间生形模式", 
+    ["🏙️ 街区全景透视推演 (现状修缮)", "🗺️ 概念总平面图生形 (辅助设计)", "🦅 轴测鸟瞰空间体块模拟 (辅助设计)"],
+    horizontal=True, key="p3_aigc_mode")
+
+st.markdown("---")
+
 with st.sidebar:
-    st.markdown("### ⚙️ 专家级渲染参数")
-    st.markdown("<p style='color: #94a3b8; font-size: 0.9rem;'>Advanced AIGC Parameters</p>", unsafe_allow_html=True)
+    st.markdown("### ⚙️ 空间测算与约束参数")
+    st.markdown("<p style='color: #94a3b8; font-size: 0.9rem;'>Spatial Constraint Settings</p>", unsafe_allow_html=True)
     st.markdown("---")
 
-    st.markdown("#### 🛠️ ControlNet 骨架引擎")
+    st.markdown("#### 🛠️ 空间格局约束骨架")
     cn_mode = st.selectbox(
         "空间约束算子 (Preprocessor)",
         [
@@ -69,22 +82,36 @@ with st.sidebar:
             "Seg (城市语义分割掩码)"
         ]
     )
-    cn_weight = st.slider("结构控制权重 (Control Weight)", 0.0, 2.0, 1.0, 0.1)
+    cn_weight = st.slider("结构网格贴合度 (Constraint Weight)", 0.0, 2.0, 1.0, 0.1, help="ControlNet 对原始路网/建筑轮廓的约束强度。数值越高，AI 生成的方案越严格遵循原有的空间肌理和路网走向。建议历史保护区设为 1.2-1.5。")
 
     st.markdown("---")
-    st.markdown("#### 🧠 潜空间采样器矩阵")
+    st.markdown("#### 🧠 衍生算法核心矩阵")
     sampler = st.selectbox(
         "采样算法 (Sampler)",
         ["DPM++ 2M Karras (推荐)", "Euler a", "DDIM", "Heun"]
     )
-    steps = st.slider("迭代步数 (Sampling Steps)", 10, 80, 20, 5)
-    cfg = st.slider("提示词相关性 (CFG Scale)", 1.0, 15.0, 7.0, 0.5)
+    steps = st.slider("迭代步数 (Sampling Steps)", 10, 80, 20, 5, help="扩散模型的去噪迭代次数。步数越多图像越精细，但耗时也越长。20 步适合快速草案预览，40+ 步适合最终出图。")
+    cfg = st.slider("提示词相关性 (CFG Scale)", 1.0, 15.0, 7.0, 0.5, help="引导权重：控制生成结果对文本描述（规划意向词）的依从程度。7.0 为平衡值，>10 时构图会极度贴合描述但可能出现色彩失真。")
 
 work_col, result_col = st.columns([1, 1.5]) # 略微增加结果区权重，确保 4:3 比例展示舒适
 
 with work_col:
     st.markdown("#### 📥 现状数据输入")
-    uploaded_file = st.file_uploader("上传长春历史街区现状照片 (支持 JPG/PNG)", type=["jpg", "jpeg", "png"])
+    
+    if aigc_mode == "🏙️ 街区全景透视推演 (现状修缮)":
+        st.info("💡 请上传现状街道实拍图以供 Canny/Seg 算子提取风貌底线结构。")
+        upload_label = "上传长春历史街区现状场景图 (JPG/PNG)"
+        default_cn = "Canny (精细边缘特征提取)"
+    elif aigc_mode == "🗺️ 概念总平面图生形 (辅助设计)":
+        st.info("💡 请上传 GIS/AutoCAD 导出的【路网与地块结构线图截图(黑白配色佳)】，通过 Seg 算子推演建筑体块肌理分布。")
+        upload_label = "上传地块路网基底图/二调影像图 (JPG/PNG)"
+        default_cn = "Seg (城市语义分割掩码)"
+    else:
+        st.info("💡 请上传【谷歌/百度无纹理的高清卫星大图】，系统将自动套用 Depth 深度透视算子生成立体的概念白模/鸟瞰草图。")
+        upload_label = "上传区域 2D 航拍图/卫星框选图 (JPG/PNG)"
+        default_cn = "Depth (深度空间透视估计)"
+        
+    uploaded_file = st.file_uploader(upload_label, type=["jpg", "jpeg", "png"])
     if uploaded_file is not None:
         file_bytes = uploaded_file.getvalue()
         # 如果是新上传的文件，则重置结果缓存
@@ -100,8 +127,8 @@ with work_col:
     
     col_p1, col_p2 = st.columns(2)
     with col_p1:
-        green_weight = st.slider("🌿 景观介入度 (Greening)", 0.0, 2.0, 1.0, 0.1)
-        heritage_weight = st.slider("🏛️ 历史锚定力 (Heritage)", 0.0, 2.0, 1.0, 0.1)
+        green_weight = st.slider("🌿 景观介入度 (Greening)", 0.0, 2.0, 1.0, 0.1, help="控制 AI 在生成方案中植入绿色景观元素的强度。参照《城市绿地规划标准》(GB/T51346-2019)，绿地率不宜低于 30%。")
+        heritage_weight = st.slider("🏛️ 历史锚定力 (Heritage)", 0.0, 2.0, 1.0, 0.1, help="历史风貌保护权重。数值越高，生成方案对原有建筑轮廓、红砖灰瓦等历史要素的保留程度越强。伪满皇宫周边建议 ≥1.3。")
     with col_p2:
         modern_weight = st.slider("✨ 现代介入感 (Modernity)", 0.0, 2.0, 1.0, 0.1)
         cinematic_weight = st.slider("🎬 表现力负载 (Cinematic)", 0.0, 2.0, 1.0, 0.1)
@@ -195,7 +222,7 @@ with work_col:
                 st.session_state['current_seed'] = random.randint(1, 999999999)
                 st.rerun()
 
-    generate_btn = st.button("🚀 启动大模型联觉生成 (Render)", use_container_width=True, type="primary")
+    generate_btn = st.button("🚀 启动视觉图景衍生测算 (Render)", use_container_width=True, type="primary")
 
 with result_col:
     st.markdown("#### 👁️ 微更新前后风貌对比")
@@ -310,9 +337,9 @@ with result_col:
                 box-shadow: 0 0 15px rgba(129,140,248,0.6);
             }}
             .label-tag {{
-                position: absolute; bottom: 12px; padding: 4px 12px;
+                position: absolute; bottom: 12px; padding: 4px 10px;
                 background: rgba(0,0,0,0.6); color: #f8fafc; border-radius: 6px;
-                font-size: 12px; font-weight: 600; z-index: 5;
+                font-size: 10px; font-weight: 600; z-index: 5;
             }}
             .label-before {{ left: 12px; }}
             .label-after {{ right: 12px; }}
@@ -396,6 +423,17 @@ if st.session_state.get('aigc_history'):
             </div>
             """, unsafe_allow_html=True)
 
+    latest_strategy = st.session_state['aigc_history'][-1]['strategy']
+    hist_count = len(st.session_state['aigc_history'])
+    st.markdown(f"""
+    <div class="academic-conclusion-box" style="margin-top:20px; margin-bottom:15px;">
+        <div class="academic-conclusion-title">🎯 视觉推演归敛结论</div>
+        <div class="academic-conclusion-text">
+            当前诊断单元已累计完成 {hist_count} 组空间形态衍生的参数化比选。最新推演采用的【{latest_strategy}】范式，在保护历史原生肌理结构与现代业态功能植入之间展现出较高的参数适配性。本图景可作为下一阶段建筑扩初设计的意向边界参考。
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     if st.button("🗑️ 清空推演历史", key="clear_history"):
         st.session_state['aigc_history'] = []
         st.rerun()
