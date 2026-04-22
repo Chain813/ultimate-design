@@ -119,6 +119,57 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
+# 📖 云端访客指南与本地部署教程 (Cloud Visitor Guide)
+# ==========================================
+engine_status_home = check_engine_status()
+if not engine_status_home["sd"] or not engine_status_home["gemma"]:
+    with st.expander("🚀 获取完整算力：本地化部署与完美体验教程 (Cloud Visitor Guide)", expanded=False):
+        st.markdown("""
+        ### ☁️ 云端演示模式说明 (Cloud Limitations)
+        您当前访问的是部署在公有云服务器上的**在线演示版本**。
+        由于标准云端环境缺乏 GPU 算力支持，本系统的两大核心 AI 引擎已自动切换为**预置演示模式 (Demo Mode)**：
+        - 🎨 **视觉渲染引擎 (Stable Diffusion)**：生成式风貌推演功能将返回预先渲染好的高质量参考图。
+        - 🧠 **决策博弈引擎 (Ollama/Gemma)**：多主体协商对话将返回结构化的预置专家推演剧本。
+        
+        *注：地图测度引擎 (Deck.GL)、AHP 评估算法、资产管理等核心逻辑不受影响，均可正常交互体验。*
+
+        ---
+
+        ### 💻 如何完美体验本项目 (Local Deployment Tutorial)
+        若您希望解锁真实、实时的 AIGC 图像生成与 LLM 智能对话推演能力，请按照以下步骤将本项目部署至您拥有独立显卡（建议 8GB+ 显存）的本地计算机：
+
+        #### 1. 获取项目源码与核心数据
+        前往本项目的 GitHub 仓库 Clone 最新代码，并安装项目所需的全部 Python 依赖。
+        ```bash
+        git clone https://github.com/YourUsername/ultimateDESIGN.git
+        cd ultimateDESIGN
+        pip install -r requirements.txt
+        ```
+
+        #### 2. 挂载本地大模型引擎 (Ollama)
+        前往 [Ollama 官网](https://ollama.com/) 下载并安装引擎。打开终端并运行以下命令，系统将在后台自动下载并运行经过量化压缩的 Gemma 模型：
+        ```bash
+        ollama run gemma4:e2b-it-q4_K_M
+        ```
+        *(引擎默认将在 `http://127.0.0.1:11434` 端口保持监听，本系统会自动捕捉该端口)*
+
+        #### 3. 挂载视觉渲染引擎 (Stable Diffusion WebUI)
+        启动您本地的 SD WebUI（如秋叶一键包），**最关键的一步**是在启动参数中添加 API 开放指令：
+        ```bash
+        # 在您的 webui-user.bat (Windows) 或 webui-user.sh (Mac/Linux) 中添加：
+        set COMMANDLINE_ARGS=--api --listen
+        ```
+        *(确保 SD WebUI 在 `http://127.0.0.1:7860` 运行。系统将通过此接口发送 ControlNet 骨架约束与 Prompt)*
+
+        #### 4. 启动最终极的数字孪生总台
+        当上述两大底层算力引擎均启动并处于监听状态后，回到本项目的根目录，运行以下命令：
+        ```bash
+        streamlit run app.py
+        ```
+        此时，主页的 **「底层算力设施调用监控」HUD** 将全面亮起🟢绿灯。恭喜您，已成功解锁 100% 算力全开的循证微更新平台！
+        """)
+
+# ==========================================
 # 🛡️ 技术监测 HUD (实时探测)
 # ==========================================
 def check_local_service(port):
