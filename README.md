@@ -73,7 +73,9 @@ ultimateDESIGN/
 若您通过 Streamlit Community Cloud 访问，系统将自动进入**演示模式**。由于云端缺乏 GPU 算力，AIGC 推演与 LLM 博弈将展示预置的高质量成果，而地图交互与空间评价算法保持 100% 实时运行。
 
 ### 2. 💻 本地全算力模式 (Local Perfect Experience)
-为解锁实时 AIGC 图像生成与真实 LLM 对话，请在本地部署：
+为解锁实时 AIGC 图像生成与真实 LLM 对话，请在本地部署。
+(👉 **[初学者请点击：保姆级手把手部署教程](#newbie-guide-cn)**)
+
 - **算力要求**：建议 NVIDIA RTX 3060 (8GB 显存) 及以上。
 - **环境准备**：
     1. 启动 [Ollama](https://ollama.com/) 并运行 `gemma4:e2b-it-q4_K_M`。
@@ -83,6 +85,47 @@ ultimateDESIGN/
     pip install -r requirements.txt
     streamlit run app.py
     ```
+
+---
+
+<a name="newbie-guide-cn"></a>
+
+## 🐣 新手保姆级部署教程 (Step-by-Step)
+
+如果您对编程一无所知，请按照以下步骤操作，即可在您的电脑上运行本项目：
+
+### 第一步：准备环境（这是基础）
+1.  **安装 Python**：前往 [Python.org](https://www.python.org/downloads/) 下载并安装。**注意**：安装时务必勾选 "Add Python to PATH"（添加到路径）。
+2.  **获取本项目代码**：点击本页面顶部的绿色按钮 `Code` -> `Download ZIP`，下载并解压到您的电脑。
+
+### 第二步：安装“运行插件”
+1.  在项目文件夹的空白处，按住键盘上的 `Shift` 键并点击鼠标右键，选择“在此处打开 PowerShell 窗口”或“在终端中打开”。
+2.  输入以下命令并按回车（这会自动安装本项目需要的所有功能组件）：
+    ```bash
+    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+    ```
+
+### 第三步：启动 AI 智能大脑 (Ollama)
+1.  下载并安装 [Ollama](https://ollama.com/)。
+2.  安装完成后，打开您的电脑终端（按 Win+R 输入 cmd 回车），输入：
+    ```bash
+    ollama run gemma4:e2b-it-q4_K_M
+    ```
+    *第一次运行会自动下载模型，请耐心等待。*
+
+### 第四步：启动风貌渲染引擎 (Stable Diffusion)
+1.  建议使用“秋叶 Stable Diffusion 一键包”。
+2.  **关键设置**：在启动器中找到“启用 API”选项并勾选。如果您是手动启动，请在 `webui-user.bat` 的参数中加入 `--api`。
+3.  点击“一键启动”，看到浏览器弹出 SD 页面即可。
+
+### 第五步：见证奇迹的时刻
+回到第二步打开的那个黑窗口，输入：
+```bash
+streamlit run app.py
+```
+稍等片刻，您的浏览器会自动弹出本项目的数字孪生界面。
+
+---
 
 ---
 
@@ -163,8 +206,10 @@ This project supports two execution modes to balance presentation convenience an
 ### 1. 🌐 Cloud Demo Mode
 If accessing via Streamlit Community Cloud, the system automatically enters **Demo Mode**. Due to the lack of GPU power in the cloud, AIGC inference and LLM negotiations will display pre-rendered high-quality results, while map interactions and assessment algorithms remain 100% real-time.
 
-### 2. 💻 Local Full-Power Mode (Perfect Experience)
-To unlock real-time AIGC image generation and authentic LLM dialogues, please deploy locally:
+### 2. 💻 Local Full-Power Mode (Local Perfect Experience)
+To unlock real-time AIGC image generation and authentic LLM dialogues, please deploy locally.
+(👉 **[Click here: Step-by-Step Newbie Guide](#newbie-guide-en)**)
+
 - **Requirements**: NVIDIA RTX 3060 (8GB VRAM) or higher recommended.
 - **Preparation**:
     1. Start [Ollama](https://ollama.com/) and run `gemma4:e2b-it-q4_K_M`.
@@ -174,6 +219,47 @@ To unlock real-time AIGC image generation and authentic LLM dialogues, please de
     pip install -r requirements.txt
     streamlit run app.py
     ```
+
+---
+
+<a name="newbie-guide-en"></a>
+
+## 🐣 Step-by-Step Newbie Guide
+
+If you have zero programming knowledge, follow these steps to run the project on your computer:
+
+### Step 1: Environment Preparation
+1.  **Install Python**: Download from [Python.org](https://www.python.org/downloads/). **CRITICAL**: Check the box "Add Python to PATH" during installation.
+2.  **Download the Code**: Click the green `Code` button at the top of this page -> `Download ZIP`. Extract it to a folder.
+
+### Step 2: Install Dependencies
+1.  Open your project folder. Hold `Shift` and right-click on an empty space, then select "Open PowerShell window here" or "Open in Terminal".
+2.  Type the following command and press Enter:
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+### Step 3: Start the AI Brain (Ollama)
+1.  Install [Ollama](https://ollama.com/).
+2.  After installation, open your terminal (Win+R, type cmd, Enter) and run:
+    ```bash
+    ollama run gemma4:e2b-it-q4_K_M
+    ```
+    *Wait for the model to download on the first run.*
+
+### Step 4: Start the Visual Engine (Stable Diffusion)
+1.  Ensure you have SD WebUI installed.
+2.  **Crucial Setting**: Enable the "API" option in your launcher. If running manually, add `--api` to your `webui-user.bat` arguments.
+3.  Launch it and ensure it's accessible in your browser.
+
+### Step 5: Launch the Platform
+Go back to the terminal from Step 2 and type:
+```bash
+streamlit run app.py
+```
+A browser window will open automatically with your Digital Twin platform.
+
+---
 
 ---
 
