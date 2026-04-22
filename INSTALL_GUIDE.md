@@ -32,7 +32,7 @@
 
 ```bash
 # 1. 克隆代码仓库
-git clone https://github.com/您的用户名/ultimateDESIGN.git
+git clone https://github.com/Chain813/ultimateDESIGN.git
 
 # 2. 进入项目根目录
 cd ultimateDESIGN
