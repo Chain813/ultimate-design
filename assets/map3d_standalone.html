@@ -68,9 +68,13 @@
             props._baseHeight = baseHeight;
 
             // 仅对研究范围内的建筑（in_scope）分配拆改留动作，范围外作为上下文白膜保留
-            if (!props.action && props.in_scope) {
-                if (props.prop_style === 'historical' || baseHeight >= 18) props.action = 'retain';
-                else if (props.prop_style === 'park') props.action = 'retain_park'; // 保护绿地
+            // 鲁棒性增强：支持布尔、数字、字符串格式的 in_scope 标绘
+            const inScope = props.in_scope === true || props.in_scope === 1 || props.in_scope === 'true' || props.in_scope === '1';
+            
+            if (!props.action && inScope) {
+                const s = (props.prop_style || '').toLowerCase();
+                if (s === 'historical' || baseHeight >= 18) props.action = 'retain';
+                else if (s === 'park') props.action = 'retain_park'; // 保护绿地
                 else if (baseHeight <= 7) props.action = 'demolish';
                 else props.action = 'renovate';
             }
@@ -206,7 +210,7 @@
                 },
                 getLineWidth: 1,
                 lineWidthMinPixels: 1,
-                parameters: { depthTest: false },
+                parameters: { depthTest: true },
                 pickable: true
             }));
         }
@@ -224,7 +228,7 @@
                 getLineWidth: 5,
                 lineWidthMinPixels: 2,
                 parameters: {
-                    depthTest: false
+                    depthTest: true
                 },
                 pickable: true
             }));
