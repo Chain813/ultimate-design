@@ -59,9 +59,33 @@ ultimateDESIGN/
 
 ---
 
-## 🚀 部署与学术复现指南
+## 🚀 部署与体验指南 (Deployment Guide)
 
-项目配套完整的 `pip` 依赖清单与本地算力引擎（SD / Ollama）接入方案，具备极高的学术复现性。详细步骤见 [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)。
+本项目支持两种运行模式，以平衡展示便捷性与计算完整性：
+
+### 1. 🌐 云端演示模式 (Cloud Demo)
+若您通过 Streamlit Community Cloud 访问，系统将自动进入**演示模式**。由于云端缺乏 GPU 算力，AIGC 推演与 LLM 博弈将展示预置的高质量成果，而地图交互与空间评价算法保持 100% 实时运行。
+
+### 2. 💻 本地全算力模式 (Local Perfect Experience)
+为解锁实时 AIGC 图像生成与真实 LLM 对话，请在本地部署：
+- **算力要求**：建议 NVIDIA RTX 3060 (8GB 显存) 及以上。
+- **环境准备**：
+    1. 启动 [Ollama](https://ollama.com/) 并运行 `gemma4:e2b-it-q4_K_M`。
+    2. 启动 **Stable Diffusion WebUI** 并添加 `--api` 参数。
+- **快速启动**：
+    ```bash
+    pip install -r requirements.txt
+    streamlit run app.py
+    ```
+
+详细开发者文档见 [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)。
+
+---
+
+## 🛠️ 核心开发组件
+- **动态坐标转换器** (`src/utils/geo_transform.py`)：集成 BD09 / GCJ02 / WGS84 工业级转换算法，支撑多源数据对齐。
+- **AHP 决策矩阵**：内置于 `pages/1_数据底座与规划策略.py`，支持专家权重的实时重算。
+- **WebGL 渲染管线**：基于 Deck.GL 实现百万级建筑要素的毫秒级渲染。
 
 ---
 
