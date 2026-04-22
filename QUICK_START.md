@@ -1,109 +1,68 @@
-# 🚀 快速启动指南
+# ⚡ 快速启动指南 (Quick Start Guide)
 
-👈 **[返回项目主页 (Back to Home)](README.md)**
+欢迎使用 **长春铁北历史街区微更新决策支持平台**！本指南将带您在 3 分钟内快速启动并体验系统核心功能。
 
-## 3 分钟快速开始
+## 🎯 启动路线图
 
-### 前提条件
-- ✅ 已安装 Anaconda/Miniconda
-- ✅ 已创建 `gis_ai` 环境
+根据您的电脑配置，选择适合您的启动方式：
 
-### 启动步骤
+- **[方式一：纯应用层启动 (轻量级)](#方式一纯应用层启动-轻量级)** —— 适合所有电脑，秒开体验（AI 功能自动降级为演示模式）。
+- **[方式二：全量算力启动 (硬核级)](#方式二全量算力启动-硬核级)** —— 需要带独立显卡的电脑（解锁真实 AIGC 图像生成与 LLM 对话）。
 
-#### 第 1 步：安装依赖（仅首次）
+---
 
-```powershell
-# 打开 Anaconda Prompt
-cd <你的项目目录>
+### 方式一：纯应用层启动 (轻量级)
 
-# 方式 1: 使用自动安装脚本
-```.\setup_env.bat
+如果您只想查看地图、指标、AHP 评价矩阵和数据底板，不需要真实的 AI 生成，执行这一步即可：
 
-# 方式 2: 手动安装
-conda activate gis_ai
+**1. 安装核心依赖**
+在项目根目录打开终端 (PowerShell/CMD)：
+```bash
 pip install -r requirements.txt
 ```
 
-#### 第 2 步：启动应用
-
-```powershell
-# 方式 1: 双击启动 (最简单)
-双击 run.bat
-
-# 方式 2: 命令行启动
+**2. 启动数字孪生总台**
+```bash
 streamlit run app.py
 ```
 
-#### 第 3 步：访问应用
-
-浏览器自动打开: **http://localhost:8501**
+🎉 **成功！** 浏览器会自动打开 `http://localhost:8501`。此时您可以体验 01、02、05 号实验室的全部功能！(注：此时 HUD 面板中的 SD 和 Gemma 将显示红灯“未挂载”，这是正常的演示状态)。
 
 ---
 
-## 常用命令速查
+### 方式二：全量算力启动 (硬核级)
 
-| 任务 | 命令 |
-|------|------|
-| **启动应用** | `.\run.bat` |
-| **安装依赖** | `.\setup_env.bat` |
-| **检查环境** | `python tools/check_env.py` |
-| **激活环境** | `conda activate gis_ai` |
-| **更新依赖** | `pip install -r requirements.txt --upgrade` |
-| **查看已安装包** | `pip list` |
-| **更换端口** | `streamlit run app.py --server.port 8502` |
+如果您拥有强劲的 GPU，并希望解锁真实的“规划草图生成”与“多方利益博弈对话”：
 
----
+**1. 启动大语言模型引擎 (Ollama)**
+打开一个新终端，运行：
+```bash
+ollama run gemma4:e2b-it-q4_K_M
+```
+*(保持这个黑色窗口运行，不要关闭)*
 
-## 常见问题快速修复
+**2. 启动生成式视觉引擎 (Stable Diffusion WebUI)**
+打开您本地的 SD WebUI（推荐秋叶一键包）：
+- 在启动器中勾选 **“启用 API”**。
+- 如果是命令行启动，务必携带 `--api` 参数。
+- 点击启动。
 
-| 问题 | 解决方法 |
-|------|---------|
-| ❌ 找不到环境 | 运行 `.\setup_env.bat` |
-| ❌ 依赖缺失 | 运行 `pip install -r requirements.txt` |
-| ❌ 端口被占用 | 使用 `--server.port 8502` |
-| ❌ 下载太慢 | 使用清华镜像源 (见下方) |
-
-### 使用清华镜像源加速下载
-
-```powershell
-pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-pip install -r requirements.txt
+**3. 启动总台**
+打开第三个终端，进入本项目目录，运行：
+```bash
+streamlit run app.py
 ```
 
----
-
-## 贡献流程（开发 -> 检查 -> 提交）
-
-```powershell
-# 1) 安装依赖
-pip install -r requirements.txt
-
-# 2) 启用本地提交前检查（仅需一次）
-pre-commit install
-
-# 3) 开发并本地验证
-ruff check .
-pytest -q
-python tools/startup_smoke.py
-
-# 4) 提交（会自动触发 pre-commit）
-git add .
-git commit -m "your message"
-```
-
-CI 会在远端并行执行 `lint`、`test`、`smoke` 三项检查，请确保本地先通过。
+🎉 **完美！** 查看左侧（或右侧）的 HUD 监控面板，如果双双亮起绿灯，说明两台 AI 引擎已成功被系统接管，您可以畅玩所有功能！
 
 ---
 
-## 项目模块
+## 🧭 常见问题速查 (FAQ)
 
-| 模块 | 功能 | 入口 |
-|------|------|------|
-| 🔬 01 数据底座 | 指标总览、MPI 评估、文档管理 | `pages/1_数据底座与规划策略.py` |
-| 🏙️ 02 全息诊断 | 数字孪生、交通潮汐、情感分析 | `pages/2_数字孪生与全息诊断.py` |
-| 🎨 03 AIGC推演 | 风貌修复、空间织补、方案生成 | `pages/3_AIGC设计推演.py` |
-| ⚖️ 04 LLM决策 | 利益相关者协商、政策推演 | `pages/4_LLM博弈决策.py` |
+| 遇到的问题 | 解决方案 |
+| :--- | :--- |
+| **安装包下载太慢/卡住** | 使用国内镜像源：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| **端口被占用报错** | 指定新端口启动：`streamlit run app.py --server.port 8502` |
+| **SD 引擎无法被识别** | 请检查您的 SD WebUI 是否开启了 API 并且运行在 `7860` 端口。 |
 
----
-
-**详细文档**: 请参阅 [INSTALL_GUIDE.md](./INSTALL_GUIDE.md)
+如果需要更深入的部署与系统架构解读，请查阅 👉 [深度安装与部署指南](INSTALL_GUIDE.md)。
