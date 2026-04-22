@@ -152,11 +152,17 @@ echo   Port: !SERVER_PORT!
 echo ----------------------------------------------------------------
 echo.
 
-REM Start Streamlit with detected port
+echo [4/4] Finalizing and launching browser...
+echo.
+
+REM Explicitly start browser to ensure it opens
+start http://localhost:!SERVER_PORT!
+
+REM Start Streamlit with detected port and headless disabled
 if defined PYTHON_PATH (
-    %PYTHON_PATH% -m streamlit run "%~dp0app.py" --server.headless true --server.enableStaticServing=true --server.port !SERVER_PORT!
+    %PYTHON_PATH% -m streamlit run "%~dp0app.py" --server.headless false --server.enableStaticServing=true --server.port !SERVER_PORT!
 ) else (
-    streamlit run "%~dp0app.py" --server.headless true --server.enableStaticServing=true --server.port !SERVER_PORT!
+    streamlit run "%~dp0app.py" --server.headless false --server.enableStaticServing=true --server.port !SERVER_PORT!
 )
 
 echo.
