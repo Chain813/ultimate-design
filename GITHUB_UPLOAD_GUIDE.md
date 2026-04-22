@@ -1,161 +1,53 @@
-# GitHub 上传指南
+# 📤 GitHub 上传与云端部署指南 (Upload & Deploy Guide)
 
-👈 **[返回项目主页 (Back to Home)](README.md)**
+将您的数字孪生平台上传到 GitHub 并非仅仅为了备份，这是将其部署至 **Streamlit Community Cloud** 供全球访问的必经之路。
 
-## 📤 方法一：通过 GitHub 网页手动上传 (推荐)
+---
 
-### 步骤 1: 创建新的 GitHub 仓库
+## 🛑 第一步：了解数据的“去与留” (.gitignore 机制)
 
-1. 访问 [GitHub](https://github.com)
-2. 点击右上角的 "+" 图标 → "New repository"
-3. 填写仓库信息:
-   - **Repository name**: `ultimateDESIGN` (或其他你喜欢的名字)
-   - **Description**: "长春伪满皇宫周边街区多模态微更新决策平台"
-   - **Public/Private**: 根据需要选择
-   - **不要勾选** "Initialize this repository with a README"
-4. 点击 "Create repository"
+本项目的核心数据资产较多。为了防止因为文件过大导致 GitHub 拒绝上传，项目中已提前配置好 `.gitignore` 文件。
 
-### 步骤 2: 准备上传文件
+**✅ 以下核心文件会被自动上传（云端能够直接读取）：**
+- 代码包：`app.py`, `pages/`, `src/`, `tools/`
+- 地理要素基底：`data/shp/` 目录下的 GeoJSON 文件（包括建筑轮廓）
+- 脱敏指标表：`data/` 目录下的各类 `.csv` 与 `.xlsx` 统计报表
 
-1. **压缩项目文件夹**:
-   - 右键点击 `ultimateDESIGN` 文件夹
-   - 选择 "发送到" → "压缩 (zipped) 文件夹"
-   - 生成 `ultimateDESIGN.zip`
+**🚫 以下大体积文件将被自动阻挡拦截（保护您的隐私与流量）：**
+- `data/streetview/`：包含成千上万张从百度街景抓取的高清影像图。
+- `data/raw_images/`：高清航拍底图与正射影像。
+- `*.pdf`：所有扫描版规划长图与法条文本。
 
-### 步骤 3: 上传到 GitHub
+> [!TIP]
+> **无需担心云端报错！** 系统代码中已编写了“演示模式”回退逻辑。云端页面在读取不到街景图或调用不了大模型时，会自动展示精美的占位素材。
 
-**方式 A - 直接拖拽上传**:
-1. 在刚创建的仓库页面，点击 "uploading an existing file"
-2. 将 `ultimateDESIGN.zip` 拖拽到上传区域
-3. 或者解压后，选择所有文件拖拽上传
-4. 在 "Commit changes" 文本框中输入提交信息，如 "Initial commit"
-5. 点击 "Commit changes"
+---
 
-**方式 B - 使用 Git 命令行**:
-```bash
-# 进入项目目录
-cd <你的项目目录>
+## 🚀 第二步：推送代码至 GitHub
 
-# 初始化 Git 仓库
-git init
+若您对 Git 命令行不熟悉，建议使用以下最简明的方案。
 
-# 添加所有文件
-git add .
+### 推荐方案：使用 GitHub Desktop (白痴级极简操作)
 
-# 提交
-git commit -m "Initial commit"
+1. 前往下载并安装 [GitHub Desktop](https://desktop.github.com/)，并登录您的 GitHub 账号。
+2. 运行软件，点击左上角 `File` -> `Add local repository`。
+3. 选择您本地的 `ultimateDESIGN` 文件夹路径，点击 `Add repository`。
+4. 在左下角的 **Summary** 框中随便写点什么（例如 `init project`），然后点击蓝色的 **Commit to main**。
+5. 最后，点击界面顶部蓝色的 **Publish repository** 按钮。在弹出的确认框中，确保**取消勾选** "Keep this code private"（如果您要公开展示的话），最后点击确认。
 
-# 关联远程仓库 (替换为你的仓库地址)
-git remote add origin https://github.com/YOUR_USERNAME/ultimateDESIGN.git
+---
 
-# 推送
-git push -u origin main
-```
+## ☁️ 第三步：在 Streamlit Cloud 一键上线
 
-## 📤 方法二：使用 Git 命令行 (适合有 Git 基础的用户)
+当您的代码成功上传到 GitHub 后，将其变成所有人可以通过网址访问的网页，只需 1 分钟：
 
-### 前置要求
+1. 访问 [Streamlit Community Cloud](https://share.streamlit.io/) 并使用您的 GitHub 账号授权登录。
+2. 点击右上角的 **New app**。
+3. 在部署配置界面：
+   - **Repository**：选择您刚刚上传的 `ultimateDESIGN`。
+   - **Branch**：默认 `main` 即可。
+   - **Main file path**：务必填写 `app.py`（这是系统的核心总枢纽）。
+   - **App URL**：可以自定义一串炫酷的网址。
+4. 点击 **Deploy!**。
 
-1. 安装 [Git](https://git-scm.com/download/win)
-2. 安装 [GitHub Desktop](https://desktop.github.com/) (可选)
-
-### 详细步骤
-
-```bash
-# 1. 进入项目目录
-cd <你的项目目录>
-
-# 2. 初始化 Git 仓库
-git init
-
-# 3. 添加所有文件到暂存区
-git add .
-
-# 4. 提交更改
-git commit -m "Initial commit: 长春伪满皇宫微更新平台"
-
-# 5. 在 GitHub 创建仓库后，关联远程仓库
-git remote add origin https://github.com/YOUR_USERNAME/ultimateDESIGN.git
-
-# 6. 推送到 GitHub
-git branch -M main
-git push -u origin main
-```
-
-## 📤 方法三：使用 GitHub Desktop (最简单)
-
-### 步骤
-
-1. 下载并安装 [GitHub Desktop](https://desktop.github.com/)
-2. 登录 GitHub 账号
-3. 点击 "File" → "Add local repository" → "Choose..."
-4. 选择 `<你的项目目录>\ultimateDESIGN` 文件夹
-5. 如果是第一次，点击 "Create a repository"
-6. 填写信息后点击 "Publish repository"
-
-## ⚠️ 重要提示
-
-### 1. .gitignore 已配置
-
-项目已包含 `.gitignore` 文件，会自动排除:
-- `__pycache__/` - Python 缓存文件
-- `venv/` - 虚拟环境
-- `.vscode/` - IDE 配置
-- `*.pyc` - 编译后的 Python 文件
-- 其他临时文件
-
-### 2. 大文件处理
-
-如果项目包含大文件 (如街景图片),建议:
-- 使用 [Git LFS](https://git-lfs.github.com/) 管理大文件
-- 或者在 `.gitignore` 中排除大文件目录
-
-### 3. 敏感信息
-
-确保不要上传:
-- API 密钥
-- 数据库密码
-- 个人敏感信息
-- `.env` 文件
-
-## 🎯 推荐做法
-
-1. **首次上传**: 使用网页上传或 GitHub Desktop
-2. **后续更新**: 使用 Git 命令行或 GitHub Desktop
-3. **大文件**: 使用 Git LFS 或排除在版本控制外
-
-## 📊 仓库大小优化
-
-如果仓库过大，可以:
-
-1. 在 `.gitignore` 中添加:
-```
-# 排除大文件
-StreetViews/*.jpg
-StreetViews/*.png
-*.csv
-*.xlsx
-```
-
-2. 使用 Git LFS 管理大文件:
-```bash
-git lfs install
-git lfs track "*.jpg"
-git lfs track "*.png"
-git add .gitattributes
-```
-
-## ✅ 上传后检查
-
-- [ ] 所有代码文件已上传
-- [ ] README.md 显示正常
-- [ ] requirements.txt 包含所有依赖
-- [ ] 没有敏感信息泄露
-- [ ] .gitignore 生效
-
-## 🔗 相关资源
-
-- [GitHub 文档](https://docs.github.com/)
-- [Git 教程](https://git-scm.com/book/zh/v2)
-- [GitHub Desktop](https://docs.github.com/desktop)
-- [Git LFS](https://git-lfs.github.com/)
+静候大约 1-3 分钟，等云端服务器自动根据 `requirements.txt` 安装完依赖后，您的学术成果便正式向全世界开放啦！🎉
