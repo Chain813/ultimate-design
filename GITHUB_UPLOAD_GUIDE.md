@@ -1,5 +1,7 @@
 # GitHub 上传指南
 
+👈 **[返回项目主页 (Back to Home)](README.md)**
+
 ## 📤 方法一：通过 GitHub 网页手动上传 (推荐)
 
 ### 步骤 1: 创建新的 GitHub 仓库
