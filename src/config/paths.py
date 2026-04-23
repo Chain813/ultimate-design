@@ -28,10 +28,11 @@ SHP_FILES = {
 # ==========================================
 # 🌐 Web Static Routing Configuration
 # ==========================================
-# WARNING: When Streamlit is run with --server.enableStaticServing=true,
-# it HARDCODES the internal web endpoint for the local 'static/' folder to '/app/static/'.
-# Please DO NOT interpret '/app/' as a Docker-specific path and attempt to remove it.
-# Deleting '/app/' will cause all frontend 3D rendering to fail with 404 errors!
+# IMPORTANT: Streamlit's static serving behavior varies between local, Docker, and Cloud.
+# 1. Locally, it often serves at /static/.
+# 2. In Docker/Cloud, it may serve at /app/static/.
+# 3. We use /app/static/ as the base, but map3d_standalone.html now includes 
+#    an automatic 404 fallback to /static/ for maximum resilience on Streamlit Cloud.
 STATIC_URL_PREFIX = "/app/static/"
 
 def get_static_url(filename: str) -> str:

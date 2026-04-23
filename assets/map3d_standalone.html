@@ -155,6 +155,15 @@
                 ...BUILDING_LAYER_CONFIG,
                 id: 'building-layer-async',
                 data: fetchUrl,
+                // 🛠️ 增强：自动路径纠错 (Streamlit Cloud 404 Fallback)
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        const fallback = url.replace('/app/', '/');
+                        console.warn(`[System] 404 at ${url}, retrying fallback: ${fallback}`);
+                        return fetch(fallback);
+                    }
+                    return res;
+                }).then(res => res.json()),
                 onDataLoad: (data) => console.log(`[Building] Loaded ${data.features?.length} features from ${fetchUrl}`),
                 onError: (err) => console.error(`[Building] Load Failed: ${err.message}`)
             }));
@@ -211,7 +220,16 @@
                 getLineWidth: 1,
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
-                pickable: true
+                pickable: true,
+                // 🛠️ 增强：自动路径纠错 (Streamlit Cloud 404 Fallback)
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        const fallback = url.replace('/app/', '/');
+                        console.warn(`[System] Landuse 404 at ${url}, retrying fallback: ${fallback}`);
+                        return fetch(fallback);
+                    }
+                    return res;
+                }).then(res => res.json())
             }));
         }
 
