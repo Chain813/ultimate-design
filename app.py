@@ -279,11 +279,6 @@ def render_status_hud():
         <div class="hud-meta">坐标系: CGCS2000</div>
     </div>
     <div class="hud-item">
-        <span class="hud-label">[天际线形态特征]</span>
-        <div class="hud-value">地标 {skyline_stats['max_height']}m / 平均 {skyline_stats['avg_height']}m<span class="status-dot-static" style="background:#818cf8;"></span></div>
-        <div class="hud-meta">高层占比: {skyline_stats['high_rise_ratio']}% (建筑总数: {skyline_stats['building_count']})</div>
-    </div>
-    <div class="hud-item">
         <span class="hud-label">[街道生态体验抽样]</span>
         <div class="hud-value">{hud_stats['gvi_count']} 影像计算截面<span class="status-dot-static" style="background:#818cf8;"></span></div>
         <div class="hud-meta">数据源: 百度街景结合植被遮罩过滤</div>
@@ -296,6 +291,31 @@ def render_status_hud():
     </div>
 </div>
 """, unsafe_allow_html=True)
+
+def render_skyline_hud():
+    """在地图下方渲染横向天际线指标面板"""
+    skyline_stats = get_skyline_features()
+    st.markdown(f"""
+    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 16px; padding: 20px 30px; margin: 25px 0; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+            <div style="font-size: 11px; color: #818cf8; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏙️ 区域天际线地标高度</div>
+            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['max_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
+        </div>
+        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+            <div style="font-size: 11px; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏢 平均建筑高度</div>
+            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['avg_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
+        </div>
+        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+            <div style="font-size: 11px; color: #f59e0b; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">📈 高层建筑占比</div>
+            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['high_rise_ratio']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">%</span></div>
+        </div>
+        <div style="flex: 1; text-align: center;">
+            <div style="font-size: 11px; color: #ec4899; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏗️ 测区建筑总数</div>
+            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['building_count']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">栋</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
 
 # ==========================================
 # 🔄 循证决策工作流 (Academic Roadmap)
@@ -709,6 +729,7 @@ def render_project_map():
         st.error(f"地图组件核心加载失败: {str(e)}")
 
 render_project_map()
+render_skyline_hud()
 
 # 🧩 核心子系统导览
 st.markdown("---")
