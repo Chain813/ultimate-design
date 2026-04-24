@@ -5,7 +5,7 @@ import socket
 from pathlib import Path
 import base64
 from src.ui.ui_components import render_top_nav, render_engine_status_alert, check_engine_status
-from src.engines.core_engine import get_hud_statistics
+from src.engines.core_engine import get_hud_statistics, get_skyline_features
 from src.config import get_static_url
 import urllib.parse
 import pandas as pd
@@ -195,6 +195,7 @@ def render_status_hud():
     sd_online = engine_status["sd"]
     gemma_online = engine_status["gemma"]
     hud_stats = get_hud_statistics()
+    skyline_stats = get_skyline_features()
 
     sd_status = "已联机" if sd_online else "未挂载"
     gemma_status = "已联机" if gemma_online else "未挂载"
@@ -276,6 +277,11 @@ def render_status_hud():
         <span class="hud-label">[研究范围投影边界]</span>
         <div class="hud-value">约 {hud_stats['boundary_ha']} 公顷用地<span class="status-dot-static" style="background:#818cf8;"></span></div>
         <div class="hud-meta">坐标系: CGCS2000</div>
+    </div>
+    <div class="hud-item">
+        <span class="hud-label">[天际线形态特征]</span>
+        <div class="hud-value">地标 {skyline_stats['max_height']}m / 平均 {skyline_stats['avg_height']}m<span class="status-dot-static" style="background:#818cf8;"></span></div>
+        <div class="hud-meta">高层占比: {skyline_stats['high_rise_ratio']}% (建筑总数: {skyline_stats['building_count']})</div>
     </div>
     <div class="hud-item">
         <span class="hud-label">[街道生态体验抽样]</span>
@@ -658,8 +664,10 @@ def render_project_map():
     poi_data_json = "null"
     if show_poi:
         try:
-            df_poi = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig').fillna("")
-            poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+            from src.engines.core_engine import get_merged_poi_data
+            df_poi = get_merged_poi_data().fillna("")
+            if not df_poi.empty:
+                poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
         except: pass
         
     traffic_data_json = "null"
