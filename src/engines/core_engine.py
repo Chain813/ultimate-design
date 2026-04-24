@@ -45,13 +45,45 @@ def is_demo_mode():
 
 
 # ==========================================
+# 🗺️ POI 双路融合数据源
+# ==========================================
+@st.cache_data
+def get_merged_poi_data():
+    df1 = pd.DataFrame()
+    df2 = pd.DataFrame()
+    try:
+        if os.path.exists("data/Changchun_POI_Real.csv"):
+            df1 = pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig')
+    except Exception: pass
+    try:
+        if os.path.exists("data/Changchun_POI_Baidu_New.csv"):
+            df2 = pd.read_csv("data/Changchun_POI_Baidu_New.csv", encoding='utf-8-sig')
+    except Exception: pass
+    
+    if not df1.empty and not df2.empty:
+        # 融合并按经纬度去重
+        df_merged = pd.concat([df1, df2], ignore_index=True)
+        # 如果列名有微小差异，比如 Lng/Lat, 尽量对齐。假设都是 Lng, Lat
+        if 'Lng' in df_merged.columns and 'Lat' in df_merged.columns:
+            # 取两位小数近似去重（约1公里，但POI精度高，取4位约10米）
+            df_merged['Lng_round'] = df_merged['Lng'].round(4)
+            df_merged['Lat_round'] = df_merged['Lat'].round(4)
+            df_merged = df_merged.drop_duplicates(subset=['Lng_round', 'Lat_round', 'Name']).drop(columns=['Lng_round', 'Lat_round'])
+        return df_merged
+    elif not df1.empty:
+        return df1
+    elif not df2.empty:
+        return df2
+    return pd.DataFrame()
+
+# ==========================================
 # 📊 HUD 动态数据统计引擎
 # ==========================================
 @st.cache_data
 def get_hud_statistics():
     stats = {}
     try:
-        stats["poi_count"] = len(pd.read_csv("data/Changchun_POI_Real.csv", encoding='utf-8-sig'))
+        stats["poi_count"] = len(get_merged_poi_data())
     except Exception:
         stats["poi_count"] = "N/A"
     try:
@@ -80,6 +112,37 @@ def get_hud_statistics():
     except Exception:
         stats["boundary_ha"] = "~156.4"
     return stats
+
+# ==========================================
+# 🏙️ 天际线形态诊断提取
+# ==========================================
+@st.cache_data
+def get_skyline_features():
+    features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
+    try:
+        import geopandas as gpd
+        import os
+        path = "data/shp/Building_Footprints.geojson"
+        if not os.path.exists(path):
+            path = "../" + path
+        buildings = gpd.read_file(path)
+        # 提取楼层数换算高度
+        if 'Floor' in buildings.columns:
+            buildings['Height'] = pd.to_numeric(buildings['Floor'], errors='coerce').fillna(1) * 3.5
+        elif 'levels' in buildings.columns:
+            buildings['Height'] = pd.to_numeric(buildings['levels'], errors='coerce').fillna(1) * 3.5
+        else:
+            buildings['Height'] = 3.5 # Default 1 floor
+
+        if not buildings.empty:
+            features["building_count"] = len(buildings)
+            features["max_height"] = round(buildings['Height'].max(), 1)
+            features["avg_height"] = round(buildings['Height'].mean(), 1)
+            high_rise = buildings[buildings['Height'] >= 24] # 高于24米算高层
+            features["high_rise_ratio"] = round(len(high_rise) / len(buildings) * 100, 1)
+    except Exception as e:
+        pass
+    return features
 
 
 # ==========================================
@@ -544,7 +607,7 @@ def get_plot_diagnostics():
 
     # 加载辅助数据
     try:
-        df_poi = pd.read_csv(str(DATA_FILES["poi"]), encoding="utf-8-sig")
+        df_poi = get_merged_poi_data()
     except Exception:
         df_poi = pd.DataFrame()
 

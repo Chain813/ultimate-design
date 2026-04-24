@@ -213,7 +213,37 @@ st.markdown("""
 
 </div>
 </div>
+</div>
+</div>
 """, unsafe_allow_html=True)
+
+subpage = st.query_params.get("sub", "多主体利益协商")
+
+if subpage == "动态共识雷达":
+    st.markdown("### 📊 动态共识雷达与策略归集")
+    st.info("💡 此页面独立展示【多主体利益协商】推演后的共识度评估图谱与对应的政策备忘录。")
+    if "p4_voting_scores" in st.session_state and "stage4_output" in st.session_state:
+        voting_scores = st.session_state["p4_voting_scores"]
+        summary = st.session_state["stage4_output"]
+        r_col, t_col = st.columns([1, 2])
+        with r_col:
+            fig = go.Figure()
+            fig.add_trace(go.Scatterpolar(
+                r=list(voting_scores.values())+[list(voting_scores.values())[0]], 
+                theta=list(voting_scores.keys())+[list(voting_scores.keys())[0]], 
+                fill='toself', fillcolor='rgba(99,102,241,0.15)', 
+                line=dict(color='#818cf8', width=2)
+            ))
+            fig.update_layout(
+                polar=dict(bgcolor='rgba(0,0,0,0)', radialaxis=dict(range=[0,100], gridcolor='rgba(99,102,241,0.15)'), angularaxis=dict(gridcolor='rgba(99,102,241,0.15)')), 
+                showlegend=False, paper_bgcolor='rgba(0,0,0,0)', height=350, font=dict(color='#94a3b8')
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        with t_col:
+            st.markdown(summary)
+    else:
+        st.warning("⚠️ 暂无共识数据。请先在左侧边栏返回【多主体利益协商】页面，并在“阶段四”中完成 AI 博弈推演。")
+    st.stop()
 
 p4_mode = st.radio("⬇️ 选择推演阶段", [
     "📊 阶段一：前期分析",
@@ -357,8 +387,101 @@ elif p4_mode == "💡 阶段三：设计理念":
 elif p4_mode == "⚖️ 阶段四：问题-策略对应":
     st.markdown("### ⚖️ 阶段四：多主体博弈 → 问题-策略对应表")
     st.info("💡 三角色围绕阶段三策略展开博弈，生成【问题→策略→依据→空间落位】对应表。")
+    
+    # --- ✨ 智能议题生成 (Phase 4 新增) ---
+    st.markdown("#### ✨ 智能议题推荐")
+    
+    # 预置高质量议题
+    preset_agendas = [
+        {
+            "title": "🏭 铁北工业遗产：保留原真性还是彻底商业化？",
+            "content": "铁北老厂区拥有大面积红砖锯齿形厂房。规划师主张严格保护其历史风貌，限制内部改造幅度；而开发商认为必须允许加建玻璃幕墙、提升容积率以植入电竞和餐饮业态，否则无法收回投资。居民则更关心改造后是否对周边免费开放公共空间。"
+        },
+        {
+            "title": "🏘️ 老旧小区改造：拆除违建补绿还是增加停车位？",
+            "content": "老旧小区普遍面临空间极度局促的问题。目前绿视率不足 10%。社区提议拆除私搭乱建，全部用于增加绿化和口袋公园；但部分有车居民及物业强烈要求将腾退空间铺设透水砖，划定为停车位。如何平衡环境品质与停车刚需？"
+        },
+        {
+            "title": "🚶 交通微循环：街道步行化改造与车流效率的冲突",
+            "content": "为了提升 15 分钟生活圈品质，规划方案建议将主街部分路段压缩车道，拓宽慢行步道，并增加沿街外摆空间。但这可能导致早晚高峰周边路网拥堵加剧。居民担心出行不便，商家则支持步行化以增加客流。"
+        }
+    ]
+    
+    s1 = st.session_state.get("stage1_output", "")
+    s2 = st.session_state.get("stage2_output", "")
     s3 = st.session_state.get("stage3_output", "")
-    proposal = st.text_area("✍️ 微更新构思或争议点：", value=s3[:300] if s3 else "", placeholder="例如：将铁北旧厂房改造为电竞创业园...", height=120)
+    
+    if "p4_generated_agendas" not in st.session_state:
+        st.session_state["p4_generated_agendas"] = []
+        
+    if st.button("🔍 基于前序证据链智能生成议题", key="btn_gen_agendas"):
+        if is_demo_mode():
+            st.session_state["p4_generated_agendas"] = preset_agendas
+            st.toast("演示模式：已加载预置更新议题", icon="💡")
+        else:
+            with st.spinner("🧠 正在结合前三阶段成果生成专属议题..."):
+                prompt = f"""
+基于以下循证推演的前三阶段成果：
+【阶段一】{s1[:800]}
+【阶段二】{s2[:800]}
+【阶段三】{s3[:800]}
+
+请针对长春铁北/伪满皇宫周边地块，生成 3 个具有争议性、多方利益冲突、且亟待通过博弈解决的“更新议题”。
+要求：
+1. 每个议题应包含一个明确的标题（title）和 100 字左右的背景说明（content）。
+2. 涉及历史风貌保护与现代商业的矛盾、居民民生需求与开发成本的平衡等。
+3. 请严格只输出一段 JSON 数组，格式如下：
+[
+  {{"title": "议题标题1", "content": "议题背景说明1"}},
+  {{"title": "议题标题2", "content": "议题背景说明2"}},
+  {{"title": "议题标题3", "content": "议题背景说明3"}}
+]
+"""
+                sys_prompt = "你是一个专门输出 JSON 的机器人。不要输出任何除了 JSON 之外的说明文本或 markdown 标记。"
+                try:
+                    # 避免在生成大段内容时使用流式
+                    raw_result = call_llm_engine(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
+                    import json
+                    clean_result = raw_result.strip()
+                    if clean_result.startswith("```json"):
+                        clean_result = clean_result[7:]
+                    if clean_result.startswith("```"):
+                        clean_result = clean_result[3:]
+                    if clean_result.endswith("```"):
+                        clean_result = clean_result[:-3]
+                    clean_result = clean_result.strip()
+                    agendas = json.loads(clean_result)
+                    if isinstance(agendas, list) and len(agendas) > 0:
+                        st.session_state["p4_generated_agendas"] = agendas
+                        st.toast("✅ 专属议题生成成功！", icon="✨")
+                    else:
+                        raise ValueError("JSON 结构错误")
+                except Exception as e:
+                    st.warning("大模型生成异常或未开启，已切换至高质量预置议题。")
+                    st.session_state["p4_generated_agendas"] = preset_agendas
+    
+    # 渲染议题卡片
+    if st.session_state["p4_generated_agendas"]:
+        st.markdown("<br>", unsafe_allow_html=True)
+        cols = st.columns(len(st.session_state["p4_generated_agendas"]))
+        for idx, agenda in enumerate(st.session_state["p4_generated_agendas"]):
+            with cols[idx]:
+                st.markdown(f"""
+                <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 15px; height: 180px; overflow-y: auto;">
+                    <div style="font-size: 14px; font-weight: 700; color: #a5b4fc; margin-bottom: 8px;">{agenda.get('title', '未命名议题')}</div>
+                    <div style="font-size: 12px; color: #cbd5e1; line-height: 1.6;">{agenda.get('content', '')}</div>
+                </div>
+                """, unsafe_allow_html=True)
+                if st.button(f"🎯 选定此议题", key=f"sel_agenda_{idx}", use_container_width=True):
+                    st.session_state["p4_selected_proposal"] = agenda.get('content', '')
+        st.markdown("---")
+
+    default_proposal_value = st.session_state.get("p4_selected_proposal", s3[:300] if s3 else "")
+    proposal = st.text_area("✍️ 微更新构思或争议点：", value=default_proposal_value, placeholder="例如：将铁北旧厂房改造为电竞创业园...", height=120)
+    
+    # 实时同步用户修改的值到 session (防止文本框锁定)
+    if proposal != default_proposal_value:
+        st.session_state["p4_selected_proposal"] = proposal
     if enable_policy_check and proposal:
         with st.expander("📜 政策合规校验 (RAG)", expanded=False):
             matrix = generate_policy_matrix(proposal)
@@ -395,22 +518,18 @@ elif p4_mode == "⚖️ 阶段四：问题-策略对应":
                     voting_scores[name] = max(0, min(100, int(m.group(1)) if m else 50))
                 time.sleep(0.3)
             st.markdown("---")
-            st.subheader("📊 共识度雷达 + 问题-策略对应表")
-            r_col, t_col = st.columns([1, 2])
-            with r_col:
-                fig = go.Figure()
-                fig.add_trace(go.Scatterpolar(r=list(voting_scores.values())+[list(voting_scores.values())[0]], theta=list(voting_scores.keys())+[list(voting_scores.keys())[0]], fill='toself', fillcolor='rgba(99,102,241,0.15)', line=dict(color='#818cf8', width=2)))
-                fig.update_layout(polar=dict(bgcolor='rgba(0,0,0,0)', radialaxis=dict(range=[0,100], gridcolor='rgba(99,102,241,0.15)'), angularaxis=dict(gridcolor='rgba(99,102,241,0.15)')), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', height=300, font=dict(color='#94a3b8'))
-                st.plotly_chart(fig, use_container_width=True)
-            with t_col:
-                sp = f"""基于博弈记录生成Markdown表格【问题-策略对应表】：
+            st.session_state["p4_voting_scores"] = voting_scores
+            
+            st.subheader("📊 问题-策略对应表")
+            sp = f"""基于博弈记录生成Markdown表格【问题-策略对应表】：
 {str(results)[:3000]}
 格式：| 问题 | 策略 | 政策依据 | 空间落位 | 共识度 |"""
-                stream = call_llm_engine_stream(prompt=sp, system_prompt="高级城市更新研究员。策略须在容积率≤1.4、限高≤18m约束下。", model=model_tag)
-                summary = st.write_stream(stream)
-                if isinstance(summary, str):
-                    st.session_state["stage4_output"] = summary
-                    st.toast("✅ 阶段四完成！", icon="⚖️")
+            stream = call_llm_engine_stream(prompt=sp, system_prompt="高级城市更新研究员。策略须在容积率≤1.4、限高≤18m约束下。", model=model_tag)
+            summary = st.write_stream(stream)
+            if isinstance(summary, str):
+                st.session_state["stage4_output"] = summary
+                st.success("✅ 阶段四完成！已生成共识度打分。请前往侧边栏【动态共识雷达】查看多维度雷达图谱。")
+                st.toast("✅ 阶段四完成！", icon="⚖️")
 
 elif p4_mode == "🎯 阶段五：空间成果方案":
     st.markdown("### 🎯 阶段五：空间成果方案汇总")
