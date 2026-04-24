@@ -296,22 +296,27 @@ def render_skyline_hud():
     """在地图下方渲染横向天际线指标面板"""
     skyline_stats = get_skyline_features()
     st.markdown(f"""
-    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 16px; padding: 20px 30px; margin: 25px 0; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
-        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
-            <div style="font-size: 11px; color: #818cf8; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏙️ 区域天际线地标高度</div>
-            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['max_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
+    <div style="background: rgba(15, 23, 42, 0.4); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 16px; padding: 20px 30px; margin: 25px 0; backdrop-filter: blur(15px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 11px; color: #818cf8; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏙️ 区域天际线地标高度</div>
+                <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['max_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
+            </div>
+            <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 11px; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏢 平均建筑高度</div>
+                <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['avg_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
+            </div>
+            <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
+                <div style="font-size: 11px; color: #f59e0b; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">📈 高层建筑占比</div>
+                <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['high_rise_ratio']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">%</span></div>
+            </div>
+            <div style="flex: 1; text-align: center;">
+                <div style="font-size: 11px; color: #ec4899; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏗️ 测区建筑总数</div>
+                <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['building_count']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">栋</span></div>
+            </div>
         </div>
-        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
-            <div style="font-size: 11px; color: #10b981; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏢 平均建筑高度</div>
-            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['avg_height']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">m</span></div>
-        </div>
-        <div style="flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2);">
-            <div style="font-size: 11px; color: #f59e0b; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">📈 高层建筑占比</div>
-            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['high_rise_ratio']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">%</span></div>
-        </div>
-        <div style="flex: 1; text-align: center;">
-            <div style="font-size: 11px; color: #ec4899; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">🏗️ 测区建筑总数</div>
-            <div style="font-size: 28px; font-weight: 800; color: #f8fafc;">{skyline_stats['building_count']}<span style="font-size: 16px; margin-left: 5px; color: #94a3b8;">栋</span></div>
+        <div style="text-align: right; font-size: 9px; color: rgba(148, 163, 184, 0.5); font-family: 'Inter', sans-serif; margin-top: 12px; border-top: 1px solid rgba(99, 102, 241, 0.1); padding-top: 8px;">
+            * 注：天际线高度数据基于建筑基底 Floor 字段按标准层高 3.5m 换算所得
         </div>
     </div>
     """, unsafe_allow_html=True)
