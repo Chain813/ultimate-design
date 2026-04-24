@@ -115,6 +115,14 @@ st.markdown("""
         <b style="color: #a5b4fc !important;">多主体协同测算 (Multi-agent Computation)</b>，
         为长春历史风貌区改造提供量化决策支撑。
     </p>
+    
+<div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; padding: 18px 25px; margin: 25px auto 0; text-align: left; max-width: 900px;">
+    <div style="color: #a5b4fc; font-weight: bold; margin-bottom: 8px; font-size: 0.95rem;">📍 研究范围声明与底层架构说明 (Research Scope)</div>
+    <div style="color: #94a3b8; font-size: 0.85rem; line-height: 1.7;">
+        <b>当前基址合规性：</b>本系统目前所呈现的核心空间数据（包括建筑三维模型、基础数据表格、全景照片等），其研究边界的划分与数据收集范围<b>严格且完全符合本课题《任务书》与《开题报告》中所限定的特定研究区域</b>，具备极强的课题针对性。<br>
+        <b>未来跨城拓展性：</b>系统采用了“界面与数据分离”的设计。未来只需在文件夹中替换对应城市的地图与数据表，就能把本系统应用到全球任何一个地块 <span style="font-size: 0.75rem; color: #64748b;">(系统解耦与模块化热替换：即不修改核心代码逻辑，仅通过替换底层资源包即可实现跨区域的二次开发)</span>。
+    </div>
+</div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -313,9 +321,9 @@ def render_workflow_logic():
     .node-group:hover .node-glow { opacity: 0.4; }
     .node-icon { font-size: 20px; text-anchor: middle; dominant-baseline: central; }
     .node-group:hover .node-icon { font-size: 24px; }
-    .node-label { font-family: 'Inter', sans-serif; font-weight: 700; fill: #e2e8f0; font-size: 10px; text-anchor: middle; opacity: 0.9; }
-    .node-sub { font-family: 'Inter', sans-serif; font-weight: 400; fill: #94a3b8; font-size: 7.5px; text-anchor: middle; opacity: 0.8; }
-    .node-tech { font-family: 'JetBrains Mono', monospace; font-size: 7px; fill: #6366f1; text-anchor: middle; opacity: 0.8; }
+    .node-label { font-family: 'Inter', sans-serif; font-weight: 700; fill: #e2e8f0; font-size: 12px; text-anchor: middle; opacity: 0.9; }
+    .node-sub { font-family: 'Inter', sans-serif; font-weight: 400; fill: #94a3b8; font-size: 9px; text-anchor: middle; opacity: 0.8; }
+    .node-tech { font-family: 'JetBrains Mono', monospace; font-size: 8.5px; fill: #6366f1; text-anchor: middle; opacity: 0.8; }
     .tooltip-box { fill: rgba(15, 23, 42, 0.95); stroke: #818cf8; stroke-width: 1; rx: 8; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .node-group:hover .tooltip-box { opacity: 1; }
     .tooltip-title { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; fill: #818cf8; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
@@ -335,16 +343,16 @@ def render_workflow_logic():
 
             <!-- Layer Backgrounds -->
             <rect x="20" y="50" width="220" height="580" rx="15" fill="rgba(99,102,241,0.03)" stroke="rgba(99,102,241,0.15)" stroke-dasharray="5,5"/>
-            <text x="130" y="70" font-family="Inter" font-weight="800" font-size="11px" fill="#6366f1" text-anchor="middle" letter-spacing="1">PHASE I: 多源异构基底</text>
+            <text x="130" y="70" font-family="Inter" font-weight="800" font-size="13px" fill="#6366f1" text-anchor="middle" letter-spacing="1">PHASE I: 多源异构基底</text>
             
             <rect x="260" y="50" width="340" height="580" rx="15" fill="rgba(16,185,129,0.03)" stroke="rgba(16,185,129,0.15)" stroke-dasharray="5,5"/>
-            <text x="430" y="70" font-family="Inter" font-weight="800" font-size="11px" fill="#10b981" text-anchor="middle" letter-spacing="1">PHASE II: 空间测度与语义解析</text>
+            <text x="430" y="70" font-family="Inter" font-weight="800" font-size="13px" fill="#10b981" text-anchor="middle" letter-spacing="1">PHASE II: 空间测度与语义解析</text>
 
             <rect x="620" y="50" width="280" height="580" rx="15" fill="rgba(236,72,153,0.03)" stroke="rgba(236,72,153,0.15)" stroke-dasharray="5,5"/>
-            <text x="760" y="70" font-family="Inter" font-weight="800" font-size="11px" fill="#ec4899" text-anchor="middle" letter-spacing="1">PHASE III: 孪生映射与干预</text>
+            <text x="760" y="70" font-family="Inter" font-weight="800" font-size="13px" fill="#ec4899" text-anchor="middle" letter-spacing="1">PHASE III: 孪生映射与干预</text>
 
             <rect x="920" y="50" width="310" height="580" rx="15" fill="rgba(245,158,11,0.03)" stroke="rgba(245,158,11,0.15)" stroke-dasharray="5,5"/>
-            <text x="1075" y="70" font-family="Inter" font-weight="800" font-size="11px" fill="#f59e0b" text-anchor="middle" letter-spacing="1">PHASE IV: 智能博弈决策</text>
+            <text x="1075" y="70" font-family="Inter" font-weight="800" font-size="13px" fill="#f59e0b" text-anchor="middle" letter-spacing="1">PHASE IV: 智能博弈决策</text>
 
             <!-- ===================== Base Paths ===================== -->
             <!-- L1 to L2 -->
@@ -410,6 +418,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="130" y="281">💬</text>
                 <text class="node-label" x="130" y="325">社会感知网络</text>
                 <text class="node-tech" x="130" y="338">UGC 脱敏文本</text>
+                
+                <rect class="tooltip-box" x="0" y="165" width="260" height="75"/>
+                <text class="tooltip-title" x="130" y="182" text-anchor="middle">Step 1.2: 社会情绪感知提取</text>
+                <text class="tooltip-desc" x="130" y="198" text-anchor="middle">爬取微博、小红书、抖音等社交媒体脱敏数据</text>
+                <text class="tooltip-desc" x="130" y="212" text-anchor="middle">用于反映居民对街区更新的自下而上诉求</text>
+                <text class="tooltip-tech-label" x="130" y="228" text-anchor="middle">核心管线：Selenium / 动态无头防封锁</text>
             </g>
             <g class="node-group">
                 <circle class="node-glow" cx="130" cy="430" r="34"/>
@@ -417,6 +431,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="130" y="431">🗺️</text>
                 <text class="node-label" x="130" y="475">物理影像底板</text>
                 <text class="node-tech" x="130" y="488">街景GVI / 建筑GeoJSON</text>
+                
+                <rect class="tooltip-box" x="0" y="315" width="260" height="75"/>
+                <text class="tooltip-title" x="130" y="332" text-anchor="middle">Step 1.3: 物理空间特征捕获</text>
+                <text class="tooltip-desc" x="130" y="348" text-anchor="middle">接入街景服务，提取道路级别的全景影像截图</text>
+                <text class="tooltip-desc" x="130" y="362" text-anchor="middle">整合建筑底面轮廓 (Footprints) 矢量数据</text>
+                <text class="tooltip-tech-label" x="130" y="378" text-anchor="middle">核心管线：Map API / GeoJSON 底座提取</text>
             </g>
             <g class="node-group">
                 <circle class="node-glow" cx="130" cy="550" r="34"/>
@@ -424,6 +444,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="130" y="551">📜</text>
                 <text class="node-label" x="130" y="595">规划条例语料库</text>
                 <text class="node-tech" x="130" y="608">PDF / Docx 文本提取</text>
+                
+                <rect class="tooltip-box" x="0" y="435" width="260" height="75"/>
+                <text class="tooltip-title" x="130" y="452" text-anchor="middle">Step 1.4: 城市规划文档入库</text>
+                <text class="tooltip-desc" x="130" y="468" text-anchor="middle">解析《历史文化名城保护条例》等长春地方法规</text>
+                <text class="tooltip-desc" x="130" y="482" text-anchor="middle">构建非结构化 PDF/Word 文档的特征检索库</text>
+                <text class="tooltip-tech-label" x="130" y="498" text-anchor="middle">核心管线：MarkItDown 跨模态文档解析</text>
             </g>
 
             <!-- L2: 测度层 -->
@@ -447,6 +473,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="380" y="281" font-size="18">🧠</text>
                 <text class="node-label" x="380" y="330">NLP 情感极性挖掘</text>
                 <text class="node-tech" x="380" y="345">SnowNLP / TF-IDF / 词云</text>
+                
+                <rect class="tooltip-box" x="250" y="165" width="260" height="75"/>
+                <text class="tooltip-title" x="380" y="182" text-anchor="middle">Step 2.2: 居民诉求倾向挖掘</text>
+                <text class="tooltip-desc" x="380" y="198" text-anchor="middle">对社会感知脱敏文本执行极性分析运算</text>
+                <text class="tooltip-desc" x="380" y="212" text-anchor="middle">输出情感均值，折算为 MPI “社会需求”维度的权重</text>
+                <text class="tooltip-tech-label" x="380" y="228" text-anchor="middle">算法：定制化规划领域情感词典 / SnowNLP</text>
             </g>
             <g class="node-group">
                 <circle class="node-glow" cx="380" cy="430" r="38"/>
@@ -469,6 +501,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="680" y="131">📍</text>
                 <text class="node-label" x="680" y="175">POI 蜂窝热力特征</text>
                 <text class="node-tech" x="680" y="188">Deck.gl HexagonLayer</text>
+                
+                <rect class="tooltip-box" x="550" y="15" width="260" height="75"/>
+                <text class="tooltip-title" x="680" y="32" text-anchor="middle">Step 3.1: 商业活力三维测度</text>
+                <text class="tooltip-desc" x="680" y="48" text-anchor="middle">基于高德 POI 设施点构建 3D 六边形蜂窝网格</text>
+                <text class="tooltip-desc" x="680" y="62" text-anchor="middle">直观映射城市公共设施的聚集度与服务盲区</text>
+                <text class="tooltip-tech-label" x="680" y="78" text-anchor="middle">渲染底层：Deck.gl HexagonLayer WebGL</text>
             </g>
             <g class="node-group">
                 <circle class="node-glow" cx="680" cy="220" r="34"/>
@@ -476,6 +514,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="680" y="221">🚦</text>
                 <text class="node-label" x="680" y="265">24H 动态潮汐轨迹</text>
                 <text class="node-tech" x="680" y="278">Deck.gl TripsLayer</text>
+                
+                <rect class="tooltip-box" x="550" y="105" width="260" height="75"/>
+                <text class="tooltip-title" x="680" y="122" text-anchor="middle">Step 3.2: 拥堵瓶颈时空演变</text>
+                <text class="tooltip-desc" x="680" y="138" text-anchor="middle">将交管时序拥堵点位渲染为带时间轴的流体轨迹</text>
+                <text class="tooltip-desc" x="680" y="152" text-anchor="middle">辅助判断更新片区的交通承载力短板与人流趋势</text>
+                <text class="tooltip-tech-label" x="680" y="168" text-anchor="middle">渲染底层：Deck.gl TripsLayer WebGL</text>
             </g>
             <g class="node-group">
                 <circle class="node-glow" cx="680" cy="330" r="44"/>
@@ -531,6 +575,12 @@ def render_workflow_logic():
                 <text class="node-icon" x="1000" y="431">📚</text>
                 <text class="node-label" x="1000" y="475">RAG 法规校验矩阵</text>
                 <text class="node-tech" x="1000" y="488">248 语义切片 + 容积率红线</text>
+                
+                <rect class="tooltip-box" x="870" y="315" width="260" height="75"/>
+                <text class="tooltip-title" x="1000" y="332" text-anchor="middle">Step 6.2: 政策合规动态校验</text>
+                <text class="tooltip-desc" x="1000" y="348" text-anchor="middle">提取各方博弈生成的更新提案细节</text>
+                <text class="tooltip-desc" x="1000" y="362" text-anchor="middle">利用语义检索强制对比法定规划容积率与高度红线</text>
+                <text class="tooltip-tech-label" x="1000" y="378" text-anchor="middle">技术栈：Text Embedding / 向量余弦检索</text>
             </g>
 
             <!-- Final Node -->

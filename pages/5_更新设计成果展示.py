@@ -136,13 +136,46 @@ elif selected_sub == "📑 规划文本成果":
         针对 MPI 评分极高且建筑老化严重、存在安全隐患的 3 层以下违章建筑实施拆除，释放的用地优先作为绿地口袋公园（提升 GVI）及公共停车场。
         """)
         
-    # 提供下载
-    mock_md = "# 宽城区历史文化街区微更新规划导则\n\n## 1. 总则\n内容略...\n## 2. 空间策略\n内容略..."
+    # 🚀 动态生成官方 Word 公文并提供下载 (替代原本的 Mock Markdown)
+    from src.utils.document_generator import generate_official_word_doc
+    
+    full_text = """
+# 第一章 总则
+## 1.1 规划目的
+为贯彻落实长春市城市更新总体战略，科学指导宽城区伪满皇宫周边历史文化街区的保护与复兴工作，制定本导则。本导则汲取了多主体（公众、开发商、规划师）的大模型博弈共识。
+
+## 1.2 规划原则
+- 修旧如旧，存量提质：严格保护历史街区真实性。
+- 针灸更新，活力激发：以微小尺度的介入带动全局活力。
+- 设施完善，韧性提升：全面升级地下水电管网系统（见 X-Ray 管线规划图）。
+
+# 第二章 空间留改拆策略分布
+## 2.1 历史风貌保护区 (紫色区域)
+涉及伪满皇宫及周边 15 处挂牌历史建筑。严格禁止改变外立面材质，允许内部进行符合现代安全标准的修缮。
+
+## 2.2 功能活化改造区 (黄色区域)
+对 80 年代建成的低效厂房及废弃商业裙楼进行“腾笼换鸟”，植入文创零售与青创办公空间。
+
+## 2.3 拆除腾退区 (动态塌缩区域)
+针对 MPI 评分极高且建筑老化严重、存在安全隐患的违章建筑实施拆除，释放的用地优先作为绿地口袋公园及公共停车场。
+    """
+    
+    # 读取跨页面 Session 中的 AIGC 成果图
+    aigc_history = st.session_state.get('aigc_history', [])
+    
+    docx_io = generate_official_word_doc(
+        title="宽城区历史文化街区微更新规划导则", 
+        text_content=full_text,
+        aigc_history=aigc_history
+    )
+    
     st.download_button(
-        label="📥 导出完整规划文本 (Markdown 格式)",
-        data=mock_md.encode("utf-8"),
-        file_name="最终规划文本成果.md",
-        mime="text/markdown"
+        label="📥 一键导出带红头公文 (Word 格式，含 AIGC 图集)",
+        data=docx_io,
+        file_name="宽城区历史文化街区微更新规划导则(AI自动生成版).docx",
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        use_container_width=True,
+        type="primary"
     )
 
 elif selected_sub == "🖼️ 重点地块效果图":

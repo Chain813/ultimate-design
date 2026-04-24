@@ -14,6 +14,19 @@ render_engine_status_alert()
 from src.utils.daemon_manager import render_daemon_control_panel
 render_daemon_control_panel()
 
+# 📊 RAG 知识库预热（带进度条）
+if "rag_warmed" not in st.session_state:
+    with st.status("⏳ 正在预热 RAG 政策知识库...", expanded=True) as rag_status:
+        st.write("📂 加载政策文档切片...")
+        from src.engines.core_engine import get_cached_db_embeddings
+        db_emb, _ = get_cached_db_embeddings()
+        if db_emb:
+            st.write(f"✅ 已加载 {len(db_emb)} 条政策向量，语义检索就绪")
+        else:
+            st.write("⚠️ 向量模型未就绪，将使用关键词匹配模式")
+        rag_status.update(label="✅ RAG 知识库预热完成", state="complete", expanded=False)
+    st.session_state["rag_warmed"] = True
+
 # --- CSS 样式注入 (巅峰版 Glassmorphism 角色卡片) ---
 st.markdown("""
 <style>
@@ -140,322 +153,296 @@ with st.sidebar:
         st.caption('暂无历史议题。点击「生成智能议题」后将自动归档。')
 
 # ==========================================
-# 📍 LLM 决策维标
+# 📍 五阶段循证规划推演工作流
 # ==========================================
 st.markdown("---")
-p4_mode = st.radio("⬇️ 选择议事工作流", ["🗣️ 多向演进协商", "📜 政策实施制定", "🗺️ 区域发展策划"], horizontal=True, key="p4_tab_mode")
+
+# --- 五阶段流程可视化 ---
+st.markdown("""
+<div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;">
+<div style="color: #a5b4fc; font-weight: 800; font-size: 15px; margin-bottom: 14px; text-align: center;">🔬 循证规划五阶段推演工作流 <span style="font-size: 11px; color: #64748b; font-weight: 400;">（每阶段输出自动传递至下一阶段，形成完整证据链）</span></div>
+<div style="display: flex; align-items: flex-start; justify-content: center; gap: 6px; flex-wrap: nowrap;">
+
+<div style="flex: 1; text-align: center; min-width: 0;">
+<div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
+<div style="font-size: 18px;">📊</div>
+<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">1. 前期分析</div>
+</div>
+<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">读取MPI/GVI/POI<br>诊断数据，输出<br><b style="color:#a5b4fc;">问题清单</b></div>
+</div>
+
+<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
+
+<div style="flex: 1; text-align: center; min-width: 0;">
+<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
+<div style="font-size: 18px;">📚</div>
+<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">2. 方案借鉴</div>
+</div>
+<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">自动提取开题报告<br>4个案例，输出<br><b style="color:#34d399;">对标分析</b></div>
+</div>
+
+<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
+
+<div style="flex: 1; text-align: center; min-width: 0;">
+<div style="background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
+<div style="font-size: 18px;">💡</div>
+<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">3. 设计理念</div>
+</div>
+<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">融合前两阶段+<br>保护条例，提炼<br><b style="color:#ec4899;">核心策略</b></div>
+</div>
+
+<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
+
+<div style="flex: 1; text-align: center; min-width: 0;">
+<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
+<div style="font-size: 18px;">⚖️</div>
+<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">4. 问题-策略</div>
+</div>
+<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">三角色博弈协商<br>问题→策略→依据<br><b style="color:#f59e0b;">对应表</b></div>
+</div>
+
+<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
+
+<div style="flex: 1; text-align: center; min-width: 0;">
+<div style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
+<div style="font-size: 18px;">🎯</div>
+<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">5. 空间成果</div>
+</div>
+<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">全链路汇总生成<br>规划导则+红头<br><b style="color:#a78bfa;">成果文件</b></div>
+</div>
+
+</div>
+</div>
+""", unsafe_allow_html=True)
+
+p4_mode = st.radio("⬇️ 选择推演阶段", [
+    "📊 阶段一：前期分析",
+    "📚 阶段二：方案借鉴",
+    "💡 阶段三：设计理念",
+    "⚖️ 阶段四：问题-策略对应",
+    "🎯 阶段五：空间成果方案"
+], horizontal=True, key="p4_tab_mode")
 
 st.markdown("---")
-if p4_mode == "🗣️ 多向演进协商":
-    st.markdown("### 📍 智能议题生成与多向演化推演")
+if p4_mode == "📊 阶段一：前期分析":
+    st.markdown("### 📊 阶段一：前期数据诊断与问题清单生成")
+    st.info("💡 本阶段自动读取第 1、2 实验室的 MPI/GVI/POI 真实数据，由 AI 生成有理有据的问题诊断报告。")
 
-    auto_col, manual_col = st.columns([1, 1])
+    diagnostics = get_plot_diagnostics()
+    if diagnostics:
+        plot_names = [d["name"] for d in diagnostics]
+        selected_plot = st.selectbox("选择重点地块：", plot_names, key="p4_s1_plot")
+        selected_diag = next(d for d in diagnostics if d["name"] == selected_plot)
 
-    with auto_col:
-        st.markdown("#### 🤖 基于诊断数据的 AI 议题生成")
-        diagnostics = get_plot_diagnostics()
-        if diagnostics:
-            plot_names = [d["name"] for d in diagnostics]
-            selected_plot = st.selectbox("选择重点地块：", plot_names, key="p4_plot_sel",
-                                         help="此处列出的地块来自 01 实验室的 MPI 评估结果，已按更新潜力排序。")
-            
-            selected_diag = next(d for d in diagnostics if d["name"] == selected_plot)
-            
-            # 展示地块概况
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("面积", f"{selected_diag['area_ha']} ha", help="地块净用地面积（公顷）")
-            m2.metric("MPI", f"{selected_diag['mpi_score']}", help="微更新潜力指数：综合评价该地块实施更新改造的紧迫性与可行性。>70 为高潜力地块。")
-            m3.metric("POI", f"{selected_diag['poi_count']}", help="兴趣点数量（Point of Interest）：反映周边商业及公共服务设施的密集程度。")
-            m4.metric("GVI", f"{selected_diag['gvi_mean']}", help="绿视率（Green View Index）：基于街景图像分析的人眼可视绿色植被占比，参照《城市居住区规划设计标准》(GB50180-2018) 绿地率不低于 30%。")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("面积", f"{selected_diag['area_ha']} ha")
+        m2.metric("MPI", f"{selected_diag['mpi_score']}")
+        m3.metric("POI", f"{selected_diag['poi_count']}")
+        m4.metric("GVI", f"{selected_diag['gvi_mean']}")
 
-            if st.button("🧠 生成 AI 智能议题 (接入本地大模型)", key="auto_gen_btn", type="primary"):
-                with st.spinner("正在调用本地大模型生成高质量议题..."):
-                    issue_prompt = f"""你是长春宽城区铁北片区的城市更新规划顾问。
-基于以下地块诊断数据：
+        if st.button("🔬 生成前期问题诊断报告", type="primary", key="s1_btn"):
+            with st.status("🔬 AI 正在诊断...", expanded=True) as status:
+                st.write("📊 注入 MPI/GVI/POI 数据至 Prompt...")
+                prompt = f"""你是长春宽城区铁北片区的城市更新规划顾问。
+基于以下来自本平台第 1、2 实验室的真实诊断数据：
 - 地块名称：{selected_plot}
-- 占地面积：{selected_diag['area_ha']} 公顷
-- 微更新潜力指数（MPI）：{selected_diag['mpi_score']}
-- 周边 POI 数量：{selected_diag['poi_count']}
-- 绿视率（GVI）：{selected_diag['gvi_mean']}%
+- 面积：{selected_diag['area_ha']} 公顷
+- 微更新潜力指数（MPI）：{selected_diag['mpi_score']}（参照：>70 为高潜力）
+- 周边 POI 设施数：{selected_diag['poi_count']}
+- 绿视率（GVI）：{selected_diag['gvi_mean']}%（参照：GB50180-2018 要求绿地率≥30%）
 
-请生成 3 个具有明显差异性的城市微更新议题方案。每个议题格式如下：
-【议题标题】...
-【核心矛盾】...  
-【更新策略】...
-【空间落位】具体到街道或建筑群名称"""
+请生成一份【前期问题诊断报告】。要求：
+1. 必须列出 4-6 个具体问题，每个问题格式为：
+   【问题编号】问题名称
+   【数据依据】引用上述具体数据指标
+   【政策依据】引用《长春市历史文化名城保护条例》或《宽城区城市更新三年行动计划》中的条文
+   【严重程度】高/中/低
+2. 最后给出问题优先级排序
+3. 结合开题报告中指出的四大核心痛点：用地混杂(中车厂区空置率40%)、交通割裂、老龄化率30%、环境品质匮乏"""
+                sys_prompt = "你是一位扎根长春铁北片区的资深城市规划诊断师。输出必须严格引用具体数据和政策条文编号，禁止空洞定性描述。"
+                st.write("🤖 调用本地大模型生成中...")
+                status.update(label="🤖 AI 正在生成诊断报告...", expanded=True)
+            stream = call_llm_engine_stream(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
+            result = st.write_stream(stream)
+            if isinstance(result, str) and len(result) > 50:
+                st.session_state["stage1_output"] = result
+                st.toast("✅ 阶段一完成！", icon="📊")
+                st.rerun()
+    else:
+        st.warning("暂无地块诊断数据。")
 
-                    stream = call_llm_engine_stream(
-                        prompt=issue_prompt,
-                        system_prompt="你是一位扎根长春铁北片区的资深城市规划师。请结合伪满皇宫周边街区的实际空间特征，给出具体到街道和建筑群的更新方案。注意：建设控制地带容积率不超过 1.4，建筑高度不超过 18m，核心保护区不超过 9m。",
-                        model=model_tag
-                    )
-                    generated_text = st.write_stream(stream)
-                    
-                    if isinstance(generated_text, str) and len(generated_text) > 20:
-                        st.session_state["p4_proposal"] = generated_text
-                        # 归档到侧边栏
-                        st.session_state["issue_archive"].append({
-                            "title": f"{selected_plot} 的 AI 议题",
-                            "content": generated_text[:500]
-                        })
-                        st.toast("✅ 议题已生成并归档至侧边栏", icon="📂")
-        else:
-            st.warning("暂无地块诊断数据")
+    if st.session_state.get("stage1_output"):
+        st.markdown("#### 📋 阶段一诊断报告")
+        st.markdown(st.session_state["stage1_output"])
+        if st.button("🗑️ 清除阶段一结果并重新生成", key="s1_clear"):
+            del st.session_state["stage1_output"]
+            st.rerun()
 
-    with manual_col:
-        st.markdown("#### ✍️ 手动输入议题")
+elif p4_mode == "📚 阶段二：方案借鉴":
+    st.markdown("### 📚 阶段二：开题报告案例自动提取与对标分析")
+    st.info("💡 系统将自动读取 `docs/开题报告_案例摘要.md` 中的 4 个案例（2 国内 + 2 国外），结合阶段一的问题清单生成对标分析。")
 
-    # --- 主交互区 ---
-    proposal = st.text_area("✍️ 请输入当前的微更新构思或争议点：", 
-                          value=st.session_state.get("p4_proposal", ""),
-                          placeholder="例如：提议将铁北旧厂房整体改造为电竞创业园，并拆除外围少量围墙以增加通达性...",
-                          height=120)
+    case_context = ""
+    case_path = "docs/开题报告_案例摘要.md"
+    if os.path.exists(case_path):
+        with open(case_path, "r", encoding="utf-8") as f:
+            case_context = f.read()
+        st.success(f"✅ 已加载案例文件：{case_path}（{len(case_context)} 字）")
+    else:
+        st.error("❌ 未找到案例摘要文件，请确认 docs/开题报告_案例摘要.md 存在。")
 
-    # ==========================================
-    # 📜 政策合规校验面板
-    # ==========================================
+    stage1_data = st.session_state.get("stage1_output", "（阶段一尚未执行，将使用开题报告中的四大痛点作为替代输入）")
+
+    if st.button("📖 生成案例对标分析报告", type="primary", key="s2_btn"):
+        prompt = f"""请基于以下开题报告中收集的 4 个案例借鉴：
+{case_context[:3000]}
+
+以及本项目阶段一诊断出的核心问题：
+{stage1_data[:2000]}
+
+生成一份【案例对标分析报告】。要求：
+1. 对每个案例逐一分析，格式为：
+   【案例名称】
+   【核心经验】该案例最值得借鉴的 1-2 个做法
+   【对标问题】该经验可以对应解决阶段一中的哪个具体问题
+   【本地化建议】结合伪满皇宫周边的实际情况，该经验如何落地
+2. 最后给出【案例经验综合提炼】，提炼出 3-4 条可直接指导本项目的核心设计原则"""
+        sys_prompt = "你是一位城市更新领域的比较研究专家。分析必须紧密结合长春铁北片区的实际情况，禁止泛泛而谈。"
+        stream = call_llm_engine_stream(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
+        result = st.write_stream(stream)
+        if isinstance(result, str) and len(result) > 50:
+            st.session_state["stage2_output"] = result
+            st.toast("✅ 阶段二完成！", icon="📚")
+            st.rerun()
+
+    if st.session_state.get("stage2_output"):
+        st.markdown("#### 📋 阶段二对标分析报告")
+        st.markdown(st.session_state["stage2_output"])
+        if st.button("🗑️ 清除并重新生成", key="s2_clear"):
+            del st.session_state["stage2_output"]
+            st.rerun()
+
+elif p4_mode == "💡 阶段三：设计理念":
+    st.markdown("### 💡 阶段三：设计理念提炼")
+    st.info("💡 融合前两阶段成果 + 开题报告设计主题，提炼核心设计理念与策略。")
+    s1 = st.session_state.get("stage1_output", "")
+    s2 = st.session_state.get("stage2_output", "")
+    case_ctx = ""
+    if os.path.exists("docs/开题报告_案例摘要.md"):
+        with open("docs/开题报告_案例摘要.md", "r", encoding="utf-8") as f:
+            case_ctx = f.read()
+    if st.button("💡 生成设计理念报告", type="primary", key="s3_btn"):
+        prompt = f"""基于：
+【阶段一·问题】{s1[:1500] if s1 else '用地混杂(空置率40%)、交通割裂、老龄化率30%、环境品质匮乏'}
+【阶段二·案例】{s2[:1500] if s2 else '恩宁路微改造、白塔寺数字织补、国王十字站城融合、巴塞罗那超级街区'}
+【开题报告主题】"数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计"
+【四大策略】{case_ctx[case_ctx.find('五、四大设计策略'):] if '五、四大设计策略' in case_ctx else '精准感知、风貌生成、路网重构、社会协同'}
+
+请生成【设计理念报告】：
+1. 提炼 1 个总体设计理念
+2. 提出 4 条策略，每条含：【策略名称】【理论依据】【解决的问题】【案例支撑】【空间方向】"""
+        stream = call_llm_engine_stream(prompt=prompt, system_prompt="你是城乡规划学术导师，精通循证规划。输出必须有理有据。", model=model_tag)
+        result = st.write_stream(stream)
+        if isinstance(result, str) and len(result) > 50:
+            st.session_state["stage3_output"] = result
+            st.toast("✅ 阶段三完成！", icon="💡")
+            st.rerun()
+    if st.session_state.get("stage3_output"):
+        st.markdown("#### 📋 阶段三设计理念报告")
+        st.markdown(st.session_state["stage3_output"])
+        if st.button("🗑️ 清除并重新生成", key="s3_clear"):
+            del st.session_state["stage3_output"]
+            st.rerun()
+
+elif p4_mode == "⚖️ 阶段四：问题-策略对应":
+    st.markdown("### ⚖️ 阶段四：多主体博弈 → 问题-策略对应表")
+    st.info("💡 三角色围绕阶段三策略展开博弈，生成【问题→策略→依据→空间落位】对应表。")
+    s3 = st.session_state.get("stage3_output", "")
+    proposal = st.text_area("✍️ 微更新构思或争议点：", value=s3[:300] if s3 else "", placeholder="例如：将铁北旧厂房改造为电竞创业园...", height=120)
     if enable_policy_check and proposal:
-        with st.expander("📜 政策合规性校验 (RAG 法规检索)", expanded=False):
+        with st.expander("📜 政策合规校验 (RAG)", expanded=False):
             matrix = generate_policy_matrix(proposal)
             if matrix:
                 for item in matrix:
-                    st.markdown(f"""
-                    <div class="policy-card">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                            <span style="color:#a5b4fc; font-weight:700; font-size:13px;">{item['source']}</span>
-                            <span style="font-size:12px;">{item['compliance_note']}</span>
-                        </div>
-                        <p style="color:#cbd5e1; font-size:12px; margin:0; line-height:1.5;">{item['clause']}</p>
-                    </div>
-                    """, unsafe_allow_html=True)
-            else:
-                st.info("未检索到相关政策条文。")
-
+                    st.markdown(f"""<div class="policy-card"><span style="color:#a5b4fc;font-weight:700;">{item['source']}</span> {item['compliance_note']}<br><span style="color:#cbd5e1;font-size:12px;">{item['clause']}</span></div>""", unsafe_allow_html=True)
     if st.button("🚀 开启多方协商推演", use_container_width=True, type="primary"):
         if not proposal:
-            st.warning("请输入提案内容以开始协商。")
+            st.warning("请输入提案内容。")
         else:
-            # 定义角色 Prompt (人格化 + 红线底盘)
-            core_constraint = "\n\n【底盘红线（你要铭记但不必在每句话中引述）】：1. 历史保护建筑必须完整保留；2. 建设控制地带容积率 ≤ 1.4，建筑限高 ≤ 18m（核心区 ≤ 9m）；3. 遵守《长春市历史文化名城保护条例》。\n"
-            cot_instruction = "\n\n请先用【思考过程】展示你的推理链，再用【正式回复】给出你的对外立场。"
-            
+            core_constraint = "\n\n【红线】：容积率≤1.4，限高≤18m（核心区≤9m），遵守《长春市历史文化名城保护条例》。\n"
+            cot_instruction = "\n\n请用【思考过程】展示推理，【正式回复】给出立场，末行<SCORE:数值>打分(0-100)。"
             roles = {
-                "🏠 居委会老王": {
-                    "system": "你是老王，在长春铁北住了30年的社区居委会代表。你说话直率，偶尔用东北方言。你最惦记的是：菜市场别搬远了、老年人看病方便、家门口的树别砍了、拆迁补偿得到位。你对搞高端商业很反感，觉得那是给外地人消费的，跟老街坊没关系。" + core_constraint + cot_instruction,
-                    "class": "resident",
-                    "avatar": "👴",
-                    "color": "#f59e0b",
-                    "stance_label": "社区民生优先"
-                },
-                "💰 开发商赵总": {
-                    "system": "你是赵总，负责长春铁北片区更新的商业开发运营者。你精于计算，满脑子都是投资回报比和坪效。你认为没有商业运营注入，老城活化就是空谈。你想争取更高的容积率以摊薄土地成本，但你也清楚保护区有 1.4 的红线限制不能碰。你的话语风格势利但专业。" + core_constraint + cot_instruction,
-                    "class": "developer",
-                    "avatar": "💼",
-                    "color": "#10b981",
-                    "stance_label": "商业可持续导向"
-                },
-                "📐 规划师李工": {
-                    "system": "你是李工，吉林建筑大学城乡规划系出身的注册规划师，现就职于长春市自然资源局。你用词严谨，常引用专业术语。你坚持：任何更新动作都必须在法定红线内推进。你高度关注伪满皇宫的天际线视廊保护、历史风貌建筑的修旧如旧，以及新旧空间肌理的织补缝合。你试图在公众利益和市场资本之间寻找科学平衡点。" + core_constraint + cot_instruction,
-                    "class": "planner",
-                    "avatar": "📐",
-                    "color": "#6366f1",
-                    "stance_label": "法定规划合规"
-                }
+                "🏠 老王": {"system": "你是老王，铁北住了30年的居委会代表。说话直率，偶尔东北方言。惦记菜市场、看病方便、别砍树。" + core_constraint + cot_instruction, "class": "resident", "avatar": "👴", "color": "#f59e0b", "stance_label": "社区民生优先"},
+                "💰 赵总": {"system": "你是赵总，商业开发运营者。精于投资回报。想争取更高容积率但知道1.4红线。" + core_constraint + cot_instruction, "class": "developer", "avatar": "💼", "color": "#10b981", "stance_label": "商业回报导向"},
+                "📐 李工": {"system": "你是李工，注册规划师。用词严谨，坚持法定红线，关注天际线视廊和修旧如旧。" + core_constraint + cot_instruction, "class": "planner", "avatar": "📐", "color": "#6366f1", "stance_label": "法定规划调停"}
             }
-
-            chat_container = st.container()
             results = {}
-            voting_scores = {}  # 共识度评分
-
-            for name, role_cfg in roles.items():
-                with chat_container:
-                    # 渲染 Glassmorphism 角色卡片
-                    st.markdown(f"""
-                    <div class="role-card {role_cfg['class']}">
-                        <div class="role-header">
-                            <div class="role-avatar" style="background: {role_cfg['color']}20; border: 2px solid {role_cfg['color']};">
-                                {role_cfg['avatar']}
-                            </div>
-                            <div>
-                                <div class="role-name">{name}</div>
-                                <div class="role-stance">立场倾向：{role_cfg['stance_label']}</div>
-                            </div>
-                        </div>
-                    </div>
-                    """, unsafe_allow_html=True)
-                    
-                    # 🚀 流式打字机输出
-                    stream = call_llm_engine_stream(
-                        prompt=f"针对以下城市更新提案，以你的立场和人格发表真实看法和建议：\n提案内容：{proposal}",
-                        system_prompt=role_cfg["system"],
-                        model=model_tag
-                    )
-                    resp = st.write_stream(stream)
-                    results[name] = resp
-
-                    # 解析思维链
-                    if isinstance(resp, str) and "【思考过程】" in resp and "【正式回复】" in resp:
-                        parts = resp.split("【正式回复】")
-                        cot_text = parts[0].replace("【思考过程】", "").strip()
-                        if cot_text:
-                            with st.expander(f"🧠 {name} 推理链路透视"):
-                                st.markdown(cot_text)
-
-                    # 模拟共识评分 (基于文本长度和关键词匹配)
-                    if isinstance(resp, str):
-                        score = 50  # 基础分
-                        if "同意" in resp or "赞成" in resp or "支持" in resp: score += 20
-                        if "反对" in resp or "不同意" in resp or "不行" in resp: score -= 20
-                        if "妥协" in resp or "折中" in resp or "可以考虑" in resp: score += 10
-                        voting_scores[name] = max(10, min(95, score))
-                    
-                    time.sleep(0.3)
-
-            # ==========================================
-            # 📊 多方共识度雷达图
-            # ==========================================
+            voting_scores = {}
+            memory_chain = ""
+            for name, cfg in roles.items():
+                st.markdown(f"""<div class="role-card {cfg['class']}"><div class="role-header"><div class="role-avatar" style="background:{cfg['color']}20;border:2px solid {cfg['color']};">{cfg['avatar']}</div><div><div class="role-name">{name}</div><div class="role-stance">立场：{cfg['stance_label']}</div></div></div></div>""", unsafe_allow_html=True)
+                dp = f"针对提案发表看法：\n{proposal}"
+                if memory_chain:
+                    dp += f"\n\n【其他方观点，请针对反驳或妥协】：\n{memory_chain}"
+                stream = call_llm_engine_stream(prompt=dp, system_prompt=cfg["system"], model=model_tag)
+                resp = st.write_stream(stream)
+                results[name] = resp
+                if isinstance(resp, str):
+                    clean = resp.split("【正式回复】")[-1].split("<SCORE:")[0].strip() if "【正式回复】" in resp else resp
+                    memory_chain += f"[{name}]: {clean}\n---\n"
+                    import re
+                    m = re.search(r"<SCORE:\s*(\d+)\s*>", resp)
+                    voting_scores[name] = max(0, min(100, int(m.group(1)) if m else 50))
+                time.sleep(0.3)
             st.markdown("---")
-            st.subheader("📊 多方共识度可视化分析")
-            
-            radar_col, report_col = st.columns([1, 2])
-            
-            with radar_col:
-                categories = list(voting_scores.keys())
-                values = list(voting_scores.values())
-                
-                fig_consensus = go.Figure()
-                fig_consensus.add_trace(go.Scatterpolar(
-                    r=values + [values[0]],
-                    theta=categories + [categories[0]],
-                    fill='toself',
-                    fillcolor='rgba(99, 102, 241, 0.15)',
-                    line=dict(color='#818cf8', width=2),
-                    name='共识度'
-                ))
-                fig_consensus.update_layout(
-                    polar=dict(
-                        bgcolor='rgba(0,0,0,0)',
-                        radialaxis=dict(visible=True, range=[0, 100], showticklabels=True, gridcolor='rgba(99,102,241,0.15)', color='#94a3b8'),
-                        angularaxis=dict(gridcolor='rgba(99,102,241,0.15)', color='#e2e8f0'),
-                    ),
-                    showlegend=False,
-                    title=dict(text="🗳️ 各方赞同度", font=dict(size=14, color='#a5b4fc')),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    margin=dict(l=60, r=60, t=50, b=30),
-                    height=300,
-                    font=dict(color='#94a3b8')
-                )
-                st.plotly_chart(fig_consensus, use_container_width=True)
+            st.subheader("📊 共识度雷达 + 问题-策略对应表")
+            r_col, t_col = st.columns([1, 2])
+            with r_col:
+                fig = go.Figure()
+                fig.add_trace(go.Scatterpolar(r=list(voting_scores.values())+[list(voting_scores.values())[0]], theta=list(voting_scores.keys())+[list(voting_scores.keys())[0]], fill='toself', fillcolor='rgba(99,102,241,0.15)', line=dict(color='#818cf8', width=2)))
+                fig.update_layout(polar=dict(bgcolor='rgba(0,0,0,0)', radialaxis=dict(range=[0,100], gridcolor='rgba(99,102,241,0.15)'), angularaxis=dict(gridcolor='rgba(99,102,241,0.15)')), showlegend=False, paper_bgcolor='rgba(0,0,0,0)', height=300, font=dict(color='#94a3b8'))
+                st.plotly_chart(fig, use_container_width=True)
+            with t_col:
+                sp = f"""基于博弈记录生成Markdown表格【问题-策略对应表】：
+{str(results)[:3000]}
+格式：| 问题 | 策略 | 政策依据 | 空间落位 | 共识度 |"""
+                stream = call_llm_engine_stream(prompt=sp, system_prompt="高级城市更新研究员。策略须在容积率≤1.4、限高≤18m约束下。", model=model_tag)
+                summary = st.write_stream(stream)
+                if isinstance(summary, str):
+                    st.session_state["stage4_output"] = summary
+                    st.toast("✅ 阶段四完成！", icon="⚖️")
 
-            with report_col:
-                st.subheader("📋 多方演化方向评估报告")
-                summary_prompt = f"""分析以下三方在城市更新提案中的观点冲突与潜在共识。
-请在报告末尾给出【3种空间演化方向】，每种方向需包含：
-1. 演化主题（如"文旅复兴"/"活态宜居"/"针灸式织补"）
-2. 核心空间策略（具体到街区和建筑群名称）
-3. 对三方利益的影响评估
+elif p4_mode == "🎯 阶段五：空间成果方案":
+    st.markdown("### 🎯 阶段五：空间成果方案汇总")
+    st.info("💡 汇总全部四阶段成果，生成最终规划导则，可导出红头 Word。")
+    s1 = st.session_state.get("stage1_output", "暂无")
+    s2 = st.session_state.get("stage2_output", "暂无")
+    s3 = st.session_state.get("stage3_output", "暂无")
+    s4 = st.session_state.get("stage4_output", "暂无")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("阶段一", "✅" if s1 != "暂无" else "❌")
+    c2.metric("阶段二", "✅" if s2 != "暂无" else "❌")
+    c3.metric("阶段三", "✅" if s3 != "暂无" else "❌")
+    c4.metric("阶段四", "✅" if s4 != "暂无" else "❌")
+    if st.button("📄 生成最终规划导则", type="primary", key="s5_btn"):
+        prompt = f"""基于四阶段证据链生成【规划导则成果书】：
+【阶段一】{s1[:1000]}
+【阶段二】{s2[:1000]}
+【阶段三】{s3[:1000]}
+【阶段四】{s4[:1000]}
+要求：公文格式(1. 1.1 1.1.1)，含总体定位/现状/理念/分区策略/实施保障。每条策略注明数据和政策依据。容积率≤1.4、限高≤18m。"""
+        stream = call_llm_engine_stream(prompt=prompt, system_prompt="长春市自然资源局首席规划师，标准行政公文格式。", model=model_tag)
+        final = st.write_stream(stream)
+        if isinstance(final, str) and len(final) > 100:
+            st.session_state["stage5_output"] = final
+            report = f"# 循证规划五阶段成果书\n\n## 阶段一\n{s1}\n\n## 阶段二\n{s2}\n\n## 阶段三\n{s3}\n\n## 阶段四\n{s4}\n\n## 阶段五\n{final}"
+            st.download_button("📥 导出完整报告 (Markdown)", report, file_name="五阶段循证报告.md", use_container_width=True)
+            try:
+                from src.utils.document_generator import generate_official_word_doc
+                wb = generate_official_word_doc(title="伪满皇宫周边街区微更新规划导则", body_text=final)
+                if wb:
+                    st.download_button("📥 导出红头公文 (Word)", wb, file_name="规划导则_红头.docx", use_container_width=True)
+            except Exception:
+                pass
+            st.toast("🎉 五阶段推演完成！", icon="🎯")
 
-各方发言记录：
-{str(results)}
-"""
-                summary_stream = call_llm_engine_stream(
-                    prompt=summary_prompt,
-                    system_prompt="你是一位高级城市更新政策研究员，站在研究区域空间尺度上进行资源调配。请确保三种演化方向都在容积率≤1.4和限高≤18m的约束下。",
-                    model=model_tag
-                )
-                summary = st.write_stream(summary_stream)
-            
-            st.toast("🎉 多方博弈评估报告已生成！", icon="🤝")
-
-            # --- 结构化报告导出 ---
-            if isinstance(summary, str):
-                report_md = f"""# 🏛️ 数字城市议事厅 — 多方协商报告
-
-## 📋 议题
-{proposal}
-
-## 🗣️ 各方发言记录
-"""
-                for role_name, role_resp in results.items():
-                    report_md += f"\n### {role_name}\n{role_resp}\n"
-                
-                report_md += f"\n---\n## 📊 综合评估与政策建议\n{summary}\n"
-                
-                if enable_policy_check:
-                    matrix = generate_policy_matrix(proposal)
-                    if matrix:
-                        report_md += "\n---\n## 📜 政策合规对照矩阵\n\n"
-                        report_md += "| 来源 | 条款摘要 | 合规性 |\n| --- | --- | --- |\n"
-                        for item in matrix:
-                            report_md += f"| {item['source']} | {item['clause'][:80]}... | {item['compliance_note']} |\n"
-
-                st.download_button(
-                    "📥 导出结构化推演报告 (Markdown)",
-                    report_md,
-                    file_name="consultation_evolution_report.md",
-                    use_container_width=True
-                )
-
-elif p4_mode == "📜 政策实施制定":
-    st.markdown("### 📜 政策实施制定 (Policy Formulation)")
-    st.info("💡 核心算法层已挂载《长春市宽城区城市更新重点指导意见建议》及十四五规划等 248 条语料切片，将执行 RAG 加强文本生成。")
-    
-    policy_target = st.text_input("请输入您希望生成政策导则的目标对象或概念",
-                                  value="",
-                                  placeholder="例如：『中车老厂区工业遗存活化导则』",
-                                  help="您可以输入具体的地块名称、建筑群组或更新策略方向，系统将结合 RAG 知识库自动生成符合长春地方规范的政策导则。")
-    if st.button("📝 生成专属实操政策大纲", type="primary"):
-        if not policy_target:
-            st.warning("请先输入需要制定政策的目标概念。")
-        else:
-            rag_context = ""
-            file_paths = [
-                "docs/长春市宽城区城市更新重点指导意见建议.md",
-                "docs/中共长春市委关于制定长春市国民经济和社会发展第十五个五年规划的建议.md"
-            ]
-            for p in file_paths:
-                if os.path.exists(p):
-                    with open(p, "r", encoding="utf-8") as f:
-                        rag_context += f.read()[:2000] + "\n\n"
-            
-            prompt = f"基于以下政府更新意见与五年规划文件精神：\n{rag_context}\n\n请为【{policy_target}】起草一份专业的城市微更新政策实施导则。要求结构严谨，必须符合标准公文排版规范，包括：\n- 使用加粗居中大标题\n- 使用严格的分级标号（1. 1.1 1.1.1）\n- 内容包含：1.总体导向 2. 空间底线约束（容积率≤1.4, 限高≤18m） 3. 业态引入门槛 4. 立面修缮规范 5. 历史建筑保护措施。"
-            sys_prompt = "你是一位就职于长春市自然资源局的首席城市规划师，擅于撰写严谨落地的高质量政府规划实施细则。必须输出标准行政公文格式（分级标号明确，禁止使用随意的表情符号）。回答请具体到宽城区铁北片区的实际情况。"
-            
-            st.markdown("#### 📄 自动政策制定生成台")
-            stream = call_llm_engine_stream(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
-            generated_text = st.write_stream(stream)
-            
-            if isinstance(generated_text, str) and len(generated_text) > 50:
-                st.download_button(
-                    "📥 导出政策导则全文 (Markdown)",
-                    generated_text,
-                    file_name=f"{policy_target}_实施导则.md",
-                    use_container_width=True
-                )
-
-elif p4_mode == "🗺️ 区域发展策划":
-    st.markdown("### 🗺️ 区域发展策划 (Regional Dev Strategy)")
-    st.info("💡 该模块已成功挂载《宽城区伪满皇宫周边缺乏业态分析》，将针对当前街区的短板输出补齐与提升的策划大纲。")
-    
-    if st.button("🚀 启动自动化片区统筹策划", type="primary"):
-        ana_path = "docs/宽城区伪满皇宫周边缺乏业态分析.md"
-        biz_context = ""
-        if os.path.exists(ana_path):
-            with open(ana_path, "r", encoding="utf-8") as f:
-                biz_context = f.read()
-                
-        prompt = f"基于以下最新的伪满皇宫周边业态痛点分析：\n{biz_context}\n\n请输出一份【宽城铁北伪满皇宫片区统筹发展策划书】。要求：\n1. 必须符合标准公文排版规范，包括居中加粗大标题与严格的分级标号（1. 1.1 1.1.1）。\n2. 不仅要修补空间，更要策划出2-3个爆款的'触媒项目引爆点'（如：沉浸式光影秀、站城融合MALL等），给出它们在片区中的具体空间落位逻辑与资金反哺模式。\n3. 注意：所有方案必须在容积率≤1.4和限高≤18m的约束下执行。"
-        sys_prompt = "你是一位顶尖的商业地产与城市更新全案策划专家，善于以爆款项目带动老城复兴。你的方案必须具体到宽城区铁北的实际街区，且输出文本必须是格式严谨的正式项目汇报书（分级标号明确）。"
-        
-        st.markdown("#### 📊 片区统筹联动与触媒项目清单")
-        stream = call_llm_engine_stream(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
-        generated_text = st.write_stream(stream)
-        
-        if isinstance(generated_text, str) and len(generated_text) > 50:
-            st.download_button(
-                "📥 导出区域发展策划书全文 (Markdown)",
-                generated_text,
-                file_name="区域统筹发展策划书.md",
-                use_container_width=True
-            )
