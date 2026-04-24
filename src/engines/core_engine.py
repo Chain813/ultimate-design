@@ -126,6 +126,16 @@ def get_skyline_features():
         if not os.path.exists(path):
             path = "../" + path
         buildings = gpd.read_file(path)
+        
+        # 空间筛选：仅保留在研究范围内的建筑 (Boundary_Scope)
+        boundary_path = "data/shp/Boundary_Scope.geojson"
+        if not os.path.exists(boundary_path): 
+            boundary_path = "../" + boundary_path
+        if os.path.exists(boundary_path):
+            boundary = gpd.read_file(boundary_path)
+            # 使用质心判断是否在范围内，避免复杂的面交集计算
+            buildings = buildings[buildings.centroid.within(boundary.unary_union)]
+
         # 提取楼层数换算高度
         if 'Floor' in buildings.columns:
             buildings['Height'] = pd.to_numeric(buildings['Floor'], errors='coerce').fillna(1) * 3.5
