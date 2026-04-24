@@ -234,7 +234,7 @@ def render_status_hud():
 .status-dot-sd {{ width: 6px; height: 6px; border-radius: 50%; background: {sd_color}; box-shadow: 0 0 12px {sd_color}; }}
 .status-dot-gemma {{ width: 6px; height: 6px; border-radius: 50%; background: {gemma_color}; box-shadow: 0 0 12px {gemma_color}; }}
 .status-dot-static {{ width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 8px #4ADE80; }}
-@media (max-width: 1450px) {{ .hud-v-bar {{ display: none; }} }}
+@media (max-width: 768px) {{ .hud-v-bar {{ display: none; }} }}
 </style>
 
 <div class="hud-v-bar hud-left">
