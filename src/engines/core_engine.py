@@ -223,7 +223,7 @@ def get_traffic_data():
 # ==========================================
 def run_realtime_sd(pil_image, prompt, negative_prompt, steps=20, cfg_scale=7.0, denoising=0.55,
                     cn_module="none", cn_model="none", cn_weight=1.0,
-                    sampler_name="DPM++ 2M Karras", seed=-1):
+                    sampler_name="DPM++ 2M Karras", seed=-1, upscale_mode=""):
     if is_demo_mode():
         w, h = pil_image.size
         demo_img = Image.new('RGB', (min(w, 1024), min(h, 1024)), '#1e293b')
@@ -269,6 +269,25 @@ def run_realtime_sd(pil_image, prompt, negative_prompt, steps=20, cfg_scale=7.0,
         }
     }
 
+    # ==========================================
+    # 🌟 画质极限突破逻辑 (Upscale Strategy)
+    # ==========================================
+    if upscale_mode and "SUPIR" in upscale_mode:
+        # SUPIR 需要极高显存的独立节点，目前作为预留备用接口
+        import streamlit as st
+        st.toast("⚠️ 触发 SUPIR 核爆超分模式。当前系统尚未探针到本地 SUPIR 独立 API，已自动降级为标准高分辨率重绘。", icon="🚨")
+    elif upscale_mode and "Ultimate" in upscale_mode:
+        # 挂载 Ultimate SD Upscale 脚本到 payload 以突破分辨率极限
+        payload["script_name"] = "Ultimate SD upscale"
+        # script_args 分别对应 WebUI 中 Ultimate 插件界面的各项参数
+        payload["script_args"] = [
+            "", 512, 512, 8, 32, 64, 0.35, 32, 
+            0, True, 0, False, 8, 0, 2, 2048, 2048, 2
+        ]
+    elif upscale_mode and "Inpainting" in upscale_mode:
+        payload["mask_blur"] = 4
+        payload["inpainting_fill"] = 1 # 1: original
+
     config = load_global_config()
     url = config.get("engines", {}).get("aigc", {}).get("sd_webui_url", "http://127.0.0.1:7860/sdapi/v1/img2img")
     timeout_val = config.get("engines", {}).get("aigc", {}).get("timeout", 120)
@@ -287,6 +306,89 @@ def run_realtime_sd(pil_image, prompt, negative_prompt, steps=20, cfg_scale=7.0,
         except Exception:
             return None
     return None
+
+# ==========================================
+# 🔍 模块 4a：RAG 语义检索向量化引擎
+# ==========================================
+@st.cache_resource
+def load_bge_micro_model():
+    """按需加载轻量级向量检索模型 (BAAI/bge-micro-zh-v4)"""
+    try:
+        from transformers import AutoTokenizer, AutoModel
+        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+        tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-micro-zh-v4")
+        model = AutoModel.from_pretrained("BAAI/bge-micro-zh-v4")
+        model.eval()
+        return tokenizer, model
+    except Exception as e:
+        print(f"Warning: BGE-Micro load failed. Fallback to Jieba. {e}")
+        return None, None
+
+@st.cache_resource
+def get_cached_db_embeddings():
+    """将 RAG 知识库内容进行预计算并缓存向量"""
+    rag_db = load_rag_knowledge()
+    if not rag_db:
+        return {}, rag_db
+    
+    tokenizer, model = load_bge_micro_model()
+    if not tokenizer or not model:
+        return {}, rag_db
+        
+    import torch
+    db_embeddings = {}
+    for cid, p_info in rag_db.items():
+        content = p_info['content']
+        inputs = tokenizer(content, padding=True, truncation=True, return_tensors='pt', max_length=512)
+        with torch.no_grad():
+            outputs = model(**inputs)
+            emb = outputs[0][:, 0]
+        emb = torch.nn.functional.normalize(emb, p=2, dim=1).numpy()[0]
+        db_embeddings[cid] = emb
+        
+    return db_embeddings, rag_db
+
+def compute_query_embedding(prompt):
+    tokenizer, model = load_bge_micro_model()
+    if not tokenizer or not model:
+        return None
+    import torch
+    inputs = tokenizer(prompt, padding=True, truncation=True, return_tensors='pt', max_length=512)
+    with torch.no_grad():
+        outputs = model(**inputs)
+        emb = outputs[0][:, 0]
+    emb = torch.nn.functional.normalize(emb, p=2, dim=1).numpy()[0]
+    return emb
+
+def retrieve_rag_context(query, top_k=3):
+    rag_db = load_rag_knowledge()
+    if not rag_db:
+        return []
+        
+    db_embeddings, _ = get_cached_db_embeddings()
+    best_chunks = []
+    
+    # 1. 优先尝试高精度的向量语义余弦检索
+    if db_embeddings:
+        import numpy as np
+        query_emb = compute_query_embedding(query)
+        if query_emb is not None:
+            for cid, p_info in rag_db.items():
+                if cid in db_embeddings:
+                    score = float(np.dot(query_emb, db_embeddings[cid]))
+                    best_chunks.append((score, p_info['content'], p_info['source']))
+    
+    # 2. 若模型未挂载，平滑降级到 Jieba 词频统计匹配
+    if not best_chunks:
+        words = [w for w in jieba.cut(query) if len(w) > 1]
+        for cid, p_info in rag_db.items():
+            content = p_info['content']
+            score = sum(1 for w in words if w in content)
+            if score > 0:
+                best_chunks.append((score, content, p_info['source']))
+                
+    best_chunks.sort(key=lambda x: x[0], reverse=True)
+    return best_chunks[:top_k]
 
 # ==========================================
 # 🧠 模块 4：LLM 本地博弈引擎 (Gemma 4 驱动 - 6GB 显存版)
@@ -314,23 +416,12 @@ def call_llm_engine(prompt, system_prompt="你是一位专业的城市规划专�
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
 
     # ==========================================
-    # 🔍 RAG：本地政策文档精准特征召回
+    # 🔍 RAG：本地政策文档精准特征召回 (已升级向量引擎)
     # ==========================================
-    rag_db = load_rag_knowledge()
-    if rag_db:
-        # 基于 jieba 切词进行倒排查询碰撞
-        words = [w for w in jieba.cut(prompt) if len(w) > 1]
-        best_chunks = []
-        for cid, p_info in rag_db.items():
-            content = p_info['content']
-            score = sum(1 for w in words if w in content)
-            if score > 0:
-                best_chunks.append((score, content, p_info['source']))
-        
-        if best_chunks:
-            best_chunks.sort(key=lambda x: x[0], reverse=True)
-            top_context = "\n\n".join([f"[{c[2]}]: {c[1]}" for c in best_chunks[:3]])
-            system_prompt += f"\n\n【本地长春市法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"
+    best_chunks = retrieve_rag_context(prompt, top_k=3)
+    if best_chunks:
+        top_context = "\n\n".join([f"[{c[2]}]: {c[1]}" for c in best_chunks])
+        system_prompt += f"\n\n【本地长春市法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"
 
     payload = {
         "model": model,
@@ -392,20 +483,11 @@ def call_llm_engine_stream(prompt, system_prompt="你是一位专业的城市规
     model = config.get("engines", {}).get("llm", {}).get("default_model", model)
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
 
-    # RAG 文档召回（复用同一逻辑）
-    rag_db = load_rag_knowledge()
-    if rag_db:
-        words = [w for w in jieba.cut(prompt) if len(w) > 1]
-        best_chunks = []
-        for cid, p_info in rag_db.items():
-            content = p_info['content']
-            score = sum(1 for w in words if w in content)
-            if score > 0:
-                best_chunks.append((score, content, p_info['source']))
-        if best_chunks:
-            best_chunks.sort(key=lambda x: x[0], reverse=True)
-            top_context = "\n\n".join([f"[{c[2]}]: {c[1]}" for c in best_chunks[:3]])
-            system_prompt += f"\n\n【本地长春市法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"
+    # RAG 文档召回（复用同一逻辑，已升级向量引擎）
+    best_chunks = retrieve_rag_context(prompt, top_k=3)
+    if best_chunks:
+        top_context = "\n\n".join([f"[{c[2]}]: {c[1]}" for c in best_chunks])
+        system_prompt += f"\n\n【本地长春市法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"
 
     payload = {
         "model": model,
@@ -548,24 +630,14 @@ def generate_policy_matrix(proposal: str) -> list:
     基于 RAG 知识库，检索与提案最相关的政策条文，
     返回 list[dict]，每个 dict: {clause, source, relevance_score, compliance_note}
     """
-    rag_db = load_rag_knowledge()
-    if not rag_db:
-        return []
-
-    words = [w for w in jieba.cut(proposal) if len(w) > 1]
-    scored_chunks = []
-    for cid, p_info in rag_db.items():
-        content = p_info["content"]
-        score = sum(1 for w in words if w in content)
-        if score > 0:
-            scored_chunks.append({
-                "clause": content[:200],
-                "source": p_info["source"],
-                "relevance_score": score,
-            })
-
-    scored_chunks.sort(key=lambda x: x["relevance_score"], reverse=True)
-    top_clauses = scored_chunks[:8]
+    best_chunks = retrieve_rag_context(proposal, top_k=8)
+    top_clauses = []
+    for score, content, source in best_chunks:
+        top_clauses.append({
+            "clause": content[:200],
+            "source": source,
+            "relevance_score": score,
+        })
 
     # 添加合规性初步标注
     for clause in top_clauses:

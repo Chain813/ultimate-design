@@ -553,6 +553,17 @@ def show_menu():
 
 
 if __name__ == "__main__":
+    # ==========================================
+    # 🔒 云边解耦：环境防爆保护机制
+    # ==========================================
+    # 如果检测到是在没有图形界面的云端容器中运行（如 Streamlit Cloud），直接拦截爬虫请求，
+    # 强制用户使用 data/ 目录下的静态离线数据湖，防止 Selenium 寻找不到 Chrome 内核而导致死机。
+    if os.environ.get("STREAMLIT_SERVER_PORT") or not sys.stdout.isatty():
+        print("\n🚫 [安全拦截] 检测到当前处于云端/非交互部署环境！")
+        print("💡 为了防止轻量服务器死机和平台封禁，已自动禁用实时 Selenium 爬虫。")
+        print("💡 系统已自适应降级：将全面使用 `data/` 目录下的清洗后冷数据集提供给大模型分析。")
+        sys.exit(0)
+
     choice = show_menu()
 
     if choice == "0":

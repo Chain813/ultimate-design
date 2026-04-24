@@ -2,6 +2,8 @@
 
 本文档将指导您从零开始搭建本项目的开发环境，并详细解读两大核心 AI 引擎（Stable Diffusion & Ollama）的本地挂载流程。
 
+> **💡 架构提示**：本项目遵循**“云边自适应降级”**机制。若您无需实时生成新内容，仅希望运行第一阶段即可；若要解锁“记忆注入链多智能体”与“AIGC 多模态画质超分”，则必须完成第二阶段的硬核引擎挂载。
+
 ---
 
 ## 💻 硬件配置推荐
@@ -39,6 +41,8 @@ cd ultimateDESIGN
 
 # 3. 安装专属依赖包 (如果下载缓慢，请加上 -i https://pypi.tuna.tsinghua.edu.cn/simple)
 pip install -r requirements.txt
+
+# 注：此命令也会自动安装 python-docx 用于第5页的自动化红头公文生成。
 ```
 
 ### 3. 冒烟测试
@@ -46,6 +50,9 @@ pip install -r requirements.txt
 ```bash
 streamlit run app.py
 ```
+> [!NOTE]
+> 首次启动时，系统会在后台下载一个极小的文本模型（约100MB）用于 **RAG 政策知识库的预热**。请耐心等待进度条跑完。
+
 若浏览器成功打开网页且不报错，则第一阶段部署成功！
 
 ---
@@ -72,8 +79,9 @@ streamlit run app.py
    - 打开您的 SD 启动器，在左侧菜单寻找“高级选项”或“启动参数”。
    - 勾选 **“启用 API (--api)”** 选项。
    - (如果是手动脚本启动，请在 `webui-user.bat` 中配置 `set COMMANDLINE_ARGS=--api --listen`)。
-3. **模型准备**：建议提前在 SD 中下载好任意写实风格大模型（如 Realistic Vision）以及 ControlNet (Canny/Depth) 插件，以获得最佳渲染效果。
-4. **验证挂载**：启动 SD 后，确认控制台输出中包含 `Running on local URL:  http://127.0.0.1:7860`。
+3. **模型准备**：建议提前在 SD 中下载好任意写实风格大模型（如 Realistic Vision）以及 ControlNet (Canny/Depth/Seg) 插件。
+4. **画质突破准备 (可选)**：如果您希望在第三页使用“无缝超分拼接 (Ultimate Upscale)”功能以获得 2K 极清画质，请在 WebUI 中提前安装 `ultimate-upscale-for-automatic1111` 插件与 `ControlNet Tile` 模型。
+5. **验证挂载**：启动 SD 后，确认控制台输出中包含 `Running on local URL:  http://127.0.0.1:7860`。
 
 ---
 

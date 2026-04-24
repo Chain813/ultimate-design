@@ -86,6 +86,17 @@ with st.sidebar:
 
     st.markdown("---")
     st.markdown("#### 🧠 衍生算法核心矩阵")
+    upscale_mode = st.selectbox(
+        "✨ 画质重构引擎 (Upscale Strategy)",
+        [
+            "全局快绘 (Standard)", 
+            "局部精描 (Inpainting)", 
+            "无缝超分 (Ultimate Upscale)",
+            "极限画质 (SUPIR)"
+        ],
+        index=2, # 默认推荐无缝超分
+        help="解决生成图发糊的核心设置。SUPIR 模式需外部独立环境。"
+    )
     sampler = st.selectbox(
         "采样算法 (Sampler)",
         ["DPM++ 2M Karras (推荐)", "Euler a", "DDIM", "Heun"]
@@ -290,7 +301,8 @@ with result_col:
                     cn_model=cn_model_map.get(cn_mode, "none"),
                     cn_weight=cn_weight,
                     sampler_name=sampler.split(" (")[0],
-                    seed=seed
+                    seed=seed,
+                    upscale_mode=upscale_mode
                 )
 
             if res_img:

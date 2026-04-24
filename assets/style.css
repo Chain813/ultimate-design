@@ -133,13 +133,14 @@ a[data-testid="stPageLink-NavLink"] span {
     background: linear-gradient(145deg, rgba(30, 41, 59, 0.5), rgba(15, 23, 42, 0.4));
     border: 1px solid rgba(99, 102, 241, 0.1);
     border-radius: 16px;
-    padding: 20px; /* 缩减内边距 */
+    padding: 16px;
     transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
     position: relative;
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    min-height: 360px; /* 随着宽度缩小同步减小高度 */
+    height: 100%;
+    box-sizing: border-box;
 }
 
 .module-container:hover .module-card {
@@ -149,10 +150,17 @@ a[data-testid="stPageLink-NavLink"] span {
 }
 
 .module-card h4 {
-    margin-top: 8px;
-    margin-bottom: 6px;
+    margin-top: 6px;
+    margin-bottom: 4px;
     color: #f8fafc !important;
-    font-size: 1.05rem !important; /* 字体略微缩小 */
+    font-size: 0.95rem !important;
+}
+
+.module-card p {
+    font-size: 0.78rem !important;
+    color: #94a3b8 !important;
+    line-height: 1.6 !important;
+    margin-bottom: 10px !important;
 }
 
 /* 模拟 Streamlit 按钮样式 */
