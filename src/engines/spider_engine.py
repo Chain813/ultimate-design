@@ -283,7 +283,8 @@ def extract_xhs_detail(driver, keyword, max_notes=6):
                 try:
                     if len(driver.window_handles) > 1: driver.close()
                     driver.switch_to.window(original)
-                except Exception: pass
+                except Exception:
+                    pass  # Selenium window cleanup is best-effort
                 continue
         print(f"   Phase B: 穿透 {clicked} 篇笔记")
     except Exception as e:
@@ -429,7 +430,8 @@ def extract_douyin_comments(driver, keyword, max_videos=5):
                 try:
                     if len(driver.window_handles) > 1: driver.close()
                     driver.switch_to.window(original)
-                except Exception: pass
+                except Exception:
+                    pass  # Selenium window cleanup is best-effort
                 continue
 
         print(f"   Phase B: 穿透 {clicked} 个视频")

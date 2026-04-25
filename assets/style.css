@@ -472,3 +472,113 @@ hr {
     50% { opacity: 0.4; }
 }
 
+/* ==========================================
+   🖥️ HUD SYSTEM — Vertical status bars
+   ========================================== */
+.hud-v-bar {
+    position: fixed; top: 75px; bottom: 30px; width: 200px; padding: 18px 14px;
+    background: rgba(10, 15, 30, 0.45); backdrop-filter: blur(25px) saturate(180%);
+    border: 1px solid rgba(99, 102, 241, 0.25); z-index: 999;
+    font-family: 'Inter', 'JetBrains Mono', 'Microsoft YaHei', sans-serif;
+    color: rgba(248, 250, 252, 0.95);
+    pointer-events: none; transition: all 0.5s ease; overflow-y: auto;
+}
+.hud-v-bar::after {
+    content: '';
+    position: absolute; top: 0; left: 0; width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(129, 140, 248, 0.6), transparent);
+    animation: hudScanLine 3s linear infinite;
+}
+@keyframes hudScanLine {
+    0% { top: 0; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
+}
+.hud-left { left: 0; border-radius: 0 16px 16px 0; border-left: 3px solid #6366f1; }
+.hud-right { right: 0; border-radius: 16px 0 0 16px; border-right: 3px solid #6366f1; text-align: right; }
+.hud-header { font-size: 11px; color: #818cf8; margin-bottom: 14px; font-weight: 800;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.3); padding-bottom: 8px; }
+.hud-item { margin-bottom: 14px; }
+.hud-label { font-size: 8px; color: rgba(148, 163, 184, 0.9); display: block; margin-bottom: 3px; font-weight: 600; }
+.hud-value { font-size: 9.5px; font-weight: 700; color: #f8fafc; display: flex; align-items: center; gap: 6px; }
+.hud-right .hud-value { justify-content: flex-end; }
+.hud-meta { font-size: 7px; color: rgba(129, 140, 248, 0.8); margin-top: 3px; line-height: 1.3; }
+.status-dot-sd { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 12px var(--sd-color, #EF4444); }
+.status-dot-gemma { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 12px var(--gemma-color, #EF4444); }
+.status-dot-static { width: 6px; height: 6px; border-radius: 50%; background: #4ADE80; box-shadow: 0 0 8px #4ADE80; }
+@media (max-width: 768px) { .hud-v-bar { display: none; } }
+
+/* ==========================================
+   🏙️ SKYLINE PANEL — Horizontal metrics bar
+   ========================================== */
+.skyline-panel {
+    background: rgba(15, 23, 42, 0.4);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    border-radius: 16px;
+    padding: 20px 30px;
+    margin: 25px 0;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+.skyline-panel .row { display: flex; justify-content: space-between; align-items: center; }
+.skyline-panel .metric { flex: 1; text-align: center; border-right: 1px solid rgba(99, 102, 241, 0.2); }
+.skyline-panel .metric-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+.skyline-panel .metric-value { font-size: 28px; font-weight: 800; color: #f8fafc; }
+.skyline-panel .metric-unit { font-size: 16px; margin-left: 5px; color: #94a3b8; }
+.skyline-panel .footnote { text-align: right; font-size: 9px; color: rgba(148, 163, 184, 0.5);
+    font-family: 'Inter', sans-serif; margin-top: 12px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1); padding-top: 8px; }
+
+/* ==========================================
+   📊 MPI CARD — Urban renewal index
+   ========================================== */
+.mpi-card {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.mpi-header {
+    color: #a5b4fc;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.mpi-desc-inline {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    margin-top: 15px;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+    padding-top: 12px;
+    line-height: 1.6;
+}
+
+/* ==========================================
+   📋 POLICY CARDS — Regulation display
+   ========================================== */
+.policy-card {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+}
+.issue-archive {
+    background: rgba(99, 102, 241, 0.06);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.issue-archive:hover {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.1);
+}

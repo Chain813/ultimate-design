@@ -12,7 +12,7 @@ from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR, get_static
 st.set_page_config(page_title="现状空间全景诊断 | 02 实验室", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
 
-@st.cache_data
+@st.cache_data(ttl=1800)
 def load_base_map_data():
     def load_json(fp):
         with open(fp, 'r', encoding='utf-8') as f: return f.read()
@@ -26,7 +26,7 @@ def load_base_map_data():
     plots_data = load_json(str(plots_path)) if plots_path.exists() else "null"
     return b_data, bound_data, plots_data, landuse_data
 
-@st.cache_data
+@st.cache_data(ttl=600)
 def _load_3d_data():
     df_pts = pd.read_excel(DATA_FILES["points"])
     df_ana = pd.read_csv(DATA_FILES["gvi"])
@@ -45,14 +45,16 @@ def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=
         try:
             df_poi = pd.read_csv(DATA_FILES["poi"], encoding='utf-8-sig').fillna("")
             poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-        except: pass
+        except Exception:
+            pass
         
     traffic_data_json = "null"
     if show_traffic:
         try:
             df_tr = pd.read_csv(DATA_FILES["traffic"], encoding='utf-8-sig').fillna("")
             traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-        except: pass
+        except Exception:
+            pass
 
     with (ASSETS_DIR / "map3d_standalone.html").open("r", encoding="utf-8") as f:
         html = f.read()
@@ -128,7 +130,8 @@ if selected_sub == "🏙️ 3D现状全息底座":
             df_poi = pd.read_csv(DATA_FILES["poi"], encoding='utf-8-sig')
             heat_data = df_poi[['Lng', 'Lat']].assign(Vitality=1.0).to_dict(orient='records')
             heat_payload = json.dumps({"data": heat_data, "metric": "Vitality", "radius": 80})
-        except: pass
+        except Exception:
+            pass
         
     if show_col:
         try:
@@ -152,7 +155,8 @@ if selected_sub == "🏙️ 3D现状全息底座":
                     "elevationScale": 10,
                     "radius": 25
                 })
-        except: pass
+        except Exception:
+            pass
         
     pitch_3d = 45 if v_mode == "🦅 3D 鸟瞰" else (60 if "漫游" in v_mode else 0)
     

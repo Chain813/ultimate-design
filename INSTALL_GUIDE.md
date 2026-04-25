@@ -85,6 +85,22 @@ streamlit run app.py
 
 ---
 
+## 🧩 项目架构速览
+
+```text
+src/engines/
+├── core_engine.py       # 向后兼容 re-export 中枢 (全部 17 个符号)
+├── spatial_engine.py    # 空间测度、POI融合、HUD统计
+├── nlp_engine.py        # 情感极性分类
+├── aigc_engine.py       # Stable Diffusion 生图管线
+├── rag_engine.py        # BGE 向量检索 + Jieba 回退
+├── llm_engine.py        # Ollama 大模型对话 (流式)
+└── diagnostic_engine.py # 地块诊断雷达与政策矩阵
+```
+> 新代码建议直接从对应领域模块导入。`core_engine.py` 保留所有旧导入路径，已有页面无需修改。
+
+---
+
 ## 🛡️ 最终联调启动
 
 当上述两个底层引擎均在后台稳定运行时，回到项目目录重新启动总台：
