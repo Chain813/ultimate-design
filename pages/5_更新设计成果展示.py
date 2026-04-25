@@ -8,7 +8,7 @@ from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR, get_static
 st.set_page_config(page_title="更新设计成果展示 | 05 实验室", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
 
-@st.cache_data
+@st.cache_data(ttl=1800)
 def load_base_map_data():
     def load_json(fp):
         with open(fp, 'r', encoding='utf-8') as f: return f.read()
@@ -20,7 +20,7 @@ def load_base_map_data():
     plots_data = load_json(str(plots_path)) if plots_path.exists() else "null"
     return b_data, bound_data, plots_data
 
-@st.cache_data
+@st.cache_data(ttl=600)
 def _load_3d_data():
     df_pts = pd.read_excel(DATA_FILES["points"])
     df_ana = pd.read_csv(DATA_FILES["gvi"])
@@ -65,7 +65,8 @@ def render_future_deckgl(is_3d=True, view_pitch=60, is_demo=True, is_xray=False)
                 pipes.append({"path": [[lng, lat], [lng + 0.001, lat + 0.001]], "type": "water"})
                 pipes.append({"path": [[lng, lat], [lng - 0.001, lat + 0.0005]], "type": "power"})
             pipe_payload = json.dumps(pipes)
-        except: pass
+        except Exception:
+            pass
         
     html = html.replace("/*__PIPE_PAYLOAD__*/null/*__END_PIPE__*/", pipe_payload)
     html = html.replace("pitch: is_3d ? 45 : 0", f"pitch: {view_pitch}")

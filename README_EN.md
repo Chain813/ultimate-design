@@ -54,13 +54,28 @@ The underlying architecture of the system adheres to the geek philosophy of "sep
 ultimateDESIGN/
 ├── app.py                      # System Control Console (Core Navigation & Status Monitoring)
 ├── pages/                      # 5 Core Labs (Asset/Diagnosis/Simulation/Game Theory/Presentation)
-├── src/                        # Core Analytical Engine Package
-│   ├── engines/                # Spatial Measurement, CV Semantic Extraction, NLP Sentiment Engines
+├── src/                        # Core Analytical Engine Package (13 modules)
+│   ├── engines/                # 6 Domain Engines + 1 Re-export Hub
+│   │   ├── core_engine.py      # Backward-compatible re-export hub (17 symbols)
+│   │   ├── spatial_engine.py   # Spatial metrics, POI fusion, HUD stats, skyline
+│   │   ├── nlp_engine.py       # Sentiment polarity classification & word cloud
+│   │   ├── aigc_engine.py      # Stable Diffusion real-time generation pipeline
+│   │   ├── rag_engine.py       # BGE vector retrieval + Jieba fallback
+│   │   ├── llm_engine.py       # Ollama local LLM chat (streaming)
+│   │   └── diagnostic_engine.py # Plot diagnostics radar & policy matrix
 │   ├── ui/                     # Unified Design System (Apple/Cyber Aesthetic)
-│   └── utils/                  # Coordinate Transformation & Spatio-temporal Projection
+│   ├── utils/                  # Shared utilities & tooling
+│   │   ├── service_check.py    # Unified port probing (eliminates 3-way duplication)
+│   │   ├── exceptions.py       # Standardized exception hierarchy + log_and_suppress
+│   │   ├── runtime_flags.py    # Global runtime mode (demo_mode)
+│   │   ├── geo_transform.py    # Coordinate transformation (BD09/GCJ02/WGS84)
+│   │   └── daemon_manager.py   # Daemon process management
+│   └── config/                 # Configuration loading & path resolution
 ├── data/                       # Data Foundation Assets
 │   ├── shp/                    # Statutory Boundaries & Key Plot GeoJSONs
 │   └── streetview/             # Captured Panoramic Imagery for CV Input
+├── assets/                     # Frontend static resources (CSS / SVG / HTML)
+├── tests/                      # Unit test suite (49 tests covering 8 modules)
 ├── docs/                       # Academic Documents, Specifications, Legal Compilations
 ├── tools/                      # Environment Self-check & Data Quality Smoke Tests
 └── .gitignore                  # Data Security & Privacy Anonymization Config
@@ -141,6 +156,8 @@ If you wish to delve deeper into the underlying logic or obtain comprehensive de
 
 ## 🛠️ Core Development Components
 - **Dynamic Geo-transform Utility** (`src/utils/geo_transform.py`): Integrated industrial-grade conversion algorithms for BD09 / GCJ02 / WGS84 to support multi-source data alignment.
+- **Standardized Exception System** (`src/utils/exceptions.py`): `log_and_suppress` decorator replaces blind `except: pass`, ensuring graceful degradation.
+- **Unified Port Probing** (`src/utils/service_check.py`): Eliminates triple-duplicated detection logic via `EngineStatus` dataclass.
 - **AHP Decision Matrix**: Built into `pages/1_数据底座与规划策略.py`, supporting real-time recalculation of expert weights.
 - **WebGL Rendering Pipeline**: Millisecond-level rendering of millions of building elements based on Deck.GL.
 

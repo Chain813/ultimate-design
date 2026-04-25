@@ -11,7 +11,6 @@ daemon_manager.py — 算力服务后台守护进程管理器
     render_daemon_control_panel()  # 在任意页面顶部调用
 """
 
-import socket
 import subprocess
 import time
 import os
@@ -23,8 +22,8 @@ from pathlib import Path
 # ==========================================
 # 🔧 配置常量
 # ==========================================
-OLLAMA_PORT = 11434
-SD_PORT = 7860
+
+from src.utils.service_check import is_port_alive, OLLAMA_PORT, SD_PORT
 
 # SD 路径配置文件（用户首次使用时需配置）
 CONFIG_PATH = Path("config_daemon.json")
@@ -52,19 +51,6 @@ def _save_daemon_config(cfg):
     """保存守护进程配置"""
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
-
-
-# ==========================================
-# 🔍 端口探测
-# ==========================================
-def is_port_alive(port, host="127.0.0.1", timeout=0.3):
-    """快速检测本地端口是否有服务存活"""
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.settimeout(timeout)
-            return s.connect_ex((host, port)) == 0
-    except Exception:
-        return False
 
 
 # ==========================================

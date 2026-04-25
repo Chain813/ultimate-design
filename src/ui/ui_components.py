@@ -2,7 +2,8 @@ import streamlit as st
 from pathlib import Path
 import os
 import urllib.parse
-import socket
+
+from src.utils.service_check import check_engine_status, is_port_alive, EngineStatus
 
 @st.cache_data
 def _get_css_content():
@@ -239,29 +240,14 @@ def render_top_nav():
 # 🔗 导出别名以实现向后兼容 (修复新页面 ImportError)
 show_nav_bar = render_top_nav
 
-def check_engine_status():
-    """统一检测核心引擎状态 (SD=7860, Ollama=11434)"""
-    def check_port(port):
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(0.1)
-                return s.connect_ex(('127.0.0.1', port)) == 0
-        except:
-            return False
-            
-    return {
-        "sd": check_port(7860),
-        "gemma": check_port(11434)
-    }
-
 def render_engine_status_alert():
     """渲染极具冲击力的引擎未启动引导提示 (Apple/Cyber 风格)"""
     status = check_engine_status()
 
     # 只有当任一引擎离线时才显示
-    if not status["sd"] or not status["gemma"]:
+    if not status.sd or not status.gemma:
         alerts = []
-        if not status["sd"]:
+        if not status.sd:
             alerts.append(
 '<div style="display:flex; align-items:center; gap:18px;">'
 '<span style="font-size:26px; filter:drop-shadow(0 0 8px rgba(239,68,68,0.5));">🎨</span>'
@@ -271,7 +257,7 @@ def render_engine_status_alert():
 '</div>'
 '</div>'
             )
-        if not status["gemma"]:
+        if not status.gemma:
             alerts.append(
 '<div style="display:flex; align-items:center; gap:18px;">'
 '<span style="font-size:26px; filter:drop-shadow(0 0 8px rgba(239,68,68,0.5));">🧠</span>'

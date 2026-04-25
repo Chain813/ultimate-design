@@ -54,13 +54,28 @@
 ultimateDESIGN/
 ├── app.py                      # 系统控制总台 (核心导航与状态监视)
 ├── pages/                      # 5大核心实验室 (资产测度/全息诊断/方案模拟/博弈决策/成果展示)
-├── src/                        # 核心解析引擎包
-│   ├── engines/                # 空间测度核心、CV 语义提取、NLP 情感分类引擎
+├── src/                        # 核心解析引擎包 (13 模块)
+│   ├── engines/                # 6 领域引擎 + 1 re-export hub
+│   │   ├── core_engine.py      # 向后兼容 re-export 中枢 (17 符号)
+│   │   ├── spatial_engine.py   # 空间测度、POI融合、HUD统计、天际线
+│   │   ├── nlp_engine.py       # 情感极性分类与词云提取
+│   │   ├── aigc_engine.py      # Stable Diffusion 实时生成与控制
+│   │   ├── rag_engine.py       # BGE 向量检索 + Jieba 回退
+│   │   ├── llm_engine.py       # Ollama 本地大模型对话 (含流式)
+│   │   └── diagnostic_engine.py # 地块诊断雷达与政策矩阵
 │   ├── ui/                     # 统一设计系统 (Apple/Cyber Aesthetic)
-│   └── utils/                  # 动态坐标转换与时空投影组件
+│   ├── utils/                  # 公共服务与工具组件
+│   │   ├── service_check.py    # 统一端口探测 (消除 3 处重复)
+│   │   ├── exceptions.py       # 标准化异常体系 + log_and_suppress 装饰器
+│   │   ├── runtime_flags.py    # 全局运行模式 (demo_mode)
+│   │   ├── geo_transform.py    # 动态坐标转换 (BD09/GCJ02/WGS84)
+│   │   └── daemon_manager.py   # 守护进程管理
+│   └── config/                 # 配置加载与路径解析
 ├── data/                       # 数据底座资产
 │   ├── shp/                    # 法定红线边界与重点地块 GeoJSON
 │   └── streetview/             # 采集测区全景影像 (作为 CV 引擎输入)
+├── assets/                     # 前端静态资源 (CSS / SVG / HTML)
+├── tests/                      # 单元测试套件 (49 测试覆盖 8 模块)
 ├── docs/                       # 学术文档、规格书、法律法规文件汇编
 ├── tools/                      # 环境自检与数据质量冒烟测试工具
 └── .gitignore                  # 数据安全与隐私脱敏忽略配置
@@ -141,6 +156,8 @@ streamlit run app.py
 
 ## 🛠️ 核心开发组件
 - **动态坐标转换器** (`src/utils/geo_transform.py`)：集成 BD09 / GCJ02 / WGS84 工业级转换算法，支撑多源数据对齐。
+- **标准化异常体系** (`src/utils/exceptions.py`)：`log_and_suppress` 装饰器替代盲 `except: pass`，确保系统降级不崩溃。
+- **统一端口探活** (`src/utils/service_check.py`)：消除 3 处重复探测逻辑，统一 `EngineStatus` 数据类。
 - **AHP 决策矩阵**：内置于 `pages/1_数据底座与规划策略.py`，支持专家权重的实时重算。
 - **WebGL 渲染管线**：基于 Deck.GL 实现百万级建筑要素的毫秒级渲染。
 
