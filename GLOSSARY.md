@@ -45,7 +45,3 @@
 ---
 
 希望这些类比能帮你打破专业壁垒！如果准备好了，请回到 **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)** 开始你的第一个数字城乡规划项目。
-
----
-
-希望这些类比能帮你打破“次元壁”！如果准备好了，请回到 **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)** 开始你的第一个数字城乡规划项目。
