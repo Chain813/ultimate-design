@@ -6,6 +6,7 @@ The latest refactor aligns the whole product around a shared UI system: page ban
 
 ## 📄 Documentation
 
+- **[GLOSSARY.md](GLOSSARY.md): Technical terms explained using Urban Planning & Architecture analogies.**
 - **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md): Super detailed guide for absolute beginners (Chinese).**
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md): Detailed repository layout and maintenance guide.
 - [QUICK_START.md](QUICK_START.md): Fast-track to running the application.
