@@ -2,7 +2,34 @@
 
 This repository contains a Streamlit-based decision support platform for evidence-based urban micro-renewal research. The current study area is the neighborhood around the Puppet Manchukuo Palace in Changchun, China.
 
-The latest refactor aligns the whole product around a shared UI system: page banners, compact summary cards, section intros, consistent Streamlit controls, and shared Plotly chart themes.
+---
+
+## 📖 Project Overview
+
+**UltimateDESIGN** is an evidence-based digital platform designed for **Urban Planning** and **Architecture** students and researchers. It bridges the gap between raw spatial data and qualitative urban design decisions.
+
+### 1. Research Background
+Focusing on the historical neighborhood of the **Puppet Manchukuo Palace in Changchun**, the project addresses the complexities of urban renewal in heritage-sensitive areas. Traditional planning often suffers from fragmented data and subjective decision-making.
+
+### 2. The Solution
+The platform implements a **"Data Foundation + Evidence-based Diagnosis + AI Collaboration"** workflow:
+- **Digital Twin Base**: Integrates multi-source spatial data (GIS, road networks, POIs, street view quality) into a 3D interactive conditioned environment.
+- **Evidence-based Induction**: A 5-stage decision path from "Task Brief Analysis" to "Spatial Diagnosis" and finally "Multi-party Consensus."
+- **AI-Driven Engines**:
+    - **AIGC (Stable Diffusion)**: Transforms planning parameters into high-fidelity design renderings for instant visual feedback.
+    - **LLM (Ollama/Gemma)**: Utilizes RAG (Retrieval-Augmented Generation) to search local policy documents and simulate negotiations between stakeholders (government, developers, residents).
+
+---
+
+## ✨ Key Features
+
+1.  **📊 Data & Strategy**: Integration of task briefs, proposals, and the MPI potential assessment model.
+2.  **🗺️ Spatial Diagnosis**: 3D map interaction with overlays for traffic, quality, and sentiment, including plot-level radar charts.
+3.  **🎨 AIGC Design Inference**: Real-time generation of design scenarios using Stable Diffusion with before/after comparisons.
+4.  **🤖 LLM Negotiation**: Simulated stakeholder博弈 based on localized policy knowledge bases.
+5.  **📋 Showcase & Export**: Comprehensive gallery of design results and master plans with one-click Word report export.
+
+---
 
 ## 📄 Documentation
 
@@ -12,6 +39,8 @@ The latest refactor aligns the whole product around a shared UI system: page ban
 - [QUICK_START.md](QUICK_START.md): Fast-track to running the application.
 - [INSTALL_GUIDE.md](INSTALL_GUIDE.md): Full installation guide including local AI engines.
 - [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md): Instructions for GitHub and Streamlit Cloud deployment.
+
+---
 
 ## 🚀 Quick Start
 
@@ -28,18 +57,7 @@ Open: `http://localhost:8501`
 
 The app can run in a lightweight demo mode without local AI services. Real-time image generation and LLM negotiation require optional local engines.
 
-## 🤖 Optional AI Engines
-
-| Engine | Usage | Default endpoint |
-| --- | --- | --- |
-| Stable Diffusion WebUI | Page 03 real-time visual generation | `http://127.0.0.1:7860` |
-| Ollama / Gemma | Page 04 stakeholder negotiation | `http://127.0.0.1:11434` |
-
-Stable Diffusion WebUI must be started with `--api`. For Ollama:
-
-```powershell
-ollama run gemma4:e2b-it-q4_K_M
-```
+---
 
 ## 🧪 Validation
 
