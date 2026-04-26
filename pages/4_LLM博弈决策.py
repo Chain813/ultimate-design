@@ -4,7 +4,16 @@ import json
 import os
 import plotly.graph_objects as go
 from src.engines.core_engine import call_llm_engine, call_llm_engine_stream, is_demo_mode, get_plot_diagnostics, generate_policy_matrix
-from src.ui.ui_components import render_top_nav, render_engine_status_alert
+from src.ui.chart_theme import apply_plotly_polar_theme
+from src.ui.design_system import (
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
+from src.ui.ui_components import (
+    render_engine_status_alert,
+    render_top_nav,
+)
 
 st.set_page_config(page_title="LLM 多方参与决策 - 数字议事厅", layout="wide")
 render_top_nav()
@@ -27,15 +36,38 @@ if "rag_warmed" not in st.session_state:
         rag_status.update(label="✅ RAG 知识库预热完成", state="complete", expanded=False)
     st.session_state["rag_warmed"] = True
 
+if "issue_archive" not in st.session_state:
+    st.session_state["issue_archive"] = []
+
+render_page_banner(
+    title="数字城市议事厅",
+    description="以五阶段循证链路串联问题诊断、案例借鉴、设计理念、多主体博弈和成果导则，把政策约束、角色分歧和空间策略放进同一套协商界面。",
+    eyebrow="Page 04",
+    tags=["RAG 政策检索", "三角色协商", "五阶段证据链"],
+    metrics=[
+        {"value": 5, "label": "推演阶段", "meta": "从前期分析到最终成果导则"},
+        {"value": 3, "label": "核心角色", "meta": "居民、开发商、规划师三方立场"},
+        {"value": "已预热" if st.session_state.get("rag_warmed") else "未就绪", "label": "政策知识库", "meta": "用于协商前的合规校验"},
+        {"value": len(st.session_state["issue_archive"]), "label": "议题归档", "meta": "当前会话已保存的历史议题数量"},
+    ],
+)
+render_summary_cards(
+    [
+        {"value": "证据链驱动", "title": "前序结果承接", "desc": "每一阶段输出会自动传递到下一阶段，不再重复录入。"},
+        {"value": "政策约束在线", "title": "RAG 合规校验", "desc": "协商前先检索规划与保护条款，减少空泛表态。"},
+        {"value": "角色冲突显性化", "title": "多主体博弈", "desc": "让居民、开发商和规划师的分歧直接映射为空间策略。"},
+    ]
+)
+
 # --- CSS 样式注入 (巅峰版 Glassmorphism 角色卡片) ---
 st.markdown("""
 <style>
     /* 🎭 Glassmorphism 角色卡片 */
     .role-card {
         position: relative;
-        padding: 20px 24px;
-        border-radius: 16px;
-        margin-bottom: 18px;
+        padding: 16px 18px;
+        border-radius: 14px;
+        margin-bottom: 14px;
         background: rgba(15, 23, 42, 0.7);
         backdrop-filter: blur(20px);
         border: 1px solid rgba(99, 102, 241, 0.2);
@@ -47,7 +79,7 @@ st.markdown("""
         position: absolute;
         top: 0; left: 0; right: 0;
         height: 3px;
-        border-radius: 16px 16px 0 0;
+        border-radius: 14px 14px 0 0;
     }
     .role-card.resident { border-left: 4px solid #f59e0b; }
     .role-card.resident::before { background: linear-gradient(90deg, #f59e0b, transparent); }
@@ -57,31 +89,31 @@ st.markdown("""
     .role-card.planner::before { background: linear-gradient(90deg, #6366f1, transparent); }
 
     .role-header {
-        display: flex; align-items: center; gap: 12px;
-        margin-bottom: 12px;
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 10px;
     }
     .role-avatar {
-        width: 42px; height: 42px; border-radius: 50%;
+        width: 38px; height: 38px; border-radius: 50%;
         display: flex; align-items: center; justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
     }
     .role-name {
-        font-size: 15px; font-weight: 700; color: #e2e8f0;
+        font-size: 14px; font-weight: 700; color: #e2e8f0;
     }
     .role-stance {
-        font-size: 11px; color: #94a3b8; font-weight: 400;
+        font-size: 10px; color: #94a3b8; font-weight: 400;
     }
     .role-content {
-        font-size: 14px; color: #e2e8f0; line-height: 1.8;
+        font-size: 13px; color: #e2e8f0; line-height: 1.7;
     }
 
     /* 📋 议题档案袋 */
     .issue-archive {
         background: rgba(99, 102, 241, 0.06);
         border: 1px solid rgba(99, 102, 241, 0.2);
-        border-radius: 10px;
-        padding: 10px 14px;
-        margin-bottom: 8px;
+        border-radius: 9px;
+        padding: 8px 12px;
+        margin-bottom: 6px;
         cursor: pointer;
         transition: all 0.2s ease;
     }
@@ -95,15 +127,15 @@ st.markdown("""
         background: rgba(99, 102, 241, 0.06);
         border: 1px solid rgba(99, 102, 241, 0.2);
         border-radius: 10px;
-        padding: 12px 16px;
-        margin-bottom: 10px;
+        padding: 10px 14px;
+        margin-bottom: 8px;
     }
     
     /* 🗳️ 共识度仪表 */
     .consensus-bar {
         height: 6px; border-radius: 3px;
         background: rgba(99, 102, 241, 0.15);
-        margin-top: 8px; overflow: hidden;
+        margin-top: 6px; overflow: hidden;
     }
     .consensus-fill {
         height: 100%; border-radius: 3px;
@@ -112,8 +144,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("🏛️ 数字城市议事厅：多主体博弈推演")
-st.info("基于 **Gemma 4** 本地大模型，模拟长春城市更新中的多方利益交锋与政策共识。")
 if is_demo_mode():
     st.success("🎭 演示模式已激活 — 将使用预置角色回复，无需 Ollama 服务。")
 
@@ -142,9 +172,6 @@ with st.sidebar:
     # 议题历史档案袋
     st.markdown("---")
     st.markdown("### 📂 议题档案袋")
-    if "issue_archive" not in st.session_state:
-        st.session_state["issue_archive"] = []
-    
     if st.session_state["issue_archive"]:
         for i, item in enumerate(st.session_state["issue_archive"]):
             with st.expander(f"📋 议题 #{i+1}: {item['title'][:20]}...", expanded=False):
@@ -156,6 +183,7 @@ with st.sidebar:
 # 📍 五阶段循证规划推演工作流
 # ==========================================
 st.markdown("---")
+render_section_intro("循证规划五阶段推演工作流", "先看清五个阶段之间的数据传递关系，再进入具体推演页面。", eyebrow="Workflow")
 
 # --- 五阶段流程可视化 ---
 st.markdown("""
@@ -220,8 +248,7 @@ st.markdown("""
 subpage = st.query_params.get("sub", "多主体利益协商")
 
 if subpage == "动态共识雷达":
-    st.markdown("### 📊 动态共识雷达与策略归集")
-    st.info("💡 此页面独立展示【多主体利益协商】推演后的共识度评估图谱与对应的政策备忘录。")
+    render_section_intro("动态共识雷达与策略归集", "独立查看多主体协商后的共识度雷达图和问题-策略归集结果。", eyebrow="Consensus Radar")
     if "p4_voting_scores" in st.session_state and "stage4_output" in st.session_state:
         voting_scores = st.session_state["p4_voting_scores"]
         summary = st.session_state["stage4_output"]
@@ -234,10 +261,7 @@ if subpage == "动态共识雷达":
                 fill='toself', fillcolor='rgba(99,102,241,0.15)', 
                 line=dict(color='#818cf8', width=2)
             ))
-            fig.update_layout(
-                polar=dict(bgcolor='rgba(0,0,0,0)', radialaxis=dict(range=[0,100], gridcolor='rgba(99,102,241,0.15)'), angularaxis=dict(gridcolor='rgba(99,102,241,0.15)')), 
-                showlegend=False, paper_bgcolor='rgba(0,0,0,0)', height=350, font=dict(color='#94a3b8')
-            )
+            apply_plotly_polar_theme(fig, title="多主体共识度", height=350, radial_range=[0, 100], accent_color="#818cf8")
             st.plotly_chart(fig, use_container_width=True)
         with t_col:
             st.markdown(summary)
@@ -255,8 +279,7 @@ p4_mode = st.radio("⬇️ 选择推演阶段", [
 
 st.markdown("---")
 if p4_mode == "📊 阶段一：前期分析":
-    st.markdown("### 📊 阶段一：前期数据诊断与问题清单生成")
-    st.info("💡 本阶段自动读取第 1、2 实验室的 MPI/GVI/POI 真实数据，由 AI 生成有理有据的问题诊断报告。")
+    render_section_intro("阶段一：前期数据诊断与问题清单生成", "自动读取第 1、2 实验室的 MPI / GVI / POI 数据，生成可引用的问题诊断报告。", eyebrow="Stage 01")
 
     diagnostics = get_plot_diagnostics()
     if diagnostics:
@@ -309,8 +332,7 @@ if p4_mode == "📊 阶段一：前期分析":
             st.rerun()
 
 elif p4_mode == "📚 阶段二：方案借鉴":
-    st.markdown("### 📚 阶段二：开题报告案例自动提取与对标分析")
-    st.info("💡 系统将自动读取 `docs/开题报告_案例摘要.md` 中的 4 个案例（2 国内 + 2 国外），结合阶段一的问题清单生成对标分析。")
+    render_section_intro("阶段二：开题报告案例自动提取与对标分析", "自动读取 `docs/开题报告_案例摘要.md` 的案例摘要，并与阶段一问题清单做对标。", eyebrow="Stage 02")
 
     case_context = ""
     case_path = "docs/开题报告_案例摘要.md"
@@ -353,8 +375,7 @@ elif p4_mode == "📚 阶段二：方案借鉴":
             st.rerun()
 
 elif p4_mode == "💡 阶段三：设计理念":
-    st.markdown("### 💡 阶段三：设计理念提炼")
-    st.info("💡 融合前两阶段成果 + 开题报告设计主题，提炼核心设计理念与策略。")
+    render_section_intro("阶段三：设计理念提炼", "融合前两阶段成果和开题报告主题，提炼可直接落地的核心设计理念与策略。", eyebrow="Stage 03")
     s1 = st.session_state.get("stage1_output", "")
     s2 = st.session_state.get("stage2_output", "")
     case_ctx = ""
@@ -385,8 +406,7 @@ elif p4_mode == "💡 阶段三：设计理念":
             st.rerun()
 
 elif p4_mode == "⚖️ 阶段四：问题-策略对应":
-    st.markdown("### ⚖️ 阶段四：多主体博弈 → 问题-策略对应表")
-    st.info("💡 三角色围绕阶段三策略展开博弈，生成【问题→策略→依据→空间落位】对应表。")
+    render_section_intro("阶段四：多主体博弈与问题-策略对应", "让三类角色围绕阶段三策略展开协商，并生成带依据和空间落位的对应表。", eyebrow="Stage 04")
     
     # --- ✨ 智能议题生成 (Phase 4 新增) ---
     st.markdown("#### ✨ 智能议题推荐")
@@ -532,8 +552,7 @@ elif p4_mode == "⚖️ 阶段四：问题-策略对应":
                 st.toast("✅ 阶段四完成！", icon="⚖️")
 
 elif p4_mode == "🎯 阶段五：空间成果方案":
-    st.markdown("### 🎯 阶段五：空间成果方案汇总")
-    st.info("💡 汇总全部四阶段成果，生成最终规划导则，可导出红头 Word。")
+    render_section_intro("阶段五：空间成果方案汇总", "汇总前四阶段结果，生成最终规划导则，并导出阶段成果文件。", eyebrow="Stage 05")
     s1 = st.session_state.get("stage1_output", "暂无")
     s2 = st.session_state.get("stage2_output", "暂无")
     s3 = st.session_state.get("stage3_output", "暂无")
@@ -558,7 +577,7 @@ elif p4_mode == "🎯 阶段五：空间成果方案":
             st.download_button("📥 导出完整报告 (Markdown)", report, file_name="五阶段循证报告.md", use_container_width=True)
             try:
                 from src.utils.document_generator import generate_official_word_doc
-                wb = generate_official_word_doc(title="伪满皇宫周边街区微更新规划导则", body_text=final)
+                wb = generate_official_word_doc(title="伪满皇宫周边街区微更新规划导则", text_content=final)
                 if wb:
                     st.download_button("📥 导出红头公文 (Word)", wb, file_name="规划导则_红头.docx", use_container_width=True)
             except Exception:

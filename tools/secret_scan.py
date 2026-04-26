@@ -10,12 +10,32 @@ PATTERNS = [
     re.compile(r"(?i)Baidu_Map_AK\s*=\s*(?!YOUR_)[A-Za-z0-9]{10,}"),
 ]
 
-EXCLUDED_PARTS = {".git", ".venv", "venv", "__pycache__", "data/streetview"}
+EXCLUDED_PARTS = {
+    ".agents",
+    ".git",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".runtime-packages",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+}
+EXCLUDED_PREFIXES = {
+    "data/raw_images/",
+    "data/streetview/",
+    "docs/",
+}
 ALLOWED_FILES = {".env.example"}
 
 
-def should_skip(path: Path) -> bool:
-    return any(part in EXCLUDED_PARTS for part in path.parts)
+def should_skip(path: Path, root: Path) -> bool:
+    rel = path.relative_to(root).as_posix()
+    return any(part in EXCLUDED_PARTS for part in path.parts) or any(
+        rel.startswith(prefix) for prefix in EXCLUDED_PREFIXES
+    )
 
 
 def main() -> int:
@@ -23,7 +43,7 @@ def main() -> int:
     findings = []
 
     for path in root.rglob("*"):
-        if not path.is_file() or should_skip(path):
+        if not path.is_file() or should_skip(path, root):
             continue
         rel = path.relative_to(root).as_posix()
         if rel in ALLOWED_FILES:

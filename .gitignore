@@ -9,6 +9,7 @@ build/
 # Streamlit 缓存与配置
 .streamlit/*
 !.streamlit/config.toml
+.runtime-packages/
 
 # 本地环境变量
 .env
@@ -20,8 +21,11 @@ archive/
 
 # 日志与临时元数据
 *.log
+*.err
+*.err.log
 data/rag_knowledge.json
 config_daemon.json
+assets/default_cover.jpg
 
 # 内部文档与代理运行痕迹
 docs/

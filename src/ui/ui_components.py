@@ -1,4 +1,5 @@
 import streamlit as st
+from html import escape
 from pathlib import Path
 import os
 import urllib.parse
@@ -304,3 +305,202 @@ def render_presentation_toggle():
                                    value=st.session_state.get("demo_mode", False),
                                    key="demo_toggle_sidebar")
             st.session_state["demo_mode"] = demo_mode
+
+
+def render_page_banner(title, description, eyebrow=None, tags=None, metrics=None):
+    """渲染带指标和标签的统一页面头图区。"""
+    load_global_css()
+    tags = tags or []
+    metrics = metrics or []
+
+    tags_html = "".join(
+        f'<span class="page-chip">{escape(str(tag))}</span>'
+        for tag in tags
+    )
+    metrics_html = "".join(
+        (
+            '<div class="page-banner-metric">'
+            f'<div class="page-banner-value">{escape(str(item.get("value", "")))}</div>'
+            f'<div class="page-banner-label">{escape(str(item.get("label", "")))}</div>'
+            f'<div class="page-banner-meta">{escape(str(item.get("meta", "")))}</div>'
+            "</div>"
+        )
+        for item in metrics
+    )
+
+    eyebrow_html = ""
+    if eyebrow:
+        eyebrow_html = f'<div class="page-eyebrow">{escape(str(eyebrow))}</div>'
+
+    st.markdown(
+        f"""
+        <section class="page-banner">
+            <div class="page-banner-copy">
+                {eyebrow_html}
+                <h1>{escape(str(title))}</h1>
+                <p>{escape(str(description))}</p>
+                <div class="page-chip-row">{tags_html}</div>
+            </div>
+            <div class="page-banner-grid">{metrics_html}</div>
+        </section>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_section_intro(title, description="", eyebrow=None):
+    """渲染统一的段落引导标题。"""
+    load_global_css()
+    eyebrow_html = ""
+    if eyebrow:
+        eyebrow_html = f'<div class="section-eyebrow">{escape(str(eyebrow))}</div>'
+
+    desc_html = ""
+    if description:
+        desc_html = f"<p>{escape(str(description))}</p>"
+
+    st.markdown(
+        f"""
+        <div class="section-intro">
+            {eyebrow_html}
+            <h2>{escape(str(title))}</h2>
+            {desc_html}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_summary_cards(cards):
+    """渲染统一的摘要指标卡片。"""
+    load_global_css()
+    html = '<div class="summary-grid">'
+    for card in cards:
+        html += f"""
+        <div class="summary-card">
+            <span class="summary-value">{escape(str(card.get("value", "")))}</span>
+            <h4>{escape(str(card.get("title", "")))}</h4>
+            <p>{escape(str(card.get("desc", "")))}</p>
+        </div>
+        """
+    html += "</div>"
+    st.markdown(html, unsafe_allow_html=True)
+
+
+CHART_PALETTE = [
+    "#818cf8",
+    "#34d399",
+    "#f59e0b",
+    "#f472b6",
+    "#22d3ee",
+    "#fb7185",
+]
+
+
+def get_chart_palette():
+    """返回统一的图表色板。"""
+    return list(CHART_PALETTE)
+
+
+def rgba_from_hex(hex_color, alpha):
+    """将十六进制颜色转为 rgba 字符串。"""
+    color = hex_color.lstrip("#")
+    if len(color) != 6:
+        raise ValueError(f"Invalid hex color: {hex_color}")
+    red = int(color[0:2], 16)
+    green = int(color[2:4], 16)
+    blue = int(color[4:6], 16)
+    return f"rgba({red}, {green}, {blue}, {alpha})"
+
+
+def apply_plotly_theme(fig, title=None, height=360, showlegend=True, legend_orientation="h"):
+    """应用统一的二维图表主题。"""
+    title_block = None
+    if title:
+        title_block = dict(text=title, x=0.0, xanchor="left", font=dict(size=15, color="#f8fafc"))
+
+    fig.update_layout(
+        title=title_block,
+        height=height,
+        showlegend=showlegend,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#cbd5e1"),
+        margin=dict(l=20, r=20, t=58 if title else 24, b=20),
+        legend=dict(
+            orientation=legend_orientation,
+            x=0,
+            xanchor="left",
+            y=1.02 if legend_orientation == "h" else 1,
+            yanchor="bottom" if legend_orientation == "h" else "top",
+            bgcolor="rgba(0,0,0,0)",
+            font=dict(size=11, color="#94a3b8"),
+        ),
+    )
+    fig.update_xaxes(
+        showgrid=True,
+        gridcolor="rgba(99,102,241,0.12)",
+        linecolor="rgba(148,163,184,0.18)",
+        zeroline=False,
+        tickfont=dict(size=11, color="#cbd5e1"),
+        title_font=dict(size=12, color="#94a3b8"),
+    )
+    fig.update_yaxes(
+        showgrid=True,
+        gridcolor="rgba(99,102,241,0.12)",
+        linecolor="rgba(148,163,184,0.18)",
+        zeroline=False,
+        tickfont=dict(size=11, color="#cbd5e1"),
+        title_font=dict(size=12, color="#94a3b8"),
+    )
+    return fig
+
+
+def apply_plotly_polar_theme(fig, title=None, height=320, radial_range=None, accent_color="#818cf8"):
+    """应用统一的极坐标雷达图主题。"""
+    title_block = None
+    if title:
+        title_block = dict(text=title, font=dict(size=13, color=accent_color))
+
+    fig.update_layout(
+        title=title_block,
+        height=height,
+        showlegend=False,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#94a3b8"),
+        margin=dict(l=34, r=34, t=44 if title else 20, b=20),
+        polar=dict(
+            bgcolor="rgba(0,0,0,0)",
+            radialaxis=dict(
+                visible=True,
+                range=radial_range or [0, 1],
+                showticklabels=False,
+                gridcolor="rgba(99,102,241,0.15)",
+                linecolor="rgba(99,102,241,0.15)",
+            ),
+            angularaxis=dict(
+                gridcolor="rgba(99,102,241,0.15)",
+                linecolor="rgba(99,102,241,0.15)",
+                color="#cbd5e1",
+                tickfont=dict(size=10),
+            ),
+        ),
+    )
+    return fig
+
+
+# Compatibility exports: new pages should import these from
+# src.ui.design_system and src.ui.chart_theme directly.
+from src.ui.chart_theme import (  # noqa: E402,F401
+    CHART_PALETTE,
+    apply_plotly_polar_theme,
+    apply_plotly_theme,
+    get_chart_palette,
+    rgba_from_hex,
+)
+from src.ui.design_system import (  # noqa: E402,F401
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
