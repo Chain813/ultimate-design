@@ -6,7 +6,15 @@ import base64
 from PIL import Image
 from io import BytesIO
 from src.engines.core_engine import run_realtime_sd, is_demo_mode, get_plot_diagnostics
-from src.ui.ui_components import render_top_nav, render_engine_status_alert
+from src.ui.design_system import (
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
+from src.ui.ui_components import (
+    render_engine_status_alert,
+    render_top_nav,
+)
 
 st.set_page_config(page_title="风貌管控 | 微更新平台", layout="wide", initial_sidebar_state="expanded")
 
@@ -17,28 +25,46 @@ render_engine_status_alert()
 from src.utils.daemon_manager import render_daemon_control_panel
 render_daemon_control_panel()
 
-st.markdown("<h2>基于先验路网约束的街区风貌推演系统</h2>", unsafe_allow_html=True)
-
 # ==========================================
 # 📍 地块导向推演模式 (Phase 3 新增)
 # ==========================================
 if 'aigc_history' not in st.session_state:
     st.session_state['aigc_history'] = []
 
+plot_diagnostics = get_plot_diagnostics()
+render_page_banner(
+    title="街区风貌修缮预演",
+    description="把诊断地块、空间约束、生成策略和 AIGC 结果放在同一工作界面内，用于快速比选历史保护与现代介入之间的平衡方案。",
+    eyebrow="Page 03",
+    tags=["ControlNet 空间约束", "地块导向推演", "会话级图集沉淀"],
+    metrics=[
+        {"value": len(plot_diagnostics) if plot_diagnostics else 0, "label": "诊断地块", "meta": "可直接继承 02 页的地块结果"},
+        {"value": len(st.session_state['aigc_history']), "label": "推演记录", "meta": "本次会话已累计的方案图数"},
+        {"value": 3, "label": "生形模式", "meta": "街景、总平面、轴测鸟瞰三种出图路径"},
+        {"value": 5, "label": "策略方向", "meta": "历史保护到科技介入的五类方案库"},
+    ],
+)
+render_summary_cards(
+    [
+        {"value": "约束先行", "title": "空间骨架", "desc": "优先锁定边界、路网和建筑肌理，再让模型生成。"},
+        {"value": "策略驱动", "title": "方案方向", "desc": "通过五类更新方向和二级策略快速形成方案差异。"},
+        {"value": "结果留存", "title": "图集沉淀", "desc": "自动把当前会话成果写入图集，服务后续导则输出。"},
+    ]
+)
+
 plot_col, mode_col = st.columns([1, 1])
 with plot_col:
-    diagnostics = get_plot_diagnostics()
-    if diagnostics:
-        plot_names = ["🔧 自由模式 (手动选择)"] + [f"📍 {d['name']} (MPI:{d['mpi_score']})" for d in diagnostics]
+    if plot_diagnostics:
+        plot_names = ["🔧 自由模式 (手动选择)"] + [f"📍 {d['name']} (MPI:{d['mpi_score']})" for d in plot_diagnostics]
         plot_sel = st.selectbox("🎯 地块导向推演", plot_names, key="aigc_plot_sel")
     else:
         plot_sel = "🔧 自由模式 (手动选择)"
         st.caption("未检测到地块数据，使用自由模式")
 
 with mode_col:
-    if plot_sel != "🔧 自由模式 (手动选择)" and diagnostics:
+    if plot_sel != "🔧 自由模式 (手动选择)" and plot_diagnostics:
         sel_name = plot_sel.split(" (MPI:")[0].replace("📍 ", "")
-        sel_diag = next((d for d in diagnostics if d['name'] == sel_name), None)
+        sel_diag = next((d for d in plot_diagnostics if d['name'] == sel_name), None)
         if sel_diag:
             mc1, mc2, mc3, mc4 = st.columns(4)
             mc1.metric("面积", f"{sel_diag['area_ha']}ha")
@@ -57,6 +83,7 @@ with mode_col:
                 st.info(f"💡 {sel_name} 建议采用 **方向一：历史风貌保护与修复**")
 
 st.markdown("---")
+render_section_intro("空间生形模式与参数", "先选地块与生形模式，再细化空间约束、生成策略和渲染参数。", eyebrow="Generation Setup")
 
 # ==========================================
 # 📍 AIGC 制图视阈切换 (Phase 5 新增)
@@ -107,6 +134,7 @@ with st.sidebar:
 work_col, result_col = st.columns([1, 1.5]) # 略微增加结果区权重，确保 4:3 比例展示舒适
 
 with work_col:
+    render_section_intro("输入与约束", "上传现状底图，配置空间骨架、规划算子和提示词。", eyebrow="Inputs")
     st.markdown("#### 📥 现状数据输入")
     
     if aigc_mode == "🏙️ 街区全景透视推演 (现状修缮)":
@@ -236,6 +264,7 @@ with work_col:
     generate_btn = st.button("🚀 启动视觉图景衍生测算 (Render)", use_container_width=True, type="primary")
 
 with result_col:
+    render_section_intro("生成结果与对比", "使用 Before / After 滑块对比现状与推演结果，并沉淀为后续导则图集。", eyebrow="Outputs")
     st.markdown("#### 👁️ 微更新前后风貌对比")
 
     if 'aigc_img_bytes' not in st.session_state:
@@ -420,8 +449,14 @@ with result_col:
 # ==========================================
 if st.session_state.get('aigc_history'):
     st.markdown("---")
-    st.markdown("### 🖼️ 推演历史对比画廊")
-    st.caption(f"共 {len(st.session_state['aigc_history'])} 次推演记录 (本次会话)")
+    render_section_intro("推演历史对比画廊", f"当前会话累计生成 {len(st.session_state['aigc_history'])} 组方案图，可直接服务页面五的成果展示。", eyebrow="History")
+    render_summary_cards(
+        [
+            {"value": len(st.session_state['aigc_history']), "title": "累计图景", "desc": "本次会话已保存的推演结果数量。"},
+            {"value": st.session_state['aigc_history'][-1]['strategy'], "title": "最新策略", "desc": "最近一次生成采用的方案范式。"},
+            {"value": st.session_state['aigc_history'][-1]['plot'], "title": "当前地块", "desc": "最近一次生成对应的空间对象。"},
+        ]
+    )
 
     gallery_cols = st.columns(min(len(st.session_state['aigc_history']), 4))
     for i, entry in enumerate(st.session_state['aigc_history'][-8:]):  # 最多展示最近 8 条

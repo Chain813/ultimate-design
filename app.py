@@ -3,7 +3,15 @@ import json
 import os
 from pathlib import Path
 import base64
-from src.ui.ui_components import render_top_nav, render_engine_status_alert
+from src.ui.design_system import (
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
+from src.ui.ui_components import (
+    render_engine_status_alert,
+    render_top_nav,
+)
 from src.engines.core_engine import get_hud_statistics, get_skyline_features
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
@@ -37,6 +45,7 @@ def get_base64_image_v2(image_path):
 # 加载顶部导航与系统状态警报
 render_top_nav()
 render_engine_status_alert()
+top_stats = get_hud_statistics()
 
 # 🎬 演示模式：最大化显示区域
 if st.session_state.get("presentation_mode", False):
@@ -93,37 +102,36 @@ MODULES = [
     }
 ]
 
-# ==========================================
-# 🏠 顶部主视觉区 (Hero Section)
-# ==========================================
-st.markdown("""
-<div class="glass-hero">
-    <h1 style="text-align: center; font-size: 2.6rem; margin-bottom: 8px;">
-        🏙️ 长春伪满皇宫周边街区
-    </h1>
-    <h2 style="text-align: center; font-size: 1.5rem; margin-bottom: 12px; border: none; background: linear-gradient(135deg, #c7d2fe, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        循证导向的空间微更新支持平台
-    </h2>
-    <p style="text-align: center; font-size: 0.95rem; color: #64748b !important; letter-spacing: 0.1em; margin-bottom: 28px;">
-        Evidence-based Micro-renewal Support System for Historic Districts
-    </p>
-    <p style="font-size: 1.05rem; line-height: 1.9; text-align: center; color: #94a3b8 !important; max-width: 900px; margin: 0 auto; padding-top: 10px;">
-        在严谨的城乡规划理论框架下，本平台引入了 <b style="color: #a5b4fc !important;">可计算城市科学</b> 范式。<br>通过 
-        <b style="color: #a5b4fc !important;">动态空间评价 (Spatial Assessment)</b>、
-        <b style="color: #a5b4fc !important;">生成式视觉推演 (Generative Pre-rendering)</b> 与
-        <b style="color: #a5b4fc !important;">多主体协同测算 (Multi-agent Computation)</b>，
-        为长春历史风貌区改造提供量化决策支撑。
-    </p>
-    
-<div style="background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(148, 163, 184, 0.2); border-radius: 8px; padding: 18px 25px; margin: 25px auto 0; text-align: left; max-width: 900px;">
-    <div style="color: #a5b4fc; font-weight: bold; margin-bottom: 8px; font-size: 0.95rem;">📍 研究范围声明与底层架构说明 (Research Scope)</div>
-    <div style="color: #94a3b8; font-size: 0.85rem; line-height: 1.7;">
-        <b>当前基址合规性：</b>本系统目前所呈现的核心空间数据（包括建筑三维模型、基础数据表格、全景照片等），其研究边界的划分与数据收集范围<b>严格且完全符合本课题《任务书》与《开题报告》中所限定的特定研究区域</b>，具备极强的课题针对性。<br>
-        <b>未来跨城拓展性：</b>系统采用了"界面与数据分离"的设计。未来只需在文件夹中替换对应城市的地图与数据表，就能把本系统应用到全球任何一个地块 <span style="font-size: 0.75rem; color: #64748b;">(系统解耦与模块化热替换：即不修改核心代码逻辑，仅通过替换底层资源包即可实现跨区域的二次开发)</span>。
+render_page_banner(
+    title="长春伪满皇宫周边街区微更新支持平台",
+    description="以研究边界锁定、空间诊断、AIGC 推演、多主体协商和成果交付为主线，把规划分析链路收敛在一套统一工作界面内。",
+    eyebrow="Home",
+    tags=["任务书 / 开题报告边界对齐", "空间诊断与 AIGC 一体化", "成果导则直接交付"],
+    metrics=[
+        {"value": "150 公顷", "label": "研究范围", "meta": "围绕历史街区与周边复合片区"},
+        {"value": len(MODULES), "label": "核心页面", "meta": "覆盖 01-05 全链路实验室"},
+        {"value": top_stats["poi_count"], "label": "POI 资产", "meta": "挂载到空间活力诊断的数据点"},
+        {"value": top_stats["gvi_count"], "label": "街景样本", "meta": "支撑环境品质与风貌分析"},
+    ],
+)
+render_summary_cards(
+    [
+        {"value": "动态空间评价", "title": "Spatial Assessment", "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。"},
+        {"value": "生成式视觉推演", "title": "Generative Pre-rendering", "desc": "将保护要求与设计策略转成可比选的空间图景。"},
+        {"value": "多主体协同测算", "title": "Multi-agent Decision", "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。"},
+    ]
+)
+st.markdown(
+    """
+    <div class="content-panel">
+        <h3>研究范围声明与系统口径</h3>
+        <p><strong>当前基址合规性：</strong>系统所呈现的建筑三维模型、基础表格和街景照片等核心数据，
+        均严格落在《任务书》与《开题报告》限定的研究区域内。</p>
+        <p><strong>未来跨城拓展性：</strong>系统采用界面与数据分离的方式，只需替换地图与数据表即可迁移到新的研究片区，而不必重写核心逻辑。</p>
     </div>
-</div>
-</div>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
 # ==========================================
 # 📖 云端访客指南与本地部署教程 (Cloud Visitor Guide)
@@ -291,10 +299,11 @@ def render_workflow_logic():
 # ==========================================
 # 🚀 渲染执行
 # ==========================================
+render_section_intro("平台状态", "先确认底层引擎和资产挂载情况，再进入地图与模块工作流。", eyebrow="Runtime")
 render_status_hud()
 
 # 🗺️ 街区范围及改造红线 (Project Boundary)
-st.markdown("### 🗺️ 街区范围及改造红线 (Project Boundary)")
+render_section_intro("街区范围及改造红线", "统一查看研究边界、重点更新单元、建筑底图和辅助图层。", eyebrow="Project Boundary")
 @st.cache_data(ttl=300)
 def load_map_data(file_path):
     path = Path(file_path)
@@ -395,7 +404,7 @@ render_skyline_hud()
 
 # 🧩 核心子系统导览
 st.markdown("---")
-st.markdown("### 🧩 核心子系统导览 (点击进入)")
+render_section_intro("核心子系统导览", "从首页直接进入 01-05 页面，按研究链路完成诊断、推演、协商与交付。", eyebrow="Modules")
 cols = st.columns(len(MODULES))
 for i, m in enumerate(MODULES):
     with cols[i]:
@@ -408,6 +417,7 @@ for i, m in enumerate(MODULES):
         st.markdown(f"""<div class="module-container"><a href="/{route}" target="_self" style="text-decoration:none;"><div class="module-card">{img_html}<h4>{m['title']}</h4><p>{m['desc']}</p><div class="module-btn-mock">{m['btn_label']}</div></div></a></div>""", unsafe_allow_html=True)
 
 # 🔄 流程路线
+render_section_intro("循证决策全流程", "用一张流程图串起数据、诊断、推演、协商与成果输出。", eyebrow="Workflow")
 render_workflow_logic()
 st.markdown("<br><br>", unsafe_allow_html=True)
 

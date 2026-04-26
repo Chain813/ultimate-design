@@ -1,112 +1,136 @@
-# 🖥️ 深度安装与核心引擎部署指南 (Installation & Deployment Guide)
+# 安装与本地引擎部署指南
 
-本文档将指导您从零开始搭建本项目的开发环境，并详细解读两大核心 AI 引擎（Stable Diffusion & Ollama）的本地挂载流程。
+本文档说明如何在本地运行项目，以及如何挂载第 03 页和第 04 页需要的 AI 引擎。
 
-> **💡 架构提示**：本项目遵循**“云边自适应降级”**机制。若您无需实时生成新内容，仅希望运行第一阶段即可；若要解锁“记忆注入链多智能体”与“AIGC 多模态画质超分”，则必须完成第二阶段的硬核引擎挂载。
+## 1. 环境要求
 
----
+| 项目 | 轻量演示模式 | 全量本地模式 |
+| --- | --- | --- |
+| 操作系统 | Windows 10/11、macOS、Linux | Windows 10/11 优先 |
+| Python | 3.10 到 3.12 | 3.10 到 3.12 |
+| 内存 | 8GB 以上 | 16GB 以上 |
+| GPU | 不需要 | 建议 NVIDIA RTX 3060 8GB 以上 |
+| AI 服务 | 不需要 | Stable Diffusion WebUI、Ollama |
 
-## 💻 硬件配置推荐
+## 2. 安装项目依赖
 
-为了获得流畅的全息渲染与 AI 推演体验，建议您的设备满足以下要求：
-
-| 组件 | 最低配置 (演示模式) | 推荐配置 (全量算力模式) |
-| :--- | :--- | :--- |
-| **操作系统** | Windows 10 / 11 (64位) | Windows 11 (64位) |
-| **处理器** | Intel i5 / AMD Ryzen 5 | Intel i7 / AMD Ryzen 7 |
-| **内存 (RAM)** | 8GB | 16GB 甚至 32GB |
-| **独立显卡** | 无需独立显卡 | **NVIDIA RTX 3060 (8GB显存) 及以上** |
-| **硬盘空间** | 1GB 可用空间 | 30GB 可用 SSD 空间（需预留给大模型库） |
-
----
-
-## 🛠️ 第一阶段：数字孪生总台安装
-
-如果您只希望运行核心的地图交互与空间评价模块，请完成本阶段即可。
-
-### 1. 安装 Python 环境
-请前往 [Python 官方网站](https://www.python.org/downloads/) 下载并安装 **Python 3.10** 或更高版本。
-> [!IMPORTANT]
-> 在安装向导的第一步，务必勾选 **"Add Python to PATH"**（将 Python 添加到环境变量），否则终端将无法识别 `pip` 和 `python` 命令。
-
-### 2. 克隆项目与安装依赖
-打开您的命令行终端（CMD 或 PowerShell），依次执行：
-
-```bash
-# 1. 克隆代码仓库
+```powershell
 git clone https://github.com/Chain813/ultimateDESIGN.git
-
-# 2. 进入项目根目录
 cd ultimateDESIGN
 
-# 3. 安装专属依赖包 (如果下载缓慢，请加上 -i https://pypi.tuna.tsinghua.edu.cn/simple)
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
-
-# 注：此命令也会自动安装 python-docx 用于第5页的自动化红头公文生成。
 ```
 
-### 3. 冒烟测试
-依赖安装完成后，您可以直接启动应用进行测试：
-```bash
+国内网络较慢时可使用镜像：
+
+```powershell
+pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+## 3. 启动 Streamlit
+
+```powershell
 streamlit run app.py
 ```
-> [!NOTE]
-> 首次启动时，系统会在后台下载一个极小的文本模型（约100MB）用于 **RAG 政策知识库的预热**。请耐心等待进度条跑完。
 
-若浏览器成功打开网页且不报错，则第一阶段部署成功！
-
----
-
-## 🧠 第二阶段：AI 引擎本地挂载 (硬核解锁)
-
-由于云端缺乏高昂的 GPU 算力，真实的生成式预演与博弈对话需要调用您本地的显卡资源。
-
-### 🧩 引擎 A：Ollama 大语言模型引擎
-负责系统中的【04 博弈决策实验室】，推演不同角色的诉求对话。
-
-1. **下载安装**：前往 [Ollama 官网](https://ollama.com/) 下载 Windows 安装包并完成安装。
-2. **下载并运行模型**：打开终端，执行以下命令。系统会自动拉取为本平台深度适配的 Gemma 4 轻量化量化模型：
-   ```bash
-   ollama run gemma4:e2b-it-q4_K_M
-   ```
-3. **验证挂载**：在浏览器输入 `http://localhost:11434`，若显示 "Ollama is running"，说明挂载成功。
-
-### 🎨 引擎 B：Stable Diffusion 视觉衍生引擎
-负责系统中的【03 方案模拟实验室】，基于 ControlNet 约束生成街景修缮草图。
-
-1. **下载安装**：推荐国内用户使用 [秋叶一键安装包 (Bilibili)](https://space.bilibili.com/12566101) 部署 SD WebUI。
-2. **开放 API 接口（极其重要）**：
-   - 打开您的 SD 启动器，在左侧菜单寻找“高级选项”或“启动参数”。
-   - 勾选 **“启用 API (--api)”** 选项。
-   - (如果是手动脚本启动，请在 `webui-user.bat` 中配置 `set COMMANDLINE_ARGS=--api --listen`)。
-3. **模型准备**：建议提前在 SD 中下载好任意写实风格大模型（如 Realistic Vision）以及 ControlNet (Canny/Depth/Seg) 插件。
-4. **画质突破准备 (可选)**：如果您希望在第三页使用“无缝超分拼接 (Ultimate Upscale)”功能以获得 2K 极清画质，请在 WebUI 中提前安装 `ultimate-upscale-for-automatic1111` 插件与 `ControlNet Tile` 模型。
-5. **验证挂载**：启动 SD 后，确认控制台输出中包含 `Running on local URL:  http://127.0.0.1:7860`。
-
----
-
-## 🧩 项目架构速览
+默认访问：
 
 ```text
-src/engines/
-├── core_engine.py       # 向后兼容 re-export 中枢 (全部 17 个符号)
-├── spatial_engine.py    # 空间测度、POI融合、HUD统计
-├── nlp_engine.py        # 情感极性分类
-├── aigc_engine.py       # Stable Diffusion 生图管线
-├── rag_engine.py        # BGE 向量检索 + Jieba 回退
-├── llm_engine.py        # Ollama 大模型对话 (流式)
-└── diagnostic_engine.py # 地块诊断雷达与政策矩阵
-```
-> 新代码建议直接从对应领域模块导入。`core_engine.py` 保留所有旧导入路径，已有页面无需修改。
-
----
-
-## 🛡️ 最终联调启动
-
-当上述两个底层引擎均在后台稳定运行时，回到项目目录重新启动总台：
-```bash
-streamlit run app.py
+http://localhost:8501
 ```
 
-在系统主页，您将看到左侧的 **「底层算力设施调用监控」** 中，【多主体交互大语言模型】与【空间影像衍生网络】均亮起 **<span style="color:#4ADE80;">绿灯 (已联机)</span>**。
-恭喜您，已解锁本平台的全部潜能！
+如果端口被占用，可指定其他端口：
+
+```powershell
+streamlit run app.py --server.port 8502
+```
+
+## 4. Stable Diffusion WebUI
+
+Stable Diffusion WebUI 用于第 03 页实时生成更新设计图景。
+
+启动要求：
+
+- WebUI 本地服务地址为 `http://127.0.0.1:7860`
+- 启动参数必须包含 `--api`
+- 推荐提前准备写实或建筑表现相关模型
+
+手动启动时示例：
+
+```text
+set COMMANDLINE_ARGS=--api
+```
+
+启动后可在浏览器打开：
+
+```text
+http://127.0.0.1:7860
+```
+
+## 5. Ollama / Gemma
+
+Ollama 用于第 04 页 LLM 多主体协商。
+
+安装 Ollama 后运行：
+
+```powershell
+ollama run gemma4:e2b-it-q4_K_M
+```
+
+验证地址：
+
+```text
+http://127.0.0.1:11434
+```
+
+如果模型名称需要调整，可在第 04 页侧边栏修改模型标签。
+
+## 6. 当前代码结构
+
+```text
+src/
+├── config/
+│   ├── paths.py              # 数据、文档、静态资源路径
+│   ├── loader.py             # 配置加载
+│   └── runtime.py            # 运行时配置
+├── engines/
+│   ├── spatial_engine.py     # 空间测度
+│   ├── diagnostic_engine.py  # 地块诊断与政策矩阵
+│   ├── aigc_engine.py        # Stable Diffusion 调用
+│   ├── rag_engine.py         # 政策知识库检索
+│   ├── llm_engine.py         # Ollama 对话
+│   └── core_engine.py        # 旧导入兼容出口
+├── ui/
+│   ├── design_system.py      # 统一页面组件
+│   ├── chart_theme.py        # 统一图表主题
+│   └── ui_components.py      # 导航、状态提示和兼容导出
+└── utils/
+    ├── document_generator.py # Word 成果导出
+    ├── service_check.py      # SD / Ollama 探活
+    ├── daemon_manager.py     # 本地守护进程控制
+    └── geo_transform.py      # 坐标转换
+```
+
+更完整的结构说明见 [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)。
+
+## 7. 验证命令
+
+```powershell
+python -m py_compile app.py src/ui/design_system.py src/ui/chart_theme.py src/ui/ui_components.py
+python -m pytest tests/ -q
+python tools/startup_smoke.py
+```
+
+如果没有完整 AI 环境，`pytest` 中与外部服务有关的测试可能需要根据本地环境调整；页面级语法检查和启动冒烟测试应优先通过。
+
+## 8. 常见问题
+
+| 问题 | 处理方式 |
+| --- | --- |
+| `streamlit` 命令不存在 | 确认虚拟环境已激活，并重新执行 `pip install -r requirements.txt` |
+| 第 03 页显示 SD 未就绪 | 确认 WebUI 已用 `--api` 启动并监听 7860 |
+| 第 04 页显示 Gemma 未就绪 | 确认 Ollama 正在运行，且模型标签与页面侧边栏一致 |
+| 页面找不到 PDF | `docs/` 是本地资料目录，GitHub 默认不上传，需要在本机保留对应文件 |
+| 上传 GitHub 文件过大 | 检查是否误加入 `.runtime-packages/`、PDF、原始影像或日志 |

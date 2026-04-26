@@ -1,172 +1,108 @@
-<p align="center">
-  <a href="README.md">简体中文 🇨🇳</a> | <a href="README_EN.md">English 🇬🇧</a>
-</p>
+# 长春伪满皇宫周边街区微更新决策支持平台
 
-<h1 align="center">循证导向的长春伪满皇宫周边街区微更新决策支持平台</h1>
+这是一个面向城乡规划毕业设计与城市更新研究的 Streamlit 应用。项目围绕长春伪满皇宫周边街区，把任务书、开题报告、空间数据、AIGC 图景推演、LLM 多主体协商和成果展示整合到一套循证式工作流中。
 
-<p align="center">
-  <img src="https://img.shields.io/badge/学科定位-城乡规划%20%2F%20城市科学-blue.svg" alt="Subject">
-  <img src="https://img.shields.io/badge/核心方法-循证决策%20%2F%20多模态评估-FF4B4B.svg" alt="Methodology">
-  <img src="https://img.shields.io/badge/技术框架-数字孪生%20%2F%20生成式AI-818cf8.svg" alt="UI">
-  <img src="https://img.shields.io/badge/模型支撑-Stable%20Diffusion%20%2F%20LLM-purple.svg" alt="Engines">
-</p>
+当前版本完成了 UI 与项目结构重构：页面统一为 `Banner + 摘要卡 + 分段引导 + 工作面板` 的表达方式，图表、卡片、按钮、输入控件和成果展示使用同一套设计系统。
 
-## 🏙️ 项目愿景与研究范围界定 (Research Scope)
+## 核心模块
 
-本平台（原 **ultimateDESIGN** 数字孪生系统）是一款致力于解决传统城市更新中“感知主观化”、“评价定性化”与“博弈不透明”痛点的**基于数据证据的城市微更新决策平台** <sub>(循证式辅助决策：指利用客观数据和计算机模型，而非单纯依赖主观经验来制定规划方案)</sub>。系统深度融合了 **3D 空间数字孪生**、**计算机视觉 (CV)** 与 **生成式大模型 (AIGC/LLM)** 技术，为规划师、政府管理部门及公众提供可量化、动态化的更新方案预演与协商底座。
+| 页面 | 模块 | 主要能力 |
+| --- | --- | --- |
+| 首页 | 系统总台 | 入口导航、运行状态、研究边界、模块导览 |
+| 01 | 数据底座与规划策略 | 任务书与开题报告资料台、MPI 更新潜力评估、空间数据资产清单 |
+| 02 | 现状空间全景诊断 | 3D 现状底座、建筑/地块/POI/交通/街景品质叠加、地块雷达诊断 |
+| 03 | AIGC 设计推演 | 空间图景生成、规划参数控制、Before/After 对比、历史图集 |
+| 04 | LLM 博弈决策 | RAG 政策检索、五阶段推演、多主体协商、共识雷达 |
+| 05 | 更新设计成果展示 | 设计总图、导则文本、效果图集、Word 成果导出 |
 
-📍 **当前核心研究基址**：长春伪满皇宫周边街区。
-> *注：此特定研究基址的边界圈定与数据采集，完全遵循并严密符合本课题《任务书》与《开题报告》的既定内容与进度安排。*
-
-🧩 **像搭积木一样的灵活底座 (Modular Scalability)**：
-系统底层架构恪守“前端界面与数据运算分离”的设计哲学。在满足当前特定基址研究的前提下，为未来的跨城市部署留有了巨大的拓展余地：只需在后台 `data/` 和 `assets/` 目录中替换对应的地图文件与数据表格，即可将本平台无缝套用至全球任何一个城市更新地块，具备极强的学术普适性与商业化二次开发潜能 <sub>(系统解耦与热替换：即不修改核心代码逻辑，仅通过替换底层资源包即可实现全平台数据换血)</sub>。
-
----
-
-## ✨ 核心科研实验室模块
-
-### 1. 📊 空间资产综合测度（01 策略实验室）
-- **MPI 指标体系 (Multi-dimensional Potential Index)**：基于 AHP 层次分析法的多维度评价模型，通过构建判断矩阵，将专家定性经验转化为定量数学权重，实现对更新单元潜力的科学分级。
-- **策略语义萃取引擎**：集成跨模态解析算法，实现对上位保护规划文本（如《名城保护条例》）的语义精准降维与关键导则提取。
-
-### 2. 🌐 数字孪生与全息诊断（02 诊断实验室）
-- **多指标空间沙盘**：基于 WebGL 引擎构建，实现对绿视率 (GVI)、天空开阔度 (SVF)、空间围合度等街道空间品质因子的 3D 全息映射。
-- **人本要素感知**：融合高德 POI 实测分布、职住交通潮汐与社会感知 (UGC) 情绪极值，构建反映“物质-社会”双重属性的城市全息图谱。
-
-### 3. 🎨 空间风貌图景推演（03 方案模拟实验室）
-- **极清画质增强功能** <sub>(多模态画质重构引擎)</sub>：在原有的生图功能之上，突破性地自研引入了“无缝拼接放大”与“局部精准描绘”等工作流。在普通显卡上即可实现 2K 级建筑材质的单反级真实感渲染，且 100% 保留原有天空与路网背景。
-- **规划条件调节面板** <sub>(算子调控矩阵)</sub>：通过拖动滑块动态调节“景观改造力度”、“历史保留程度”等参数，实现对 AI 画图风格的精确控制。
-
-### 4. ⚖️ 利益主体协商决策（04 博弈决策实验室）
-- **五阶段循证推演工作流** <sub>(全链路闭环智能决策)</sub>：摒弃了传统的单点问答，重构为“前期分析 → 方案借鉴 → 设计理念 → 问题-策略对应 → 空间成果”的五阶段标准化推演链路。每个阶段的输出都会自动传递至下一阶段，形成严密的“证据链”。
-- **带“记忆”的多角色博弈机制** <sub>(极简多智能体记忆链)</sub>：在“问题-策略对应”阶段，首创轻量级“聊天记录传递”技术。让公众代表、开发商与规划师三个 AI 角色，能实时读取对方的观点并展开交叉反驳与妥协，在容积率和限高等硬性红线下达成共识。
-- **有理有据的本地政策搜索** <sub>(bge-micro 语义向量级检索 RAG)</sub>：底层采用极轻量的文本转换模型（仅约100MB），在秒级内为系统建立专属知识库索引。让 AI 在发言前，能精准地从长春市规划条例及开题报告中找出符合语境的条文和数据，作为决策依据。
-
-### 5. 🎯 更新设计成果展示（05 成果展示实验室）
-- **一键红头文件生成器** <sub>(自动化公文排版引擎 docxtpl)</sub>：聚合各实验室测度、推演与博弈共识数据，通过原生 Python 技术，一键把各种文字和 AI 画的图自动拼装成具备法定格式（红头、特定字体缩进）的 Word 导则文档，实现数字规划的完美落地成果。
-- **4D 时空方案全景漫游**：集成“留改拆”违建塌缩动画与 X-Ray 管线透视，提供极具视觉冲击力的大屏漫游方案。
-
----
-
-## 📂 模块化分层架构
+## 项目结构
 
 ```text
 ultimateDESIGN/
-├── app.py                      # 系统控制总台 (核心导航与状态监视)
-├── pages/                      # 5大核心实验室 (资产测度/全息诊断/方案模拟/博弈决策/成果展示)
-├── src/                        # 核心解析引擎包 (13 模块)
-│   ├── engines/                # 6 领域引擎 + 1 re-export hub
-│   │   ├── core_engine.py      # 向后兼容 re-export 中枢 (17 符号)
-│   │   ├── spatial_engine.py   # 空间测度、POI融合、HUD统计、天际线
-│   │   ├── nlp_engine.py       # 情感极性分类与词云提取
-│   │   ├── aigc_engine.py      # Stable Diffusion 实时生成与控制
-│   │   ├── rag_engine.py       # BGE 向量检索 + Jieba 回退
-│   │   ├── llm_engine.py       # Ollama 本地大模型对话 (含流式)
-│   │   └── diagnostic_engine.py # 地块诊断雷达与政策矩阵
-│   ├── ui/                     # 统一设计系统 (Apple/Cyber Aesthetic)
-│   ├── utils/                  # 公共服务与工具组件
-│   │   ├── service_check.py    # 统一端口探测 (消除 3 处重复)
-│   │   ├── exceptions.py       # 标准化异常体系 + log_and_suppress 装饰器
-│   │   ├── runtime_flags.py    # 全局运行模式 (demo_mode)
-│   │   ├── geo_transform.py    # 动态坐标转换 (BD09/GCJ02/WGS84)
-│   │   └── daemon_manager.py   # 守护进程管理
-│   └── config/                 # 配置加载与路径解析
-├── data/                       # 数据底座资产
-│   ├── shp/                    # 法定红线边界与重点地块 GeoJSON
-│   └── streetview/             # 采集测区全景影像 (作为 CV 引擎输入)
-├── assets/                     # 前端静态资源 (CSS / SVG / HTML)
-├── tests/                      # 单元测试套件 (49 测试覆盖 8 模块)
-├── docs/                       # 学术文档、规格书、法律法规文件汇编
-├── tools/                      # 环境自检与数据质量冒烟测试工具
-└── .gitignore                  # 数据安全与隐私脱敏忽略配置
+├── app.py                         # Streamlit 首页与系统总台
+├── pages/                         # 01-05 业务页面，文件名同时承担 Streamlit 路由
+├── src/
+│   ├── config/                    # 路径、运行配置、数据资产入口
+│   ├── engines/                   # 空间分析、AIGC、RAG、LLM、诊断等领域引擎
+│   ├── ui/
+│   │   ├── design_system.py       # 页面 Banner、Section Intro、摘要卡等统一布局组件
+│   │   ├── chart_theme.py         # Plotly 色板与二维/雷达图主题
+│   │   └── ui_components.py       # 顶部导航、引擎状态提示、兼容导出
+│   └── utils/                     # 文档生成、服务探活、坐标转换、守护进程管理
+├── assets/                        # 全局 CSS、3D 地图 HTML、首页素材
+├── data/                          # 脱敏指标表、GeoJSON、元数据文本
+├── static/                        # Streamlit 静态服务所需的大体积地图底图
+├── tools/                         # 数据处理、质量检查、启动冒烟测试脚本
+├── tests/                         # 单元测试
+├── docs/                          # 本地规划资料与 PDF，默认不上传 GitHub
+├── PROJECT_STRUCTURE.md           # 更详细的目录与维护说明
+└── README_EN.md                   # English README
 ```
 
----
+## 快速启动
 
-## 🚀 部署与体验指南 (Deployment Guide)
+建议使用 Python 3.10 到 3.12。Windows 用户可直接在项目根目录运行：
 
-本项目在架构上独创了 **“防崩溃的云端自适应模式”** <sub>(云边解耦与自适应降级：指系统能智能判断当前所处服务器的算力好坏，自动切断耗能任务)</sub>，以求在“最高画质算力”与“最广开源覆盖面”之间达成完美平衡：
-
-### 1. 🌐 云端轻量演示模式 (Cloud Demo - 零配置秒开)
-为彻底消除普通用户的电脑配置焦虑，系统一旦侦测到部署于普通的轻量云网页时，将**自动开启保护机制**，切断底层的真实舆情爬虫与庞大的 AI 画图请求，无缝切入“本地静态存档库”模式。不仅绝不会抛出报错甚至死机，还能为您保留 100% 的 3D 地图震撼交互与数据诊断体验。
-
-### 2. 💻 本地全算力核心模式 (Local Perfect Experience)
-为解锁实时多角色交叉开会与 AI 极清画质生成，推荐在本地电脑启动全量模块。
-(👉 **[初学者请点击：保姆级手把手部署教程](#newbie-guide-cn)**)
-
-- **算力要求**：建议 NVIDIA RTX 3060 (8GB 显存) 及以上。
-- **环境准备**：
-    1. 启动 [Ollama](https://ollama.com/) 并运行 `gemma4:e2b-it-q4_K_M`。
-    2. 启动 **Stable Diffusion WebUI** 并添加 `--api` 参数。
-- **快速启动**：
-    ```bash
-    pip install -r requirements.txt
-    streamlit run app.py
-    ```
-
----
-
-<a name="newbie-guide-cn"></a>
-
-## 🐣 新手保姆级部署教程 (Step-by-Step)
-
-如果您对编程一无所知，请按照以下步骤操作，即可在您的电脑上运行本项目：
-
-### 第一步：准备环境（这是基础）
-1.  **安装 Python**：前往 [Python.org](https://www.python.org/downloads/) 下载并安装。**注意**：安装时务必勾选 "Add Python to PATH"（添加到路径）。
-2.  **获取本项目代码**：点击本页面顶部的绿色按钮 `Code` -> `Download ZIP`，下载并解压到您的电脑。
-
-### 第二步：安装“运行插件”
-1.  在项目文件夹的空白处，按住键盘上的 `Shift` 键并点击鼠标右键，选择“在此处打开 PowerShell 窗口”或“在终端中打开”。
-2.  输入以下命令并按回车（这会自动安装本项目需要的所有功能组件）：
-    ```bash
-    pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
-    ```
-
-### 第三步：启动 AI 智能大脑 (Ollama)
-1.  下载并安装 [Ollama](https://ollama.com/)。
-2.  安装完成后，打开您的电脑终端（按 Win+R 输入 cmd 回车），输入：
-    ```bash
-    ollama run gemma4:e2b-it-q4_K_M
-    ```
-    *第一次运行会自动下载模型，请耐心等待。*
-
-### 第四步：启动风貌渲染引擎 (Stable Diffusion)
-1.  建议使用“秋叶 Stable Diffusion 一键包”。
-2.  **关键设置**：在启动器中找到“启用 API”选项并勾选。如果您是手动启动，请在 `webui-user.bat` 的参数中加入 `--api`。
-3.  点击“一键启动”，看到浏览器弹出 SD 页面即可。
-
-### 第五步：见证奇迹的时刻
-回到第二步打开的那个黑窗口，输入：
-```bash
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
 streamlit run app.py
 ```
-稍等片刻，您的浏览器会自动弹出本项目的数字孪生界面。
 
----
+启动后访问：
 
-## 📚 进阶文档导航 (Advanced Documentation)
+```text
+http://localhost:8501
+```
 
-如果您希望深入了解本系统的底层逻辑或获取完整的部署帮助，请查阅以下深度文档：
-- ⚡ **[快速启动指南 (3分钟体验教程)](QUICK_START.md)**：包含纯净版体验与全量算力版体验的双模式路线。
-- 🖥️ **[深度安装与核心引擎部署指南](INSTALL_GUIDE.md)**：详尽解读 Python 环境搭建以及 Stable Diffusion、Ollama 本地挂载流程。
-- 📤 **[GitHub 上传与云端上线指南](GITHUB_UPLOAD_GUIDE.md)**：针对小白的 Streamlit Community Cloud 一键部署教学。
+如果只查看数据、地图、成果展示和演示内容，不需要启动本地 AI 服务。03 页和 04 页的实时生成能力需要额外挂载本地引擎。
 
----
+## 可选 AI 引擎
 
-## 🛠️ 核心开发组件
-- **动态坐标转换器** (`src/utils/geo_transform.py`)：集成 BD09 / GCJ02 / WGS84 工业级转换算法，支撑多源数据对齐。
-- **标准化异常体系** (`src/utils/exceptions.py`)：`log_and_suppress` 装饰器替代盲 `except: pass`，确保系统降级不崩溃。
-- **统一端口探活** (`src/utils/service_check.py`)：消除 3 处重复探测逻辑，统一 `EngineStatus` 数据类。
-- **AHP 决策矩阵**：内置于 `pages/1_数据底座与规划策略.py`，支持专家权重的实时重算。
-- **WebGL 渲染管线**：基于 Deck.GL 实现百万级建筑要素的毫秒级渲染。
+| 引擎 | 用途 | 默认地址 |
+| --- | --- | --- |
+| Stable Diffusion WebUI | 第 03 页实时图景生成 | `http://127.0.0.1:7860` |
+| Ollama / Gemma | 第 04 页 LLM 多主体协商 | `http://127.0.0.1:11434` |
 
----
+Stable Diffusion WebUI 需要开启 `--api`。Ollama 可按项目默认配置运行：
 
-## ⚠️ 使用声明
+```powershell
+ollama run gemma4:e2b-it-q4_K_M
+```
 
-本项目仅供学术研讨、毕业论文展示及长春城市科学研究使用。项目数据涉及经脱敏处理的社会感知信息与高德 API 快照，严禁用于任何商业开发活动。
+未启动这些服务时，系统会显示离线提示，并尽量使用演示数据继续运行。
 
----
+## 开发与校验
 
-**循证导向 · 科学织补 · 智慧决策**
+```powershell
+python -m py_compile app.py src/ui/design_system.py src/ui/chart_theme.py src/ui/ui_components.py
+python -m pytest tests/ -q
+python tools/startup_smoke.py
+```
+
+CI 当前执行三类检查：`ruff` 关键错误扫描、密钥扫描、单元测试和启动冒烟测试。配置见 `.github/workflows/ci.yml`。
+
+## 数据与 GitHub 上传说明
+
+仓库默认保留核心代码、脱敏表格、GeoJSON、前端素材和测试脚本。以下内容默认不上传：
+
+- `.runtime-packages/`、`.venv/` 等本地依赖环境
+- Streamlit 运行日志和错误日志
+- `docs/` 中的规划 PDF 与任务资料
+- `data/streetview/`、`data/raw_images/` 等大体积原始影像
+- 所有 `*.pdf`
+
+更详细的上传与部署说明见 [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md)。
+
+## 相关文档
+
+- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)：目录结构与维护边界
+- [QUICK_START.md](QUICK_START.md)：快速启动路径
+- [INSTALL_GUIDE.md](INSTALL_GUIDE.md)：本地环境和 AI 引擎部署
+- [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md)：GitHub 上传与 Streamlit Cloud 部署
+- [README_EN.md](README_EN.md)：English overview
+
+## 使用声明
+
+本项目用于学术研究、课程展示和毕业设计演示。项目中的规划资料、空间数据和社会感知数据应按来源授权和隐私要求使用，不建议直接用于商业决策。

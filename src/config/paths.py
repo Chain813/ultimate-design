@@ -9,6 +9,8 @@ DATA_DIR = ROOT_DIR / "data"
 SHP_DIR = DATA_DIR / "shp"
 ASSETS_DIR = ROOT_DIR / "assets"
 STATIC_DIR = ROOT_DIR / "static"
+DOCS_DIR = ROOT_DIR / "docs"
+META_DIR = DATA_DIR / "meta"
 
 DATA_FILES = {
     "poi": DATA_DIR / "Changchun_POI_Real.csv",

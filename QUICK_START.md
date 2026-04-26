@@ -1,77 +1,80 @@
-# ⚡ 快速启动指南 (Quick Start Guide)
+# 快速启动指南
 
-欢迎使用 **长春铁北历史街区微更新决策支持平台**！本指南将带您在 3 分钟内快速启动并体验系统核心功能。
+本指南用于快速运行当前重构后的 Streamlit 项目。完整安装和 AI 引擎挂载见 [INSTALL_GUIDE.md](INSTALL_GUIDE.md)。
 
-## 🎯 启动路线图
+## 1. 轻量演示模式
 
-本项目独创了**云端自适应防死机机制** <sub>(云边解耦与自适应降级)</sub>，根据您的电脑配置，选择适合的启动方式：
+适合只查看首页、空间数据、3D 地图、诊断结果、成果展示和离线演示内容。
 
-- **[方式一：轻量本地免配置模式 (推荐初学者)](#方式一轻量本地免配置模式-推荐初学者)** —— 适合所有普通电脑或云服务器，防死机零配置秒开（AI 功能自动切入预存的展示图，真实爬虫自动切断，转为读取静态文件）。
-- **[方式二：全量算力核心启动 (极客模式)](#方式二全量算力核心启动-极客模式)** —— 需要带独立显卡 (8GB+) 的电脑（解锁真实的多角色开会辩论、AI 极清画质生成 <sub>(多智能体辩论与 AIGC 超分)</sub>）。
-
----
-
-### 方式一：轻量本地免配置模式 (推荐初学者)
-
-如果您只想查看全息 3D 沙盘地图、空间诊断指标、AHP 评价矩阵，以及体验自动化生成红头文件，无需配置 AI 环境：
-
-**1. 安装核心依赖**
-在项目根目录打开终端 (PowerShell/CMD)：
-```bash
+```powershell
+python -m venv .venv
+.\.venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-**2. 启动数字孪生总台**
-```bash
 streamlit run app.py
 ```
 
-🎉 **成功！** 浏览器会自动打开 `http://localhost:8501`。此时您可以顺畅体验 01、02、05 号实验室的全部功能！(注：此时 HUD 面板中的 SD 和 Gemma 将显示红灯“未挂载”，这是正常的演示保护状态)。
+浏览器打开：
 
----
+```text
+http://localhost:8501
+```
 
-### 方式二：全量算力核心启动 (极客模式)
+未启动 Stable Diffusion 或 Ollama 时，页面会显示引擎未就绪提示，这是正常状态。系统会尽量保留地图、表格、已有图集和成果导出能力。
 
-如果您拥有强劲的 GPU，并希望解锁真实的“AIGC 多模态画质超分”与“零依赖记忆注入链对话”：
+## 2. 全量本地模式
 
-**1. 启动大语言模型引擎 (Ollama)**
-打开一个新终端，运行：
-```bash
+如果需要第 03 页实时生图和第 04 页 LLM 多主体协商，请额外启动两个本地服务。
+
+### Ollama
+
+```powershell
 ollama run gemma4:e2b-it-q4_K_M
 ```
-*(保持这个黑色窗口运行，不要关闭)*
 
-**2. 启动生成式视觉引擎 (Stable Diffusion WebUI)**
-打开您本地的 SD WebUI（推荐秋叶一键包）：
-- 在启动器中勾选 **“启用 API”**。
-- 如果是命令行启动，务必携带 `--api` 参数。
-- 点击启动。
+默认服务地址：
 
-**3. 启动总台**
-打开第三个终端，进入本项目目录，运行：
-```bash
-streamlit run app.py
+```text
+http://127.0.0.1:11434
 ```
 
-🎉 **完美！** HUD 面板双双亮起绿灯。您可以前往【03 AIGC设计推演】实验室体验不同画质重构引擎（建议选择“无缝超分”实现 2K 极清画质），前往【04 博弈决策】实验室体验完整的“五阶段循证推演工作流”与带有上下文关联的智能体辩论！
+### Stable Diffusion WebUI
 
----
+启动 WebUI 时必须开启 API：
 
-## 🧭 常见问题速查 (FAQ)
-
-| 遇到的问题 | 解决方案 |
-| :--- | :--- |
-| **安装包下载太慢/卡住** | 使用国内镜像源：`pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
-| **第五页无法导出 Word 红头文件** | 请确保您安装了新依赖 `python-docx`。 |
-| **AIGC 选择了 SUPIR 模式没反应** | SUPIR 为备用核爆算力接口，若未单独部署外挂节点，系统会自动为您降级为安全模式以防死机。 |
-
-### 🧪 运行测试套件 (可选)
-
-项目内置 49 项单元测试，覆盖全部 6 个领域引擎及工具模块：
-```bash
-python -m pytest tests/ -v
+```text
+--api
 ```
 
----
+默认服务地址：
 
-如果需要更深入的部署与系统架构解读，请查阅 👉 [深度安装与核心引擎部署指南](INSTALL_GUIDE.md)。
+```text
+http://127.0.0.1:7860
+```
+
+## 3. 当前页面结构
+
+| 页面 | 地址入口 | 用途 |
+| --- | --- | --- |
+| 首页 | `app.py` | 系统总台、研究范围、模块导览 |
+| 01 | `pages/1_数据底座与规划策略.py` | 任务书、开题报告、空间数据、MPI |
+| 02 | `pages/2_现状空间全景诊断.py` | 3D 现状底图和地块诊断 |
+| 03 | `pages/3_AIGC设计推演.py` | AIGC 设计推演与图集 |
+| 04 | `pages/4_LLM博弈决策.py` | 五阶段协商与政策检索 |
+| 05 | `pages/5_更新设计成果展示.py` | 成果总图、导则、效果展示 |
+
+## 4. 常用检查
+
+```powershell
+python -m py_compile app.py src/ui/design_system.py src/ui/chart_theme.py src/ui/ui_components.py
+python -m pytest tests/ -q
+python tools/startup_smoke.py
+```
+
+## 5. 常见问题
+
+| 问题 | 处理方式 |
+| --- | --- |
+| 依赖安装慢 | 使用 `pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple` |
+| 第 03 页无法实时生成 | 确认 SD WebUI 已启动并开启 `--api` |
+| 第 04 页没有 LLM 回复 | 确认 Ollama 已运行并加载 `gemma4:e2b-it-q4_K_M` |
+| GitHub 上传文件过大 | 查看 [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md)，不要上传本地依赖、PDF 和原始影像 |

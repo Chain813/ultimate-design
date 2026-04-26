@@ -3,7 +3,11 @@ import pandas as pd
 import json
 import plotly.express as px
 import streamlit.components.v1 as components
-from src.ui.ui_components import render_top_nav
+from src.ui.chart_theme import apply_plotly_polar_theme, get_chart_palette, rgba_from_hex
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.ui_components import (
+    render_top_nav,
+)
 from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR, get_static_url
 
 # ==========================================
@@ -11,6 +15,23 @@ from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR, get_static
 # ==========================================
 st.set_page_config(page_title="现状空间全景诊断 | 02 实验室", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
+
+@st.cache_data(ttl=1800)
+def count_geo_features(path):
+    if not path.exists():
+        return 0
+    try:
+        return len(json.loads(path.read_text(encoding="utf-8")).get("features", []))
+    except Exception:
+        return 0
+
+@st.cache_data(ttl=1800)
+def count_table_rows(path, reader="csv"):
+    if not path.exists():
+        return 0
+    if reader == "excel":
+        return int(pd.read_excel(path).shape[0])
+    return int(pd.read_csv(path).shape[0])
 
 @st.cache_data(ttl=1800)
 def load_base_map_data():
@@ -83,6 +104,26 @@ def render_advanced_deckgl(is_3d=True, view_pitch=45, show_build=True, show_poi=
     </style>""", unsafe_allow_html=True)
     components.html(html, height=800, scrolling=False)
 
+render_page_banner(
+    title="现状空间全景诊断",
+    description="把研究范围、建筑底图、土地利用、街景品质和公共服务设施叠加到同一张诊断底板上，先看清问题分布，再进入地块级判断。",
+    eyebrow="Page 02",
+    tags=["3D 现状全息底座", "街景品质量化", "重点地块雷达诊断"],
+    metrics=[
+        {"value": count_geo_features(SHP_FILES["plots"]), "label": "重点地块", "meta": "用于后续更新优先级和雷达诊断"},
+        {"value": count_geo_features(SHP_FILES["buildings"]), "label": "建筑底图", "meta": "作为现状孪生场景底板"},
+        {"value": count_table_rows(DATA_FILES["points"], reader="excel"), "label": "采样点", "meta": "支撑街景与环境指标映射"},
+        {"value": count_table_rows(DATA_FILES["gvi"]), "label": "街景记录", "meta": "用于 GVI / SVF / 围合感分析"},
+    ],
+)
+render_summary_cards(
+    [
+        {"value": "物理基底", "title": "建筑与用地", "desc": "统一查看建筑轮廓、边界和土地利用分类。"},
+        {"value": "社会活力", "title": "POI 与交通", "desc": "辅助识别服务设施密度与热点分布。"},
+        {"value": "空间测度", "title": "街景品质", "desc": "通过 3D 柱体与雷达图定位环境短板。"},
+    ]
+)
+
 # ==========================================
 # 🌌 逻辑切换架构
 # ==========================================
@@ -99,6 +140,14 @@ st.markdown("---")
 # 🌌 模块 A: 3D 现状空间全景诊断
 # ==========================================
 if selected_sub == "🏙️ 3D现状全息底座":
+    render_section_intro("3D 现状全息底座", "用多图层底图快速锁定边界、地块、建筑和街景品质热点。", eyebrow="Scene Layering")
+    render_summary_cards(
+        [
+            {"value": "建筑 + 边界", "title": "基础底板", "desc": "优先保持研究边界和建筑轮廓可见。"},
+            {"value": "POI / 热力", "title": "社会活力", "desc": "按需叠加设施分布与热点信号。"},
+            {"value": "3D 柱体", "title": "空间品质", "desc": "用高度和颜色表达环境指标差异。"},
+        ]
+    )
     
     # 顶部横向图层控制
     st.markdown("<p style='color: #818cf8; font-size: 14px; font-weight: 700; margin-bottom: 5px;'>🎛️ 多源异构诊断图层控制 (Layer Toggles)</p>", unsafe_allow_html=True)
@@ -159,8 +208,17 @@ if selected_sub == "🏙️ 3D现状全息底座":
             pass
         
     pitch_3d = 45 if v_mode == "🦅 3D 鸟瞰" else (60 if "漫游" in v_mode else 0)
-    
+
     st.markdown("---")
+    st.markdown(
+        """
+        <div class="content-panel">
+            <h3>阅读顺序建议</h3>
+            <p>先打开建筑底座与重点地块，再根据需要叠加土地利用、POI、交通或街景柱体。这样能避免信息过载，也更容易看出问题集中区。</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
     
     render_advanced_deckgl(
         is_3d=(v_mode != "🗺️ 2D 平面"),
@@ -184,8 +242,7 @@ elif selected_sub == "📍 地块级诊断面板":
     import plotly.graph_objects as go
     from src.engines.core_engine import get_plot_diagnostics
 
-    st.markdown("### 📍 重点地块多维诊断面板")
-    st.info("此面板基于重点更新单元，自动计算多维指标并生成诊断雷达图。")
+    render_section_intro("重点地块多维诊断面板", "把重点更新单元的环境、活力和更新潜力汇总成排行榜与雷达图。", eyebrow="Plot Diagnostics")
     
     diagnostics = get_plot_diagnostics()
 
@@ -194,6 +251,13 @@ elif selected_sub == "📍 地块级诊断面板":
     else:
         df_diag = pd.DataFrame(diagnostics)
         df_diag_sorted = df_diag.sort_values("mpi_score", ascending=False)
+        render_summary_cards(
+            [
+                {"value": len(df_diag_sorted), "title": "已诊断地块", "desc": "当前纳入多维指标计算的重点单元数量。"},
+                {"value": f"{df_diag_sorted.iloc[0]['name']}", "title": "最高潜力地块", "desc": "当前 MPI 排名第一的更新对象。"},
+                {"value": f"{df_diag_sorted.iloc[0]['mpi_score']}", "title": "最高 MPI", "desc": "用于识别近期优先启动的单元。"},
+            ]
+        )
         
         st.markdown("#### 更新潜力排行榜 (MPI)")
         st.dataframe(
@@ -224,7 +288,7 @@ elif selected_sub == "📍 地块级诊断面板":
             if invert: ratio = 1.0 - ratio
             return 0.15 + ratio * 0.8
 
-        plot_colors = ['#f59e0b', '#10b981', '#6366f1', '#ec4899', '#06b6d4']
+        plot_colors = get_chart_palette()
         
         cols = st.columns(min(len(diagnostics), 3))
         for i, diag in enumerate(diagnostics):
@@ -244,24 +308,11 @@ elif selected_sub == "📍 地块级诊断面板":
                     r=values + [values[0]],
                     theta=categories + [categories[0]],
                     fill='toself',
-                    fillcolor=f'rgba({int(c[1:3],16)},{int(c[3:5],16)},{int(c[5:7],16)},0.15)',
+                    fillcolor=rgba_from_hex(c, 0.16),
                     line=dict(color=c, width=2.5),
                     name=diag["name"]
                 ))
-                fig_radar.update_layout(
-                    polar=dict(
-                        bgcolor='rgba(0,0,0,0)',
-                        radialaxis=dict(visible=True, range=[0, 1], showticklabels=False, gridcolor='rgba(99,102,241,0.15)'),
-                        angularaxis=dict(gridcolor='rgba(99,102,241,0.15)', color='#cbd5e1', tickfont=dict(size=10)),
-                    ),
-                    showlegend=False,
-                    title=dict(text=f"{diag['name']}", font=dict(size=13, color=c)),
-                    paper_bgcolor='rgba(0,0,0,0)',
-                    plot_bgcolor='rgba(0,0,0,0)',
-                    margin=dict(l=45, r=45, t=45, b=25),
-                    height=280,
-                    font=dict(color='#94a3b8')
-                )
+                apply_plotly_polar_theme(fig_radar, title=diag["name"], height=290, radial_range=[0, 1], accent_color=c)
                 st.plotly_chart(fig_radar, use_container_width=True)
                 
                 mc1, mc2, mc3 = st.columns(3)
