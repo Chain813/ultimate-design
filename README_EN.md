@@ -4,6 +4,32 @@ This repository contains a Streamlit-based decision support platform for evidenc
 
 ---
 
+## 📁 Repository Structure
+
+```text
+ultimateDESIGN/
+├── app.py                         # Main Streamlit entrance
+├── pages/                         # Business modules (01-05 Evidence-based workflow)
+│   ├── 1_Data_Foundation.py       # Data assets & planning brief
+│   ├── 2_Spatial_Diagnosis.py     # 3D interactive conditioned environment
+│   ├── 3_AIGC_Design.py           # Stable Diffusion based visual inference
+│   ├── 4_LLM_Negotiation.py       # RAG-based stakeholder consensus model
+│   └── 5_Result_Showcase.py       # Outcome compilation & export
+├── src/                           # Core logic components
+│   ├── config/                    # System paths & runtime configuration
+│   ├── engines/                   # Engines: Spatial, AIGC, RAG, LLM
+│   ├── ui/                        # UI system: Shared components & themes
+│   └── utils/                     # Utilities: Geo-transform, service checks
+├── assets/                        # Static assets: CSS, HTML templates, images
+├── data/                          # Planning data foundation (GIS, POI, Tables)
+├── tools/                         # Standalone utility scripts (Scrapers, indexers)
+├── docs/                          # Local PDFs and planning documents (Git-ignored)
+├── config.yaml                    # Global runtime configuration
+└── requirements.txt               # Python dependencies
+```
+
+---
+
 ## 📖 Project Overview
 
 **UltimateDESIGN** is an evidence-based digital platform designed for **Urban Planning** and **Architecture** students and researchers. It bridges the gap between raw spatial data and qualitative urban design decisions.

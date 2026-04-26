@@ -64,10 +64,43 @@
 
 ---
 
-## 📁 项目文档与开发
+## 📁 项目文件结构说明
 
-- [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md)：详细的项目目录职责、UI 层约定与维护说明。
-- [GITHUB_UPLOAD_GUIDE.md](GITHUB_UPLOAD_GUIDE.md)：GitHub 上传规范、代码清理规则及 Streamlit Cloud 部署流程。
+```text
+ultimateDESIGN/
+├── app.py                         # Streamlit 平台总台入口
+├── pages/                         # 业务功能页面 (01-05 循证工作流)
+│   ├── 1_数据底座与规划策略.py      # 资料管理、评估指标与资产清单
+│   ├── 2_现状空间全景诊断.py      # 3D 地图交互与空间量化评估
+│   ├── 3_AIGC设计推演.py          # 基于 SD 的更新图景生成
+│   ├── 4_LLM博弈决策.py          # 基于 RAG 的多主体协商模型
+│   └── 5_更新设计成果展示.py      # 成果汇总与报告导出
+├── src/                           # 核心业务逻辑组件
+│   ├── config/                    # 系统配置：路径注册、环境变量、模型参数
+│   ├── engines/                   # 核心引擎：空间分析、AIGC、RAG、LLM
+│   ├── ui/                        # 统一 UI 系统：设计组件、图表主题、导航
+│   └── utils/                     # 通用工具：坐标转换、服务探活、文档生成
+├── assets/                        # 前端静态资源：CSS 样式、地图 HTML 模板、封面图片
+├── data/                          # 规划数据底座
+│   ├── shp/                       # 地块、建筑、边界等空间 GeoJSON 数据
+│   ├── meta/                      # 政策文本、语义提取等文本元数据
+│   └── *.csv / *.xlsx             # POI、交通、人口、评价指标等统计数据
+├── tools/                         # 独立工具脚本
+│   ├── get_poi.py                 # POI 数据抓取工具
+│   ├── rebuild_rag.py             # 重新构建政策知识库索引
+│   └── startup_smoke.py           # 系统启动冒烟测试
+├── docs/                          # 本地资料库：规划规范 PDF、项目任务书 (默认不上传 GitHub)
+├── static/                        # Streamlit 静态资源缓存 (如超大体积 GeoJSON)
+├── tests/                         # 系统单元测试
+├── config.yaml                    # 全局运行配置文件
+├── requirements.txt               # Python 环境依赖清单
+├── setup_env.bat                  # 一键配置本地环境脚本
+└── README.md                      # 项目主说明文档
+```
+
+---
+
+## 📁 项目文档与开发
 
 ### 🧪 校验命令
 
