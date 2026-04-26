@@ -23,6 +23,7 @@
 ## 🐣 快速上手
 
 - **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)：电脑小白超详细上手指南 (推荐新手阅读)**
+- **[GLOSSARY.md](GLOSSARY.md)：规建专业学子的技术术语通俗解释 (像理解 Rhino/CAD 一样理解代码)**
 - [QUICK_START.md](QUICK_START.md)：快速启动命令参考
 - [INSTALL_GUIDE.md](INSTALL_GUIDE.md)：全量本地环境与 AI 引擎（SD / Ollama）部署指南
 
