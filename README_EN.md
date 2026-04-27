@@ -13,14 +13,14 @@ ultimateDESIGN/
 │   ├── 1_Data_Foundation.py       # Data assets & planning brief
 │   ├── 2_Spatial_Diagnosis.py     # 3D interactive conditioned environment
 │   ├── 3_AIGC_Design.py           # Stable Diffusion based visual inference
-│   ├── 4_LLM_Negotiation.py       # RAG-based stakeholder consensus model
+│   ├── 4_LLM_Negotiation.py       # RAG-based stakeholder consensus model and drawing prompt assistant
 │   └── 5_Result_Showcase.py       # Outcome compilation & export
 ├── src/                           # Core logic components
 │   ├── config/                    # System paths & runtime configuration
-│   ├── engines/                   # Engines: Spatial, AIGC, RAG, LLM
+│   ├── engines/                   # Engines: Spatial, AIGC, RAG, LLM, drawing prompt templates
 │   ├── ui/                        # UI system: Shared components & themes
 │   └── utils/                     # Utilities: Geo-transform, service checks
-├── assets/                        # Static assets: CSS, HTML templates, images
+├── assets/                        # Static assets: CSS, HTML templates, workflow graphics, images
 ├── data/                          # Planning data foundation (GIS, POI, Tables)
 ├── tools/                         # Standalone utility scripts (Scrapers, indexers)
 ├── docs/                          # Local PDFs and planning documents (Git-ignored)
@@ -44,6 +44,7 @@ The platform implements a **"Data Foundation + Evidence-based Diagnosis + AI Col
 - **AI-Driven Engines**:
     - **AIGC (Stable Diffusion)**: Transforms planning parameters into high-fidelity design renderings for instant visual feedback.
     - **LLM (Ollama/Gemma)**: Utilizes RAG (Retrieval-Augmented Generation) to search local policy documents and simulate negotiations between stakeholders (government, developers, residents).
+- **Drawing Prompt Assistant**: Adds a ChatGPT Image 2.0 prompt workflow inside the LLM decision page. It combines atlas chapters, drawing types, precision levels, uploaded basemaps, legend rules, style rules and negative prompts into one copy-ready prompt.
 
 ---
 
@@ -54,6 +55,7 @@ The platform implements a **"Data Foundation + Evidence-based Diagnosis + AI Col
 3.  **🎨 AIGC Design Inference**: Real-time generation of design scenarios using Stable Diffusion with before/after comparisons.
 4.  **🤖 LLM Negotiation**: Simulated stakeholder博弈 based on localized policy knowledge bases.
 5.  **📋 Showcase & Export**: Comprehensive gallery of design results and master plans with one-click Word report export.
+6.  **🖼️ Drawing Prompt Assistant**: Generates ChatGPT Image 2.0 prompts for A3 atlases, A1 boards and presentation decks. It blocks high-precision drawings when required basemaps are missing and downgrades unsupported analysis drawings to visual-expression templates.
 
 ---
 
@@ -90,6 +92,7 @@ The app can run in a lightweight demo mode without local AI services. Real-time 
 ```powershell
 python -m py_compile app.py src/ui/design_system.py src/ui/chart_theme.py src/ui/ui_components.py
 python -m pytest tests/ -q
+python -m pytest tests/test_core_engine.py tests/test_image_prompt_engine.py -q
 python tools/startup_smoke.py
 ```
 
