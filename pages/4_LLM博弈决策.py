@@ -4,6 +4,15 @@ import json
 import os
 import plotly.graph_objects as go
 from src.engines.core_engine import call_llm_engine, call_llm_engine_stream, is_demo_mode, get_plot_diagnostics, generate_policy_matrix
+from src.engines.image_prompt_engine import (
+    BOOK_CHAPTERS,
+    UPLOAD_CHANNELS,
+    UPLOAD_REFERENCE_TEXT,
+    ImagePromptRequest,
+    build_image_prompt,
+    get_drawing_profile,
+    revise_prompt_by_rating,
+)
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.design_system import (
     render_page_banner,
@@ -179,6 +188,300 @@ with st.sidebar:
     else:
         st.caption('暂无历史议题。点击「生成智能议题」后将自动归档。')
 
+
+def _detect_prompt_source_channels():
+    """Infer which reference channels are already available in the local project data."""
+    detected = []
+    checks = [
+        ("卫星底图", ["data/无纹理2D卫星图.png"]),
+        ("红线边界图", ["data/shp/Boundary_Scope.geojson", "data/shp/Key_Plots_District.json"]),
+        ("GIS专题图", ["data/GIS高对比度图纸.png", "data/土地利用分类图.png"]),
+        ("建筑肌理图", ["data/shp/Building_Footprints.geojson"]),
+        ("图例参考图", ["data/土地利用分类图.png", "data/GIS高对比度图纸.png"]),
+    ]
+    for channel, paths in checks:
+        if any(os.path.exists(path) for path in paths):
+            detected.append(channel)
+    return detected
+
+
+def _default_legend_for_profile(profile):
+    if profile.precision == "一级精度":
+        return "研究范围边界、五个重点地块、主要道路、建筑轮廓、用地或更新分类、保留/改造/新建控制分类"
+    if profile.precision == "二级精度":
+        return "评价等级、问题类型、策略类型、保护分区、更新潜力分区、公共空间与生态节点"
+    return "输入、诊断、评价、推演、输出、反馈闭环；历史重点、问题预警、生态公共空间、AI推演节点"
+
+
+def _render_upload_channel_picker(profile):
+    detected_channels = _detect_prompt_source_channels()
+    st.caption("系统会把本地已有数据与本次上传文件合并判断。未上传或未确认的资料不会被写入严格参考说明。")
+    selected_channels = st.multiselect(
+        "已确认可用于本图的资料通道",
+        UPLOAD_CHANNELS,
+        default=[channel for channel in detected_channels if channel in UPLOAD_CHANNELS],
+        help="可直接勾选项目 data 目录中已有的数据，也可在下方上传临时参考图。",
+        key="p4_prompt_confirmed_channels",
+    )
+    if profile.required_uploads:
+        st.info("当前图纸建议/必须资料：" + "、".join(profile.required_uploads))
+
+    uploaded_channels = set(selected_channels)
+    with st.expander("固定上传通道（可选，文件仅用于确认本次提示词引用）", expanded=False):
+        cols = st.columns(2)
+        for idx, channel in enumerate(UPLOAD_CHANNELS):
+            with cols[idx % 2]:
+                files = st.file_uploader(
+                    channel,
+                    type=["png", "jpg", "jpeg", "webp", "pdf", "geojson", "json", "csv", "xlsx"],
+                    accept_multiple_files=True,
+                    key=f"p4_prompt_upload_{channel}",
+                    help=UPLOAD_REFERENCE_TEXT.get(channel, ""),
+                )
+                if files:
+                    uploaded_channels.add(channel)
+    return list(uploaded_channels)
+
+
+def _render_image_prompt_assistant():
+    render_section_intro(
+        "图纸提示词助手",
+        "按照现有数据、阶段分析结果和上传资料完整性，生成可复制到 ChatGPT Image 2.0 的单张图纸提示词。",
+        eyebrow="Image 2.0 Prompt",
+    )
+
+    s1 = st.session_state.get("stage1_output", "")
+    s2 = st.session_state.get("stage2_output", "")
+    s3 = st.session_state.get("stage3_output", "")
+    s4 = st.session_state.get("stage4_output", "")
+    selected_proposal = st.session_state.get("p4_selected_proposal", "")
+    voting_scores = st.session_state.get("p4_voting_scores", {})
+
+    ready_count = sum(1 for item in [s1, s2, s3, s4] if item)
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric("已读取阶段成果", f"{ready_count}/4")
+    m2.metric("图纸生成方式", "提示词")
+    m3.metric("图像模型调用", "不调用")
+    m4.metric("缺失拦截", "开启")
+
+    chapter_options = list(BOOK_CHAPTERS.keys())
+    default_chapter_index = chapter_options.index("04 策略生成篇")
+
+    st.markdown("#### 1. 图纸选择")
+    c1, c2, c3 = st.columns([1.15, 1.25, 0.9])
+    with c1:
+        chapter = st.selectbox(
+            "图册章节",
+            chapter_options,
+            index=default_chapter_index,
+            key="p4_prompt_chapter",
+        )
+    drawing_options = BOOK_CHAPTERS[chapter]
+    default_drawing = "总体策略图" if "总体策略图" in drawing_options else drawing_options[0]
+    with c2:
+        drawing_name = st.selectbox(
+            "图纸名称",
+            drawing_options,
+            index=drawing_options.index(default_drawing),
+            key=f"p4_prompt_drawing_{chapter}",
+        )
+    profile = get_drawing_profile(drawing_name)
+    with c3:
+        output_scene = st.selectbox(
+            "输出场景",
+            ["A3横版图册", "A1竖版展板", "方案汇报PPT"],
+            key="p4_prompt_output_scene",
+        )
+
+    p1, p2, p3, p4 = st.columns(4)
+    p1.metric("图纸类型", profile.drawing_type)
+    p2.metric("精度等级", profile.precision)
+    p3.metric("真实数据", "必须" if profile.needs_real_data else "可选")
+    p4.metric("AI发挥", "允许" if profile.allows_ai_expression else "受限")
+
+    st.markdown("#### 2. 底图与资料")
+    uploaded_channels = _render_upload_channel_picker(profile)
+
+    st.markdown("#### 3. 必要信息")
+    f1, f2 = st.columns([1, 1])
+    with f1:
+        aspect_ratio = st.selectbox(
+            "画面比例",
+            ["A3横版", "A1竖版", "16:9横版", "4:3横版"],
+            key="p4_prompt_aspect",
+        )
+        layout_structure = st.selectbox(
+            "版式结构",
+            [
+                "问题-策略-空间响应三栏结构",
+                "地图主图 + 右侧图例 + 底部信息框",
+                "环形闭环结构",
+                "横向流程结构",
+                "左侧结论栏 + 中央主图 + 右侧图例栏",
+            ],
+            key="p4_prompt_layout",
+        )
+        main_expression = st.text_area(
+            "本图主要表达",
+            value="将阶段四多主体博弈形成的问题-策略对应关系转译为图纸，突出共识策略、空间落位、政策依据和实施优先级。",
+            height=92,
+            key="p4_prompt_main_expression",
+        )
+        legend_content = st.text_area(
+            "图例内容",
+            value=_default_legend_for_profile(profile),
+            height=92,
+            key="p4_prompt_legend",
+        )
+    with f2:
+        must_include = st.text_area(
+            "必须出现的内容",
+            value="研究范围边界、五个重点地块、伪满皇宫、长春站、伊通河、主要道路、问题-策略-空间响应标签。",
+            height=92,
+            key="p4_prompt_must_include",
+        )
+        key_plots = st.text_area(
+            "重点地块 / 空间对象",
+            value="五个重点地块、伪满皇宫周边街区、长春站TOD联系、伊通河生态联系。",
+            height=92,
+            key="p4_prompt_key_plots",
+        )
+        design_strategy = st.text_area(
+            "设计策略",
+            value=(s4[:520] if s4 else s3[:520] if s3 else "以保护优先、功能织补、慢行缝合、公共空间补足和智慧治理为核心策略。"),
+            height=120,
+            key="p4_prompt_design_strategy",
+        )
+
+    with st.expander("高级内容与文字规则", expanded=False):
+        a1, a2 = st.columns(2)
+        with a1:
+            analysis_conclusion = st.text_area(
+                "分析结论",
+                value=(s1[:420] if s1 else "数据不足处使用占位符，不生成具体统计数值。"),
+                height=100,
+                key="p4_prompt_analysis_conclusion",
+            )
+            emphasized_problem = st.text_area(
+                "需要强调的问题",
+                value="用地混杂、交通割裂、公共空间不足、历史风貌保护与商业开发之间的冲突。",
+                height=80,
+                key="p4_prompt_problem",
+            )
+            emphasized_advantage = st.text_area(
+                "需要强调的优势",
+                value="伪满皇宫历史文化资源、长春站TOD潜力、伊通河生态联系、老城复兴示范价值。",
+                height=80,
+                key="p4_prompt_advantage",
+            )
+        with a2:
+            avoid_content = st.text_area(
+                "需要避免的内容",
+                value="不要虚构边界、道路、地块、用地分类、统计数据、政策名称和大段说明文字。",
+                height=100,
+                key="p4_prompt_avoid",
+            )
+            mark_as_schematic = st.checkbox(
+                "数据不足时标注“示意”",
+                value=True,
+                key="p4_prompt_schematic",
+            )
+            use_existing_results = st.checkbox(
+                "嵌入页面4现有阶段结果",
+                value=True,
+                key="p4_prompt_use_existing",
+            )
+            text_rules = st.text_area(
+                "文字规则",
+                value="中文文字使用微软雅黑风格，英文辅助使用 Times New Roman 风格，只生成清晰标题和少量关键词；信息不全处使用占位符，避免乱码。",
+                height=100,
+                key="p4_prompt_text_rules",
+            )
+
+    evidence_blocks = {
+        "阶段一前期诊断": s1,
+        "阶段二案例借鉴": s2,
+        "阶段三设计理念": s3,
+        "阶段四博弈共识": s4,
+        "当前微更新提案": selected_proposal,
+        "角色共识度": json.dumps(voting_scores, ensure_ascii=False) if voting_scores else "",
+    }
+
+    request = ImagePromptRequest(
+        chapter=chapter,
+        drawing_name=drawing_name,
+        drawing_type=profile.drawing_type,
+        aspect_ratio=aspect_ratio,
+        output_scene=output_scene,
+        uploaded_channels=uploaded_channels,
+        main_expression=main_expression,
+        must_include=must_include,
+        legend_content=legend_content,
+        key_plots=key_plots,
+        design_strategy=design_strategy,
+        analysis_conclusion=analysis_conclusion,
+        emphasized_problem=emphasized_problem,
+        emphasized_advantage=emphasized_advantage,
+        avoid_content=avoid_content,
+        layout_structure=layout_structure,
+        text_rules=text_rules,
+        mark_as_schematic=mark_as_schematic,
+        use_existing_results=use_existing_results,
+        evidence_blocks=evidence_blocks,
+    )
+
+    st.markdown("#### 4. 完整性检查与生成")
+    if st.button("生成 ChatGPT Image 2.0 图纸提示词", type="primary", use_container_width=True, key="p4_prompt_generate"):
+        result = build_image_prompt(request)
+        st.session_state["p4_image_prompt_result"] = result
+        st.session_state.pop("p4_image_prompt_revised", None)
+
+    result = st.session_state.get("p4_image_prompt_result")
+    if result:
+        for notice in result.notices:
+            st.warning(notice) if not result.can_generate else st.info(notice)
+        if result.missing_items:
+            st.markdown("当前缺少：" + "、".join(result.missing_items))
+        if not result.can_generate:
+            st.error("因此暂不生成提示词。请补齐上述资料或必要字段后重新生成。")
+            return
+        if result.template_only:
+            st.info("已按“视觉表达模板提示词”输出：不会生成具体热力、评价等级或统计结论。")
+        st.text_area("完整 Image 2.0 提示词", value=result.prompt, height=430, key="p4_prompt_output")
+        st.download_button(
+            "下载提示词 Markdown",
+            result.prompt,
+            file_name=f"{result.profile.name}_Image2_prompt.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+
+        st.markdown("#### 5. 成图评级与提示词修正")
+        r1, r2 = st.columns([0.85, 1.15])
+        with r1:
+            rating = st.radio(
+                "生成图片后评级",
+                ["A级：可直接放入图册", "B级：需要轻微后期修改", "C级：只适合作为背景或灵感", "D级：不可用，需要重生成"],
+                key="p4_prompt_rating",
+            )
+        with r2:
+            issue_types = st.multiselect(
+                "问题类型",
+                ["文字不准", "文字乱码", "边界不准", "图例不准", "颜色不统一", "信息太密", "图面太杂", "画面太空", "风格不一致", "清晰度不足", "数据不真实"],
+                key="p4_prompt_issue_types",
+            )
+        if st.button("根据评级修正提示词", use_container_width=True, key="p4_prompt_revise"):
+            revised = revise_prompt_by_rating(result.prompt, rating, issue_types)
+            st.session_state["p4_image_prompt_revised"] = revised
+            if rating.startswith("A级"):
+                st.session_state["p4_accepted_prompt_style"] = revised
+                st.success("已标记为可用版本，后续相似图纸可继承该提示词结构。")
+
+        revised_prompt = st.session_state.get("p4_image_prompt_revised")
+        if revised_prompt:
+            st.text_area("修正后提示词", value=revised_prompt, height=430, key="p4_prompt_revised_output")
+
+
 # ==========================================
 # 📍 五阶段循证规划推演工作流
 # ==========================================
@@ -269,13 +572,25 @@ if subpage == "动态共识雷达":
         st.warning("⚠️ 暂无共识数据。请先在左侧边栏返回【多主体利益协商】页面，并在“阶段四”中完成 AI 博弈推演。")
     st.stop()
 
-p4_mode = st.radio("⬇️ 选择推演阶段", [
+P4_MODE_OPTIONS = [
     "📊 阶段一：前期分析",
     "📚 阶段二：方案借鉴",
     "💡 阶段三：设计理念",
     "⚖️ 阶段四：问题-策略对应",
+    "🖼️ 图纸提示词助手",
     "🎯 阶段五：空间成果方案"
-], horizontal=True, key="p4_tab_mode")
+]
+SUBPAGE_TO_MODE = {
+    "多主体利益协商": "⚖️ 阶段四：问题-策略对应",
+    "图纸提示词助手": "🖼️ 图纸提示词助手",
+    "空间成果方案": "🎯 阶段五：空间成果方案",
+}
+target_mode = SUBPAGE_TO_MODE.get(subpage)
+if target_mode and st.session_state.get("p4_last_sub_param") != subpage:
+    st.session_state["p4_tab_mode"] = target_mode
+    st.session_state["p4_last_sub_param"] = subpage
+
+p4_mode = st.radio("⬇️ 选择推演阶段", P4_MODE_OPTIONS, horizontal=True, key="p4_tab_mode")
 
 st.markdown("---")
 if p4_mode == "📊 阶段一：前期分析":
@@ -550,6 +865,9 @@ elif p4_mode == "⚖️ 阶段四：问题-策略对应":
                 st.session_state["stage4_output"] = summary
                 st.success("✅ 阶段四完成！已生成共识度打分。请前往侧边栏【动态共识雷达】查看多维度雷达图谱。")
                 st.toast("✅ 阶段四完成！", icon="⚖️")
+
+elif p4_mode == "🖼️ 图纸提示词助手":
+    _render_image_prompt_assistant()
 
 elif p4_mode == "🎯 阶段五：空间成果方案":
     render_section_intro("阶段五：空间成果方案汇总", "汇总前四阶段结果，生成最终规划导则，并导出阶段成果文件。", eyebrow="Stage 05")
