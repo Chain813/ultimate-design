@@ -52,6 +52,7 @@
 
 ## 🐣 快速上手
 
+- **[WORKFLOW_REPORT.md](WORKFLOW_REPORT.md)：循证规划五阶段推演工作流全解析 (必读)**
 - **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)：电脑小白超详细上手指南 (推荐新手阅读)**
 - **[GLOSSARY.md](GLOSSARY.md)：城乡规划专业学子的技术术语通俗解释 (像理解 GIS/控规一样理解代码)**
 - [QUICK_START.md](QUICK_START.md)：快速启动命令参考

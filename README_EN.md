@@ -61,6 +61,7 @@ The platform implements a **"Data Foundation + Evidence-based Diagnosis + AI Col
 
 ## 📄 Documentation
 
+- **[WORKFLOW_REPORT.md](WORKFLOW_REPORT.md): Full analysis of the 5-stage induction planning workflow (Must Read).**
 - **[GLOSSARY.md](GLOSSARY.md): Technical terms explained using Urban Planning & Architecture analogies.**
 - **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md): Super detailed guide for absolute beginners (Chinese).**
 - [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md): Detailed repository layout and maintenance guide.
