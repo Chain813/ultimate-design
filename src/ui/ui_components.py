@@ -7,12 +7,16 @@ import urllib.parse
 from src.utils.service_check import check_engine_status, is_port_alive, EngineStatus
 
 @st.cache_data
+def _read_css_content(css_path: str, mtime: float):
+    with open(css_path, "r", encoding="utf-8") as f:
+        return f.read()
+
+
 def _get_css_content():
     base_path = Path(__file__).parent.parent.parent
     css_path = base_path / "assets" / "style.css"
     if css_path.exists():
-        with open(css_path, "r", encoding="utf-8") as f:
-            return f.read()
+        return _read_css_content(str(css_path), css_path.stat().st_mtime)
     return ""
 
 def load_global_css():
@@ -30,7 +34,7 @@ def render_top_nav():
         {"lab": "01 资产测度", "path": "pages/1_数据底座与规划策略.py", "subs": ["MPI 更新潜力测度", "策略语义与红线", "多源异构底座"]},
         {"lab": "02 全息诊断", "path": "pages/2_现状空间全景诊断.py", "subs": ["3D 现状全息底座", "地块级诊断面板"]},
         {"lab": "03 方案模拟", "path": "pages/3_AIGC设计推演.py", "subs": ["AIGC 视觉图景衍生", "本地算力调度"]},
-        {"lab": "04 博弈决策", "path": "pages/4_LLM博弈决策.py", "subs": ["多主体利益协商", "动态共识雷达"]},
+        {"lab": "04 博弈决策", "path": "pages/4_LLM博弈决策.py", "subs": ["多主体利益协商", "动态共识雷达", "图纸提示词助手"]},
         {"lab": "05 成果展示", "path": "pages/5_更新设计成果展示.py", "subs": ["3D 更新设计全景", "规划文本成果", "重点效果展示"]},
     ]
 
@@ -123,10 +127,12 @@ def render_top_nav():
     div[data-testid="stRadio"] > div[role="radiogroup"] {{
         display: flex !important;
         flex-direction: row !important;
+        flex-wrap: wrap !important;
         background: transparent !important; /* 移除整体背景，突出独立感 */
         padding: 0 !important;
         border: none !important;
-        width: fit-content !important;
+        width: 100% !important;
+        max-width: 100% !important;
         gap: 12px !important; /* 增加胶囊间的间隙 */
         margin: 15px 0 !important;
     }}
@@ -161,6 +167,7 @@ def render_top_nav():
     
     /* 每一个选项都成为一个独立的胶囊 */
     div[data-testid="stRadio"] label {{
+        flex: 0 1 auto !important;
         background: rgba(255, 255, 255, 0.06) !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         padding: 10px 24px !important;
@@ -229,7 +236,8 @@ def render_top_nav():
         '''
         # 子项横向分布 (如果子项多，可以分 Column，目前先统一排布)
         for sub in item['subs']:
-            nav_html += f'<a href="/{slug}" target="_self" class="dropdown-item">{sub}</a>'
+            sub_query = urllib.parse.quote(str(sub), safe="")
+            nav_html += f'<a href="/{slug}?sub={sub_query}" target="_self" class="dropdown-item">{sub}</a>'
         
         nav_html += '</div></div></div></div>'
     
@@ -332,20 +340,18 @@ def render_page_banner(title, description, eyebrow=None, tags=None, metrics=None
     if eyebrow:
         eyebrow_html = f'<div class="page-eyebrow">{escape(str(eyebrow))}</div>'
 
-    st.markdown(
-        f"""
-        <section class="page-banner">
-            <div class="page-banner-copy">
-                {eyebrow_html}
-                <h1>{escape(str(title))}</h1>
-                <p>{escape(str(description))}</p>
-                <div class="page-chip-row">{tags_html}</div>
-            </div>
-            <div class="page-banner-grid">{metrics_html}</div>
-        </section>
-        """,
-        unsafe_allow_html=True,
+    html = (
+        '<section class="page-banner">'
+        '<div class="page-banner-copy">'
+        f"{eyebrow_html}"
+        f"<h1>{escape(str(title))}</h1>"
+        f"<p>{escape(str(description))}</p>"
+        f'<div class="page-chip-row">{tags_html}</div>'
+        "</div>"
+        f'<div class="page-banner-grid">{metrics_html}</div>'
+        "</section>"
     )
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_section_intro(title, description="", eyebrow=None):
@@ -359,32 +365,30 @@ def render_section_intro(title, description="", eyebrow=None):
     if description:
         desc_html = f"<p>{escape(str(description))}</p>"
 
-    st.markdown(
-        f"""
-        <div class="section-intro">
-            {eyebrow_html}
-            <h2>{escape(str(title))}</h2>
-            {desc_html}
-        </div>
-        """,
-        unsafe_allow_html=True,
+    html = (
+        '<div class="section-intro">'
+        f"{eyebrow_html}"
+        f"<h2>{escape(str(title))}</h2>"
+        f"{desc_html}"
+        "</div>"
     )
+    st.markdown(html, unsafe_allow_html=True)
 
 
 def render_summary_cards(cards):
     """渲染统一的摘要指标卡片。"""
     load_global_css()
-    html = '<div class="summary-grid">'
+    parts = ['<div class="summary-grid">']
     for card in cards:
-        html += f"""
-        <div class="summary-card">
-            <span class="summary-value">{escape(str(card.get("value", "")))}</span>
-            <h4>{escape(str(card.get("title", "")))}</h4>
-            <p>{escape(str(card.get("desc", "")))}</p>
-        </div>
-        """
-    html += "</div>"
-    st.markdown(html, unsafe_allow_html=True)
+        parts.append(
+            '<div class="summary-card">'
+            f'<span class="summary-value">{escape(str(card.get("value", "")))}</span>'
+            f'<h4>{escape(str(card.get("title", "")))}</h4>'
+            f'<p>{escape(str(card.get("desc", "")))}</p>'
+            "</div>"
+        )
+    parts.append("</div>")
+    st.markdown("".join(parts), unsafe_allow_html=True)
 
 
 CHART_PALETTE = [
