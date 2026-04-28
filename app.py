@@ -30,7 +30,7 @@ def get_page_route(page_path):
     name = name.replace(".py", "")
     return name
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, show_spinner=False)
 def get_base64_image_v2(image_path):
     """将本地图片转换为 Base64 编码"""
     try:
@@ -70,21 +70,21 @@ MODULES = [
         "title": "01 前期数据获取与现状分析",
         "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
         "image": "assets/01_data_overview.png",
-        "path": "pages/01_前期数据获取与现状分析.py",
+        "path": "pages/01_任务解读.py",
         "btn_label": "进入前期板块"
     },
     {
         "title": "02 中期概念生成与应对策略",
         "desc": "目标定位、设计策略、案例借鉴、协商共识。",
         "image": "assets/02_strategy_library.png",
-        "path": "pages/02_中期概念生成与应对策略.py",
+        "path": "pages/06_目标定位.py",
         "btn_label": "进入中期板块"
     },
     {
         "title": "03 后期设计生成与成果表达",
         "desc": "总体设计、专项系统、重点深化、实施路径、导则和成果表达。",
         "image": "assets/05_design_inference.png",
-        "path": "pages/03_后期设计生成与成果表达.py",
+        "path": "pages/08_总体城市设计.py",
         "btn_label": "进入后期板块"
     }
 ]
@@ -249,26 +249,51 @@ render_status_hud()
 
 # 🗺️ 街区范围及改造红线 (Project Boundary)
 render_section_intro("街区范围及改造红线", "统一查看研究边界、重点更新单元、建筑底图和辅助图层。", eyebrow="Project Boundary")
-@st.cache_data(ttl=300)
+
+@st.cache_data(ttl=3600, show_spinner=False)
 def load_map_data(file_path):
+    """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
     path = Path(file_path)
     if not path.exists(): return None
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def render_project_map():
-    # 🎨 视图模式选择器 (置于显眼位置)
-    view_mode = st.radio(
-        "🗺️ 视图模式", 
-        ["🦅 3D 仿真视角", "🗺️ 2D 空间肌理"], 
-        index=0, 
-        horizontal=True, 
-        key="global_map_view_mode"
-    )
+@st.cache_data(ttl=3600, show_spinner=False)
+def _load_map_html_template():
+    """缓存 HTML 模板读取，避免每次交互都重新读磁盘。"""
+    with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
+        return f.read()
 
-    # 🚀 --- 统一高性能渲染链路 (Deck.GL 分离组件加速版) ---
+@st.cache_data(ttl=3600, show_spinner=False)
+def _load_traffic_json():
+    """缓存交通数据的 JSON 序列化结果。"""
+    try:
+        df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
+        return json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+    except Exception:
+        return "null"
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def _load_poi_json():
+    """缓存 POI 数据的 JSON 序列化结果。"""
+    try:
+        from src.engines.spatial_engine import get_merged_poi_data
+        df_poi = get_merged_poi_data().fillna("")
+        if not df_poi.empty:
+            return json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+    except Exception:
+        pass
+    return "null"
+
+@st.fragment
+def render_project_map():
+    """使用 @st.fragment 封装地图，图层切换只刷新本块，不重跑整页。"""
+    view_mode = st.radio(
+        "🗺️ 视图模式",
+        ["🦅 3D 仿真视角", "🗺️ 2D 空间肌理"],
+        index=0, horizontal=True, key="global_map_view_mode"
+    )
     is_3d_mode = "3D" in view_mode
-    import streamlit.components.v1 as components
 
     layer_cols = st.columns(6)
     with layer_cols[0]:
@@ -284,62 +309,32 @@ def render_project_map():
     with layer_cols[5]:
         show_landuse = st.checkbox("🧬 规划用地底色", value=False, key="map_landuse")
 
-    # ☀️ 光照控制 (单独一行)
     show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key="map_lighting")
-
-    # 🛠️ 仿真时间控制
     sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key="map_sun_time")
 
-    # 1. 独立获取并 JSON 序列化数据（建筑大模型使用流媒体路由，规避渲染引擎强行注入导致的假死）
+    # 1. 使用缓存函数获取序列化数据，避免重复计算
     b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
     bound_data_json = json.dumps(load_map_data("data/shp/Boundary_Scope.geojson")) if show_boundary else "null"
     plots_data_json = json.dumps(load_map_data("data/shp/Key_Plots_District.json")) if show_plots else "null"
-    
-    poi_data_json = "null"
-    if show_poi:
-        try:
-            from src.engines.spatial_engine import get_merged_poi_data
-            df_poi = get_merged_poi_data().fillna("")
-            if not df_poi.empty:
-                poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-        except Exception:
-            pass  # POI is optional for map overlay
-        
-    traffic_data_json = "null"
-    if show_traffic:
-        try:
-            df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
-            traffic_data_json = json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-        except Exception:
-            pass  # Traffic data is optional for map overlay
-
-    # 🧬 用地数据层 (采用 URL 异步流模式加载，规避大文件注入导致的假死)
+    poi_data_json = _load_poi_json() if show_poi else "null"
+    traffic_data_json = _load_traffic_json() if show_traffic else "null"
     landuse_data_json = f"'{get_static_url('landuse.geojson')}'" if show_landuse else "null"
 
-    # 2. 读取纯粹的高性能 WebGL HTML 骨架
+    # 2. 从缓存读取 HTML 模板骨架
     try:
-        with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
-            html_template = f.read()
-            
-        # 3. 外科手术式闪电替换，将百万级节点数据直接输送入前端内存
+        html_template = _load_map_html_template()
         html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
         html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)
         html_template = html_template.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data_json)
         html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
         html_template = html_template.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
         html_template = html_template.replace("/*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/", landuse_data_json)
-        # 注入模式切换标志
         html_template = html_template.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d_mode else "false")
-        # 注入光照显示与时间标志
         html_template = html_template.replace("/*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/", "true" if show_lighting else "false")
         html_template = html_template.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))
-        
-        # 4. 定制化组件外观，保持科技感一致性，防范滚动渗透
         st.markdown("""<style>
             iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
         </style>""", unsafe_allow_html=True)
-        
-        # 以非滚动组件形式释放
         components.html(html_template, height=650, scrolling=False)
     except Exception as e:
         st.error(f"地图组件核心加载失败: {str(e)}")
@@ -348,4 +343,3 @@ render_project_map()
 render_skyline_hud()
 
 st.markdown("<br><br>", unsafe_allow_html=True)
-
