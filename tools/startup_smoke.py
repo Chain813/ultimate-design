@@ -7,15 +7,19 @@ import sys
 
 TARGETS = [
     "app.py",
-    "pages/01_前期数据获取与现状分析.py",
-    "pages/02_中期概念生成与应对策略.py",
-    "pages/03_后期设计生成与成果表达.py",
-    "pages/04_现场调研.py",
-    "pages/11_数据底座与规划策略.py",
-    "pages/12_现状空间全景诊断.py",
-    "pages/13_AIGC设计推演.py",
-    "pages/14_LLM博弈决策.py",
-    "pages/15_更新设计成果展示.py",
+    "pages/01_任务解读.py",
+    "pages/02_资料收集.py",
+    "pages/03_现场调研.py",
+    "pages/04_现状分析.py",
+    "pages/05_问题诊断.py",
+    "pages/06_目标定位.py",
+    "pages/07_设计策略.py",
+    "pages/08_总体城市设计.py",
+    "pages/09_专项系统设计.py",
+    "pages/10_重点地段深化.py",
+    "pages/11_实施路径.py",
+    "pages/12_城市设计导则.py",
+    "pages/13_成果表达.py",
 ]
 
 
@@ -23,8 +27,12 @@ def main() -> int:
     root = Path(__file__).resolve().parents[1]
     failed = []
     for target in TARGETS:
+        target_path = root / target
+        if not target_path.exists():
+            failed.append((target, "File does not exist"))
+            continue
         try:
-            py_compile.compile(str(root / target), doraise=True)
+            py_compile.compile(str(target_path), doraise=True)
         except Exception as exc:  # pragma: no cover - smoke diagnostics
             failed.append((target, str(exc)))
 

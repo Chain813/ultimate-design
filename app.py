@@ -30,7 +30,7 @@ def get_page_route(page_path):
     name = name.replace(".py", "")
     return name
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def get_base64_image_v2(image_path):
     """将本地图片转换为 Base64 编码"""
     try:
@@ -250,7 +250,7 @@ render_status_hud()
 # 🗺️ 街区范围及改造红线 (Project Boundary)
 render_section_intro("街区范围及改造红线", "统一查看研究边界、重点更新单元、建筑底图和辅助图层。", eyebrow="Project Boundary")
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def load_map_data(file_path):
     """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
     path = Path(file_path)
@@ -258,13 +258,13 @@ def load_map_data(file_path):
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def _load_map_html_template():
     """缓存 HTML 模板读取，避免每次交互都重新读磁盘。"""
     with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
         return f.read()
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def _load_traffic_json():
     """缓存交通数据的 JSON 序列化结果。"""
     try:
@@ -273,7 +273,7 @@ def _load_traffic_json():
     except Exception:
         return "null"
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def _load_poi_json():
     """缓存 POI 数据的 JSON 序列化结果。"""
     try:

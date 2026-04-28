@@ -26,7 +26,7 @@ logger = logging.getLogger("ultimateDESIGN")
 # POI dual-source fusion
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def get_merged_poi_data() -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
     df1 = _safe_read_csv("data/Changchun_POI_Real.csv")
@@ -60,7 +60,7 @@ def _safe_read_csv(path: str) -> pd.DataFrame:
 # HUD dynamic statistics
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@st.cache_data(ttl=1800)
 def get_hud_statistics() -> dict:
     """Aggregate live statistics for the HUD overlay."""
     stats: dict = {}
@@ -114,7 +114,7 @@ def _calc_boundary_ha(geojson_path: str):
 # Skyline morphology
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def get_skyline_features() -> dict:
     """Extract max height, avg height, high-rise ratio, building count."""
     features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
@@ -152,7 +152,7 @@ def get_skyline_features() -> dict:
 # Spatial GVI point data
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, show_spinner=False)
+@st.cache_data(ttl=3600)
 def get_spatial_data() -> pd.DataFrame:
     """Merge base spatial points with GVI analysis results."""
     base_path = resolve_path(str(DATA_FILES["points"]))
