@@ -1,58 +1,68 @@
+[**English**](./README_EN.md) • [**简体中文**](./README.md) • [**🚀 快速启动**](./QUICK_START.md) • [**🔧 安装指南**](./INSTALL_GUIDE.md) • [**👶 新手教程**](./BEGINNER_GUIDE.md) • [**📖 核心术语**](./GLOSSARY.md) • [**☁️ GitHub部署**](./GITHUB_UPLOAD_GUIDE.md)
+
+---
+
 # UltimateDESIGN
 
-**Urban-design decision support platform for micro-renewal around the Puppet Manchukuo Palace area in Changchun.**
+**Micro-Renewal & Urban Design Decision Support Platform**
 
-UltimateDESIGN is a Streamlit application for urban-planning coursework, graduation design, and research presentation. It organizes the project into **13 independent stage pages** following the standard urban-design workflow. Each page integrates functional modules, data-driven drawing prompt generation, and thesis-defense-oriented stage summaries.
+UltimateDESIGN is a Streamlit application designed for urban planning courses, graduation projects, and research presentations. The project strictly organizes pages according to **13 professional stages**, covering the complete evidence-based planning workflow from "pre-analysis" to "mid-term concept strategies" to "post-design detailing and export".
 
-## Three Boards & 13 Stages
+---
 
-| Board | Stages | Pages |
-| --- | --- | --- |
-| Early | 01-05 | `pages/01_任务解读.py` ~ `pages/05_问题诊断.py` |
-| Mid | 06-07 | `pages/06_目标定位.py` ~ `pages/07_设计策略.py` |
-| Late | 08-13 | `pages/08_总体城市设计.py` ~ `pages/13_成果表达.py` |
+### 🌟 Core Features & Architecture
 
-## 13-Stage Page Overview
+- **13-Stage Independent Workflow**
+  Breaks down urban design into 13 standardized steps, each encapsulating independent functional panels, AI drawing prompt generation logic, and stage defense summaries.
+- **41 Professional Drawing Templates**
+  Built-in 41 prompt templates based on Stable Diffusion and ControlNet. The system automatically extracts spatial assets (e.g., building heights, POI vitality) to inject and format prompts.
+- **Dynamic Defense Charts**
+  Utilizes Plotly to automatically generate highly relevant analysis charts for the defense summaries of the 13 stages, including MPI renewal potential rankings, multi-agent consensus radars, and phased implementation Gantt charts.
+- **LLM Evidence-Based Reasoning Logic**
+  Deep integration with local Gemma models. Through a cross-stage data bus (`stage_data_bus`), it generates academic reasoning paragraphs that are free of "AI flavor" and rich in professional terminology with one click.
+- **High-Speed Rendering & Fragment Refreshing**
+  Employs time-based data format caching optimization (`@st.cache_data`), combined with JS asynchronous map mounting and Streamlit fragment redrawing (`@st.fragment`), ensuring silky-smooth interaction on a 150-hectare base.
 
-Every stage page includes: **Functional Modules** + **Drawing Prompt Generation** + **Stage Summary**.
+---
 
-| Stage | Page | Core Functions |
-| --- | --- | --- |
-| 01 | Task Interpretation | Project brief, task book / proposal display, location map prompts |
-| 02 | Data Collection | Semantic extraction engine (PDF/Word→Markdown), spatial asset management |
-| 03 | Field Survey | Street-view sample library (four-way photo retrieval) |
-| 04 | Status Analysis | 3D holographic base overview, POI / building / skyline statistics |
-| 05 | Problem Diagnosis | **AHP-MPI assessment** + **plot radar** + **AI diagnostic report** |
-| 06 | Goal Positioning | **LLM case benchmarking** + **design concept extraction** (LLM Stages 2+3) |
-| 07 | Design Strategy | **3-role negotiation** + **consensus radar** + **RAG policy check** (LLM Stage 4) |
-| 08 | Overall Urban Design | Conceptual master plan AIGC generation |
-| 09 | Specialized Systems | Axonometric simulation + traffic / public space / facade / cultural heritage overlays |
-| 10 | Key Area Design | 5-type plot selection + AIGC street-view inference + Before/After |
-| 11 | Implementation Path | 6 update categories + near/mid/long-term phasing plan |
-| 12 | Design Guidelines | **LLM 5-stage guideline generation** + control indicators + Word export |
-| 13 | Deliverables | **Full-workflow drawing prompt library (16+ templates)** + gallery + export center |
+### 🗂️ Core File Structure & Explanations
 
-## Core Modules
-
-| Module | Responsibility |
-| --- | --- |
-| `src/workflow/stage_data_bus.py` | Cross-stage data bus and evidence chain progress bar |
-| `src/ui/module_summary.py` | Stage research summary panel (thesis-defense oriented) |
-| `src/engines/drawing_prompt_templates.py` | 16+ data-driven drawing prompt template library |
-| `src/engines/spatial_engine.py` | POI, street-view, skyline, and spatial statistics |
-| `src/engines/site_diagnostic_engine.py` | Plot-level diagnosis and strategy matrix |
-| `src/engines/llm_engine.py` | Ollama/Gemma calls and streaming output |
-
-## Run
-
-```powershell
-pip install -r requirements.txt
-streamlit run app.py
+```text
+UltimateDESIGN
+├── app.py                       --- Home, platform status, global 2D/3D map base entry
+├── pages/                       --- Core views: divided into Pre, Mid, and Post phases
+│   ├── 01_任务解读.py             --- [Pre] Project overview, task requirements extraction
+│   ├── 02_资料收集.py             --- [Pre] Semantic extraction engine, asset completeness
+│   ├── 03_现场调研.py             --- [Pre] Street view sample library and retrieval
+│   ├── 04_现状分析.py             --- [Pre] 3D base, POI aggregation, skyline analysis
+│   ├── 05_问题诊断.py             --- [Pre] AHP-MPI model and plot diagnostic radar
+│   ├── 06_目标定位.py             --- [Mid] LLM case benchmarking and vision extraction
+│   ├── 07_设计策略.py             --- [Mid] Tripartite negotiation and RAG policy check
+│   ├── 08_总体城市设计.py         --- [Post] AIGC conceptual master plan generation
+│   ├── 09_专项系统设计.py         --- [Post] Transport/Space/Style/Culture specializations
+│   ├── 10_重点地段深化.py         --- [Post] AIGC Before/After inference for 5 key plots
+│   ├── 11_实施路径.py             --- [Post] Six renewal modes and 3-phase timeline
+│   ├── 12_城市设计导则.py         --- [Post] Spatial control indicators and guideline export
+│   └── 13_成果表达.py             --- [Post] 41 drawing templates overview and atlas export
+├── src/                         --- Domain code: core logic and reusable components
+│   ├── config/                  --- Static variables, path registration, config loading
+│   ├── engines/                 --- Computation, LLM, AIGC logic (Strictly NO UI here)
+│   ├── ui/                      --- Global shell, atomic design system, chart themes
+│   ├── utils/                   --- IO ops, data conversion, text cleaning utilities
+│   └── workflow/                --- 13-stage workflow mapping engine and data bus
+├── assets/                      --- Frontend statics: CSS styles, HTML WebGL templates
+├── data/                        --- Data warehouse: spatial base, tables, semantic cache
+├── docs/                        --- Planning docs: task briefs, statutory policy materials
+├── static/                      --- Network static resources exposed by Streamlit Server
+├── tools/                       --- DevOps: environment checks and smoke test scripts
+└── tests/                       --- Automated verification: Pytest unit tests
 ```
 
-## Verification
+---
 
-```powershell
-python -m compileall app.py pages src tests tools
-pytest
-```
+### 🚀 Quick Exploration
+
+If you are new to this project, we recommend reading in the following order:
+1. Go to **[🚀 快速启动](./QUICK_START.md)** for the simplest running commands.
+2. Read **[👶 新手教程](./BEGINNER_GUIDE.md)** to understand how the urban design workflow maps to the system.
+3. Refer to **[🔧 安装指南](./INSTALL_GUIDE.md)** to complete the local computational configuration for Gemma and SD.
