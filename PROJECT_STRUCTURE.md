@@ -42,7 +42,7 @@ ultimateDESIGN/
 │  ├─ 10_重点地段深化.py           # 5 类地块选择 + AIGC 街景推演
 │  ├─ 11_实施路径.py               # 六类更新方式 + 三期实施计划
 │  ├─ 12_城市设计导则.py           # LLM 导则生成 + 管控指标 + Word 导出
-│  └─ 13_成果表达.py               # 图纸提示词总览(16+模板) + 导出中心
+│  └─ 13_成果表达.py               # 图纸提示词总览(41个模板) + 导出中心
 ```
 
 ## 🧩 13 阶段映射
@@ -61,7 +61,7 @@ ultimateDESIGN/
 | 10 | 重点地段深化 | 后期 | 5 类重点地块 + AIGC 街景推演 + Before/After |
 | 11 | 实施路径 | 后期 | 六类更新方式 + 近中远三期实施 |
 | 12 | 城市设计导则 | 后期 | LLM 五阶段导则汇总 + 管控指标 + Word/Markdown 导出 |
-| 13 | 成果表达 | 后期 | 全流程图纸提示词总览 + 效果图管理 + 多格式导出 |
+| 13 | 成果表达 | 后期 | 全流程图纸提示词总览(41个模板) + 效果图管理 + 多格式导出 |
 
 ## 🧬 源码目录职责
 
@@ -86,7 +86,7 @@ ultimateDESIGN/
 | 🔎 | `site_diagnostic_engine.py` | 地块诊断、策略矩阵、问题判断 |
 | 🎨 | `stable_diffusion_engine.py` | Stable Diffusion WebUI 请求和图像生成 |
 | ✍️ | `drawing_prompt_engine.py` | 城市设计图纸提示词模板和生成规则 |
-| 🖼️ | `drawing_prompt_templates.py` | **16+ 数据驱动的图纸提示词模板库** |
+| 🖼️ | `drawing_prompt_templates.py` | **41 个数据驱动的图纸提示词模板库** |
 | 📚 | `rag_engine.py` | 本地知识库、向量检索、政策上下文召回 |
 | 🤖 | `llm_engine.py` | Ollama/Gemma 调用、流式输出和提示词封装 |
 | 💬 | `nlp_engine.py` | 社交文本清洗、情绪分析、词频统计 |
