@@ -295,8 +295,23 @@ def stage_modules(stage_code):
 
 
 def stage_primary_href(stage_code):
-    modules = stage_modules(stage_code)
-    return modules[0]["href"] if modules else "#"
+    """Return the direct URL for a stage's independent page."""
+    _STAGE_PAGE_MAP = {
+        "01": "/任务解读",
+        "02": "/资料收集",
+        "03": "/现场调研",
+        "04": "/现状分析",
+        "05": "/问题诊断",
+        "06": "/目标定位",
+        "07": "/设计策略",
+        "08": "/总体城市设计",
+        "09": "/专项系统设计",
+        "10": "/重点地段深化",
+        "11": "/实施路径",
+        "12": "/城市设计导则",
+        "13": "/成果表达",
+    }
+    return _STAGE_PAGE_MAP.get(stage_code, "#")
 
 
 def render_stage_workbench(stage_code):
