@@ -5,9 +5,10 @@ import plotly.express as px
 import streamlit.components.v1 as components
 from src.ui.chart_theme import apply_plotly_polar_theme, get_chart_palette, rgba_from_hex
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
-from src.ui.ui_components import (
+from src.ui.app_shell import (
     render_top_nav,
 )
+from src.workflow.city_design_workflow import resolve_subpage_option
 from src.config import ASSETS_DIR, DATA_FILES, SHP_FILES, STATIC_DIR, get_static_url
 
 # ==========================================
@@ -132,7 +133,12 @@ if 'lab02_active_sub' not in st.session_state:
 
 TAB_OPTIONS = ["🏙️ 3D现状全息底座", "📍 地块级诊断面板"]
 
-selected_sub = st.radio("功能选择", TAB_OPTIONS, index=TAB_OPTIONS.index(st.session_state.lab02_active_sub) if st.session_state.lab02_active_sub in TAB_OPTIONS else 0, horizontal=True, label_visibility="collapsed", key="lab02_switcher")
+default_tab_index = TAB_OPTIONS.index(st.session_state.lab02_active_sub) if st.session_state.lab02_active_sub in TAB_OPTIONS else 0
+default_tab_index = resolve_subpage_option(TAB_OPTIONS, default_index=default_tab_index)
+if st.query_params.get("sub"):
+    st.session_state.lab02_active_sub = TAB_OPTIONS[default_tab_index]
+    st.session_state["lab02_switcher"] = TAB_OPTIONS[default_tab_index]
+selected_sub = TAB_OPTIONS[default_tab_index]
 st.session_state.lab02_active_sub = selected_sub
 st.markdown("---")
 
@@ -240,7 +246,7 @@ if selected_sub == "🏙️ 3D现状全息底座":
 # ==========================================
 elif selected_sub == "📍 地块级诊断面板":
     import plotly.graph_objects as go
-    from src.engines.core_engine import get_plot_diagnostics
+    from src.engines.site_diagnostic_engine import get_plot_diagnostics
 
     render_section_intro("重点地块多维诊断面板", "把重点更新单元的环境、活力和更新潜力汇总成排行榜与雷达图。", eyebrow="Plot Diagnostics")
     

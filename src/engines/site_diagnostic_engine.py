@@ -1,7 +1,7 @@
 """Diagnostic engine: plot-level metrics and policy-matrix generation.
 
 Usage:
-    from src.engines.diagnostic_engine import get_plot_diagnostics, generate_policy_matrix
+    from src.engines.site_diagnostic_engine import get_plot_diagnostics, generate_policy_matrix
 """
 
 import json

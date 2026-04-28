@@ -8,7 +8,7 @@ if str(root) not in sys.path:
     sys.path.append(str(root))
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-import src.engines.core_engine as core_engine
+import src.engines.engine_registry as core_engine
 
 
 # ── Phase 1 + 2 ── config / runtime

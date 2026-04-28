@@ -1,4 +1,4 @@
-from src.engines.image_prompt_engine import (
+from src.engines.drawing_prompt_engine import (
     ImagePromptRequest,
     build_image_prompt,
     get_drawing_profile,

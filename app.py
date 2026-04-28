@@ -9,11 +9,11 @@ from src.ui.design_system import (
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.ui_components import (
+from src.ui.app_shell import (
     render_engine_status_alert,
     render_top_nav,
 )
-from src.engines.core_engine import get_hud_statistics, get_skyline_features
+from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
 import pandas as pd
@@ -67,47 +67,33 @@ st.markdown("""
 # ==========================================
 MODULES = [
     {
-        "title": "🔬 01 数据底座与策略构建",
-        "desc": "汇聚长春专项规划与现场勘测数据，结合 AHP 专家矩阵执行地块更新潜力（MPI）多维综合评价。",
+        "title": "01 前期数据获取与现状分析",
+        "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
         "image": "assets/01_data_overview.png",
-        "path": "pages/1_数据底座与规划策略.py",
-        "btn_label": "🚀 访问数据资产"
+        "path": "pages/01_前期数据获取与现状分析.py",
+        "btn_label": "进入前期板块"
     },
     {
-        "title": "🏙️ 02 现状空间全景诊断",
-        "desc": "将多模态数据锚定至地理空间，实现三维数字孪生呈现与慢行品质（绿视率/开阔度等）量化诊断。",
-        "image": "assets/03_digital_twin.png",
-        "path": "pages/2_现状空间全景诊断.py",
-        "btn_label": "🚀 开启空间诊断"
+        "title": "02 中期概念生成与应对策略",
+        "desc": "目标定位、设计策略、案例借鉴、协商共识。",
+        "image": "assets/02_strategy_library.png",
+        "path": "pages/02_中期概念生成与应对策略.py",
+        "btn_label": "进入中期板块"
     },
     {
-        "title": "🎨 03 街区风貌修缮预演",
-        "desc": "以提取的城市特质为约束条件，驱动生成式衍生模型输出多情景、合乎空间尺度的更新方案图谱。",
+        "title": "03 后期设计生成与成果表达",
+        "desc": "总体设计、专项系统、重点深化、实施路径、导则和成果表达。",
         "image": "assets/05_design_inference.png",
-        "path": "pages/3_AIGC设计推演.py",
-        "btn_label": "🎨 执行风貌预演"
-    },
-    {
-        "title": "⚖️ 04 多主体协商议事厅",
-        "desc": "基于长春市现行规范法则库，推演公众代表、投资方及规划师之间的诉求博弈与政策共识。",
-        "image": "assets/06_llm_consultation_v2.png",
-        "path": "pages/4_LLM博弈决策.py",
-        "btn_label": "⚖️ 进入协同决策"
-    },
-    {
-        "title": "🏗️ 05 更新设计成果展示",
-        "desc": "展示“留改拆”四维推演动画、地下基建 X-Ray 透视及最终规划导则成果，实现全过程数字化交付。",
-        "image": "assets/03_digital_twin.png",
-        "path": "pages/5_更新设计成果展示.py",
-        "btn_label": "🚀 访问设计成果"
+        "path": "pages/03_后期设计生成与成果表达.py",
+        "btn_label": "进入后期板块"
     }
 ]
 
 render_page_banner(
     title="长春伪满皇宫周边街区微更新支持平台",
-    description="以研究边界锁定、空间诊断、AIGC 推演、多主体协商和成果交付为主线，把规划分析链路收敛在一套统一工作界面内。",
+    description="按城乡规划专业 13 阶段组织为前期、中期、后期三大板块，统一调度已有功能页与占位深化页。",
     eyebrow="Home",
-    tags=["任务书 / 开题报告边界对齐", "空间诊断与 AIGC 一体化", "成果导则直接交付"],
+    tags=["前期数据获取与现状分析", "中期概念生成与应对策略", "后期设计生成与成果表达"],
     metrics=[
         {"value": "150 公顷", "label": "研究范围", "meta": "围绕历史街区与周边复合片区"},
         {"value": len(MODULES), "label": "核心页面", "meta": "覆盖 01-05 全链路实验室"},
@@ -201,61 +187,28 @@ def render_status_hud():
     gemma_color = "#4ADE80" if gemma_online else "#EF4444"
 
     st.markdown(f"""
-<style>.hud-v-bar {{ --sd-color: {sd_color}; --gemma-color: {gemma_color}; }}</style>
-
-<div class="hud-v-bar hud-left">
-    <div class="hud-header">底层算力设施调用监控</div>
-    <div class="hud-item">
-        <span class="hud-label">[多主体交互大语言模型]</span>
-        <div class="hud-value"><span class="status-dot-gemma"></span>{gemma_status}</div>
-        <div class="hud-meta">承担角色推理与政策文书生成<br>(依托引擎: Local Ollama)</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[空间影像衍生网络]</span>
-        <div class="hud-value"><span class="status-dot-sd"></span>{sd_status}</div>
-        <div class="hud-meta">承担街景风貌意向图的计算重构<br>(依托引擎: Stable Diffusion)</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[地理空间测度引擎]</span>
-        <div class="hud-value"><span class="status-dot-static"></span>正常</div>
-        <div class="hud-meta">基于 AHP 处理多因子向量乘加逻辑</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[结构化文档解析引擎]</span>
-        <div class="hud-value"><span class="status-dot-static"></span>已就绪</div>
-        <div class="hud-meta">用于萃取法定规划图文 PDF</div>
-    </div>
-</div>
-
-<div class="hud-v-bar hud-right">
-    <div class="hud-header">空间与社会资产挂载验证</div>
-    <div class="hud-item">
-        <span class="hud-label">[城市公共服务设施网络]</span>
-        <div class="hud-value">{hud_stats['poi_count']} 商业与公共锚点<span class="status-dot-static" style="background:#818cf8;"></span></div>
-        <div class="hud-meta">数据源追踪: 高德开放平台 POI 快照</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[公众情绪意向样本]</span>
-        <div class="hud-value">{hud_stats['nlp_count']} 去隐私化语段<span class="status-dot-static" style="background:#818cf8;"></span></div>
-        <div class="hud-meta">数据源追踪: 本地生活平台脱敏 UGC</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[研究范围投影边界]</span>
-        <div class="hud-value">约 {hud_stats['boundary_ha']} 公顷用地<span class="status-dot-static" style="background:#818cf8;"></span></div>
-        <div class="hud-meta">坐标系: CGCS2000</div>
-    </div>
-    <div class="hud-item">
-        <span class="hud-label">[街道生态体验抽样]</span>
-        <div class="hud-value">{hud_stats['gvi_count']} 影像计算截面<span class="status-dot-static" style="background:#818cf8;"></span></div>
-        <div class="hud-meta">数据源: 百度街景结合植被遮罩过滤</div>
-    </div>
-    <div class="academic-conclusion-box" style="margin-top: 20px; padding: 12px; background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 12px;">
-        <div class="academic-conclusion-title" style="font-size: 9px; font-weight: 800; color: #a5b4fc; margin-bottom: 6px;">🎯 系统数据底座挂载诊断报告</div>
-        <div class="academic-conclusion-text" style="font-size: 8px; color: #cbd5e1; line-height: 1.5;">
-            经核实验证，当前城市底座多源异构数据（含POI、UGC及街景采样）挂载率达 100%。底层空间解析引擎（核心生成网络与大语言模型）通信握手正常，具备高鲁棒性的城市微更新循证辅助研判能力。
-        </div>
-    </div>
-</div>
+<section class="platform-hud" style="--sd-color:{sd_color}; --gemma-color:{gemma_color};">
+    <article class="platform-hud-card">
+        <div class="platform-hud-title">底层算力设施</div>
+        <div class="platform-hud-row"><span class="status-dot-gemma"></span><b>多主体交互大语言模型</b><em>{gemma_status}</em></div>
+        <p>承担角色推理与政策文书生成，依托 Local Ollama。</p>
+    </article>
+    <article class="platform-hud-card">
+        <div class="platform-hud-title">视觉渲染引擎</div>
+        <div class="platform-hud-row"><span class="status-dot-sd"></span><b>空间影像衍生网络</b><em>{sd_status}</em></div>
+        <p>承担街景风貌意向图计算，依托 Stable Diffusion。</p>
+    </article>
+    <article class="platform-hud-card">
+        <div class="platform-hud-title">空间与资料引擎</div>
+        <div class="platform-hud-row"><span class="status-dot-static"></span><b>测度 / 文档解析</b><em>正常</em></div>
+        <p>AHP 测度与法定规划图文 PDF 萃取已就绪。</p>
+    </article>
+    <article class="platform-hud-card">
+        <div class="platform-hud-title">数据资产挂载</div>
+        <div class="platform-hud-row"><span class="status-dot-static"></span><b>{hud_stats['poi_count']} POI / {hud_stats['gvi_count']} 街景</b><em>已挂载</em></div>
+        <p>研究边界约 {hud_stats['boundary_ha']} 公顷，含 POI、UGC 与街景采样。</p>
+    </article>
+</section>
 """, unsafe_allow_html=True)
 
 def render_skyline_hud():
@@ -287,149 +240,6 @@ def render_skyline_hud():
     </div>
     """, unsafe_allow_html=True)
 
-
-# ==========================================
-# 🔄 循证决策工作流 (Academic Roadmap)
-# ==========================================
-def render_workflow_logic():
-    with open("assets/workflow_svg.html", "r", encoding="utf-8") as f:
-        workflow_html = f.read()
-    components.html(workflow_html, height=900, scrolling=False)
-    return
-
-    stages = [
-        {
-            "code": "01",
-            "title": "项目边界与数据底座",
-            "module": "页面 01",
-            "accent": "blue",
-            "inputs": "研究范围红线、五个重点地块、卫星底图、建筑轮廓、POI / 交通 / 街景 / UGC 数据",
-            "process": "锁定长春大街、长白路、东九条、亚泰快速路围合的 150 公顷研究范围，完成数据清洗、空间落位和更新潜力测度。",
-            "outputs": "统一项目底图、MPI 更新潜力、策略语义库、可复用边界约束",
-        },
-        {
-            "code": "02",
-            "title": "现状空间全景诊断",
-            "module": "页面 02",
-            "accent": "green",
-            "inputs": "建筑高度、道路交通、公共空间、绿视率、街景语义分割、社会感知文本",
-            "process": "用 2D / 3D 数字孪生底板叠加多源诊断图层，识别用地混杂、交通割裂、公共空间不足、风貌破碎等核心问题。",
-            "outputs": "现状问题清单、空间诊断面板、重点地块诊断依据",
-        },
-        {
-            "code": "03",
-            "title": "价值评估与保护更新冲突",
-            "module": "评估内核",
-            "accent": "gold",
-            "inputs": "遗产点位、历史风貌、更新潜力、公共活力、政策红线",
-            "process": "把遗产价值、风貌敏感度、更新潜力和保护开发冲突转成可解释的等级分区，为策略生成提供约束边界。",
-            "outputs": "价值评估分区、保护优先级、更新潜力等级、冲突识别",
-        },
-        {
-            "code": "04",
-            "title": "策略生成与空间响应",
-            "module": "页面 04",
-            "accent": "pink",
-            "inputs": "诊断问题、案例借鉴、设计理念、政策依据、重点地块定位",
-            "process": "以阶段一至三结果为证据链，生成问题-策略-空间响应表，形成总体策略、功能策划、空间结构和五个重点地块导向。",
-            "outputs": "总体策略、更新模式、空间落位、政策依据与共识度",
-        },
-        {
-            "code": "05",
-            "title": "AIGC 方案推演",
-            "module": "页面 03",
-            "accent": "cyan",
-            "inputs": "现状照片、空间骨架、风貌策略、ControlNet 约束、提示词参数",
-            "process": "在不改变真实边界和空间尺度的前提下，进行街景风貌修缮、节点场景和方案意向的生成式推演。",
-            "outputs": "A/B 方案图、风貌更新效果、推演历史与可比选图景",
-        },
-        {
-            "code": "06",
-            "title": "图纸提示词与图册生产",
-            "module": "页面 04",
-            "accent": "violet",
-            "inputs": "现有阶段结果、图纸类型、精度等级、上传底图、图例规则、文字规则",
-            "process": "按一级/二级/三级精度进行完整性检查，自动组合 Image 2.0 图纸提示词；缺少关键底图时拦截，缺少数据时降级为视觉模板。",
-            "outputs": "可复制提示词、负面提示词、A/B/C/D 成图评级修正记录",
-        },
-        {
-            "code": "07",
-            "title": "成果交付与实施反馈",
-            "module": "页面 05",
-            "accent": "red",
-            "inputs": "策略表、共识结果、AIGC 图景、图册提示词、规划指标和实施分期",
-            "process": "汇总导则、图册、重点地块深化、实施分期和更新成效评估，形成可展示、可汇报、可继续反馈迭代的成果包。",
-            "outputs": "规划导则、A3 图册、重点地块成果、实施建议与评估闭环",
-        },
-    ]
-
-    stage_cards = []
-    for stage in stages:
-        stage_cards.append(
-            f'<article class="evidence-stage evidence-stage-{stage["accent"]}">'
-            f'<div class="evidence-stage-top"><span class="evidence-stage-code">{stage["code"]}</span>'
-            f'<span class="evidence-stage-module">{escape(stage["module"])}</span></div>'
-            f'<h3>{escape(stage["title"])}</h3>'
-            f'<p>{escape(stage["process"])}</p>'
-            '<div class="evidence-stage-meta">'
-            f'<div><b>输入</b><span>{escape(stage["inputs"])}</span></div>'
-            f'<div><b>输出</b><span>{escape(stage["outputs"])}</span></div>'
-            '</div>'
-            '</article>'
-        )
-
-    guardrails = [
-        ("空间真实性", "研究范围、五个重点地块、道路关系、建筑轮廓和高度控制不得被 AI 任意改写。"),
-        ("数据可信度", "一级图纸缺底图即拦截；二级图纸缺专题数据时只生成视觉表达模板，不生成具体结论。"),
-        ("政策合规", "RAG 检索长春历史文化保护与城市更新相关条文，约束容积率、限高、保护优先级。"),
-        ("成果闭环", "成图后按 A/B/C/D 评级修正提示词，优质版本沉淀为后续图册统一风格。"),
-    ]
-    guardrail_html = "".join(
-        f'<div class="evidence-guardrail"><b>{escape(title)}</b><span>{escape(desc)}</span></div>'
-        for title, desc in guardrails
-    )
-
-    atlas_chapters = [
-        "项目认知",
-        "数据诊断",
-        "价值评估",
-        "策略生成",
-        "总体规划",
-        "重点地块深化",
-        "技术推演与实施",
-    ]
-    chapter_html = "".join(f'<span>{escape(chapter)}</span>' for chapter in atlas_chapters)
-
-    html = (
-        '<section class="evidence-workflow">'
-        '<div class="evidence-workflow-head">'
-        '<div>'
-        '<div class="section-eyebrow">Closed Loop</div>'
-        '<h3>数据诊断 - 价值评估 - 策略生成 - 方案推演 - 实施反馈</h3>'
-        '<p>主页流程已按当前项目完整链路重构：从真实边界和多源数据出发，进入诊断、评估、策略、AIGC、LLM 博弈、Image 2.0 图纸提示词与成果交付，形成毕业设计图册和规划导则的统一闭环。</p>'
-        '</div>'
-        '<div class="evidence-workflow-kpi">'
-        '<b>70-84</b><span>A3 横版图册建议页数</span>'
-        '<b>7</b><span>图册章节</span>'
-        '<b>5</b><span>重点地块</span>'
-        '</div>'
-        '</div>'
-        f'<div class="evidence-stage-grid">{"".join(stage_cards)}</div>'
-        '<div class="evidence-workflow-band">'
-        '<div><h4>图册章节映射</h4><div class="evidence-chapter-row">'
-        f'{chapter_html}'
-        '</div></div>'
-        '<div><h4>系统硬约束</h4><div class="evidence-guardrail-grid">'
-        f'{guardrail_html}'
-        '</div></div>'
-        '</div>'
-        '<div class="evidence-feedback-line">'
-        '<span>反馈路径</span>'
-        '<p>成图评级、政策校验、指标修正和实施反馈会回流到策略库、提示词模板和重点地块深化规则，下一轮图纸和方案继承已验证的风格与约束。</p>'
-        '</div>'
-        '</section>'
-    )
-    st.markdown(html, unsafe_allow_html=True)
 
 # ==========================================
 # 🚀 渲染执行
@@ -488,7 +298,7 @@ def render_project_map():
     poi_data_json = "null"
     if show_poi:
         try:
-            from src.engines.core_engine import get_merged_poi_data
+            from src.engines.spatial_engine import get_merged_poi_data
             df_poi = get_merged_poi_data().fillna("")
             if not df_poi.empty:
                 poi_data_json = json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
@@ -537,30 +347,5 @@ def render_project_map():
 render_project_map()
 render_skyline_hud()
 
-# 🧩 核心子系统导览
-st.markdown("---")
-render_section_intro("核心子系统导览", "从首页直接进入 01-05 页面，按研究链路完成诊断、推演、协商与交付。", eyebrow="Modules")
-module_cards_html = '<div class="module-grid-home">'
-for m in MODULES:
-    route = get_page_route(m["path"])
-    img_base64 = get_base64_image_v2(m["image"])
-    img_html = ""
-    if img_base64:
-        img_html = f'<img src="data:image/png;base64,{img_base64}" alt="{escape(m["title"])}">'
-    module_cards_html += (
-        f'<div class="module-container">'
-        f'<a href="/{route}" target="_self" style="text-decoration:none;">'
-        f'<div class="module-card">{img_html}'
-        f'<h4>{escape(m["title"])}</h4>'
-        f'<p>{escape(m["desc"])}</p>'
-        f'<div class="module-btn-mock">{escape(m["btn_label"])}</div>'
-        f'</div></a></div>'
-    )
-module_cards_html += "</div>"
-st.markdown(module_cards_html, unsafe_allow_html=True)
-
-# 🔄 流程路线
-render_section_intro("循证决策全流程", "用一张流程图串起数据、诊断、推演、协商与成果输出。", eyebrow="Workflow")
-render_workflow_logic()
 st.markdown("<br><br>", unsafe_allow_html=True)
 

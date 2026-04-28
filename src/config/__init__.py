@@ -11,6 +11,7 @@ from .paths import (
     SHP_DIR,
     SHP_FILES,
     STATIC_DIR,
+    STREETVIEW_DIR,
     get_static_url,
 )
 from .runtime import project_root, resolve_path
@@ -25,6 +26,7 @@ __all__ = [
     "SHP_DIR",
     "ASSETS_DIR",
     "STATIC_DIR",
+    "STREETVIEW_DIR",
     "DOCS_DIR",
     "META_DIR",
     "DATA_FILES",

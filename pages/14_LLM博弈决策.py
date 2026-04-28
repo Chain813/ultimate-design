@@ -3,8 +3,9 @@ import time
 import json
 import os
 import plotly.graph_objects as go
-from src.engines.core_engine import call_llm_engine, call_llm_engine_stream, is_demo_mode, get_plot_diagnostics, generate_policy_matrix
-from src.engines.image_prompt_engine import (
+from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
+from src.engines.site_diagnostic_engine import get_plot_diagnostics, generate_policy_matrix
+from src.engines.drawing_prompt_engine import (
     BOOK_CHAPTERS,
     UPLOAD_CHANNELS,
     UPLOAD_REFERENCE_TEXT,
@@ -19,10 +20,11 @@ from src.ui.design_system import (
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.ui_components import (
+from src.ui.app_shell import (
     render_engine_status_alert,
     render_top_nav,
 )
+from src.utils.runtime_flags import is_demo_mode
 
 st.set_page_config(page_title="LLM 多方参与决策 - 数字议事厅", layout="wide")
 render_top_nav()
@@ -36,7 +38,7 @@ render_daemon_control_panel()
 if "rag_warmed" not in st.session_state:
     with st.status("⏳ 正在预热 RAG 政策知识库...", expanded=True) as rag_status:
         st.write("📂 加载政策文档切片...")
-        from src.engines.core_engine import get_cached_db_embeddings
+        from src.engines.rag_engine import get_cached_db_embeddings
         db_emb, _ = get_cached_db_embeddings()
         if db_emb:
             st.write(f"✅ 已加载 {len(db_emb)} 条政策向量，语义检索就绪")
@@ -482,72 +484,6 @@ def _render_image_prompt_assistant():
             st.text_area("修正后提示词", value=revised_prompt, height=430, key="p4_prompt_revised_output")
 
 
-# ==========================================
-# 📍 五阶段循证规划推演工作流
-# ==========================================
-st.markdown("---")
-render_section_intro("循证规划五阶段推演工作流", "先看清五个阶段之间的数据传递关系，再进入具体推演页面。", eyebrow="Workflow")
-
-# --- 五阶段流程可视化 ---
-st.markdown("""
-<div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 16px; padding: 20px 24px; margin-bottom: 20px;">
-<div style="color: #a5b4fc; font-weight: 800; font-size: 15px; margin-bottom: 14px; text-align: center;">🔬 循证规划五阶段推演工作流 <span style="font-size: 11px; color: #64748b; font-weight: 400;">（每阶段输出自动传递至下一阶段，形成完整证据链）</span></div>
-<div style="display: flex; align-items: flex-start; justify-content: center; gap: 6px; flex-wrap: nowrap;">
-
-<div style="flex: 1; text-align: center; min-width: 0;">
-<div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
-<div style="font-size: 18px;">📊</div>
-<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">1. 前期分析</div>
-</div>
-<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">读取MPI/GVI/POI<br>诊断数据，输出<br><b style="color:#a5b4fc;">问题清单</b></div>
-</div>
-
-<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
-
-<div style="flex: 1; text-align: center; min-width: 0;">
-<div style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
-<div style="font-size: 18px;">📚</div>
-<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">2. 方案借鉴</div>
-</div>
-<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">自动提取开题报告<br>4个案例，输出<br><b style="color:#34d399;">对标分析</b></div>
-</div>
-
-<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
-
-<div style="flex: 1; text-align: center; min-width: 0;">
-<div style="background: rgba(236, 72, 153, 0.15); border: 1px solid rgba(236, 72, 153, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
-<div style="font-size: 18px;">💡</div>
-<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">3. 设计理念</div>
-</div>
-<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">融合前两阶段+<br>保护条例，提炼<br><b style="color:#ec4899;">核心策略</b></div>
-</div>
-
-<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
-
-<div style="flex: 1; text-align: center; min-width: 0;">
-<div style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
-<div style="font-size: 18px;">⚖️</div>
-<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">4. 问题-策略</div>
-</div>
-<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">三角色博弈协商<br>问题→策略→依据<br><b style="color:#f59e0b;">对应表</b></div>
-</div>
-
-<div style="color: #818cf8; font-size: 18px; padding-top: 16px;">→</div>
-
-<div style="flex: 1; text-align: center; min-width: 0;">
-<div style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 10px; padding: 10px 6px; margin-bottom: 6px;">
-<div style="font-size: 18px;">🎯</div>
-<div style="font-size: 11px; font-weight: 700; color: #e2e8f0;">5. 空间成果</div>
-</div>
-<div style="font-size: 9px; color: #94a3b8; line-height: 1.4;">全链路汇总生成<br>规划导则+红头<br><b style="color:#a78bfa;">成果文件</b></div>
-</div>
-
-</div>
-</div>
-</div>
-</div>
-""", unsafe_allow_html=True)
-
 subpage = st.query_params.get("sub", "多主体利益协商")
 
 if subpage == "动态共识雷达":
@@ -582,15 +518,31 @@ P4_MODE_OPTIONS = [
 ]
 SUBPAGE_TO_MODE = {
     "多主体利益协商": "⚖️ 阶段四：问题-策略对应",
+    "阶段一：前期分析": "📊 阶段一：前期分析",
+    "阶段二：方案借鉴": "📚 阶段二：方案借鉴",
+    "阶段三：设计理念": "💡 阶段三：设计理念",
+    "阶段四：问题-策略对应": "⚖️ 阶段四：问题-策略对应",
     "图纸提示词助手": "🖼️ 图纸提示词助手",
     "空间成果方案": "🎯 阶段五：空间成果方案",
+    "📊 阶段一：前期分析": "📊 阶段一：前期分析",
+    "📚 阶段二：方案借鉴": "📚 阶段二：方案借鉴",
+    "💡 阶段三：设计理念": "💡 阶段三：设计理念",
+    "⚖️ 阶段四：问题-策略对应": "⚖️ 阶段四：问题-策略对应",
+    "🖼️ 图纸提示词助手": "🖼️ 图纸提示词助手",
+    "🎯 阶段五：空间成果方案": "🎯 阶段五：空间成果方案",
 }
 target_mode = SUBPAGE_TO_MODE.get(subpage)
 if target_mode and st.session_state.get("p4_last_sub_param") != subpage:
     st.session_state["p4_tab_mode"] = target_mode
     st.session_state["p4_last_sub_param"] = subpage
 
-p4_mode = st.radio("⬇️ 选择推演阶段", P4_MODE_OPTIONS, horizontal=True, key="p4_tab_mode")
+if target_mode:
+    p4_mode = target_mode
+else:
+    p4_mode = st.session_state.get("p4_tab_mode", "⚖️ 阶段四：问题-策略对应")
+    if p4_mode not in P4_MODE_OPTIONS:
+        p4_mode = "⚖️ 阶段四：问题-策略对应"
+st.session_state["p4_tab_mode"] = p4_mode
 
 st.markdown("---")
 if p4_mode == "📊 阶段一：前期分析":
