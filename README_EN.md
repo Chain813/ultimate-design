@@ -1,119 +1,58 @@
-# 🏙️ UltimateDESIGN
+# UltimateDESIGN
 
 **Urban-design decision support platform for micro-renewal around the Puppet Manchukuo Palace area in Changchun.**
 
-UltimateDESIGN is a Streamlit application for urban-planning coursework, graduation design, and research presentation. It organizes the project around a **13-stage urban-design workflow** and separates planning documents, spatial analytics, street-view survey images, AIGC simulation, LLM negotiation, and final deliverables into clear modules.
+UltimateDESIGN is a Streamlit application for urban-planning coursework, graduation design, and research presentation. It organizes the project into **13 independent stage pages** following the standard urban-design workflow. Each page integrates functional modules, data-driven drawing prompt generation, and thesis-defense-oriented stage summaries.
 
-## 🧭 At A Glance
+## Three Boards & 13 Stages
 
-| Icon | Keyword | Description |
+| Board | Stages | Pages |
 | --- | --- | --- |
-| 🧩 | 13-stage workflow | Professional urban-design process mapped into page routes |
-| 🗺️ | Data foundation | Planning briefs, GeoJSON, POI, traffic, and street-view data |
-| 🔎 | Diagnosis | Spatial indicators, street-view metrics, and plot-level assessment |
-| 🧠 | AI collaboration | Stable Diffusion, Ollama/Gemma, RAG, and stakeholder negotiation |
-| 🖼️ | Deliverables | Scenario images, drawing prompts, planning text, and Word export |
+| Early | 01-05 | `pages/01_任务解读.py` ~ `pages/05_问题诊断.py` |
+| Mid | 06-07 | `pages/06_目标定位.py` ~ `pages/07_设计策略.py` |
+| Late | 08-13 | `pages/08_总体城市设计.py` ~ `pages/13_成果表达.py` |
 
-## 🧱 Modules
+## 13-Stage Page Overview
 
-| Module | Stages | Page |
+Every stage page includes: **Functional Modules** + **Drawing Prompt Generation** + **Stage Summary**.
+
+| Stage | Page | Core Functions |
 | --- | --- | --- |
-| 🟦 Early Data Acquisition and Existing Condition Analysis | 01-05 | `pages/01_前期数据获取与现状分析.py` |
-| 🟨 Mid-term Concept Generation and Strategy Response | 06-07 | `pages/02_中期概念生成与应对策略.py` |
-| 🟩 Late Design Generation and Result Presentation | 08-13 | `pages/03_后期设计生成与成果表达.py` |
+| 01 | Task Interpretation | Project brief, task book / proposal display, location map prompts |
+| 02 | Data Collection | Semantic extraction engine (PDF/Word→Markdown), spatial asset management |
+| 03 | Field Survey | Street-view sample library (four-way photo retrieval) |
+| 04 | Status Analysis | 3D holographic base overview, POI / building / skyline statistics |
+| 05 | Problem Diagnosis | **AHP-MPI assessment** + **plot radar** + **AI diagnostic report** |
+| 06 | Goal Positioning | **LLM case benchmarking** + **design concept extraction** (LLM Stages 2+3) |
+| 07 | Design Strategy | **3-role negotiation** + **consensus radar** + **RAG policy check** (LLM Stage 4) |
+| 08 | Overall Urban Design | Conceptual master plan AIGC generation |
+| 09 | Specialized Systems | Axonometric simulation + traffic / public space / facade / cultural heritage overlays |
+| 10 | Key Area Design | 5-type plot selection + AIGC street-view inference + Before/After |
+| 11 | Implementation Path | 6 update categories + near/mid/long-term phasing plan |
+| 12 | Design Guidelines | **LLM 5-stage guideline generation** + control indicators + Word export |
+| 13 | Deliverables | **Full-workflow drawing prompt library (16+ templates)** + gallery + export center |
 
-## 🧰 Functional Pages & Sub-page Structures
+## Core Modules
 
-The system abstracts the professional workflow into 5 core functional pages and 1 field survey page. Each page uses subpages and specific algorithmic modules (Functions) to host fine-grained design inference tasks.
+| Module | Responsibility |
+| --- | --- |
+| `src/workflow/stage_data_bus.py` | Cross-stage data bus and evidence chain progress bar |
+| `src/ui/module_summary.py` | Stage research summary panel (thesis-defense oriented) |
+| `src/engines/drawing_prompt_templates.py` | 16+ data-driven drawing prompt template library |
+| `src/engines/spatial_engine.py` | POI, street-view, skyline, and spatial statistics |
+| `src/engines/site_diagnostic_engine.py` | Plot-level diagnosis and strategy matrix |
+| `src/engines/llm_engine.py` | Ollama/Gemma calls and streaming output |
 
-### 🏠 Home / Entry (`app.py`)
-- **Platform Status**: Displays underlying computing facilities (SD, Gemma), spatial measurement status, and data asset mounting radar.
-- **Project Boundary**: Provides global 2D/3D base and layer controls to verify project boundaries.
-- **Subsystem Navigation**: Provides routing into the 01-05 core research modules.
-
-### 🚶 Field Survey (`pages/04_现场调研.py`)
-- **Streetview Sample Library**: Reads the local `streetview` folder, providing coordinates and four-way (0/90/180/270 degrees) streetview photo retrieval based on survey points.
-
-### 📚 Page 01: Data Foundation & Planning Strategy (`pages/11_数据底座与规划策略.py`)
-- **Asset Assessment**: AHP weight configuration for expert judgment; real-time MPI update potential measurement and key plot rankings; MPI formula and scatter plots; CSV export.
-- **Strategy Semantic Extraction**: Original reference desk for assignments and proposals; batch configuration and preview for converting PDF/Word to structured Markdown.
-- **Physical Base Management**: Full spatial data asset inventory (boundaries, buildings, POI, street views) verification; one-click preview and data overlay upload.
-
-### 🗺️ Page 02: Site Diagnostic Engine (`pages/12_现状空间全景诊断.py`)
-- **3D Holographic Base**: Physical base (buildings, land use) layer control; social vitality (POI, traffic) overlay; street quality (GVI, SVF) 3D cylinder evaluation; free 3D/2D/roaming perspectives with simulated lighting.
-- **Plot-level Diagnostic Panel**: Inherits MPI to provide potential rankings; radar charts for multi-dimensional evaluation and targeted intervention advice per plot; diagnostic report export (CSV).
-
-### 🎨 Page 03: Block Facade Restoration Pre-rendering (`pages/13_AIGC设计推演.py`)
-- **Plot-oriented Inference**: Select key update units and get strategy recommendations based on indicators.
-- **Spatial Morphogenesis**: Supports block panoramic perspective inference (status restoration), conceptual master plan generation, and axonometric volume simulation.
-- **Spatial Measurement & Parameters**: Provides ControlNet (Canny/MLSD/Depth/Seg) operators to constrain AI grids; advanced parameters for quality, sampling, and prompt correlation.
-- **Input & Constraints**: Base map upload, rotation/cropping; built-in planning operators and two-stage strategy library; custom Prompt/Negative Prompt and denoising strength.
-- **Generation & Comparison**: Interactive Before/After slider; local file download and session history gallery.
-
-### 🤝 Page 04: Digital City Hall (`pages/14_LLM博弈决策.py`)
-- **Multi-agent Negotiation**:
-  - *Stage 1: Preliminary Analysis*: Converts core data into structured diagnostic reports.
-  - *Stage 2: Benchmarking*: Connects external experience for case analysis reports.
-  - *Stage 3: Design Concept*: Extracts overall design visions, goals, and strategies.
-  - *Stage 4: Issue-Strategy Matching*: Based on RAG policy compliance pre-checks, launches 3-role (resident, developer, planner) smart negotiation.
-  - *Stage 5: Spatial Outcome*: Automatically organizes the final graphic and text planning guidelines.
-- **Dynamic Consensus Radar**: Visualizes core conflicts and consensus after trilateral negotiation.
-- **Drawing Prompt Assistant**: Expert system for Image 2.0 drawing generation; provides information completeness checks and A/B/C/D graded prompt revisions.
-
-### 📦 Page 05: Update Design Outcome Showcase (`pages/15_更新设计成果展示.py`)
-- **Update Master Map**: Integrates restoration, functional transformation, and demolition/retention layers; supports underground pipeline X-Ray views.
-- **Planning Text Outcomes**: Quick download of assignment/standard references; online display of general guidelines and implementation points; Word export of the guidelines with text and graphics.
-- **Key Plot Renderings**: Manages session AIGC images and local outcome graphics; one-click history clearing.
-
-## 📁 Repository Layout
-
-```text
-ultimateDESIGN/
-├─ 🏠 app.py                       # Streamlit home page and platform status
-├─ 🧭 pages/                       # Streamlit pages
-├─ 🧬 src/
-│  ├─ ⚙️ config/                   # Paths, config loading, runtime helpers
-│  ├─ 🧠 engines/                  # Spatial, diagnostic, RAG, LLM, AIGC engines
-│  ├─ 🎛️ ui/                       # App shell, design system, chart theme
-│  ├─ 🧰 utils/                    # Text IO, document export, service checks
-│  └─ 🧩 workflow/                 # 13-stage workflow and route mapping
-├─ 🎨 assets/
-├─ 🗃️ data/
-├─ 📄 docs/
-├─ 🛠️ tools/
-└─ ✅ tests/
-```
-
-## 🧠 Core Naming
-
-| Icon | Module | Responsibility |
-| --- | --- | --- |
-| 🧭 | `src/ui/app_shell.py` | Global CSS, top navigation, shell-level status alerts |
-| 🧩 | `src/workflow/city_design_workflow.py` | 13-stage workflow and stage-to-module routing |
-| 🧠 | `src/engines/engine_registry.py` | Stable aggregate import surface for page code |
-| 🗺️ | `src/engines/spatial_engine.py` | POI, street-view, skyline, and spatial statistics |
-| 🔎 | `src/engines/site_diagnostic_engine.py` | Plot-level diagnosis and strategy matrix |
-| 🎨 | `src/engines/stable_diffusion_engine.py` | Stable Diffusion WebUI requests |
-| ✍️ | `src/engines/drawing_prompt_engine.py` | Drawing prompt generation rules |
-
-## 🚀 Run
+## Run
 
 ```powershell
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Open:
-
-```text
-http://localhost:8501/
-```
-
-## 🧪 Verification
+## Verification
 
 ```powershell
 python -m compileall app.py pages src tests tools
 pytest
-python tools/check_env.py
-python tools/startup_smoke.py
 ```
