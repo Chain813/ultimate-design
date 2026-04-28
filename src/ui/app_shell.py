@@ -96,7 +96,7 @@ def render_top_nav():
     
     /* 激活态：取消延迟，实现瞬时开启 */
     .nav-item:hover .dropdown-content {{
-        height: 280px; opacity: 1; visibility: visible;
+        height: 360px; opacity: 1; visibility: visible;
         transition-delay: 0s;
     }}
     
