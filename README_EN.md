@@ -22,18 +22,48 @@ UltimateDESIGN is a Streamlit application for urban-planning coursework, graduat
 | 🟨 Mid-term Concept Generation and Strategy Response | 06-07 | `pages/02_中期概念生成与应对策略.py` |
 | 🟩 Late Design Generation and Result Presentation | 08-13 | `pages/03_后期设计生成与成果表达.py` |
 
-## 🧰 Functional Pages
+## 🧰 Functional Pages & Sub-page Structures
 
-| Icon | Page | Responsibility |
-| --- | --- | --- |
-| 🚶 | `pages/04_现场调研.py` | Field survey page backed by `data/streetview/Point_x/heading_*.jpg` |
-| 📚 | `pages/11_数据底座与规划策略.py` | Planning documents, spatial assets, and MPI evaluation |
-| 🗺️ | `pages/12_现状空间全景诊断.py` | 3D existing-condition scene and plot-level diagnosis |
-| 🎨 | `pages/13_AIGC设计推演.py` | Stable Diffusion based visual design simulation |
-| 🤝 | `pages/14_LLM博弈决策.py` | RAG, multi-stakeholder negotiation, and drawing prompt assistant |
-| 📦 | `pages/15_更新设计成果展示.py` | Future scenario map, planning text, image gallery, and Word export |
+The system abstracts the professional workflow into 5 core functional pages and 1 field survey page. Each page uses subpages and specific algorithmic modules (Functions) to host fine-grained design inference tasks.
 
-In-page navigation cards were removed. Users navigate between modules through the top navigation bar.
+### 🏠 Home / Entry (`app.py`)
+- **Platform Status**: Displays underlying computing facilities (SD, Gemma), spatial measurement status, and data asset mounting radar.
+- **Project Boundary**: Provides global 2D/3D base and layer controls to verify project boundaries.
+- **Subsystem Navigation**: Provides routing into the 01-05 core research modules.
+
+### 🚶 Field Survey (`pages/04_现场调研.py`)
+- **Streetview Sample Library**: Reads the local `streetview` folder, providing coordinates and four-way (0/90/180/270 degrees) streetview photo retrieval based on survey points.
+
+### 📚 Page 01: Data Foundation & Planning Strategy (`pages/11_数据底座与规划策略.py`)
+- **Asset Assessment**: AHP weight configuration for expert judgment; real-time MPI update potential measurement and key plot rankings; MPI formula and scatter plots; CSV export.
+- **Strategy Semantic Extraction**: Original reference desk for assignments and proposals; batch configuration and preview for converting PDF/Word to structured Markdown.
+- **Physical Base Management**: Full spatial data asset inventory (boundaries, buildings, POI, street views) verification; one-click preview and data overlay upload.
+
+### 🗺️ Page 02: Site Diagnostic Engine (`pages/12_现状空间全景诊断.py`)
+- **3D Holographic Base**: Physical base (buildings, land use) layer control; social vitality (POI, traffic) overlay; street quality (GVI, SVF) 3D cylinder evaluation; free 3D/2D/roaming perspectives with simulated lighting.
+- **Plot-level Diagnostic Panel**: Inherits MPI to provide potential rankings; radar charts for multi-dimensional evaluation and targeted intervention advice per plot; diagnostic report export (CSV).
+
+### 🎨 Page 03: Block Facade Restoration Pre-rendering (`pages/13_AIGC设计推演.py`)
+- **Plot-oriented Inference**: Select key update units and get strategy recommendations based on indicators.
+- **Spatial Morphogenesis**: Supports block panoramic perspective inference (status restoration), conceptual master plan generation, and axonometric volume simulation.
+- **Spatial Measurement & Parameters**: Provides ControlNet (Canny/MLSD/Depth/Seg) operators to constrain AI grids; advanced parameters for quality, sampling, and prompt correlation.
+- **Input & Constraints**: Base map upload, rotation/cropping; built-in planning operators and two-stage strategy library; custom Prompt/Negative Prompt and denoising strength.
+- **Generation & Comparison**: Interactive Before/After slider; local file download and session history gallery.
+
+### 🤝 Page 04: Digital City Hall (`pages/14_LLM博弈决策.py`)
+- **Multi-agent Negotiation**:
+  - *Stage 1: Preliminary Analysis*: Converts core data into structured diagnostic reports.
+  - *Stage 2: Benchmarking*: Connects external experience for case analysis reports.
+  - *Stage 3: Design Concept*: Extracts overall design visions, goals, and strategies.
+  - *Stage 4: Issue-Strategy Matching*: Based on RAG policy compliance pre-checks, launches 3-role (resident, developer, planner) smart negotiation.
+  - *Stage 5: Spatial Outcome*: Automatically organizes the final graphic and text planning guidelines.
+- **Dynamic Consensus Radar**: Visualizes core conflicts and consensus after trilateral negotiation.
+- **Drawing Prompt Assistant**: Expert system for Image 2.0 drawing generation; provides information completeness checks and A/B/C/D graded prompt revisions.
+
+### 📦 Page 05: Update Design Outcome Showcase (`pages/15_更新设计成果展示.py`)
+- **Update Master Map**: Integrates restoration, functional transformation, and demolition/retention layers; supports underground pipeline X-Ray views.
+- **Planning Text Outcomes**: Quick download of assignment/standard references; online display of general guidelines and implementation points; Word export of the guidelines with text and graphics.
+- **Key Plot Renderings**: Manages session AIGC images and local outcome graphics; one-click history clearing.
 
 ## 📁 Repository Layout
 
