@@ -125,6 +125,19 @@ render_evidence_chain_bar("XX", [...])
 | 🎨 | `assets/` | CSS、HTML 模板、展示图片 |
 | 🌐 | `static/` | Streamlit 可直接访问的静态文件 |
 
+## ⚡ 性能优化与渲染架构
+
+系统在处理城市级大体量 GeoJSON（150公顷+建筑底座）时，采用了以下核心优化策略，后续二次开发时**务必遵守**：
+
+1. **统一数据流式缓存 (`@st.cache_data`)**
+   - 对 `spatial_engine.py` 中的 `get_merged_poi_data`、`get_skyline_features` 等耗时操作使用缓存（`ttl=3600`）。
+   - **禁止**在 `@st.cache_data` 中使用 `show_spinner=False`，以防打破向下兼容（或导致旧版本 CI 测试失败）。
+2. **地图组件静态渲染与按需刷新 (`@st.fragment`)**
+   - 首页 `render_project_map()` 封装在 `@st.fragment` 装饰器下。当用户勾选或切换左侧图层（如开关建筑轮廓、开启光照）时，**只会重绘该模块**，不会导致整个 Streamlit App 重跑。
+   - `map3d_standalone.html` 通过字符串读取后直接作为骨架传递给 `components.html`，底层采用基于 JS 原生的 Fetch 异步按需加载巨型 `.geojson` 文件，避免 Python 主线程假死。
+3. **异步大模型推演**
+   - 与本地 Gemma/SD 的通信放置在后台执行，或者结合 Streamlit 状态机使用，保证 UI 始终有响应性。
+
 ## 🛠️ 维护规则
 
 - 🧭 **导航唯一**：跨页面跳转只放在顶部导航栏。
