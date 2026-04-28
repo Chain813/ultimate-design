@@ -1,8 +1,7 @@
 import streamlit as st
 from html import escape
 from pathlib import Path
-import os
-import urllib.parse
+from src.workflow.city_design_workflow import WORKFLOW_BOARDS, STAGE_LOOKUP, stage_primary_href
 
 from src.utils.service_check import check_engine_status, is_port_alive, EngineStatus
 
@@ -29,13 +28,16 @@ def render_top_nav():
     """下一代全景悬停导航栏 (Multi-level Hover Dropdown)"""
     load_global_css()
     
-    # 🧪 5 大核心实验室导航架构
     nav_data = [
-        {"lab": "01 资产测度", "path": "pages/1_数据底座与规划策略.py", "subs": ["MPI 更新潜力测度", "策略语义与红线", "多源异构底座"]},
-        {"lab": "02 全息诊断", "path": "pages/2_现状空间全景诊断.py", "subs": ["3D 现状全息底座", "地块级诊断面板"]},
-        {"lab": "03 方案模拟", "path": "pages/3_AIGC设计推演.py", "subs": ["AIGC 视觉图景衍生", "本地算力调度"]},
-        {"lab": "04 博弈决策", "path": "pages/4_LLM博弈决策.py", "subs": ["多主体利益协商", "动态共识雷达", "图纸提示词助手"]},
-        {"lab": "05 成果展示", "path": "pages/5_更新设计成果展示.py", "subs": ["3D 更新设计全景", "规划文本成果", "重点效果展示"]},
+        {
+            "lab": board["title"],
+            "path": board["path"],
+            "subs": [
+                {"label": f"{code} {STAGE_LOOKUP[code]['title']}", "href": stage_primary_href(code)}
+                for code in board["stages"]
+            ],
+        }
+        for board in WORKFLOW_BOARDS
     ]
 
     # 💎 CSS3 悬停交互引擎
@@ -213,31 +215,21 @@ def render_top_nav():
     """, unsafe_allow_html=True)
 
     # --- 🏗️ 构造全宽导航 HTML ---
-    import urllib.parse
-    
-    def get_nav_slug(p):
-        name = os.path.basename(p).replace(".py", "")
-        if "_" in name and name.split("_")[0].isdigit():
-            name = name.split("_", 1)[1]
-        return name
-
     nav_html = '<div class="nav-bar"><div class="nav-container">'
     nav_html += '<a href="/" target="_self" class="nav-item" style="text-decoration: none !important; color: rgba(245, 245, 247, 0.95) !important; font-weight: 900 !important; font-size: 24px !important;">主页</a>'
     
     for item in nav_data:
-        slug = get_nav_slug(item['path'])
         nav_html += f'''
         <div class="nav-item">
             {item['lab']}
             <div class="dropdown-content">
                 <div class="submenu-container">
                     <div class="submenu-column">
-                        <div class="submenu-title">功能子项探取</div>
+                        <div class="submenu-title">专业流程子页面</div>
         '''
         # 子项横向分布 (如果子项多，可以分 Column，目前先统一排布)
         for sub in item['subs']:
-            sub_query = urllib.parse.quote(str(sub), safe="")
-            nav_html += f'<a href="/{slug}?sub={sub_query}" target="_self" class="dropdown-item">{sub}</a>'
+            nav_html += f'<a href="{escape(sub["href"])}" target="_self" class="dropdown-item">{escape(sub["label"])}</a>'
         
         nav_html += '</div></div></div></div>'
     

@@ -52,6 +52,8 @@ def main():
                     import_name = "dotenv"
                 if pkg == "streamlit-folium":
                     import_name = "streamlit_folium"
+                if pkg == "PyYAML":
+                    import_name = "yaml"
                 
                 if not check_package(import_name):
                     missing.append(pkg)
@@ -67,15 +69,21 @@ def main():
     print(f"\n[3/3] Checking critical data files...")
     critical_files = [
         "app.py",
-        "src/engines/core_engine.py",
-        "src/ui/ui_components.py",
-        "src/engines/spider_engine.py",
-        "src/engines/cv_semantic_engine.py",
+        "src/engines/engine_registry.py",
+        "src/ui/app_shell.py",
+        "src/workflow/city_design_workflow.py",
+        "src/engines/social_media_crawler.py",
+        "src/engines/urban_image_segmentation.py",
         "tools/run_deeplabv3.py",
-        "pages/1_数据底座与规划策略.py",
-        "pages/2_数字孪生与全息诊断.py",
-        "pages/3_AIGC设计推演.py",
-        "pages/4_LLM博弈决策.py",
+        "pages/01_前期数据获取与现状分析.py",
+        "pages/02_中期概念生成与应对策略.py",
+        "pages/03_后期设计生成与成果表达.py",
+        "pages/04_现场调研.py",
+        "pages/11_数据底座与规划策略.py",
+        "pages/12_现状空间全景诊断.py",
+        "pages/13_AIGC设计推演.py",
+        "pages/14_LLM博弈决策.py",
+        "pages/15_更新设计成果展示.py",
         "src/utils/geo_transform.py",
     ]
     

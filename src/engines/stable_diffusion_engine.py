@@ -1,7 +1,7 @@
 """AIGC engine: Stable Diffusion img2img pipeline via local WebUI API.
 
 Usage:
-    from src.engines.aigc_engine import run_realtime_sd
+    from src.engines.stable_diffusion_engine import run_realtime_sd
 """
 
 import base64

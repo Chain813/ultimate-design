@@ -5,16 +5,19 @@ import os
 import base64
 from PIL import Image
 from io import BytesIO
-from src.engines.core_engine import run_realtime_sd, is_demo_mode, get_plot_diagnostics
+from src.engines.site_diagnostic_engine import get_plot_diagnostics
+from src.engines.stable_diffusion_engine import run_realtime_sd
+from src.utils.runtime_flags import is_demo_mode
 from src.ui.design_system import (
     render_page_banner,
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.ui_components import (
+from src.ui.app_shell import (
     render_engine_status_alert,
     render_top_nav,
 )
+from src.workflow.city_design_workflow import resolve_subpage_option
 
 st.set_page_config(page_title="风貌管控 | 微更新平台", layout="wide", initial_sidebar_state="expanded")
 
@@ -88,9 +91,12 @@ render_section_intro("空间生形模式与参数", "先选地块与生形模式
 # ==========================================
 # 📍 AIGC 制图视阈切换 (Phase 5 新增)
 # ==========================================
-aigc_mode = st.radio("⬇️ 选择空间生形模式", 
-    ["🏙️ 街区全景透视推演 (现状修缮)", "🗺️ 概念总平面图生形 (辅助设计)", "🦅 轴测鸟瞰空间体块模拟 (辅助设计)"],
-    horizontal=True, key="p3_aigc_mode")
+aigc_mode_options = ["🏙️ 街区全景透视推演 (现状修缮)", "🗺️ 概念总平面图生形 (辅助设计)", "🦅 轴测鸟瞰空间体块模拟 (辅助设计)"]
+aigc_mode_index = resolve_subpage_option(aigc_mode_options, default_index=0)
+if st.query_params.get("sub"):
+    st.session_state["p3_aigc_mode"] = aigc_mode_options[aigc_mode_index]
+aigc_mode = aigc_mode_options[aigc_mode_index]
+st.session_state["p3_aigc_mode"] = aigc_mode
 
 st.markdown("---")
 

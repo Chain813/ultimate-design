@@ -16,9 +16,11 @@ from src.ui.design_system import (
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.ui_components import (
+from src.ui.app_shell import (
     render_top_nav,
 )
+from src.workflow.city_design_workflow import resolve_subpage_option
+from src.utils.text_io import read_text_with_fallback
 
 
 st.set_page_config(page_title="数据底座与策略实验室 | 01", layout="wide", initial_sidebar_state="expanded")
@@ -33,9 +35,7 @@ CONSTRAINTS_PATH = META_DIR / "extracted_constraints.txt"
 
 @st.cache_data(ttl=1800)
 def read_text(path: Path) -> str:
-    if not path.exists():
-        return ""
-    return path.read_text(encoding="utf-8")
+    return read_text_with_fallback(path)
 
 
 @st.cache_data(ttl=1800)
@@ -184,13 +184,12 @@ if "lab01_active_sub" not in st.session_state:
     st.session_state.lab01_active_sub = "📊 资产综合评估"
 
 tab_options = ["📊 资产综合评估", "📑 策略语义萃取", "⚙️ 物理底座管理"]
-selected_sub = st.radio(
-    "功能选择",
-    tab_options,
-    index=tab_options.index(st.session_state.lab01_active_sub),
-    horizontal=True,
-    key="lab01_switcher",
-)
+default_tab_index = tab_options.index(st.session_state.lab01_active_sub) if st.session_state.lab01_active_sub in tab_options else 0
+default_tab_index = resolve_subpage_option(tab_options, default_index=default_tab_index)
+if st.query_params.get("sub"):
+    st.session_state.lab01_active_sub = tab_options[default_tab_index]
+    st.session_state["lab01_switcher"] = tab_options[default_tab_index]
+selected_sub = tab_options[default_tab_index]
 st.session_state.lab01_active_sub = selected_sub
 st.markdown("---")
 

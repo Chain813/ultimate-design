@@ -1,126 +1,124 @@
-<p align="right">
-  <a href="README_EN.md">English Version</a> | <strong>中文版</strong>
-</p>
+# 🏙️ UltimateDESIGN
 
-<h1 align="center">🏙️ UltimateDESIGN</h1>
-<h3 align="center">长春伪满皇宫周边街区微更新决策支持平台</h3>
+**长春伪满皇宫周边街区微更新与城市设计决策支持平台**
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10~3.12-blue?logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/Streamlit-1.38-FF4B4B?logo=streamlit&logoColor=white" alt="Streamlit">
-  <img src="https://img.shields.io/badge/LLM-Ollama%20%2F%20Gemma-8A2BE2" alt="LLM">
-  <img src="https://img.shields.io/badge/AIGC-Stable%20Diffusion-green" alt="AIGC">
-  <img src="https://img.shields.io/badge/Image%202.0-Prompt%20Assistant-0EA5E9" alt="Image Prompt Assistant">
-  <img src="https://img.shields.io/badge/License-Academic-orange" alt="License">
-</p>
+UltimateDESIGN 是一个面向城乡规划专业城市设计课程、毕业设计和研究展示的 Streamlit 应用。项目把城市设计工作拆解为 **13 个专业阶段**，并把资料读取、空间分析、现场调研、AIGC 图景推演、LLM 协商决策和成果表达整理成清晰的模块化页面。
 
----
+> 当前版本强调“顶部导航直达功能”。页面主体不再放置二次跳转卡片，避免中转和重复入口。
 
-## 📖 项目概况
+## 🧭 快速理解
 
-**UltimateDESIGN** 是一款专为**城乡规划**、**建筑学**专业学生及研究人员设计的、基于数据驱动的城市微更新决策支持平台。
+| 图标 | 关键词 | 说明 |
+| --- | --- | --- |
+| 🧩 | 13 阶段流程 | 按城乡规划专业城市设计工作流组织页面顺序 |
+| 🗺️ | 数据底座 | 统一管理任务书、开题报告、GeoJSON、POI、交通和街景数据 |
+| 🔎 | 现状诊断 | 基于空间指标、街景指标和地块信息生成诊断面板 |
+| 🧠 | AI 协同 | 接入 Stable Diffusion、Ollama/Gemma、RAG 政策检索和多主体协商 |
+| 🖼️ | 设计表达 | 生成图景推演、图纸提示词、规划文本和成果导出 |
 
-### 1. 研究背景与挑战
-本项目以**长春伪满皇宫周边街区**为实证研究对象。该区域作为典型的历史文化街区，在城市更新过程中面临着：
-- **数据孤岛**：空间数据、政策条文、社情民意散落在不同平台。
-- **决策主观**：传统规划往往依赖规划师个人经验，缺乏量化的现状诊断。
-- **沟通鸿沟**：复杂的规划方案难以让非专业人士（如居民、政府人员）直观理解并参与讨论。
+## 🧱 三大板块与 13 阶段
 
-### 2. 解决方案
-平台提出了一套**“数据底座 + 循证诊断 + AI 协同”**的闭环工作流：
-- **数字孪生基底**：整合多源空间数据（GIS、路网、POI、街景），构建 3D 现状诊断底座。
-- **循证推演模型**：建立从“任务书解析”到“空间诊断”，再到“多主体博弈”的五阶段决策路径。
-- **双引擎 AI 驱动**：
-    - **AIGC (Stable Diffusion)**：将枯燥的规划参数转化为高保真的设计意向图，实现“设计即见”。
-    - **LLM (Ollama/Gemma)**：利用 RAG 技术对政策库进行检索，模拟多主体（政府、开发商、居民）协商，辅助达成规划共识。
-- **图纸提示词助手**：在 LLM 博弈决策页面接入 ChatGPT Image 2.0 图纸提示词生成流程，按图册章节、图纸类型、精度等级和上传资料完整性生成可复制提示词。
+```mermaid
+flowchart LR
+    A["🟦 前期数据获取与现状分析<br/>01-05"] --> B["🟨 中期概念生成与应对策略<br/>06-07"]
+    B --> C["🟩 后期设计生成与成果表达<br/>08-13"]
+```
 
----
+| 板块 | 阶段 | 页面入口 |
+| --- | --- | --- |
+| 🟦 前期数据获取与现状分析 | 01 任务解读、02 资料收集、03 现场调研、04 现状分析、05 问题诊断 | `pages/01_前期数据获取与现状分析.py` |
+| 🟨 中期概念生成与应对策略 | 06 目标定位、07 设计策略 | `pages/02_中期概念生成与应对策略.py` |
+| 🟩 后期设计生成与成果表达 | 08 总体城市设计、09 专项系统设计、10 重点地段深化、11 实施路径、12 城市设计导则、13 成果表达 | `pages/03_后期设计生成与成果表达.py` |
 
-## ✨ 核心功能
+## 🧰 功能页面
 
-平台围绕规划全生命周期划分为五大模块，并在决策页内补充图册生产辅助工具：
+| 图标 | 页面 | 对应功能 |
+| --- | --- | --- |
+| 🚶 | `pages/04_现场调研.py` | 读取 `data/streetview/Point_x/heading_*.jpg`，展示现场调研点与四向街景照片 |
+| 📚 | `pages/11_数据底座与规划策略.py` | 任务书、开题报告、语义萃取、空间资产清单、MPI 更新潜力测度 |
+| 🗺️ | `pages/12_现状空间全景诊断.py` | 3D 现状底座、POI、街景指标、地块级诊断和空间评估 |
+| 🎨 | `pages/13_AIGC设计推演.py` | Stable Diffusion 图景推演、街景修缮、总平面和轴测鸟瞰模拟 |
+| 🤝 | `pages/14_LLM博弈决策.py` | RAG 政策检索、多主体协商、五阶段推演、图纸提示词生成 |
+| 📦 | `pages/15_更新设计成果展示.py` | 留改拆总图、规划文本、重点地块效果图、Word 成果导出 |
 
-1.  **📊 数据底座与规划策略**：整合任务书、开题报告及 MPI 更新潜力评估模型，确立研究起点。
-2.  **🗺️ 现状空间全景诊断**：支持 3D 地图交互，叠加交通、品质、热力等图层，实现地块级的雷达图健康诊断。
-3.  **🎨 AIGC 设计图景推演**：利用 Stable Diffusion 实时生成更新意向图，支持 Before/After 对比展示。
-4.  **🤖 LLM 循证博弈决策**：基于知识库检索政策导则，驱动多角色 AI 进行博弈，生成规划建议书。
-5.  **📋 更新设计成果展示**：汇总设计导则、总图成果及效果图集，支持一键导出 Word 研究报告。
-6.  **🖼️ 图纸提示词助手**：面向 A3 图册、A1 展板和汇报 PPT，生成符合真实边界、底图约束、图例规则和统一风格的 Image 2.0 提示词；一级精度图纸缺少底图时会拦截生成，二级精度图纸缺少数据时仅输出视觉表达模板。
-
----
-
-## 🐣 快速上手
-
-- **[WORKFLOW_REPORT.md](WORKFLOW_REPORT.md)：循证规划五阶段推演工作流全解析 (必读)**
-- **[BEGINNER_GUIDE.md](BEGINNER_GUIDE.md)：电脑小白超详细上手指南 (推荐新手阅读)**
-- **[GLOSSARY.md](GLOSSARY.md)：城乡规划专业学子的技术术语通俗解释 (像理解 GIS/控规一样理解代码)**
-- [QUICK_START.md](QUICK_START.md)：快速启动命令参考
-- [INSTALL_GUIDE.md](INSTALL_GUIDE.md)：全量本地环境与 AI 引擎（SD / Ollama）部署指南
-
----
-
-## 🚀 启动预览
-
-> **轻量演示模式** — 无需 GPU 或 AI 引擎，可直接查看首页、空间数据、3D 地图、诊断结果和成果展示。
-> 
-> 详细步骤请参考：**[QUICK_START.md](QUICK_START.md)**
-
----
-
-## 📁 项目文件结构说明
+## 📁 代码结构
 
 ```text
 ultimateDESIGN/
-├── app.py                         # Streamlit 平台总台入口
-├── pages/                         # 业务功能页面 (01-05 循证工作流)
-│   ├── 1_数据底座与规划策略.py      # 资料管理、评估指标与资产清单
-│   ├── 2_现状空间全景诊断.py      # 3D 地图交互与空间量化评估
-│   ├── 3_AIGC设计推演.py          # 基于 SD 的更新图景生成
-│   ├── 4_LLM博弈决策.py          # 基于 RAG 的多主体协商模型与图纸提示词助手
-│   └── 5_更新设计成果展示.py      # 成果汇总与报告导出
-├── src/                           # 核心业务逻辑组件
-│   ├── config/                    # 系统配置：路径注册、环境变量、模型参数
-│   ├── engines/                   # 核心引擎：空间分析、AIGC、RAG、LLM、图纸提示词模板
-│   ├── ui/                        # 统一 UI 系统：设计组件、图表主题、导航
-│   └── utils/                     # 通用工具：坐标转换、服务探活、文档生成
-├── assets/                        # 前端静态资源：CSS 样式、地图 HTML 模板、流程图与封面图片
-├── data/                          # 规划数据底座
-│   ├── shp/                       # 地块、建筑、边界等空间 GeoJSON 数据
-│   ├── meta/                      # 政策文本、语义提取等文本元数据
-│   └── *.csv / *.xlsx             # POI、交通、人口、评价指标等统计数据
-├── tools/                         # 独立工具脚本
-│   ├── get_poi.py                 # POI 数据抓取工具
-│   ├── rebuild_rag.py             # 重新构建政策知识库索引
-│   └── startup_smoke.py           # 系统启动冒烟测试
-├── docs/                          # 本地资料库：规划规范 PDF、项目任务书 (默认不上传 GitHub)
-├── static/                        # Streamlit 静态资源缓存 (如超大体积 GeoJSON)
-├── tests/                         # 系统单元测试（含核心引擎与图纸提示词助手测试）
-├── config.yaml                    # 全局运行配置文件
-├── requirements.txt               # Python 环境依赖清单
-├── setup_env.bat                  # 一键配置本地环境脚本
-└── README.md                      # 项目主说明文档
+├─ 🏠 app.py                       # Streamlit 首页、平台状态、总入口
+├─ 🧭 pages/                       # Streamlit 页面，文件名影响路由顺序
+├─ 🧬 src/
+│  ├─ ⚙️ config/                   # 项目路径、数据路径、配置加载
+│  ├─ 🧠 engines/                  # 领域引擎：空间、诊断、RAG、LLM、AIGC、提示词
+│  ├─ 🎛️ ui/                       # 顶部导航、页面设计系统、图表主题
+│  ├─ 🧰 utils/                    # 文本读取、文档导出、坐标转换、服务探测
+│  └─ 🧩 workflow/                 # 13 阶段城市设计工作流与阶段路由映射
+├─ 🎨 assets/                      # 全局 CSS、HTML 地图模板、展示资源
+├─ 🗃️ data/                        # GeoJSON、CSV、街景图、语义中间文件
+├─ 📄 docs/                        # 本地任务书、开题报告、规范和政策资料
+├─ 🛠️ tools/                       # 数据抓取、清洗、压缩、环境检查脚本
+├─ ✅ tests/                       # 单元测试
+└─ 🌐 static/                      # Streamlit 静态资源目录
 ```
 
----
+## 🧠 核心模块命名
 
-## 📁 项目文档与开发
+| 图标 | 模块 | 职责 |
+| --- | --- | --- |
+| 🧭 | `src/ui/app_shell.py` | 全局 CSS 注入、顶部导航、引擎状态提示 |
+| 🧩 | `src/workflow/city_design_workflow.py` | 13 阶段定义、阶段资源、顶部导航直达 URL |
+| 🧠 | `src/engines/engine_registry.py` | 跨领域聚合导出，供页面按需使用 |
+| 🗺️ | `src/engines/spatial_engine.py` | POI、街景、天际线、空间数据统计 |
+| 🔎 | `src/engines/site_diagnostic_engine.py` | 地块诊断、策略矩阵、问题判断 |
+| 🎨 | `src/engines/stable_diffusion_engine.py` | 本地 Stable Diffusion WebUI 调用 |
+| ✍️ | `src/engines/drawing_prompt_engine.py` | 城市设计图纸提示词生成 |
+| 📚 | `src/engines/rag_engine.py` | 政策文本向量检索和上下文召回 |
+| 🤖 | `src/engines/llm_engine.py` | Ollama/Gemma 调用与流式输出 |
+| 💬 | `src/engines/nlp_engine.py` | 社交文本情感和词频分析 |
+| 🕸️ | `src/engines/social_media_crawler.py` | 社交平台抓取逻辑 |
+| 🖼️ | `src/engines/urban_image_segmentation.py` | 街景图像语义分割和城市指标计算 |
 
-### 🧪 校验命令
+## 🚀 启动
 
 ```powershell
-# 语法检查
-python -m py_compile app.py src/ui/design_system.py src/ui/chart_theme.py src/ui/ui_components.py
-# 单元测试
-python -m pytest tests/ -q
-# 本次图纸提示词助手相关回归测试
-python -m pytest tests/test_core_engine.py tests/test_image_prompt_engine.py -q
-# 启动冒烟测试
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+浏览器访问：
+
+```text
+http://localhost:8501/
+```
+
+## 🧪 验证
+
+```powershell
+python -m compileall app.py pages src tests tools
+pytest
+python tools/check_env.py
 python tools/startup_smoke.py
 ```
 
----
+## 🗃️ 数据说明
 
-## 📜 使用声明
+| 图标 | 路径 | 内容 |
+| --- | --- | --- |
+| 🗺️ | `data/shp/` | 研究边界、建筑底图、地块和空间 GeoJSON |
+| 🚶 | `data/streetview/` | 现场调研街景图片，按 `Point_x/heading_*.jpg` 组织 |
+| 🧾 | `data/meta/` | 任务书摘录、政策约束抽取、语义萃取中间结果 |
+| 📄 | `docs/` | 本地 PDF、Markdown 规划资料、任务书和开题报告 |
+| 🎨 | `assets/` | CSS、HTML 地图模板、页面展示资源 |
 
-本项目用于学术研究、课程展示和毕业设计演示。项目中的规划资料、空间数据和社会感知数据应按来源授权和隐私要求使用，不建议直接用于商业决策。
+## 🛠️ 开发规则
+
+- 🧭 页面跳转只放在顶部导航，页面主体不再放功能跳转卡片。
+- 🧩 13 阶段流程只维护在 `src/workflow/city_design_workflow.py`。
+- 🧠 计算逻辑放在 `src/engines/` 或 `src/utils/`，不要写进页面文件。
+- 🎛️ 通用 UI 放在 `src/ui/`，页面内只保留必要交互和展示。
+- 🗃️ 新增数据路径先登记在 `src/config/paths.py`。
+- ✅ 修改后至少运行 `compileall`、`pytest` 和 `tools/check_env.py`。
+
+## 📌 使用声明
+
+本项目用于课程设计、毕业设计和学术研究展示。规划资料、街景数据和社会感知数据应按来源授权、隐私要求和学校/项目管理要求使用。

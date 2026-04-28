@@ -33,7 +33,7 @@ def evaluate_gvi(image_path):
     
     # Pascal VOC class 16 = potted plant (唯一植被类别)
     # 注意：VOC 仅含盆栽类，无法识别行道树/草坪，GVI 会偏低
-    # 如需精确街景绿视率，推荐使用 cv_semantic_engine.py (Cityscapes class 8 = Vegetation)
+    # 如需精确街景绿视率，推荐使用 urban_image_segmentation.py (Cityscapes class 8 = Vegetation)
     green_pixels = np.sum(mask == 16)
     return round((green_pixels / mask.size) * 100, 1)
 

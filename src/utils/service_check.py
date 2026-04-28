@@ -1,6 +1,6 @@
 """Unified local-service availability probing.
 
-Eliminates triple duplication across app.py, ui_components.py, and daemon_manager.py.
+Eliminates duplicated probes across app.py, app_shell.py, and daemon_manager.py.
 
 Usage:
     from src.utils.service_check import is_port_alive, check_engine_status, EngineStatus
