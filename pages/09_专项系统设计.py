@@ -1,4 +1,4 @@
-﻿"""阶段 09：专项系统设计 —— 轴测鸟瞰 + 3D 专项叠合 + 图纸提示词。"""
+"""阶段 09：专项系统设计 —— 轴测鸟瞰 + 3D 专项叠合 + 图纸提示词。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
@@ -70,7 +70,7 @@ elif selected_sub == "🖼️ 图纸提示词生成":
         st.text_area("数据注入后的提示词", value=prompt_text, height=300)
         if st.button("🧠 调用 DeepSeek 生成", type="primary", use_container_width=True):
             with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
+                result = generate_drawing_prompt_with_llm(selected_tmpl)
             st.text_area("完整 Image 2.0 提示词", value=result, height=400)
             st.download_button("📥 下载", result, file_name=f"{selected_tmpl}_prompt.md", mime="text/markdown", use_container_width=True)
     else:

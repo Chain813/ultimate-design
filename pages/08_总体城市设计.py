@@ -1,4 +1,4 @@
-﻿"""阶段 08：总体城市设计 —— 概念总平面图生形 + AIGC 推演。"""
+"""阶段 08：总体城市设计 —— 概念总平面图生形 + AIGC 推演。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
@@ -59,7 +59,7 @@ elif selected_sub == "🖼️ 图纸提示词生成":
         st.text_area("数据注入后的提示词", value=prompt_text, height=300)
         if st.button("🧠 调用 DeepSeek 生成", type="primary", use_container_width=True):
             with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
+                result = generate_drawing_prompt_with_llm(selected_tmpl)
             st.text_area("完整 Image 2.0 提示词", value=result, height=400)
     else:
         st.info(f"「{selected_tmpl}」暂无预设模板，请使用通用图纸提示词助手。")

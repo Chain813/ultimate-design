@@ -137,8 +137,9 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
     api_key = os.getenv("DEEPSEEK_API_KEY")
 
     if not api_key:
-        yield "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
-        return
+        def _err_gen():
+            yield "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
+        return _err_gen()
 
     headers = {
         "Content-Type": "application/json",
