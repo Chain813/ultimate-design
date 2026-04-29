@@ -1,4 +1,4 @@
-"""阶段 08：总体城市设计 —— 概念总平面图生形 + AIGC 推演。"""
+﻿"""阶段 08：总体城市设计 —— 概念总平面图生形 + AIGC 推演。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
@@ -6,6 +6,7 @@ from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="08 总体城市设计", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -42,9 +43,8 @@ if selected_sub == "🗺️ 概念总平面图生形":
     save_stage_output("08", "status", "已就绪")
 
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro("总体设计类图纸提示词", "生成总平面图、鸟瞰图、功能布局图等。", eyebrow="Drawing Prompts")
-    with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p8_model")
+    render_drawing_prompt_ui("08", key_prefix="p8", stage_title="总体城市设计")
+
 
     # 合并所有可用的总体设计模板
     all_names = ["总平面图", "鸟瞰效果图", "功能布局图", "土地利用规划图"]
@@ -57,7 +57,7 @@ elif selected_sub == "🖼️ 图纸提示词生成":
     if selected_tmpl in tmpl_names:
         prompt_text, _ = build_drawing_prompt(selected_tmpl)
         st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True):
+        if st.button("🧠 调用 DeepSeek 生成", type="primary", use_container_width=True):
             with st.spinner("生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.text_area("完整 Image 2.0 提示词", value=result, height=400)

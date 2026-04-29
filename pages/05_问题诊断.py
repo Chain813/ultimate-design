@@ -1,4 +1,4 @@
-"""阶段 05：问题诊断 —— MPI 更新潜力评估、地块雷达、LLM 诊断报告。
+﻿"""阶段 05：问题诊断 —— MPI 更新潜力评估、地块雷达、LLM 诊断报告。
 
 从原 page11 (MPI 计算面板) + page12 (地块雷达) + page14 (LLM 阶段一) 整合。
 """
@@ -29,6 +29,7 @@ from src.workflow.stage_data_bus import (
     render_evidence_chain_bar,
 )
 from src.utils.runtime_flags import is_demo_mode
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="05 问题诊断", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -42,7 +43,7 @@ render_page_banner(
     metrics=[
         {"value": "AHP-MPI", "label": "评价模型", "meta": "空间潜力×社会需求×环境紧迫度"},
         {"value": "3", "label": "核心维度", "meta": "可交互调权"},
-        {"value": "Gemma 4", "label": "诊断引擎", "meta": "本地大模型"},
+        {"value": "DeepSeek", "label": "诊断引擎", "meta": "本地大模型"},
     ],
 )
 
@@ -196,10 +197,10 @@ elif selected_sub == "🎯 地块雷达诊断":
 # 子页面 3: AI 前期诊断报告 (原 page14 阶段一)
 # ═══════════════════════════════════════════
 elif selected_sub == "🔬 AI 前期诊断报告":
-    render_section_intro("AI 前期问题诊断", "自动读取 MPI/GVI/POI 数据，调用本地 Gemma 4 生成数据驱动的问题诊断报告。", eyebrow="LLM Stage 01")
+    render_section_intro("AI 前期问题诊断", "自动读取 MPI/GVI/POI 数据，调用本地 DeepSeek 生成数据驱动的问题诊断报告。", eyebrow="LLM Stage 01")
 
     with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p5_model")
+        model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p5_model")
 
     diagnostics = get_plot_diagnostics()
     if diagnostics:
@@ -244,14 +245,11 @@ elif selected_sub == "🔬 AI 前期诊断报告":
 # 子页面 4: 图纸提示词生成 (新增)
 # ═══════════════════════════════════════════
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro(
-        "问题诊断类图纸提示词",
-        "基于本阶段数据自动生成面向 ChatGPT Image 2.0 的专业图纸提示词，可调用本地大模型优化。",
-        eyebrow="Drawing Prompt Templates",
-    )
+    render_drawing_prompt_ui("05", key_prefix="p5", stage_title="问题诊断")
+
 
     with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p5_draw_model")
+        model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p5_draw_model")
 
     templates = get_templates_by_stage("05")
     if templates:
@@ -265,7 +263,7 @@ elif selected_sub == "🖼️ 图纸提示词生成":
         prompt_text, sys_text = build_drawing_prompt(selected_tmpl)
         st.text_area("预览：数据注入后的提示词模板", value=prompt_text, height=300, key="p5_draw_preview")
 
-        if st.button("🧠 调用 Gemma 4 生成完整提示词", type="primary", use_container_width=True, key="p5_draw_gen"):
+        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", use_container_width=True, key="p5_draw_gen"):
             with st.spinner("正在生成..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.session_state["p5_generated_prompt"] = result

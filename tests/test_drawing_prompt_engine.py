@@ -59,7 +59,7 @@ def test_level_one_complete_prompt_includes_reference_constraints():
     request = _base_request(
         chapter="05 总体规划篇",
         drawing_name="道路交通系统规划图",
-        uploaded_channels=["卫星底图", "红线边界图", "道路矢量图", "图例参考图"],
+        uploaded_channels=["卫星底图", "红线边界图", "道路矢量图", "图例参考图", "固定图框模板"],
         main_expression="表达道路等级、交通组织和慢行衔接",
         legend_content="主干路、次干路、支路、慢行路径、换乘节点",
     )
@@ -69,6 +69,7 @@ def test_level_one_complete_prompt_includes_reference_constraints():
     assert result.can_generate
     assert "不得改变研究范围边界" in result.prompt
     assert "请严格保持上传道路矢量图" in result.prompt
+    assert "请严格套用上传的固定图框" in result.prompt
     assert "不要改变道路结构" in result.negative_prompt
 
 

@@ -1,4 +1,4 @@
-"""阶段 06：目标定位 —— LLM 案例对标(阶段二) + 设计理念(阶段三)。"""
+﻿"""阶段 06：目标定位 —— LLM 案例对标(阶段二) + 设计理念(阶段三)。"""
 
 import os
 import streamlit as st
@@ -21,7 +21,7 @@ render_page_banner(
 render_evidence_chain_bar("06", ["05", "06", "07"])
 
 with st.sidebar:
-    model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p6_model")
+    model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p6_model")
 
 SUB_OPTIONS = ["📚 案例对标分析", "💡 设计理念提炼"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
@@ -84,6 +84,6 @@ render_stage_summary(
         {"point": "提炼'数字孪生·古今共振'的总体设计理念", "evidence": "融合前期诊断与案例对标"},
         {"point": "形成四大设计策略方向：精准感知、风貌生成、路网重构、社会协同", "evidence": "LLM 循证推演"},
     ],
-    methodology="基于 Gemma 4 本地大模型的循证推演，融合案例对标与前期诊断",
+    methodology="基于 DeepSeek 本地大模型的循证推演，融合案例对标与前期诊断",
     implication="为设计策略（Stage 07）的多主体协商提供了理念框架和策略方向",
 )

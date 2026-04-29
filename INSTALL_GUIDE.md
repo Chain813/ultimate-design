@@ -1,4 +1,4 @@
-[**English**](./README_EN.md) • [**简体中文**](./README.md) • [**🚀 快速启动**](./QUICK_START.md) • [**🔧 安装指南**](./INSTALL_GUIDE.md) • [**👶 新手教程**](./BEGINNER_GUIDE.md) • [**📖 核心术语**](./GLOSSARY.md) • [**☁️ GitHub部署**](./GITHUB_UPLOAD_GUIDE.md)
+﻿[**English**](./README_EN.md) • [**简体中文**](./README.md) • [**🚀 快速启动**](./QUICK_START.md) • [**🔧 安装指南**](./INSTALL_GUIDE.md) • [**👶 新手教程**](./BEGINNER_GUIDE.md) • [**📖 核心术语**](./GLOSSARY.md) • [**☁️ GitHub部署**](./GITHUB_UPLOAD_GUIDE.md)
 
 ---
 
@@ -15,7 +15,7 @@
 1. 前往 [Ollama 官网](https://ollama.com/) 下载并安装客户端。
 2. 打开终端，拉取并运行特定的 Gemma 量化版本：
    ```powershell
-   ollama run gemma4:e2b-it-q4_K_M
+   ollama run deepseek-v4-pro
    ```
 3. **验证机制**：确保 Ollama 在后台静默运行（默认监听 `127.0.0.1:11434`）。平台主页的 HUD 会自动侦测到该端口，并亮起绿色状态灯。
 

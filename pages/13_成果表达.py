@@ -5,6 +5,7 @@ from pathlib import Path
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
+from src.ui.output_flow_panel import render_output_flow_prompt_panel
 from src.engines.drawing_prompt_templates import (
     DRAWING_TEMPLATES,
     get_templates_by_stage,
@@ -34,9 +35,10 @@ if selected_sub == "📋 图纸提示词总览":
         "一览全部预设图纸模板，可按阶段筛选，支持一键生成数据注入后的 Image 2.0 提示词。",
         eyebrow="All Drawing Prompts",
     )
+    render_output_flow_prompt_panel(expanded=True)
 
     with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p13_model")
+        model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p13_model")
         stage_filter = st.selectbox("按阶段筛选", ["全部"] + [f"{t.stage} {t.chapter}" for t in DRAWING_TEMPLATES], key="p13_filter")
 
     import pandas as pd
@@ -57,13 +59,24 @@ if selected_sub == "📋 图纸提示词总览":
     selected_tmpl = st.selectbox("选择模板生成完整提示词", [t.name for t in filtered], key="p13_tmpl")
     if selected_tmpl:
         tmpl = next(t for t in DRAWING_TEMPLATES if t.name == selected_tmpl)
+        
+        st.markdown("#### 📤 渲染底图与合成图框上传")
+        col_img1, col_img2, col_img3 = st.columns(3)
+        with col_img1:
+            st.file_uploader("1. AIGC 底图 / 线稿", type=["png", "jpg"], key="p13_base_map")
+        with col_img2:
+            st.file_uploader("2. 研究范围蒙版", type=["png", "jpg"], key="p13_scope_mask")
+        with col_img3:
+            st.file_uploader("3. 标准排版图框", type=["png", "pdf", "jpg"], key="p13_title_block")
+        st.markdown("---")
+
         prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True):
-            with st.spinner("生成中..."):
+        st.text_area("数据注入后的系统提示词片段", value=prompt_text, height=200)
+        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", use_container_width=True):
+            with st.spinner("DeepSeek 推理生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
-            st.download_button("📥 下载", result, file_name=f"{selected_tmpl}_prompt.md", mime="text/markdown", use_container_width=True)
+            st.text_area("完整 Image 2.0 英文提示词 (可直接拷贝)", value=result, height=350)
+            st.download_button("📥 下载提示词", result, file_name=f"{selected_tmpl}_prompt.md", mime="text/markdown", use_container_width=True)
 
 elif selected_sub == "🖼️ AIGC 效果图管理":
     render_section_intro("AIGC 效果图管理", "管理和展示历次 AIGC 推演生成的效果图。", eyebrow="Gallery")

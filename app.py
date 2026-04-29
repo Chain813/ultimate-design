@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 import json
 import os
 from pathlib import Path
@@ -151,7 +151,7 @@ if not engine_status_home.sd or not engine_status_home.gemma:
         #### 2. 挂载本地大模型引擎 (Ollama)
         前往 [Ollama 官网](https://ollama.com/) 下载并安装引擎。打开终端并运行以下命令，系统将在后台自动下载并运行经过量化压缩的 Gemma 模型：
         ```bash
-        ollama run gemma4:e2b-it-q4_K_M
+        ollama run deepseek-v4-pro
         ```
         *(引擎默认将在 `http://127.0.0.1:11434` 端口保持监听，本系统会自动捕捉该端口)*
 

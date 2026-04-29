@@ -1,4 +1,4 @@
-"""
+﻿"""
 daemon_manager.py — 算力服务后台守护进程管理器
 
 功能：
@@ -29,7 +29,7 @@ from src.utils.service_check import is_port_alive, OLLAMA_PORT, SD_PORT
 CONFIG_PATH = Path("config_daemon.json")
 
 DEFAULT_CONFIG = {
-    "ollama_model": "gemma4:e2b-it-q4_K_M",
+    "ollama_model": "deepseek-v4-pro",
     "sd_webui_path": r"E:\SDstablediffusion\sd-webui-aki\sd-webui-aki-v4.11.1-cu128\sd-webui-aki-v4.11.1-cu128",
     "sd_launch_file": "webui-user.bat",
     "sd_extra_args": "--api --xformers"
@@ -171,7 +171,7 @@ def render_daemon_control_panel():
 
             if st.button("🦙 一键唤醒 Ollama", key="btn_start_ollama"):
                 with st.spinner("正在检查本地模型库..."):
-                    model_name = cfg.get("ollama_model", "gemma4:e2b-it-q4_K_M")
+                    model_name = cfg.get("ollama_model", "deepseek-v4-pro")
                     has_model = check_ollama_model(model_name)
 
                     if not has_model:

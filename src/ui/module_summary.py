@@ -1,11 +1,11 @@
-"""阶段研究小结组件 —— 每个阶段页面底部的专业结论面板。
+﻿"""阶段研究小结组件 —— 每个阶段页面底部的专业结论面板。
 
 面向答辩委员会，用城乡规划专业术语输出当前阶段的核心发现。
 支持：
 - 静态发现列表
 - 动态数据注入（自动从数据总线读取）
 - 内嵌统计图表（Plotly）
-- 一键调用 Gemma 4 生成 AI 小结
+- 一键调用 DeepSeek 生成 AI 小结
 """
 
 from __future__ import annotations
@@ -450,7 +450,7 @@ def _render_llm_summary_button(
     col1, col2 = st.columns([3, 1])
     with col2:
         model_tag = st.text_input(
-            "模型", value="gemma4:e2b-it-q4_K_M",
+            "模型", value="deepseek-v4-pro",
             key=f"summary_model_{stage_code}",
             label_visibility="collapsed",
         )
@@ -508,9 +508,9 @@ def generate_stage_summary_text(
     stage_code: str,
     stage_name: str,
     data_context: str,
-    model: str = "gemma4:e2b-it-q4_K_M",
+    model: str = "deepseek-v4-pro",
 ) -> str:
-    """调用本地 Gemma 4 生成阶段小结文字。
+    """调用本地 DeepSeek 生成阶段小结文字。
 
     Parameters
     ----------

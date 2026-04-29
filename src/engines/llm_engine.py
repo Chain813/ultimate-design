@@ -6,11 +6,15 @@ Usage:
 
 import json as _json
 import logging
+import os
 import time
 
 import requests
+from dotenv import load_dotenv
 
 from src.config.loader import load_global_config
+
+load_dotenv()
 from src.engines.rag_engine import retrieve_rag_context
 from src.utils.runtime_flags import is_demo_mode
 
@@ -67,16 +71,25 @@ def _select_demo_response(system_prompt: str) -> str:
 # ═══════════════════════════════════════════
 
 def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                    model: str = "gemma4:e2b-it-q4_K_M") -> str:
-    """Call local Ollama engine (non-streaming). Falls back to demo responses."""
+                    model: str = "deepseek-v4-pro") -> str:
+    """Call DeepSeek API (non-streaming). Falls back to demo responses."""
     if is_demo_mode():
         return _select_demo_response(system_prompt)
 
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
-    url = config.get("engines", {}).get("llm", {}).get("ollama_url", "http://127.0.0.1:11434/api/chat")
-    model = config.get("engines", {}).get("llm", {}).get("default_model", model)
+    
+    url = "https://api.deepseek.com/chat/completions"
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+
+    if not api_key:
+        return "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
 
     payload = {
         "model": model,
@@ -84,29 +97,28 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
-        "options": {"num_ctx": 8192},
         "stream": False,
     }
 
     for attempt in range(2):
         try:
-            response = requests.post(url, json=payload, timeout=timeout_val)
+            response = requests.post(url, headers=headers, json=payload, timeout=timeout_val)
             if response.status_code == 200:
-                return response.json().get("message", {}).get("content", "")
-            return f"Ollama 报错: {response.status_code} - {response.text}"
+                return response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+            return f"DeepSeek 报错: {response.status_code} - {response.text}"
         except requests.exceptions.ConnectionError:
             if attempt == 0:
                 time.sleep(3)
         except Exception as e:
-            logger.warning("Ollama call failed", exc_info=True)
-            return f"无法连接到 Ollama 服务，请确认已在终端运行: ollama run {model}"
+            logger.warning("DeepSeek call failed", exc_info=True)
+            return f"无法连接到 DeepSeek API: {str(e)}"
 
-    return f"无法连接到 Ollama 服务，请确认已在终端运行: ollama run {model}"
+    return f"无法连接到 DeepSeek API，请检查网络或代理设置。"
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                           model: str = "gemma4:e2b-it-q4_K_M"):
-    """Call local Ollama engine (streaming generator). Falls back to character-by-character demo."""
+                           model: str = "deepseek-v4-pro"):
+    """Call DeepSeek API (streaming generator). Falls back to character-by-character demo."""
     if is_demo_mode():
         text = _select_demo_response(system_prompt)
 
@@ -119,9 +131,19 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
 
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
-    url = config.get("engines", {}).get("llm", {}).get("ollama_url", "http://127.0.0.1:11434/api/chat")
-    model = config.get("engines", {}).get("llm", {}).get("default_model", model)
+    
+    url = "https://api.deepseek.com/chat/completions"
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
+    api_key = os.getenv("DEEPSEEK_API_KEY")
+
+    if not api_key:
+        yield "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
+        return
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
 
     payload = {
         "model": model,
@@ -129,26 +151,33 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt},
         ],
-        "options": {"num_ctx": 8192},
         "stream": True,
     }
 
     def _stream_gen():
         try:
-            response = requests.post(url, json=payload, timeout=(5, timeout_val), stream=True)
+            response = requests.post(url, headers=headers, json=payload, timeout=(5, timeout_val), stream=True)
             if response.status_code == 200:
                 for line in response.iter_lines():
                     if line:
-                        chunk = _json.loads(line)
-                        token = chunk.get("message", {}).get("content", "")
-                        if token:
-                            yield token
+                        decoded_line = line.decode('utf-8')
+                        if decoded_line.startswith("data: "):
+                            data_str = decoded_line[6:]
+                            if data_str == "[DONE]":
+                                break
+                            try:
+                                chunk = _json.loads(data_str)
+                                token = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                                if token:
+                                    yield token
+                            except _json.JSONDecodeError:
+                                continue
             else:
-                yield f"Ollama 报错: {response.status_code} - {response.text}"
+                yield f"DeepSeek 报错: {response.status_code} - {response.text}"
         except requests.exceptions.ConnectionError:
-            yield f"无法连接到 Ollama 服务，请确认已在终端运行: ollama run {model}"
+            yield "无法连接到 DeepSeek API，请检查网络或代理设置。"
         except Exception as e:
-            logger.warning("Ollama stream call failed", exc_info=True)
+            logger.warning("DeepSeek stream call failed", exc_info=True)
             yield f"LLM 引擎异常: {str(e)}"
 
     return _stream_gen()

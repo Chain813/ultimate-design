@@ -1,4 +1,4 @@
-"""阶段 04：现状分析 —— 3D 全息底座 + POI/交通图层。
+﻿"""阶段 04：现状分析 —— 3D 全息底座 + POI/交通图层。
 
 引导用户前往 3D 底座查看，同时提供图纸提示词生成。
 """
@@ -10,6 +10,7 @@ from src.ui.module_summary import render_stage_summary
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="04 现状分析", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -52,22 +53,8 @@ if selected_sub == "🏙️ 3D 现状全息底座":
     save_stage_output("04", "avg_height", sky.get("avg_height", 0))
 
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro("现状分析类图纸提示词", "基于空间数据生成专业图纸提示词。", eyebrow="Drawing Prompts")
-    with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p4_model")
-    templates = get_templates_by_stage("04")
-    if templates:
-        selected_tmpl = st.selectbox("选择图纸模板", [t.name for t in templates])
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-        st.markdown(f"**{tmpl.description}**")
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
-    else:
-        st.info("暂无本阶段图纸模板。")
+    render_drawing_prompt_ui("04", key_prefix="p4", stage_title="现状分析")
+
 
 st.markdown("---")
 render_stage_summary(

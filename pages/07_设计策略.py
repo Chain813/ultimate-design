@@ -1,4 +1,4 @@
-"""阶段 07：设计策略 —— LLM 多主体协商(阶段四) + 共识雷达。"""
+﻿"""阶段 07：设计策略 —— LLM 多主体协商(阶段四) + 共识雷达。"""
 
 import time
 import re
@@ -14,6 +14,7 @@ from src.engines.site_diagnostic_engine import generate_policy_matrix
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
 from src.utils.runtime_flags import is_demo_mode
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="07 设计策略", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -28,7 +29,7 @@ render_page_banner(
 render_evidence_chain_bar("07", ["05", "06", "07"])
 
 with st.sidebar:
-    model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p7_model")
+    model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p7_model")
     temp = st.slider("决策倾向 (Temperature)", 0.0, 1.0, 0.7, key="p7_temp")
     enable_policy = st.checkbox("📜 启用政策合规校验", value=True, key="p7_policy")
 
@@ -102,18 +103,8 @@ elif selected_sub == "📊 共识雷达":
         st.warning("暂无共识数据，请先完成多主体协商推演。")
 
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro("策略类图纸提示词", "生成更新模式分区图、空间结构规划图等。", eyebrow="Drawing Prompts")
-    templates = get_templates_by_stage("07")
-    if templates:
-        selected_tmpl = st.selectbox("选择图纸模板", [t.name for t in templates])
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-        st.markdown(f"**{tmpl.description}**")
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
+    render_drawing_prompt_ui("07", key_prefix="p7", stage_title="设计策略")
+
 
 st.markdown("---")
 render_stage_summary(
@@ -123,6 +114,6 @@ render_stage_summary(
         {"point": "三角色（居民/开发商/规划师）围绕更新策略完成多轮协商", "evidence": "LLM 模拟三方立场博弈"},
         {"point": "策略矩阵包含问题-策略-政策依据-空间落位对应关系", "evidence": "协商推演自动汇总"},
     ],
-    methodology="基于 Gemma 4 的多主体智能协商推演 + RAG 政策合规预审",
+    methodology="基于 DeepSeek 的多主体智能协商推演 + RAG 政策合规预审",
     implication="为总体城市设计（Stage 08）提供了策略框架和空间落位指引",
 )

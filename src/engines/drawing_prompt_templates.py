@@ -1,4 +1,4 @@
-"""图纸提示词模板库 —— 为每类缺失图纸预设基于研究区域数据的专业提示词。
+﻿"""图纸提示词模板库 —— 为每类缺失图纸预设基于研究区域数据的专业提示词。
 
 每个模板包含：
 - ``name``         图纸名称
@@ -15,6 +15,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from src.engines.drawing_prompt_engine import (
+    ImagePromptRequest,
+    build_image_prompt,
+    get_drawing_profile,
+)
+from src.workflow.template_assets import (
+    get_template_asset_rows,
+    get_uploaded_prompt_channels,
+    load_template_asset_manifest,
+    summarize_template_assets_for_prompt,
+)
+
 
 @dataclass
 class DrawingTemplate:
@@ -23,7 +35,10 @@ class DrawingTemplate:
     stage: str
     description: str
     prompt_tmpl: str
-    sys_prompt: str = "你是城乡规划专业的毕业设计图纸制作顾问。请生成可直接用于 ChatGPT Image 2.0 的图纸提示词。"
+    sys_prompt: str = (
+        "你是城乡规划专业的固定资产制图提示词审校器。必须保留底图、研究范围、重点地块和图框约束；"
+        "不得把缺失资产的图纸改写成可直接出图的提示词。"
+    )
     data_deps: list[str] = field(default_factory=list)
 
 
@@ -890,7 +905,7 @@ def get_all_template_names() -> list[str]:
 
 
 def build_drawing_prompt(template_name: str) -> tuple[str, str]:
-    """构建完整的图纸提示词（自动注入项目数据）。
+    """构建固定资产约束下的 Image 2.0 图纸提示词。
 
     Returns
     -------
@@ -900,22 +915,142 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     tmpl = get_template(template_name)
     if not tmpl:
         return "", ""
-    ctx = _get_project_context()
-    prompt = tmpl.prompt_tmpl.replace("{data_context}", ctx)
-    return prompt, tmpl.sys_prompt
+
+    manifest = load_template_asset_manifest()
+    uploaded_channels = get_uploaded_prompt_channels(manifest)
+    profile = get_drawing_profile(tmpl.name)
+    project_context = _get_project_context()
+    asset_context = summarize_template_assets_for_prompt(manifest)
+    template_requirements = _extract_template_requirements(tmpl.prompt_tmpl)
+
+    request = ImagePromptRequest(
+        chapter=tmpl.chapter,
+        drawing_name=tmpl.name,
+        drawing_type=profile.drawing_type,
+        aspect_ratio="A3横版",
+        output_scene="毕业设计图册 / A1 展板 / 方案汇报",
+        uploaded_channels=uploaded_channels,
+        main_expression=tmpl.description,
+        must_include=template_requirements,
+        legend_content=_default_legend_content(tmpl.name),
+        key_plots="研究范围红线、五个重点地块、主要道路、伪满皇宫周边核心节点、图例区和固定图框。",
+        design_strategy=(
+            "只生成规划分析覆盖层、符号、箭头、半透明色块和必要标注；底图、红线、重点地块和图框由固定资产锁定。"
+            "最终合成顺序固定为：固定底图 -> AI 覆盖层 -> 研究范围红线 -> 重点地块边界 -> 固定图框。"
+        ),
+        analysis_conclusion="引用前序阶段数据与上传专题图；信息不完整处使用占位符，不得虚构评价等级、面积或统计数值。",
+        avoid_content="不得重绘底图、不得移动边界、不得改写重点地块、不得改变图框、不得虚构道路和用地分类。",
+        layout_structure="固定图框模板 + 主图底图锁定区 + 右侧图例区 + 底部信息框 + 数据来源注记",
+        mark_as_schematic="示意" in template_requirements or profile.precision != "一级精度",
+        evidence_blocks={
+            "项目与数据上下文": project_context,
+            "固定制图资产": asset_context,
+            "模板内容要求": template_requirements,
+        },
+    )
+    result = build_image_prompt(request)
+    if result.can_generate:
+        return result.prompt, tmpl.sys_prompt
+
+    return _build_blocked_prompt(
+        tmpl=tmpl,
+        profile_precision=profile.precision,
+        missing_items=result.missing_items,
+        notices=result.notices,
+        uploaded_channels=uploaded_channels,
+        asset_context=asset_context,
+        template_requirements=template_requirements,
+    ), tmpl.sys_prompt
 
 
 def generate_drawing_prompt_with_llm(
     template_name: str,
-    model: str = "gemma4:e2b-it-q4_K_M",
+    model: str = "deepseek-v4-pro",
 ) -> str:
-    """调用 Gemma 4 生成基于数据的图纸提示词。"""
+    """调用 DeepSeek 审校固定资产约束提示词。"""
     prompt, sys_prompt = build_drawing_prompt(template_name)
     if not prompt:
         return f"未找到模板: {template_name}"
+    if "暂不生成最终 Image 2.0 提示词" in prompt:
+        return prompt
 
     from src.engines.llm_engine import call_llm_engine
     try:
-        return call_llm_engine(prompt=prompt, system_prompt=sys_prompt, model=model)
+        review_prompt = f"""请审校并轻微整理以下 Image 2.0 图纸提示词。
+
+硬性规则：
+- 必须保留所有“上传底图与资料引用”“固定制图资产”“负面要求”中的约束。
+- 不得把底图、研究范围、重点地块、图框写成可被 AI 重新设计的内容。
+- 不得新增未上传数据、未证明的评价等级、面积、热力强弱或统计数字。
+- 输出仍然是一条可直接用于 Image 2.0 的完整提示词，不输出解释。
+
+{prompt}"""
+        return call_llm_engine(prompt=review_prompt, system_prompt=sys_prompt, model=model)
     except Exception as e:
         return f"LLM 调用失败: {e}"
+
+
+def _extract_template_requirements(prompt_tmpl: str) -> str:
+    """Extract legacy template requirements as content requirements, not as the final prompt."""
+    text = prompt_tmpl.replace("{data_context}", "").strip()
+    markers = ("图纸要求：", "图纸要求:")
+    for marker in markers:
+        if marker in text:
+            text = text.split(marker, 1)[1]
+            break
+    lines = [line.strip() for line in text.splitlines()]
+    lines = [line for line in lines if line and not line.startswith("请为以下城市设计项目生成")]
+    return "\n".join(lines)
+
+
+def _default_legend_content(drawing_name: str) -> str:
+    if any(key in drawing_name for key in ("封面", "目录", "理念", "目标", "矩阵", "运营管理", "技术框架")):
+        return "标题层级、模块编号、流程箭头、责任主体、数据来源和必要注记。"
+    if any(key in drawing_name for key in ("道路", "交通", "慢行", "可达性")):
+        return "道路等级、慢行路径、交通节点、阻隔要素、换乘节点、研究范围和重点地块。"
+    if any(key in drawing_name for key in ("用地", "功能", "分区", "控制", "总平面", "地块")):
+        return "用地分类、功能分区、控制指标、重点地块、研究范围、图例色块和数据来源。"
+    if any(key in drawing_name for key in ("热力", "评价", "诊断", "问题", "现状", "风貌", "遗产")):
+        return "评价等级、问题类型、保护对象、更新潜力、研究范围、重点地块和图例说明。"
+    return "研究范围、重点地块、主要道路、核心节点、图例分类、比例尺、指北针和数据来源。"
+
+
+def _build_blocked_prompt(
+    tmpl: DrawingTemplate,
+    profile_precision: str,
+    missing_items: list[str],
+    notices: list[str],
+    uploaded_channels: list[str],
+    asset_context: str,
+    template_requirements: str,
+) -> str:
+    uploaded_text = "、".join(uploaded_channels) if uploaded_channels else "无"
+    missing_text = "、".join(missing_items) if missing_items else "固定资产或必要内容未完整"
+    notice_text = "\n".join(f"- {notice}" for notice in notices) if notices else "- 请先补齐固定资产后再生成。"
+    rows = get_template_asset_rows()
+    required_rows = [row for row in rows if row["必备"] == "是"]
+    required_status = "\n".join(f"- {row['资产']}：{row['状态']}" for row in required_rows)
+
+    return f"""【{tmpl.name}】
+
+暂不生成最终 Image 2.0 提示词。
+
+原因：
+- 图纸精度：{profile_precision}
+- 已上传约束通道：{uploaded_text}
+- 缺失项：{missing_text}
+{notice_text}
+
+【固定资产状态】
+{required_status}
+
+【固定制图资产约束】
+{asset_context}
+
+【保留的图纸内容要求】
+{template_requirements}
+
+处理方式：
+1. 先在 Stage 02 / 固定制图模板 中补齐固定底图、研究范围红线、重点地块边界和固定图框。
+2. 再重新生成本图提示词。
+3. 后续出图时只允许 AI 生成研究范围内的分析覆盖层，最终由程序叠加红线、重点地块和图框。"""

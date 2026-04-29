@@ -1,11 +1,11 @@
-# ==========================================
+﻿# ==========================================
 # ⚙️ UltimateDESIGN V2.0 终极全局配置文件
 # ==========================================
 
 engines:
   llm:
     ollama_url: "http://127.0.0.1:11434/api/chat"
-    default_model: "gemma4:e2b-it-q4_K_M"
+    default_model: "deepseek-v4-pro"
     timeout: 120
   
   aigc:

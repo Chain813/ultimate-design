@@ -1,4 +1,4 @@
-import streamlit as st
+﻿import streamlit as st
 from html import escape
 from pathlib import Path
 from src.workflow.city_design_workflow import WORKFLOW_BOARDS, STAGE_LOOKUP, stage_primary_href
@@ -264,7 +264,7 @@ def render_engine_status_alert():
 '<span style="font-size:26px; filter:drop-shadow(0 0 8px rgba(239,68,68,0.5));">🧠</span>'
 '<div>'
 '<strong style="color:#fca5a5; font-size:15px; display:block; font-weight:800; letter-spacing:0.02em; text-shadow:0 2px 4px rgba(0,0,0,0.5);">决策博弈引擎 (Ollama/Gemma) 未就绪</strong>'
-'<p style="color:rgba(248,250,252,0.85); font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:6px; color:#f87171; font-family:monospace; border:1px solid rgba(239,68,68,0.2);">ollama run gemma4:e2b-it-q4_K_M</code> (监听端口 11434)</p>'
+'<p style="color:rgba(248,250,252,0.85); font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:6px; color:#f87171; font-family:monospace; border:1px solid rgba(239,68,68,0.2);">ollama run deepseek-v4-pro</code> (监听端口 11434)</p>'
 '</div>'
 '</div>'
             )

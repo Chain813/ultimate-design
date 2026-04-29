@@ -1,4 +1,4 @@
-"""阶段 12：城市设计导则 —— LLM 导则文本生成(阶段五) + Word 导出。"""
+﻿"""阶段 12：城市设计导则 —— LLM 导则文本生成(阶段五) + Word 导出。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
@@ -13,14 +13,14 @@ render_engine_status_alert()
 
 render_page_banner(
     title="城市设计导则",
-    description="汇总全流程成果，调用 Gemma 4 生成城市设计导则文本，并导出为 Word 公文格式。",
+    description="汇总全流程成果，调用 DeepSeek 生成城市设计导则文本，并导出为 Word 公文格式。",
     eyebrow="Stage 12",
     tags=["导则文本", "LLM 汇总", "Word 导出", "管控条文"],
 )
 render_evidence_chain_bar("12", ["05", "06", "07", "12"])
 
 with st.sidebar:
-    model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p12_model")
+    model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p12_model")
 
 SUB_OPTIONS = ["📜 导则文本生成", "📊 管控指标汇总"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
@@ -103,7 +103,7 @@ render_stage_summary(
     findings=[
         {"point": "导则覆盖用地、强度、高度、界面、风貌、公共空间、慢行七大管控维度", "evidence": "城市设计导则标准体系"},
         {"point": "核心区限高≤9m，一般区≤18m，容积率≤1.4", "evidence": "历史文化名城保护规划约束"},
-        {"point": "导则文本由 Gemma 4 基于五阶段证据链自动生成", "evidence": "LLM 循证推演引擎"},
+        {"point": "导则文本由 DeepSeek 基于五阶段证据链自动生成", "evidence": "LLM 循证推演引擎"},
     ],
     methodology="基于五阶段循证推演链路（诊断→案例→理念→协商→导则）的 LLM 汇总",
     implication="为成果表达（Stage 13）提供了可交付的导则文本和管控指标体系",

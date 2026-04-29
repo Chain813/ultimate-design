@@ -1,4 +1,4 @@
-"""阶段 11：实施路径 —— 更新方式分类 + 分期实施 + LLM 五阶段汇总。"""
+﻿"""阶段 11：实施路径 —— 更新方式分类 + 分期实施 + LLM 五阶段汇总。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
@@ -6,6 +6,7 @@ from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="11 实施路径", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -56,22 +57,8 @@ elif selected_sub == "📅 分期实施计划":
                 st.checkbox(item, value=False, key=f"phase_{item}")
 
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro("实施类图纸提示词", "生成分期实施图、更新方式分类图等。", eyebrow="Drawing Prompts")
-    with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p11_model")
-    templates = get_templates_by_stage("11")
-    if templates:
-        selected_tmpl = st.selectbox("选择图纸模板", [t.name for t in templates])
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-        st.markdown(f"**{tmpl.description}**")
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.text_area("完整提示词", value=result, height=400)
-    else:
-        st.info("暂无本阶段图纸模板。")
+    render_drawing_prompt_ui("11", key_prefix="p11", stage_title="实施路径")
+
 
 st.markdown("---")
 render_stage_summary(

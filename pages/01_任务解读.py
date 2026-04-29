@@ -9,6 +9,7 @@ from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain
 from src.config import DOCS_DIR, META_DIR
 from src.utils.text_io import read_text_with_fallback
 from pathlib import Path
+from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="01 任务解读", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -54,41 +55,56 @@ elif selected_sub == "📄 任务书与开题报告":
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("#### 📕 毕业设计任务书")
-        if TASK_BOOK_PATH.exists():
-            st.download_button("📥 下载任务书原件", TASK_BOOK_PATH.read_bytes(), file_name=TASK_BOOK_PATH.name, mime="application/pdf", use_container_width=True)
-        else:
-            st.warning("未找到任务书文件。")
+        with st.container(border=True):
+            st.markdown("#### 📕 毕业设计任务书")
+            st.caption("官方下发的设计要求与边界限定文件。")
+            if TASK_BOOK_PATH.exists():
+                st.download_button("📥 下载任务书 PDF", TASK_BOOK_PATH.read_bytes(), file_name=TASK_BOOK_PATH.name, mime="application/pdf", use_container_width=True, type="primary")
+            else:
+                st.warning("未找到任务书文件。")
+            
+            mission_path = META_DIR / "mission_text.txt"
+            if mission_path.exists():
+                mission_text = read_text_with_fallback(mission_path)
+                with st.expander("👁️ 查看任务书核心摘录", expanded=True):
+                    # HTML formatting for a sleek, dark-themed scrollable text block
+                    st.markdown(
+                        f'''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6; 
+                        max-height:280px; overflow-y:auto; padding:12px; 
+                        background:rgba(0,0,0,0.25); border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+                        {mission_text[:1800].replace(chr(10), "<br>")}</div>''', 
+                        unsafe_allow_html=True
+                    )
 
     with col2:
-        st.markdown("#### 📗 毕业设计开题报告")
-        if PROPOSAL_PATH.exists():
-            st.download_button("📥 下载开题报告原件", PROPOSAL_PATH.read_bytes(), file_name=PROPOSAL_PATH.name, mime="application/pdf", use_container_width=True)
-        else:
-            st.warning("未找到开题报告文件。")
-
-    mission_path = META_DIR / "mission_text.txt"
-    if mission_path.exists():
-        mission_text = read_text_with_fallback(mission_path)
-        st.text_area("任务书原文摘录", mission_text[:1800], height=280)
+        with st.container(border=True):
+            st.markdown("#### 📗 毕业设计开题报告")
+            st.caption("前期调研、文献综述与核心技术路线推演报告。")
+            if PROPOSAL_PATH.exists():
+                st.download_button("📥 下载开题报告 PDF", PROPOSAL_PATH.read_bytes(), file_name=PROPOSAL_PATH.name, mime="application/pdf", use_container_width=True, type="primary")
+            else:
+                st.warning("未找到开题报告文件。")
+            
+            with st.expander("👁️ 查看核心框架提纲", expanded=True):
+                st.markdown(
+                    '''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6; 
+                    max-height:280px; overflow-y:auto; padding:12px; 
+                    background:rgba(0,0,0,0.25); border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
+                    <b style="color:rgba(255,255,255,0.9);">第一部分：现状研判与问题痛点</b><br>
+                    • 历史文脉断裂与空间感知弱化<br>
+                    • 工业遗存与建筑资产闲置低效<br>
+                    • 跨铁路交通微循环与慢行系统不畅<br><br>
+                    <b style="color:rgba(255,255,255,0.9);">第二部分：目标定位与愿景</b><br>
+                    数字孪生驱动的“古今共振”街区微更新规划<br><br>
+                    <b style="color:rgba(255,255,255,0.9);">第三部分：拟采用的核心技术路线</b><br>
+                    <code>GIS底座构建</code> ➔ <code>多源数据语义萃取</code> ➔ <code>AHP-MPI 潜力评估</code> ➔ <code>AIGC (SD/ControlNet) 推演</code>
+                    </div>''', 
+                    unsafe_allow_html=True
+                )
 
 elif selected_sub == "🖼️ 图纸提示词生成":
-    render_section_intro("任务解读类图纸提示词", "基于研究区域数据生成 Image 2.0 专业图纸提示词。", eyebrow="Drawing Prompts")
-    with st.sidebar:
-        model_tag = st.text_input("Gemma 4 模型标签", value="gemma4:e2b-it-q4_K_M", key="p1_model")
-    templates = get_templates_by_stage("01")
-    if templates:
-        selected_tmpl = st.selectbox("选择图纸模板", [t.name for t in templates], key="p1_draw_sel")
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-        st.markdown(f"**图纸说明：** {tmpl.description}")
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 Gemma 4 生成", type="primary", use_container_width=True, key="p1_gen"):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
-    else:
-        st.info("暂无本阶段图纸模板。")
+    render_drawing_prompt_ui("01", key_prefix="p1", stage_title="任务解读")
+
 
 st.markdown("---")
 render_stage_summary(

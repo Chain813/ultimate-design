@@ -17,6 +17,7 @@ build/
 # 离线大数据与媒体文件 (排除大文件，但保留核心底座数据以供 GitHub Clone)
 data/streetview/
 data/raw_images/
+data/template_assets/
 archive/
 
 # 日志与临时元数据
