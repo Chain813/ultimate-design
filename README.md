@@ -79,16 +79,17 @@ python tools/startup_smoke.py
 
 要激活 UltimateDESIGN 的「完全体」形态（包括 AIGC 推演与 LLM 博弈），您需要将本地的算力基础设施与应用进行挂载。
 
-### 🧠 1. 挂载本地大模型引擎 (Ollama)
+### 🧠 1. 配置云端大模型 API (DeepSeek)
 
-本平台使用轻量级的高性能语言模型 Gemma 来执行政策推演和导则撰写。
+平台已全面接入 DeepSeek 官方云端 API，为您提供最顶级的推理能力，**且完全不占用本地计算资源（零显存消耗）**。
 
-1. 前往 [Ollama 官网](https://ollama.com/) 下载并安装客户端。
-2. 打开终端，拉取并运行特定的 Gemma 量化版本：
-   ```powershell
-   ollama run deepseek-v4-pro
+1. 前往 [DeepSeek 开放平台](https://platform.deepseek.com/) 注册并获取您的 API Key。
+2. 在项目根目录找到或创建 `.env` 文件。
+3. 填入您的 API 密钥：
+   ```env
+   DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxx"
    ```
-3. **验证机制**：确保 Ollama 在后台静默运行（默认监听 `127.0.0.1:11434`）。平台主页的 HUD 会自动侦测到该端口，并亮起绿色状态灯。
+4. **验证机制**：系统启动后，底层的 `llm_engine` 会自动读取该环境变量并在执行案例推演、多方博弈时将请求发送至云端处理。
 
 ### 🎨 2. 挂载视觉渲染引擎 (Stable Diffusion WebUI)
 
