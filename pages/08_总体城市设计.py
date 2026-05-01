@@ -7,6 +7,7 @@ from src.ui.module_summary import render_stage_summary
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="08 总体城市设计", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -57,7 +58,7 @@ elif selected_sub == "🖼️ 图纸提示词生成":
     if selected_tmpl in tmpl_names:
         prompt_text, _ = build_drawing_prompt(selected_tmpl)
         st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 DeepSeek 生成", type="primary", use_container_width=True):
+        if st.button("🧠 调用 DeepSeek 生成", type="primary", **stretch_width(st.button)):
             with st.spinner("生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl)
             st.text_area("完整 Image 2.0 提示词", value=result, height=400)

@@ -94,7 +94,7 @@ def retrieve_rag_context(query: str, top_k: int = 3) -> list:
 
     if not best_chunks:
         words = [w for w in jieba.cut(query) if len(w) > 1]
-        for cid, p_info in rag_db.items():
+        for _cid, p_info in rag_db.items():
             content = p_info["content"]
             score = sum(1 for w in words if w in content)
             if score > 0:

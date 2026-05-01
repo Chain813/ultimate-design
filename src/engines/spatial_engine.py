@@ -10,14 +10,12 @@ Usage:
 import json
 import logging
 import math
-import os
 
 import numpy as np
 import pandas as pd
 import streamlit as st
 
 from src.config import resolve_path, SHP_FILES, DATA_FILES
-from src.utils.exceptions import log_and_suppress
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -128,7 +126,7 @@ def get_skyline_features() -> dict:
 
         if boundary_path.exists():
             boundary = gpd.read_file(str(boundary_path))
-            buildings = buildings[buildings.centroid.within(boundary.unary_union)]
+            buildings = _filter_buildings_within_boundary(buildings, boundary)
 
         if "Floor" in buildings.columns:
             buildings["Height"] = pd.to_numeric(buildings["Floor"], errors="coerce").fillna(1) * 3.5
@@ -146,6 +144,46 @@ def get_skyline_features() -> dict:
     except Exception:
         logger.warning("Skyline feature extraction failed", exc_info=True)
     return features
+
+
+def _filter_buildings_within_boundary(buildings, boundary):
+    """Filter buildings by centroid within boundary using a projected CRS."""
+    if buildings.empty or boundary.empty:
+        return buildings.iloc[0:0].copy()
+
+    buildings = _ensure_crs(buildings)
+    boundary = _ensure_crs(boundary)
+    if boundary.crs != buildings.crs:
+        boundary = boundary.to_crs(buildings.crs)
+
+    buildings_projected, boundary_projected = _project_for_geometry_ops(buildings, boundary)
+    boundary_union = (
+        boundary_projected.geometry.union_all()
+        if hasattr(boundary_projected.geometry, "union_all")
+        else boundary_projected.geometry.unary_union
+    )
+    centroid_mask = buildings_projected.geometry.centroid.within(boundary_union)
+    return buildings.loc[centroid_mask].copy()
+
+
+def _ensure_crs(gdf, default_crs: str = "EPSG:4326"):
+    if gdf.crs is None:
+        return gdf.set_crs(default_crs, allow_override=True)
+    return gdf
+
+
+def _project_for_geometry_ops(buildings, boundary):
+    try:
+        target_crs = boundary.estimate_utm_crs() or buildings.estimate_utm_crs()
+    except Exception:
+        target_crs = None
+
+    if target_crs is None and buildings.crs and buildings.crs.is_geographic:
+        target_crs = "EPSG:3857"
+
+    if target_crs is None:
+        return buildings, boundary
+    return buildings.to_crs(target_crs), boundary.to_crs(target_crs)
 
 
 # ═══════════════════════════════════════════

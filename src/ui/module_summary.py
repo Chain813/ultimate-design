@@ -1,4 +1,4 @@
-﻿"""阶段研究小结组件 —— 每个阶段页面底部的专业结论面板。
+"""阶段研究小结组件 —— 每个阶段页面底部的专业结论面板。
 
 面向答辩委员会，用城乡规划专业术语输出当前阶段的核心发现。
 支持：
@@ -14,6 +14,7 @@ from html import escape
 
 import streamlit as st
 from src.ui.design_system import load_design_css
+from src.ui.streamlit_compat import stretch_width
 
 
 def render_stage_summary(
@@ -145,13 +146,13 @@ def render_stage_summary(
 
     # ── 渲染附带的图表 ──
     for fig in chart_figures:
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
     # ── 自动生成统计图表 ──
     if auto_chart:
         auto_fig = _build_auto_chart(stage_code)
         if auto_fig:
-            st.plotly_chart(auto_fig, use_container_width=True)
+            st.plotly_chart(auto_fig, **stretch_width(st.plotly_chart))
 
     # ── AI 小结生成按钮 ──
     if enable_llm:
@@ -458,7 +459,7 @@ def _render_llm_summary_button(
         if st.button(
             f"🧠 AI 生成 Stage {stage_code} 答辩小结",
             key=f"summary_btn_{stage_code}",
-            use_container_width=True,
+            **stretch_width(st.button),
         ):
             # 收集数据上下文
             data_lines = [f"阶段：{stage_code} {stage_name}", f"方法论：{methodology}"]
@@ -499,8 +500,8 @@ def _render_llm_summary_button(
             st.session_state[session_key],
             file_name=f"Stage{stage_code}_答辩小结.md",
             mime="text/markdown",
-            use_container_width=True,
             key=f"dl_summary_{stage_code}",
+            **stretch_width(st.download_button),
         )
 
 
@@ -533,16 +534,18 @@ def generate_stage_summary_text(
     prompt = f"""你是城乡规划专业毕业设计的答辩评审专家。
 请根据以下"{stage_name}"阶段的数据分析结果，撰写一段精炼的阶段研究小结。
 
-要求：
-1. 使用城乡规划专业术语，语言简洁精炼
-2. 列出 3-5 条核心发现，每条必须引用具体数据
-3. 最后一句说明本阶段结论对后续设计的支撑作用
-4. 总字数控制在 200-300 字
+硬性要求：
+1. **真实性第一**：严禁编造任何数字、面积、POI 数量或地块名称。
+2. **严丝合缝**：所有发现必须在“数据上下文”中找到对应依据。如果数据中没有提到的内容，绝对不要出现。
+3. **专业表达**：使用城乡规划专业术语（如：空间绩效、形态约束、功能错位等）。
+4. **结构清晰**：列出 3-5 条核心发现，每条必须标注其数据来源或依据。
+5. **后续支撑**：最后一句明确说明本阶段结论对后续设计的支撑作用。
+6. **字数限制**：总字数控制在 250 字左右。
 
 数据上下文：
-{data_context[:3000]}
+{data_context[:3500]}
 """
-    sys_prompt = "你是城乡规划专业答辩委员会成员，擅长用专业术语撰写精炼的研究小结。禁止使用技术代码术语。"
+    sys_prompt = "你是城乡规划专业答辩委员会成员。你极其严谨，宁缺毋滥，禁止虚构任何未在上下文中出现的事实或数据。禁止输出技术代码或 JSON 格式，只输出专业文本。"
 
     try:
         result = call_llm_engine(prompt=prompt, system_prompt=sys_prompt, model=model)

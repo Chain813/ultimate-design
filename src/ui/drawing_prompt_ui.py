@@ -1,5 +1,6 @@
 import streamlit as st
 from src.ui.design_system import render_section_intro
+from src.ui.streamlit_compat import stretch_width
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 
 def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str):
@@ -51,7 +52,12 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
         prompt_text, _ = build_drawing_prompt(selected_tmpl)
         st.text_area("数据注入后的系统提示词片段", value=prompt_text, height=200, key=f"{key_prefix}_preview")
         
-        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", use_container_width=True, key=f"{key_prefix}_gen"):
+        if st.button(
+            "🧠 调用 DeepSeek 生成完整提示词",
+            type="primary",
+            key=f"{key_prefix}_gen",
+            **stretch_width(st.button),
+        ):
             with st.spinner("DeepSeek 推理生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.text_area("完整 Image 2.0 英文提示词 (可直接拷贝至 Midjourney/SD)", value=result, height=350, key=f"{key_prefix}_result")

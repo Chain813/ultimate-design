@@ -3,6 +3,7 @@
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav
+from src.ui.streamlit_compat import stretch_width
 from src.ui.module_summary import render_stage_summary
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
@@ -59,7 +60,14 @@ elif selected_sub == "📄 任务书与开题报告":
             st.markdown("#### 📕 毕业设计任务书")
             st.caption("官方下发的设计要求与边界限定文件。")
             if TASK_BOOK_PATH.exists():
-                st.download_button("📥 下载任务书 PDF", TASK_BOOK_PATH.read_bytes(), file_name=TASK_BOOK_PATH.name, mime="application/pdf", use_container_width=True, type="primary")
+                st.download_button(
+                    "📥 下载任务书 PDF",
+                    TASK_BOOK_PATH.read_bytes(),
+                    file_name=TASK_BOOK_PATH.name,
+                    mime="application/pdf",
+                    type="primary",
+                    **stretch_width(st.download_button),
+                )
             else:
                 st.warning("未找到任务书文件。")
             
@@ -81,7 +89,14 @@ elif selected_sub == "📄 任务书与开题报告":
             st.markdown("#### 📗 毕业设计开题报告")
             st.caption("前期调研、文献综述与核心技术路线推演报告。")
             if PROPOSAL_PATH.exists():
-                st.download_button("📥 下载开题报告 PDF", PROPOSAL_PATH.read_bytes(), file_name=PROPOSAL_PATH.name, mime="application/pdf", use_container_width=True, type="primary")
+                st.download_button(
+                    "📥 下载开题报告 PDF",
+                    PROPOSAL_PATH.read_bytes(),
+                    file_name=PROPOSAL_PATH.name,
+                    mime="application/pdf",
+                    type="primary",
+                    **stretch_width(st.download_button),
+                )
             else:
                 st.warning("未找到开题报告文件。")
             

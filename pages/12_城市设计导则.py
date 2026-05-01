@@ -6,6 +6,7 @@ from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="12 城市设计导则", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -40,7 +41,7 @@ if selected_sub == "📜 导则文本生成":
     c3.metric("阶段三(理念)", "✅" if s3 != "暂无" else "❌")
     c4.metric("阶段四(协商)", "✅" if s4 != "暂无" else "❌")
 
-    if st.button("📄 生成城市设计导则", type="primary", use_container_width=True, key="s5_btn"):
+    if st.button("📄 生成城市设计导则", type="primary", key="s5_btn", **stretch_width(st.button)):
         prompt = f"""基于四阶段证据链生成【城市设计导则成果书】：
 【阶段一 问题诊断】{str(s1)[:1000]}
 【阶段二 案例对标】{str(s2)[:1000]}
@@ -65,13 +66,23 @@ if selected_sub == "📜 导则文本生成":
             save_stage_output("12", "design_guideline", final)
 
             report = f"# 循证规划五阶段成果书\n\n## 阶段一\n{s1}\n\n## 阶段二\n{s2}\n\n## 阶段三\n{s3}\n\n## 阶段四\n{s4}\n\n## 阶段五\n{final}"
-            st.download_button("📥 导出完整报告 (Markdown)", report, file_name="五阶段循证报告.md", use_container_width=True)
+            st.download_button(
+                "📥 导出完整报告 (Markdown)",
+                report,
+                file_name="五阶段循证报告.md",
+                **stretch_width(st.download_button),
+            )
 
             try:
                 from src.utils.document_generator import generate_official_word_doc
                 wb = generate_official_word_doc(title="伪满皇宫周边街区微更新规划导则", text_content=final)
                 if wb:
-                    st.download_button("📥 导出红头公文 (Word)", wb, file_name="规划导则_红头.docx", use_container_width=True)
+                    st.download_button(
+                        "📥 导出红头公文 (Word)",
+                        wb,
+                        file_name="规划导则_红头.docx",
+                        **stretch_width(st.download_button),
+                    )
             except Exception:
                 pass
 
@@ -94,7 +105,7 @@ elif selected_sub == "📊 管控指标汇总":
         {"管控类型": "公共空间", "管控内容": "开放空间比例、可达性", "控制要求": "步行5分钟覆盖率≥80%"},
         {"管控类型": "慢行交通", "管控内容": "步行宽度、骑行空间", "控制要求": "人行道≥2m"},
     ]
-    st.dataframe(pd.DataFrame(indicators), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(indicators), hide_index=True, **stretch_width(st.dataframe))
 
 st.markdown("---")
 render_stage_summary(

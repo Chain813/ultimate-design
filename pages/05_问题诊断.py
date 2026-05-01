@@ -30,6 +30,7 @@ from src.workflow.stage_data_bus import (
 )
 from src.utils.runtime_flags import is_demo_mode
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="05 问题诊断", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -134,17 +135,24 @@ if selected_sub == "📊 MPI 更新潜力评估":
     st.dataframe(
         df_filtered[["地块名称", "MPI 得分"]],
         column_config={"MPI 得分": st.column_config.ProgressColumn("MPI 综合潜力分", format="%.1f", min_value=0, max_value=100)},
-        use_container_width=True, hide_index=True,
+        hide_index=True,
+        **stretch_width(st.dataframe),
     )
 
     csv_report = df_filtered.to_csv(index=False).encode("utf-8-sig")
-    st.download_button("📤 导出评估排行榜 (CSV)", csv_report, file_name="MPI_Report.csv", mime="text/csv", use_container_width=True)
+    st.download_button(
+        "📤 导出评估排行榜 (CSV)",
+        csv_report,
+        file_name="MPI_Report.csv",
+        mime="text/csv",
+        **stretch_width(st.download_button),
+    )
 
     if not df_filtered.empty:
         fig = px.scatter(df_filtered, x="空间潜力原分", y="社会需求原分", size="MPI 得分", color="地块名称",
                          color_discrete_sequence=get_chart_palette(), height=440)
         apply_plotly_theme(fig, title="空间潜力与社会需求耦合分布", height=440, showlegend=True)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
     # 保存到数据总线
     save_stage_output("05", "mpi_ranking", df_filtered.to_dict("records"))
@@ -187,7 +195,7 @@ elif selected_sub == "🎯 地块雷达诊断":
             line=dict(color="#818cf8", width=2),
         ))
         apply_plotly_polar_theme(fig, title=f"{selected_plot} 多维诊断雷达", height=380)
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
         save_stage_output("05", "radar_data", {"plot": selected_plot, "categories": categories, "values": values})
     else:
@@ -263,15 +271,25 @@ elif selected_sub == "🖼️ 图纸提示词生成":
         prompt_text, sys_text = build_drawing_prompt(selected_tmpl)
         st.text_area("预览：数据注入后的提示词模板", value=prompt_text, height=300, key="p5_draw_preview")
 
-        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", use_container_width=True, key="p5_draw_gen"):
+        if st.button(
+            "🧠 调用 DeepSeek 生成完整提示词",
+            type="primary",
+            key="p5_draw_gen",
+            **stretch_width(st.button),
+        ):
             with st.spinner("正在生成..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.session_state["p5_generated_prompt"] = result
 
         if st.session_state.get("p5_generated_prompt"):
             st.text_area("生成的完整 Image 2.0 提示词", value=st.session_state["p5_generated_prompt"], height=400, key="p5_draw_output")
-            st.download_button("📥 下载提示词", st.session_state["p5_generated_prompt"],
-                              file_name=f"{selected_tmpl}_prompt.md", mime="text/markdown", use_container_width=True)
+            st.download_button(
+                "📥 下载提示词",
+                st.session_state["p5_generated_prompt"],
+                file_name=f"{selected_tmpl}_prompt.md",
+                mime="text/markdown",
+                **stretch_width(st.download_button),
+            )
     else:
         st.info("暂无本阶段图纸模板。")
 

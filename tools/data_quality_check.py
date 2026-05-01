@@ -10,7 +10,6 @@
 输出：终端摘要 + docs/STAGE2_DATA_QUALITY_REPORT.md
 """
 import sys
-import os
 import json
 from pathlib import Path
 
@@ -25,7 +24,12 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 import pandas as pd
-import numpy as np
+
+try:
+    from shapely.geometry import Point, shape
+except ImportError:  # pragma: no cover - optional GIS dependency fallback
+    Point = None
+    shape = None
 
 
 # ==========================================
@@ -65,6 +69,7 @@ GEO_REGISTRY = {
     "重点地块": ROOT / "data" / "shp" / "Key_Plots_District.json",
     "建筑轮廓": ROOT / "data" / "shp" / "Building_Footprints.geojson",
 }
+ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name")
 
 
 def check_csv_or_excel(name: str, cfg: dict) -> dict:
@@ -174,9 +179,8 @@ def check_geojson(name: str, path: Path) -> dict:
         geom = feat.get("geometry", {})
         if not geom.get("coordinates"):
             report["issues"].append(f"Feature #{i} 缺少坐标数据")
-        name_field = props.get("name", props.get("Name"))
-        if name_field is None and "OBJECTID" not in props:
-            report["issues"].append(f"Feature #{i} 缺少 name/OBJECTID 属性")
+        if not any(props.get(field) not in (None, "") for field in ID_FIELDS):
+            report["issues"].append(f"Feature #{i} 缺少稳定标识字段 ({'/'.join(ID_FIELDS)})")
 
     report["grade"] = "A" if not report["issues"] else "B"
     return report
@@ -196,18 +200,24 @@ def generate_plot_cards(plots_path: Path, gvi_path: Path, poi_path: Path) -> lis
     except Exception:
         df_poi = pd.DataFrame()
 
-    try:
-        df_gvi = pd.read_csv(gvi_path)
-    except Exception:
-        df_gvi = pd.DataFrame()
-
     for feat in geo.get("features", []):
         props = feat.get("properties", {})
         name = props.get("name", f"地块_{props.get('OBJECTID', '?')}")
         area_sqm = props.get("Shape_Area", 0)
-        coords = feat["geometry"]["coordinates"][0]
+        geometry = feat.get("geometry", {})
+        coords = list(_iter_lng_lat_pairs(geometry.get("coordinates", [])))
+        if not coords:
+            cards.append(
+                {
+                    "name": name,
+                    "area_ha": round(area_sqm / 10000, 2),
+                    "poi_count": 0,
+                    "poi_method": "missing_geometry",
+                    "bbox": None,
+                }
+            )
+            continue
 
-        # 计算边界框
         lngs = [c[0] for c in coords]
         lats = [c[1] for c in coords]
         bbox = {
@@ -217,27 +227,57 @@ def generate_plot_cards(plots_path: Path, gvi_path: Path, poi_path: Path) -> lis
             "max_lat": max(lats),
         }
 
-        # 统计 POI 覆盖
-        poi_count = 0
-        if not df_poi.empty and "Lng" in df_poi.columns and "Lat" in df_poi.columns:
-            in_bbox = df_poi[
-                (df_poi["Lng"] >= bbox["min_lng"])
-                & (df_poi["Lng"] <= bbox["max_lng"])
-                & (df_poi["Lat"] >= bbox["min_lat"])
-                & (df_poi["Lat"] <= bbox["max_lat"])
-            ]
-            poi_count = len(in_bbox)
+        poi_count, poi_method = _count_poi_for_geometry(df_poi, geometry, bbox)
 
         cards.append(
             {
                 "name": name,
                 "area_ha": round(area_sqm / 10000, 2),
                 "poi_count": poi_count,
+                "poi_method": poi_method,
                 "bbox": bbox,
             }
         )
 
     return cards
+
+
+def _iter_lng_lat_pairs(coords):
+    if not coords:
+        return
+    if isinstance(coords[0], (int, float)) and len(coords) >= 2:
+        yield (coords[0], coords[1])
+        return
+    for item in coords:
+        yield from _iter_lng_lat_pairs(item)
+
+
+def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) -> tuple:
+    if df_poi.empty or "Lng" not in df_poi.columns or "Lat" not in df_poi.columns:
+        return 0, "polygon"
+
+    candidates = df_poi[
+        (df_poi["Lng"] >= bbox["min_lng"])
+        & (df_poi["Lng"] <= bbox["max_lng"])
+        & (df_poi["Lat"] >= bbox["min_lat"])
+        & (df_poi["Lat"] <= bbox["max_lat"])
+    ]
+    if candidates.empty:
+        return 0, "polygon"
+
+    if Point is None or shape is None:
+        return int(len(candidates)), "bbox_fallback"
+
+    try:
+        plot_geom = shape(geometry)
+        count = 0
+        for _, row in candidates.iterrows():
+            point = Point(float(row["Lng"]), float(row["Lat"]))
+            if plot_geom.contains(point) or plot_geom.touches(point):
+                count += 1
+        return count, "polygon"
+    except Exception:
+        return int(len(candidates)), "bbox_fallback"
 
 
 def main():
@@ -277,7 +317,7 @@ def main():
         DATA_REGISTRY["POI"]["path"],
     )
     for card in cards:
-        print(f"  🏗️ {card['name']}: {card['area_ha']} ha, POI覆盖 {card['poi_count']} 个")
+        print(f"  🏗️ {card['name']}: {card['area_ha']} ha, POI覆盖 {card['poi_count']} 个 ({card['poi_method']})")
 
     # 输出 Markdown 报告
     md_path = ROOT / "docs" / "STAGE2_DATA_QUALITY_REPORT.md"
@@ -312,10 +352,10 @@ def main():
                 f.write("\n")
 
         f.write("## 4. 重点地块诊断卡\n\n")
-        f.write("| 地块名称 | 面积(ha) | POI覆盖 |\n")
-        f.write("| --- | --- | --- |\n")
+        f.write("| 地块名称 | 面积(ha) | POI覆盖 | 统计方式 |\n")
+        f.write("| --- | --- | --- | --- |\n")
         for card in cards:
-            f.write(f"| {card['name']} | {card['area_ha']} | {card['poi_count']} |\n")
+            f.write(f"| {card['name']} | {card['area_ha']} | {card['poi_count']} | {card['poi_method']} |\n")
 
     print(f"\n✅ 报告已生成: {md_path}")
     print("=" * 60)

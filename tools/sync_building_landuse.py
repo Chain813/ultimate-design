@@ -20,6 +20,8 @@ def sync_building_landuse():
 
     print("  Loading buildings...")
     buildings = gpd.read_file("data/shp/Building_Footprints.geojson")
+    if 'building_id' not in buildings.columns:
+        buildings.insert(0, 'building_id', [f"B{idx + 1:06d}" for idx in range(len(buildings))])
     print(f"  Buildings: {len(buildings)}")
 
     # Ensure CRS match

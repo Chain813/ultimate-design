@@ -15,6 +15,7 @@ from src.engines.drawing_prompt_templates import get_templates_by_stage, build_d
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
 from src.utils.runtime_flags import is_demo_mode
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="07 设计策略", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -50,7 +51,7 @@ if selected_sub == "⚖️ 多主体协商推演":
                 for item in matrix:
                     st.markdown(f"**{item['source']}** {item['compliance_note']}")
 
-    if st.button("🚀 开启多方协商推演", use_container_width=True, type="primary"):
+    if st.button("🚀 开启多方协商推演", type="primary", **stretch_width(st.button)):
         if not proposal:
             st.warning("请输入提案内容。")
         else:
@@ -98,7 +99,7 @@ elif selected_sub == "📊 共识雷达":
             fill="toself", fillcolor="rgba(99,102,241,0.15)", line=dict(color="#818cf8", width=2),
         ))
         apply_plotly_polar_theme(fig, title="多主体共识度", height=380, radial_range=[0, 100])
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, **stretch_width(st.plotly_chart))
     else:
         st.warning("暂无共识数据，请先完成多主体协商推演。")
 

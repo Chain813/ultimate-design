@@ -13,6 +13,7 @@ from src.engines.drawing_prompt_templates import (
     generate_drawing_prompt_with_llm,
 )
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="13 成果表达", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -49,7 +50,7 @@ if selected_sub == "📋 图纸提示词总览":
         filtered = get_templates_by_stage(code)
 
     rows = [{"阶段": t.stage, "图纸名称": t.name, "章节": t.chapter, "说明": t.description} for t in filtered]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **stretch_width(st.dataframe))
 
     render_summary_cards([
         {"value": len(DRAWING_TEMPLATES), "title": "预设模板", "desc": "全流程图纸提示词模板"},
@@ -72,11 +73,17 @@ if selected_sub == "📋 图纸提示词总览":
 
         prompt_text, _ = build_drawing_prompt(selected_tmpl)
         st.text_area("数据注入后的系统提示词片段", value=prompt_text, height=200)
-        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", use_container_width=True):
+        if st.button("🧠 调用 DeepSeek 生成完整提示词", type="primary", **stretch_width(st.button)):
             with st.spinner("DeepSeek 推理生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.text_area("完整 Image 2.0 英文提示词 (可直接拷贝)", value=result, height=350)
-            st.download_button("📥 下载提示词", result, file_name=f"{selected_tmpl}_prompt.md", mime="text/markdown", use_container_width=True)
+            st.download_button(
+                "📥 下载提示词",
+                result,
+                file_name=f"{selected_tmpl}_prompt.md",
+                mime="text/markdown",
+                **stretch_width(st.download_button),
+            )
 
 elif selected_sub == "🖼️ AIGC 效果图管理":
     render_section_intro("AIGC 效果图管理", "管理和展示历次 AIGC 推演生成的效果图。", eyebrow="Gallery")
@@ -90,7 +97,7 @@ elif selected_sub == "🖼️ AIGC 效果图管理":
             cols = st.columns(3)
             for idx, img in enumerate(images):
                 with cols[idx % 3]:
-                    st.image(str(img), caption=img.stem, use_container_width=True)
+                    st.image(str(img), caption=img.stem, **stretch_width(st.image))
         else:
             st.info("暂无效果图。请在 AIGC 推演页面生成后自动归档。")
     else:
@@ -102,12 +109,22 @@ elif selected_sub == "📤 成果导出中心":
     # 导则文本
     guideline = load_stage_output("12", "design_guideline", "")
     if guideline:
-        st.download_button("📥 城市设计导则 (Markdown)", guideline, file_name="城市设计导则.md", use_container_width=True)
+        st.download_button(
+            "📥 城市设计导则 (Markdown)",
+            guideline,
+            file_name="城市设计导则.md",
+            **stretch_width(st.download_button),
+        )
         try:
             from src.utils.document_generator import generate_official_word_doc
             wb = generate_official_word_doc(title="伪满皇宫周边街区微更新规划导则", text_content=guideline)
             if wb:
-                st.download_button("📥 红头公文 (Word)", wb, file_name="规划导则_红头.docx", use_container_width=True)
+                st.download_button(
+                    "📥 红头公文 (Word)",
+                    wb,
+                    file_name="规划导则_红头.docx",
+                    **stretch_width(st.download_button),
+                )
         except Exception:
             pass
     else:
@@ -118,12 +135,22 @@ elif selected_sub == "📤 成果导出中心":
     if mpi:
         import pandas as pd
         csv = pd.DataFrame(mpi).to_csv(index=False).encode("utf-8-sig")
-        st.download_button("📥 MPI 评估排行榜 (CSV)", csv, file_name="MPI_Report.csv", use_container_width=True)
+        st.download_button(
+            "📥 MPI 评估排行榜 (CSV)",
+            csv,
+            file_name="MPI_Report.csv",
+            **stretch_width(st.download_button),
+        )
 
     # 诊断报告
     diagnosis = load_stage_output("05", "diagnosis_report", "")
     if diagnosis:
-        st.download_button("📥 前期诊断报告 (Markdown)", diagnosis, file_name="诊断报告.md", use_container_width=True)
+        st.download_button(
+            "📥 前期诊断报告 (Markdown)",
+            diagnosis,
+            file_name="诊断报告.md",
+            **stretch_width(st.download_button),
+        )
 
 st.markdown("---")
 render_stage_summary(

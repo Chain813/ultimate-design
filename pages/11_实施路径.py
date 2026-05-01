@@ -7,6 +7,7 @@ from src.ui.module_summary import render_stage_summary
 from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
+from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="11 实施路径", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -38,7 +39,7 @@ if selected_sub == "🏗️ 更新方式分类":
 
     import pandas as pd
     df = pd.DataFrame(categories)
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, hide_index=True, **stretch_width(st.dataframe))
 
     st.info("💡 留改拆总图请前往原 **更新设计成果展示** 页面查看 GIS 图层标注。")
 

@@ -15,7 +15,7 @@ try:
     df_base = pd.read_excel("data/Changchun_Precise_Points.xlsx")
     CENTER_LAT = float(df_base['Lat'].mean())
     CENTER_LNG = float(df_base['Lng'].mean())
-except Exception as e:
+except Exception:
     print("❌ 未找到底表，使用默认坐标。")
     CENTER_LAT, CENTER_LNG = 43.902, 125.315
 

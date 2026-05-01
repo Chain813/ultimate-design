@@ -13,6 +13,7 @@ from src.ui.design_system import render_page_banner, render_section_intro, rende
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.output_flow_panel import render_output_flow_prompt_panel
+from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
 from src.workflow.template_assets import (
     get_template_asset_rows,
@@ -42,7 +43,7 @@ st.markdown("---")
 if selected_sub == "📑 语义萃取引擎":
     render_section_intro("语义萃取引擎", "批量上传规划文档，转为可检索和引用的结构化文本。", eyebrow="MarkItDown")
     up_files = st.file_uploader("上传规划文档 (PDF/Word/PPT)", accept_multiple_files=True)
-    if up_files and st.button("🚀 启动语义萃取", type="primary", use_container_width=True):
+    if up_files and st.button("🚀 启动语义萃取", type="primary", **stretch_width(st.button)):
         res_list = []
         progress = st.progress(0)
         md_engine = MarkItDown()
@@ -100,7 +101,7 @@ elif selected_sub == "⚙️ 空间数据资产管理":
     ])
 
     rows = [{"数据集": i["name"], "记录数": i["count"], "状态": "✅ 已挂载" if i["count"] > 0 else "❌ 缺失"} for i in inventory]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **stretch_width(st.dataframe))
     save_stage_output("02", "data_completeness", f"{total_loaded}/{len(inventory)}")
 
 elif selected_sub == "🧩 固定制图模板":
@@ -141,7 +142,7 @@ elif selected_sub == "🧩 固定制图模板":
             """
         )
 
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **stretch_width(st.dataframe))
 
     st.markdown("#### 上传入口")
     for spec in get_template_asset_specs():
@@ -165,14 +166,22 @@ elif selected_sub == "🧩 固定制图模板":
             )
             note = st.text_input("备注 / 坐标口径 / 图框说明", value=existing.get("note", "") if existing else "", key=f"template_asset_note_{spec.asset_id}")
             col_save, col_remove = st.columns(2)
-            if col_save.button("保存 / 覆盖", key=f"template_asset_save_{spec.asset_id}", use_container_width=True):
+            if col_save.button(
+                "保存 / 覆盖",
+                key=f"template_asset_save_{spec.asset_id}",
+                **stretch_width(col_save.button),
+            ):
                 if not upload:
                     st.warning("请先选择文件。")
                 else:
                     save_template_asset(spec.asset_id, upload.name, bytes(upload.getbuffer()), note=note)
                     st.success("已保存。")
                     st.rerun()
-            if existing and col_remove.button("移除", key=f"template_asset_remove_{spec.asset_id}", use_container_width=True):
+            if existing and col_remove.button(
+                "移除",
+                key=f"template_asset_remove_{spec.asset_id}",
+                **stretch_width(col_remove.button),
+            ):
                 remove_template_asset(spec.asset_id)
                 st.warning("已移除该资产。")
                 st.rerun()

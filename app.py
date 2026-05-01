@@ -40,7 +40,7 @@ def get_base64_image_v2(image_path):
         with open(abs_path, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
-    except Exception as e:
+    except Exception:
         return ""
 
 # 加载顶部导航与系统状态警报

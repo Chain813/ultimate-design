@@ -4,6 +4,8 @@ import shutil
 print("Loading datasets...", flush=True)
 try:
     buildings = gpd.read_file('data/shp/Building_Footprints.geojson')
+    if 'building_id' not in buildings.columns:
+        buildings.insert(0, 'building_id', [f"B{idx + 1:06d}" for idx in range(len(buildings))])
     print("Total buildings loaded:", len(buildings), flush=True)
     
     boundary = gpd.read_file('data/shp/Boundary_Scope.geojson')

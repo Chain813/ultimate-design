@@ -8,6 +8,7 @@ import pandas as pd
 import streamlit as st
 
 from src.ui.design_system import render_summary_cards
+from src.ui.streamlit_compat import stretch_width
 from src.workflow.template_assets import (
     get_template_asset_rows,
     load_template_asset_manifest,
@@ -80,14 +81,14 @@ def render_output_flow_prompt_panel(manifest: Optional[Dict] = None, expanded: b
         else:
             st.success("必备固定资产已齐全。可生成带底图、范围、地块和图框约束的最终提示词。")
 
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, **stretch_width(st.dataframe))
         st.text_area("可复制的最终出图流程提示词", value=prompt_text, height=360)
         st.download_button(
             "下载流程提示词",
             prompt_text,
             file_name="固定资产出图流程提示词.md",
             mime="text/markdown",
-            use_container_width=True,
+            **stretch_width(st.download_button),
         )
 
     return prompt_text

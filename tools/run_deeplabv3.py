@@ -43,7 +43,7 @@ output_csv = r"data/GVI_Results_Analysis.csv"
 results = []
 
 print("🚀 开始执行高通量视觉推断 (分析 240 张街景切片)...")
-for subdir, dirs, files in os.walk(root_path):
+for subdir, _dirs, files in os.walk(root_path):
     # 只处理以 Point_ 开头的有效节点文件夹
     folder_name = os.path.basename(subdir)
     if not folder_name.startswith("Point_"):

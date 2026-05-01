@@ -5,6 +5,7 @@ from pathlib import Path
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
+from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
 
 st.set_page_config(page_title="03 现场调研", layout="wide", initial_sidebar_state="collapsed")
@@ -36,7 +37,7 @@ if sv_root.exists():
             with cols[i]:
                 img_path = point_path / f"heading_{h}.jpg"
                 if img_path.exists():
-                    st.image(str(img_path), caption=f"{h}°", use_container_width=True)
+                    st.image(str(img_path), caption=f"{h}°", **stretch_width(st.image))
                 else:
                     st.warning(f"{h}° 缺失")
 

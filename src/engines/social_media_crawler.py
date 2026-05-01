@@ -70,7 +70,7 @@ def build_stealth_browser(headless=False):
 
 def scroll_page(driver, times=5, wait_range=(2.0, 4.0)):
     """通用页面滚动"""
-    for i in range(times):
+    for _ in range(times):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(random.uniform(*wait_range))
 
@@ -458,7 +458,7 @@ def run_douyin(driver):
         time.sleep(random.uniform(4.0, 6.0))
 
         # 抖音特有：模拟人类滚动行为（非匀速，有停顿）
-        for i in range(8):
+        for _ in range(8):
             scroll_dist = random.randint(400, 900)
             driver.execute_script(f"window.scrollBy(0, {scroll_dist});")
             time.sleep(random.uniform(1.5, 3.5))

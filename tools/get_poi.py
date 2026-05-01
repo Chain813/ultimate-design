@@ -17,7 +17,7 @@ try:
     CENTER_LAT = float(df_base['Lat'].mean())
     CENTER_LNG = float(df_base['Lng'].mean())
     print(f"成功锁定基准中心: 经度 {CENTER_LNG:.5f}, 纬度 {CENTER_LAT:.5f}")
-except Exception as e:
+except Exception:
     print("未找到底表数据，请确保 Changchun_Precise_Points.xlsx 存在！")
     exit()
 

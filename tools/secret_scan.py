@@ -1,4 +1,4 @@
-"""Basic secret pattern scanner for tracked files."""
+"""Basic secret pattern scanner for repository and local env files."""
 
 from pathlib import Path
 import re
@@ -9,6 +9,8 @@ PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{12,}"),
     re.compile(r"(?i)Baidu_Map_AK\s*=\s*(?!YOUR_)[A-Za-z0-9]{10,}"),
 ]
+SCANNED_SUFFIXES = {".py", ".md", ".txt", ".yaml", ".yml", ".toml"}
+SCANNED_FILENAMES = {".env"}
 
 EXCLUDED_PARTS = {
     ".agents",
@@ -48,23 +50,21 @@ def main() -> int:
         rel = path.relative_to(root).as_posix()
         if rel in ALLOWED_FILES:
             continue
-        if path.suffix.lower() not in {".py", ".md", ".txt", ".yaml", ".yml", ".env", ".toml"}:
+        if path.suffix.lower() not in SCANNED_SUFFIXES and path.name not in SCANNED_FILENAMES:
             continue
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
             continue
 
-        for pattern in PATTERNS:
-            match = pattern.search(text)
-            if match:
-                findings.append((rel, match.group(0)[:120]))
-                break
+        for line_number, line in enumerate(text.splitlines(), start=1):
+            if any(pattern.search(line) for pattern in PATTERNS):
+                findings.append((rel, line_number))
 
     if findings:
         print("[ERROR] Potential secrets found:")
-        for rel, sample in findings:
-            print(f" - {rel}: {sample}")
+        for rel, line_number in findings:
+            print(f" - {rel}:{line_number}")
         return 1
 
     print("[OK] No obvious secrets found.")
