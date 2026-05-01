@@ -257,6 +257,6 @@ git push origin main
 
 ## 🐞 报告与反馈
 
-- 有关本项目已识别和待修复的错误日志，请参阅 **`BUG_REPORT.md`**。
-- 关于项目最近的一次系统级性能体检与架构分析，请参阅 **`PROJECT_INSPECTION_REPORT.md`**。
+- 有关本项目已识别和待修复的错误日志，请参阅 **[`BUG_REPORT.md`](./BUG_REPORT.md)**。
+- 关于项目最近的一次系统级性能体检与架构分析，请参阅 **[`PROJECT_INSPECTION_REPORT.md`](./PROJECT_INSPECTION_REPORT.md)**。
 - 如果在使用过程中遇到任何漏洞、功能建议或配置难题，欢迎随时提交 Issue 至本 GitHub 仓库。我们将定期跟进并维护。
