@@ -1,4 +1,4 @@
-﻿"""
+"""
 daemon_manager.py — 算力服务后台守护进程管理器
 
 功能：
@@ -30,7 +30,7 @@ CONFIG_PATH = Path("config_daemon.json")
 
 DEFAULT_CONFIG = {
     "ollama_model": "deepseek-v4-pro",
-    "sd_webui_path": r"E:\SDstablediffusion\sd-webui-aki\sd-webui-aki-v4.11.1-cu128\sd-webui-aki-v4.11.1-cu128",
+    "sd_webui_path": r"C:\path\to\your\sd-webui",
     "sd_launch_file": "webui-user.bat",
     "sd_extra_args": "--api --xformers"
 }
@@ -214,7 +214,7 @@ def render_daemon_control_panel():
                     1. 找到您安装 Stable Diffusion 的文件夹（通常带 <code>sd-webui</code> 字样）<br>
                     2. 文件管理器中右键 → 选择"复制文件夹路径"<br>
                     3. 粘贴至上方输入框<br>
-                    <b>示例：</b><code>E:\\SDstablediffusion\\sd-webui-aki-v4.11.1</code>
+                    <b>示例：</b><code>C:\\path\\to\\your\\sd-webui</code>
                 </div>
                 """, unsafe_allow_html=True)
 

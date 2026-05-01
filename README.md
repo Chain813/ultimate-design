@@ -87,7 +87,7 @@ python tools/startup_smoke.py
 2. 在项目根目录找到或创建 `.env` 文件。
 3. 填入您的 API 密钥：
    ```env
-   DEEPSEEK_API_KEY="sk-xxxxxxxxxxxxxxxxxxx"
+   DEEPSEEK_API_KEY="<your-deepseek-api-key>"
    ```
 4. **验证机制**：系统启动后，底层的 `llm_engine` 会自动读取该环境变量并在执行案例推演、多方博弈时将请求发送至云端处理。
 
