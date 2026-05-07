@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #0a0f1a; font-family: 'Noto Sans SC', sans-serif; }
+      .clip { position: absolute; top: 0; left: 0; width: 1920px; height: 1080px; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="555" data-width="1920" data-height="1080">
+
+      <!-- 开场 0-15s -->
+      <div id="opening" class="clip" data-start="0" data-duration="15" data-track-index="1"
+           style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: #0a0f1a;">
+        <div style="position: absolute; top: 50%; left: 50%; width: 600px; height: 600px; border-radius: 50%;
+                    background: radial-gradient(circle, rgba(0,212,255,0.3), transparent 70%);
+                    transform: translate(-50%, -50%);"></div>
+        <h1 id="title" style="font-size: 80px; font-weight: bold; color: #fff; z-index: 1;
+            text-shadow: 0 0 40px rgba(0,212,255,0.3); opacity: 0; transform: scale(0.8);">
+          数字孪生·古今共振
+        </h1>
+        <p id="subtitle" style="font-size: 36px; color: #94a3b8; margin-top: 24px; z-index: 1; opacity: 0; transform: translateY(20px);">
+          AI赋能下的伪满皇宫周边街区更新规划设计
+        </p>
+        <div id="divider" style="width: 0; height: 2px; background: #00d4ff; margin: 32px 0; z-index: 1;"></div>
+        <p id="info" style="font-size: 24px; color: #94a3b8; z-index: 1; opacity: 0; transform: translateY(20px);">
+          中国吉林省长春市宽城区 | 约150公顷
+        </p>
+      </div>
+
+      <!-- 阶段 01：任务解读 15-45s -->
+      <div id="stage-01" class="clip" data-start="15" data-duration="30" data-track-index="2"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">01</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">任务解读</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+          <div class="task-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               border-left: 4px solid #00d4ff; opacity: 0; transform: translateX(-20px);">
+            <h3 style="color: #00d4ff; font-size: 28px; margin-bottom: 16px;">任务书要点</h3>
+            <p style="color: #fff; font-size: 20px; line-height: 1.8;">
+              研究范围由长春大街、长白路、东九条、亚泰快速路围合，总用地面积约150公顷。核心任务：街区微更新与城市设计。
+            </p>
+          </div>
+          <div>
+            <h3 style="color: #ffd700; font-size: 28px; margin-bottom: 16px;">红线限制</h3>
+            <div class="constraint" style="background: #111827; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+                 border-left: 4px solid #ffd700; opacity: 0; transform: translateX(20px);">
+              <span style="color: #fff; font-size: 18px;">容积率 ≤ 1.4</span>
+            </div>
+            <div class="constraint" style="background: #111827; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+                 border-left: 4px solid #ffd700; opacity: 0; transform: translateX(20px);">
+              <span style="color: #fff; font-size: 18px;">建筑限高 ≤ 24m</span>
+            </div>
+            <div class="constraint" style="background: #111827; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+                 border-left: 4px solid #ffd700; opacity: 0; transform: translateX(20px);">
+              <span style="color: #fff; font-size: 18px;">保护伪满皇宫核心保护区</span>
+            </div>
+            <div class="constraint" style="background: #111827; border-radius: 8px; padding: 16px; margin-bottom: 12px;
+                 border-left: 4px solid #ffd700; opacity: 0; transform: translateX(20px);">
+              <span style="color: #fff; font-size: 18px;">维持铁路安全退距</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 02：资料收集 45-75s -->
+      <div id="stage-02" class="clip" data-start="45" data-duration="30" data-track-index="3"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">02</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">资料收集</span>
+        </div>
+        <div style="display: flex; justify-content: center; gap: 40px;">
+          <div class="data-node" style="background: #111827; border-radius: 16px; padding: 32px; text-align: center;
+               border: 2px solid rgba(0,212,255,0.2); min-width: 200px; opacity: 0; transform: scale(0.9);">
+            <div style="font-size: 48px; font-weight: bold; color: #00d4ff; font-family: monospace;">110,289</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 8px;">建筑</div>
+            <div style="font-size: 20px; color: #fff; margin-top: 12px;">空间数据</div>
+          </div>
+          <div class="data-node" style="background: #111827; border-radius: 16px; padding: 32px; text-align: center;
+               border: 2px solid rgba(78,205,196,0.2); min-width: 200px; opacity: 0; transform: scale(0.9);">
+            <div style="font-size: 48px; font-weight: bold; color: #4ecdc4; font-family: monospace;">1,200</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 8px;">条记录</div>
+            <div style="font-size: 20px; color: #fff; margin-top: 12px;">POI 数据</div>
+          </div>
+          <div class="data-node" style="background: #111827; border-radius: 16px; padding: 32px; text-align: center;
+               border: 2px solid rgba(255,215,0,0.2); min-width: 200px; opacity: 0; transform: scale(0.9);">
+            <div style="font-size: 48px; font-weight: bold; color: #ffd700; font-family: monospace;">80</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 8px;">采样点</div>
+            <div style="font-size: 20px; color: #fff; margin-top: 12px;">街景影像</div>
+          </div>
+          <div class="data-node" style="background: #111827; border-radius: 16px; padding: 32px; text-align: center;
+               border: 2px solid rgba(168,85,247,0.2); min-width: 200px; opacity: 0; transform: scale(0.9);">
+            <div style="font-size: 48px; font-weight: bold; color: #a855f7; font-family: monospace;">207</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 8px;">条分析</div>
+            <div style="font-size: 20px; color: #fff; margin-top: 12px;">舆情数据</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 03：现场调研 75-115s -->
+      <div id="stage-03" class="clip" data-start="75" data-duration="40" data-track-index="4"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">03</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">现场调研</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #ff6b35;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">🏚️</span>
+            <span style="color: #fff; font-size: 20px;">界面杂乱</span>
+          </div>
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #ffd700;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">🅿️</span>
+            <span style="color: #fff; font-size: 20px;">停车混乱</span>
+          </div>
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #94a3b8;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">⬜</span>
+            <span style="color: #fff; font-size: 20px;">消极空间</span>
+          </div>
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #00d4ff;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">🔧</span>
+            <span style="color: #fff; font-size: 20px;">设施老化</span>
+          </div>
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #4ecdc4;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">🌿</span>
+            <span style="color: #fff; font-size: 20px;">绿化不足</span>
+          </div>
+          <div class="survey-card" style="background: #111827; border-radius: 12px; padding: 24px;
+               display: flex; align-items: center; gap: 16px; border-left: 4px solid #ef4444;
+               opacity: 0; transform: translateY(20px);">
+            <span style="font-size: 36px;">🚧</span>
+            <span style="color: #fff; font-size: 20px;">交通割裂</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 04：现状分析 + 3D 全息 115-165s -->
+      <div id="stage-04" class="clip" data-start="115" data-duration="50" data-track-index="5"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">04</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">现状分析 · 3D全息数据底座</span>
+        </div>
+        <!-- 3D 全息分层 -->
+        <div style="position: relative; height: 800px; perspective: 800px;">
+          <div style="position: absolute; inset: 0; transform: rotateX(45deg); transform-origin: center center;">
+            <div class="holo-layer" id="layer-buildings" style="position: absolute; inset: 0; background: #475569;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #475569;">建筑基底</div>
+            </div>
+            <div class="holo-layer" id="layer-landuse" style="position: absolute; inset: 0; background: #ef4444;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #ef4444;">用地现状</div>
+            </div>
+            <div class="holo-layer" id="layer-poi" style="position: absolute; inset: 0; background: #f59e0b;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #f59e0b;">POI 热力</div>
+            </div>
+            <div class="holo-layer" id="layer-roads" style="position: absolute; inset: 0; background: #ffffff;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #ffffff;">道路交通</div>
+            </div>
+            <div class="holo-layer" id="layer-height" style="position: absolute; inset: 0; background: #3b82f6;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #3b82f6;">建筑高度</div>
+            </div>
+            <div class="holo-layer" id="layer-potential" style="position: absolute; inset: 0; background: #a855f7;
+                 border-radius: 12px; opacity: 0;">
+              <div style="position: absolute; top: 20px; left: 20px; color: white; font-size: 18px; font-weight: bold;
+                          background: rgba(0,0,0,0.6); padding: 8px 16px; border-radius: 8px;
+                          border-left: 3px solid #a855f7;">更新潜力</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 05：问题诊断 165-215s -->
+      <div id="stage-05" class="clip" data-start="165" data-duration="50" data-track-index="6"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">05</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">问题诊断</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+          <!-- MPI 排行 -->
+          <div>
+            <h3 style="color: #00d4ff; font-size: 28px; margin-bottom: 24px;">MPI 更新潜力排行</h3>
+            <div class="bar-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0;">
+              <div style="width: 120px; text-align: right; color: #94a3b8; font-size: 16px;">站城门户</div>
+              <div style="flex: 1; height: 32px; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                <div class="bar-fill" style="width: 0%; height: 100%; border-radius: 16px;
+                     background: linear-gradient(90deg, #00d4ff, rgba(0,212,255,0.5));" data-target="85"></div>
+              </div>
+            </div>
+            <div class="bar-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0;">
+              <div style="width: 120px; text-align: right; color: #94a3b8; font-size: 16px;">工业遗产</div>
+              <div style="flex: 1; height: 32px; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                <div class="bar-fill" style="width: 0%; height: 100%; border-radius: 16px;
+                     background: linear-gradient(90deg, #00d4ff, rgba(0,212,255,0.5));" data-target="72"></div>
+              </div>
+            </div>
+            <div class="bar-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0;">
+              <div style="width: 120px; text-align: right; color: #94a3b8; font-size: 16px;">老旧社区</div>
+              <div style="flex: 1; height: 32px; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                <div class="bar-fill" style="width: 0%; height: 100%; border-radius: 16px;
+                     background: linear-gradient(90deg, #00d4ff, rgba(0,212,255,0.5));" data-target="68"></div>
+              </div>
+            </div>
+            <div class="bar-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0;">
+              <div style="width: 120px; text-align: right; color: #94a3b8; font-size: 16px;">历史风貌</div>
+              <div style="flex: 1; height: 32px; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                <div class="bar-fill" style="width: 0%; height: 100%; border-radius: 16px;
+                     background: linear-gradient(90deg, #00d4ff, rgba(0,212,255,0.5));" data-target="65"></div>
+              </div>
+            </div>
+            <div class="bar-row" style="display: flex; align-items: center; gap: 16px; margin-bottom: 12px; opacity: 0;">
+              <div style="width: 120px; text-align: right; color: #94a3b8; font-size: 16px;">文旅活力</div>
+              <div style="flex: 1; height: 32px; background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden;">
+                <div class="bar-fill" style="width: 0%; height: 100%; border-radius: 16px;
+                     background: linear-gradient(90deg, #00d4ff, rgba(0,212,255,0.5));" data-target="58"></div>
+              </div>
+            </div>
+          </div>
+          <!-- 雷达图 -->
+          <div style="text-align: center;">
+            <h3 style="color: #00d4ff; font-size: 28px; margin-bottom: 24px;">地块诊断雷达</h3>
+            <svg width="300" height="300" viewBox="0 0 300 300">
+              <polygon points="150,22 262,82 262,218 150,278 38,218 38,82" fill="none" stroke="rgba(0,212,255,0.1)" stroke-width="1"/>
+              <polygon points="150,59 229,99 229,201 150,241 71,201 71,99" fill="none" stroke="rgba(0,212,255,0.1)" stroke-width="1"/>
+              <polygon points="150,96 196,116 196,184 150,204 104,184 104,116" fill="none" stroke="rgba(0,212,255,0.1)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="150" y2="22" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="262" y2="82" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="262" y2="218" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="150" y2="278" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="38" y2="218" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <line x1="150" y1="150" x2="38" y2="82" stroke="rgba(0,212,255,0.2)" stroke-width="1"/>
+              <polygon class="radar-data" points="150,56 224,97 237,197 150,228 89,184 104,116"
+                       fill="rgba(0,212,255,0.15)" stroke="#00d4ff" stroke-width="2"
+                       stroke-dasharray="1000" stroke-dashoffset="1000"/>
+              <text x="150" y="12" fill="#94a3b8" font-size="14" text-anchor="middle">空间潜力</text>
+              <text x="272" y="82" fill="#94a3b8" font-size="14" text-anchor="start">设施密度</text>
+              <text x="272" y="228" fill="#94a3b8" font-size="14" text-anchor="start">绿视率</text>
+              <text x="150" y="298" fill="#94a3b8" font-size="14" text-anchor="middle">天空开敞度</text>
+              <text x="28" y="228" fill="#94a3b8" font-size="14" text-anchor="end">环境整洁度</text>
+              <text x="28" y="82" fill="#94a3b8" font-size="14" text-anchor="end">设施密度</text>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 06：目标定位 215-250s -->
+      <div id="stage-06" class="clip" data-start="215" data-duration="35" data-track-index="7"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 60px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">06</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">目标定位</span>
+        </div>
+        <div style="text-align: center;">
+          <h2 id="concept" style="font-size: 56px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.3);
+              opacity: 0; transform: scale(0.9);">「数字孪生·古今共振」</h2>
+          <div style="display: flex; justify-content: center; gap: 40px; margin-top: 60px;">
+            <div class="dimension" style="background: #111827; border-radius: 16px; padding: 32px; width: 200px;
+                 border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
+              <div style="font-size: 24px; color: #00d4ff; font-weight: bold;">精准感知</div>
+              <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">数据驱动的现状诊断</div>
+            </div>
+            <div class="dimension" style="background: #111827; border-radius: 16px; padding: 32px; width: 200px;
+                 border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
+              <div style="font-size: 24px; color: #00d4ff; font-weight: bold;">古今共振</div>
+              <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">历史文脉与当代活力融合</div>
+            </div>
+            <div class="dimension" style="background: #111827; border-radius: 16px; padding: 32px; width: 200px;
+                 border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
+              <div style="font-size: 24px; color: #00d4ff; font-weight: bold;">多元协商</div>
+              <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">居民/开发商/规划师共识</div>
+            </div>
+            <div class="dimension" style="background: #111827; border-radius: 16px; padding: 32px; width: 200px;
+                 border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
+              <div style="font-size: 24px; color: #00d4ff; font-weight: bold;">渐进更新</div>
+              <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">微更新→系统更新的分期路径</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 07：设计策略 250-300s -->
+      <div id="stage-07" class="clip" data-start="250" data-duration="50" data-track-index="8"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">07</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">设计策略</span>
+        </div>
+        <h3 style="color: #00d4ff; font-size: 28px; margin-bottom: 32px;">三主体博弈推演</h3>
+        <div style="display: flex; gap: 24px; margin-bottom: 40px;">
+          <div class="negotiation-card" style="flex: 1; background: #111827; border-radius: 16px; padding: 24px;
+               border-top: 4px solid #4ecdc4; opacity: 0; transform: translateY(20px);">
+            <div style="font-size: 18px; color: #4ecdc4; font-weight: bold; margin-bottom: 12px;">居民代表老王</div>
+            <div style="font-size: 16px; color: #fff; line-height: 1.6; font-style: italic;">
+              "我们只想保留老街坊的味道，别全拆了。"
+            </div>
+          </div>
+          <div class="negotiation-card" style="flex: 1; background: #111827; border-radius: 16px; padding: 24px;
+               border-top: 4px solid #ff6b35; opacity: 0; transform: translateY(20px);">
+            <div style="font-size: 18px; color: #ff6b35; font-weight: bold; margin-bottom: 12px;">开发商赵总</div>
+            <div style="font-size: 16px; color: #fff; line-height: 1.6; font-style: italic;">
+              "容积率至少要1.4，不然算不过来账。"
+            </div>
+          </div>
+          <div class="negotiation-card" style="flex: 1; background: #111827; border-radius: 16px; padding: 24px;
+               border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(20px);">
+            <div style="font-size: 18px; color: #00d4ff; font-weight: bold; margin-bottom: 12px;">规划师李工</div>
+            <div style="font-size: 16px; color: #fff; line-height: 1.6; font-style: italic;">
+              "我建议分区施策，历史区保护、新区适度开发。"
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 08：总体城市设计 300-350s -->
+      <div id="stage-08" class="clip" data-start="300" data-duration="50" data-track-index="9"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">08</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">总体城市设计</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
+          <div style="border-radius: 16px; overflow: hidden; border: 2px solid rgba(0,212,255,0.2);
+               background: #111827; height: 500px; display: flex; align-items: center; justify-content: center;">
+            <span style="color: #94a3b8; font-size: 20px;">总平面图 / 鸟瞰效果图</span>
+          </div>
+          <div>
+            <h3 style="color: #00d4ff; font-size: 24px; margin-bottom: 24px;">空间结构</h3>
+            <div class="structure-item" style="background: #111827; border-radius: 8px; padding: 16px;
+                 margin-bottom: 12px; border-left: 4px solid #ffd700; opacity: 0; transform: translateX(20px);">
+              <span style="color: #ffd700; font-weight: bold; font-size: 20px;">一核</span>
+              <span style="color: #94a3b8; margin-left: 12px;">伪满皇宫文化核心</span>
+            </div>
+            <div class="structure-item" style="background: #111827; border-radius: 8px; padding: 16px;
+                 margin-bottom: 12px; border-left: 4px solid #00d4ff; opacity: 0; transform: translateX(20px);">
+              <span style="color: #00d4ff; font-weight: bold; font-size: 20px;">两轴</span>
+              <span style="color: #94a3b8; margin-left: 12px;">站城活力轴 + 工业遗产轴</span>
+            </div>
+            <div class="structure-item" style="background: #111827; border-radius: 8px; padding: 16px;
+                 margin-bottom: 12px; border-left: 4px solid #4ecdc4; opacity: 0; transform: translateX(20px);">
+              <span style="color: #4ecdc4; font-weight: bold; font-size: 20px;">多片</span>
+              <span style="color: #94a3b8; margin-left: 12px;">文旅/创意/社区/站前</span>
+            </div>
+            <div class="structure-item" style="background: #111827; border-radius: 8px; padding: 16px;
+                 margin-bottom: 12px; border-left: 4px solid #a855f7; opacity: 0; transform: translateX(20px);">
+              <span style="color: #a855f7; font-weight: bold; font-size: 20px;">多节点</span>
+              <span style="color: #94a3b8; margin-left: 12px;">门户/文化/社区/生态</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 09：专项系统设计 350-395s -->
+      <div id="stage-09" class="clip" data-start="350" data-duration="45" data-track-index="10"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">09</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">专项系统设计</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;">
+          <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               border-top: 4px solid #94a3b8; opacity: 0; transform: scale(0.95);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <span style="font-size: 40px;">🛣️</span>
+              <span style="font-size: 24px; color: #94a3b8; font-weight: bold;">道路交通</span>
+            </div>
+            <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
+                        display: flex; align-items: center; justify-content: center;">
+              <span style="color: #94a3b8;">道路交通规划图</span>
+            </div>
+          </div>
+          <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               border-top: 4px solid #4ecdc4; opacity: 0; transform: scale(0.95);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <span style="font-size: 40px;">🚶</span>
+              <span style="font-size: 24px; color: #4ecdc4; font-weight: bold;">慢行系统</span>
+            </div>
+            <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
+                        display: flex; align-items: center; justify-content: center;">
+              <span style="color: #94a3b8;">慢行系统规划图</span>
+            </div>
+          </div>
+          <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               border-top: 4px solid #ffd700; opacity: 0; transform: scale(0.95);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <span style="font-size: 40px;">🏛️</span>
+              <span style="font-size: 24px; color: #ffd700; font-weight: bold;">公共空间</span>
+            </div>
+            <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
+                        display: flex; align-items: center; justify-content: center;">
+              <span style="color: #94a3b8;">公共空间系统图</span>
+            </div>
+          </div>
+          <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               border-top: 4px solid #34d399; opacity: 0; transform: scale(0.95);">
+            <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+              <span style="font-size: 40px;">🌳</span>
+              <span style="font-size: 24px; color: #34d399; font-weight: bold;">绿地景观</span>
+            </div>
+            <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
+                        display: flex; align-items: center; justify-content: center;">
+              <span style="color: #94a3b8;">绿地景观系统图</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 10：重点地段深化 395-445s -->
+      <div id="stage-10" class="clip" data-start="395" data-duration="50" data-track-index="11"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">10</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">重点地段深化</span>
+        </div>
+        <h3 style="color: #00d4ff; font-size: 32px; margin-bottom: 24px; text-align: center;">改造前后对比</h3>
+        <div style="position: relative; height: 500px; border-radius: 16px; overflow: hidden;
+             border: 2px solid rgba(0,212,255,0.3);">
+          <div style="position: absolute; inset: 0; background: #111827; display: flex;
+                      align-items: center; justify-content: center;">
+            <span style="color: #34d399; font-size: 24px;">After — AIGC 效果图</span>
+          </div>
+          <div id="before-clip" style="position: absolute; inset: 0; background: #1e293b;
+               display: flex; align-items: center; justify-content: center;
+               clip-path: inset(0 100% 0 0);">
+            <span style="color: #ef4444; font-size: 24px;">Before — 现状照片</span>
+          </div>
+          <div id="wipe-line" style="position: absolute; top: 0; bottom: 0; width: 4px;
+               background: #00d4ff; left: 100%; box-shadow: 0 0 20px rgba(0,212,255,0.8);
+               transform: translateX(-50%);"></div>
+        </div>
+        <div style="display: flex; gap: 16px; justify-content: center; margin-top: 24px;">
+          <div style="padding: 8px 16px; background: rgba(0,0,0,0.4); border-radius: 8px;
+               border-left: 3px solid #00d4ff; display: flex; gap: 12px; align-items: center;">
+            <span style="color: #94a3b8; font-size: 16px;">绿视率 GVI</span>
+            <span style="color: #ef4444; font-size: 18px;">12%</span>
+            <span style="color: #00d4ff; font-size: 14px;">→</span>
+            <span style="color: #34d399; font-size: 18px; font-weight: bold;">35%</span>
+          </div>
+          <div style="padding: 8px 16px; background: rgba(0,0,0,0.4); border-radius: 8px;
+               border-left: 3px solid #00d4ff; display: flex; gap: 12px; align-items: center;">
+            <span style="color: #94a3b8; font-size: 16px;">公共空间</span>
+            <span style="color: #ef4444; font-size: 18px;">2.3ha</span>
+            <span style="color: #00d4ff; font-size: 14px;">→</span>
+            <span style="color: #34d399; font-size: 18px; font-weight: bold;">8.7ha</span>
+          </div>
+          <div style="padding: 8px 16px; background: rgba(0,0,0,0.4); border-radius: 8px;
+               border-left: 3px solid #00d4ff; display: flex; gap: 12px; align-items: center;">
+            <span style="color: #94a3b8; font-size: 16px;">环境品质</span>
+            <span style="color: #ef4444; font-size: 18px;">C级</span>
+            <span style="color: #00d4ff; font-size: 14px;">→</span>
+            <span style="color: #34d399; font-size: 18px; font-weight: bold;">A级</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 11：实施路径 445-475s -->
+      <div id="stage-11" class="clip" data-start="445" data-duration="30" data-track-index="12"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 60px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">11</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">实施路径</span>
+        </div>
+        <div style="display: flex; gap: 32px; justify-content: center;">
+          <div class="phase-card" style="background: #111827; border-radius: 16px; padding: 32px; width: 300px;
+               border-top: 4px solid #34d399; opacity: 0; transform: translateY(30px);">
+            <div style="font-size: 28px; color: #34d399; font-weight: bold;">近期</div>
+            <div style="font-size: 18px; color: #94a3b8; margin: 8px 0 16px;">1-3年</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 环境整治</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 口袋公园</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 街道微更新</div>
+          </div>
+          <div class="phase-card" style="background: #111827; border-radius: 16px; padding: 32px; width: 300px;
+               border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
+            <div style="font-size: 28px; color: #00d4ff; font-weight: bold;">中期</div>
+            <div style="font-size: 18px; color: #94a3b8; margin: 8px 0 16px;">3-5年</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 功能置换</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 工业遗产活化</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 商业导入</div>
+          </div>
+          <div class="phase-card" style="background: #111827; border-radius: 16px; padding: 32px; width: 300px;
+               border-top: 4px solid #a855f7; opacity: 0; transform: translateY(30px);">
+            <div style="font-size: 28px; color: #a855f7; font-weight: bold;">远期</div>
+            <div style="font-size: 18px; color: #94a3b8; margin: 8px 0 16px;">5-10年</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 片区整体更新</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 文旅品牌</div>
+            <div style="color: #fff; font-size: 16px; margin: 8px 0;">• 智慧系统</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 12：城市设计导则 475-505s -->
+      <div id="stage-12" class="clip" data-start="475" data-duration="30" data-track-index="13"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">12</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">城市设计导则</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+          <div class="guideline-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               text-align: center; border: 2px solid rgba(0,212,255,0.2); opacity: 0; transform: scale(0.95);">
+            <div style="font-size: 48px; margin-bottom: 16px;">📐</div>
+            <div style="font-size: 22px; color: #00d4ff; font-weight: bold;">地块控制图则</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">容积率、建筑密度、绿地率、限高</div>
+          </div>
+          <div class="guideline-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               text-align: center; border: 2px solid rgba(0,212,255,0.2); opacity: 0; transform: scale(0.95);">
+            <div style="font-size: 48px; margin-bottom: 16px;">🛤️</div>
+            <div style="font-size: 22px; color: #00d4ff; font-weight: bold;">街道设计导则</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">断面设计、界面控制、设施配置</div>
+          </div>
+          <div class="guideline-card" style="background: #111827; border-radius: 16px; padding: 32px;
+               text-align: center; border: 2px solid rgba(0,212,255,0.2); opacity: 0; transform: scale(0.95);">
+            <div style="font-size: 48px; margin-bottom: 16px;">🏛️</div>
+            <div style="font-size: 22px; color: #00d4ff; font-weight: bold;">公共空间导则</div>
+            <div style="font-size: 16px; color: #94a3b8; margin-top: 12px;">配置标准、设施指引、活动场景</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 阶段 13：成果表达 505-555s -->
+      <div id="stage-13" class="clip" data-start="505" data-duration="50" data-track-index="14"
+           style="background: #0a0f1a; padding: 80px;">
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 40px;">
+          <span style="font-size: 120px; font-weight: bold; color: #00d4ff; font-family: monospace;
+                       text-shadow: 0 0 40px rgba(0,212,255,0.4);">13</span>
+          <span style="font-size: 48px; color: #fff; margin-left: 32px;">成果表达</span>
+        </div>
+        <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 80px;">
+          <div style="text-align: center;">
+            <div class="counter-value" style="font-size: 72px; font-weight: bold; font-family: monospace;
+                 color: #00d4ff; text-shadow: 0 0 30px rgba(0,212,255,0.3);">150</div>
+            <div style="font-size: 20px; color: #94a3b8; margin-top: 8px;">研究范围（公顷）</div>
+          </div>
+          <div style="text-align: center;">
+            <div class="counter-value" style="font-size: 72px; font-weight: bold; font-family: monospace;
+                 color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.3);">110,289</div>
+            <div style="font-size: 20px; color: #94a3b8; margin-top: 8px;">建筑总量（栋）</div>
+          </div>
+          <div style="text-align: center;">
+            <div class="counter-value" style="font-size: 72px; font-weight: bold; font-family: monospace;
+                 color: #4ecdc4; text-shadow: 0 0 30px rgba(78,205,196,0.3);">5</div>
+            <div style="font-size: 20px; color: #94a3b8; margin-top: 8px;">重点地块（个）</div>
+          </div>
+          <div style="text-align: center;">
+            <div class="counter-value" style="font-size: 72px; font-weight: bold; font-family: monospace;
+                 color: #a855f7; text-shadow: 0 0 30px rgba(168,85,247,0.3);">70</div>
+            <div style="font-size: 20px; color: #94a3b8; margin-top: 8px;">图纸模板（种）</div>
+          </div>
+        </div>
+        <div style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); text-align: center;">
+          <div style="color: #94a3b8; font-size: 24px;">感谢聆听 | Thank You</div>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      // GSAP 动画时间轴
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+
+      // 开场动画 (0-15s)
+      tl.to("#title", { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" }, 0);
+      tl.to("#subtitle", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0.6);
+      tl.to("#divider", { width: 300, duration: 0.6, ease: "power2.inOut" }, 1.0);
+      tl.to("#info", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.3);
+
+      // 阶段 01 动画 (15-45s, clip 内相对时间)
+      tl.to("#stage-01 .task-card", { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 15);
+      tl.to("#stage-01 .constraint", { opacity: 1, x: 0, duration: 0.6, ease: "power2.out", stagger: 0.15 }, 15.5);
+
+      // 阶段 02 动画 (45-75s)
+      tl.to("#stage-02 .data-node", { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out", stagger: 0.2 }, 45);
+
+      // 阶段 03 动画 (75-115s)
+      tl.to("#stage-03 .survey-card", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.15 }, 75);
+
+      // 阶段 04 全息分层动画 (115-165s)
+      tl.to("#layer-buildings", { opacity: 0.8, duration: 0.8, ease: "power2.out" }, 116);
+      tl.to("#layer-landuse", { opacity: 0.6, duration: 0.8, ease: "power2.out" }, 120);
+      tl.to("#layer-poi", { opacity: 0.5, duration: 0.8, ease: "power2.out" }, 124);
+      tl.to("#layer-roads", { opacity: 0.7, duration: 0.8, ease: "power2.out" }, 128);
+      tl.to("#layer-height", { opacity: 0.6, duration: 0.8, ease: "power2.out" }, 132);
+      tl.to("#layer-potential", { opacity: 0.5, duration: 0.8, ease: "power2.out" }, 136);
+
+      // 阶段 05 动画 (165-215s)
+      tl.to("#stage-05 .bar-row", { opacity: 1, duration: 0.6, ease: "power2.out", stagger: 0.2 }, 165);
+      tl.to("#stage-05 .bar-fill", { width: (i, el) => el.dataset.target + "%", duration: 1.5, ease: "power2.out", stagger: 0.2 }, 166);
+      tl.to("#stage-05 .radar-data", { strokeDashoffset: 0, duration: 2, ease: "power2.inOut" }, 166);
+
+      // 阶段 06 动画 (215-250s)
+      tl.to("#concept", { opacity: 1, scale: 1, duration: 1, ease: "power2.out" }, 216);
+      tl.to("#stage-06 .dimension", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.2 }, 218);
+
+      // 阶段 07 动画 (250-300s)
+      tl.to("#stage-07 .negotiation-card", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.3 }, 250);
+
+      // 阶段 08 动画 (300-350s)
+      tl.to("#stage-08 .structure-item", { opacity: 1, x: 0, duration: 0.6, ease: "power2.out", stagger: 0.2 }, 301);
+
+      // 阶段 09 动画 (350-395s)
+      tl.to("#stage-09 .system-card", { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out", stagger: 0.2 }, 350);
+
+      // 阶段 10 Before/After 动画 (395-445s)
+      tl.to("#before-clip", { clipPath: "inset(0 50% 0 0)", duration: 2, ease: "power2.inOut" }, 396);
+      tl.to("#wipe-line", { left: "50%", duration: 2, ease: "power2.inOut" }, 396);
+
+      // 阶段 11 动画 (445-475s)
+      tl.to("#stage-11 .phase-card", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out", stagger: 0.3 }, 445);
+
+      // 阶段 12 动画 (475-505s)
+      tl.to("#stage-12 .guideline-card", { opacity: 1, scale: 1, duration: 0.8, ease: "power2.out", stagger: 0.2 }, 475);
+
+      // 阶段 13 动画 (505-555s)
+      tl.to("#stage-13 .counter-value", { opacity: 1, duration: 0.6, ease: "power2.out" }, 505);
+
+      window.__timelines["main"] = tl;
+    </script>
+  </body>
+</html>
