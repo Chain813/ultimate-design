@@ -1,0 +1,17 @@
+{
+  "name": "ultimatedesign-video-composer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "render": "hyperframes render index.ts --output ../output/final.mp4",
+    "preview": "hyperframes render index.ts --output ../output/preview.mp4 --quality low"
+  },
+  "dependencies": {
+    "hyperframes": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0"
+  }
+}
