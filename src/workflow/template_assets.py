@@ -137,6 +137,15 @@ def save_template_asset(
     manifest_path: Optional[Path] = None,
 ) -> Dict:
     spec = get_template_asset_spec(asset_id)
+
+    # Validate file type
+    suffix = Path(original_name).suffix.lower().lstrip(".")
+    if suffix not in spec.accepted_types:
+        raise ValueError(
+            f"File type '.{suffix}' not accepted for {spec.label}. "
+            f"Accepted: {spec.accepted_types}"
+        )
+
     storage_dir = asset_dir or TEMPLATE_ASSET_DIR
     manifest_file = manifest_path or TEMPLATE_ASSET_MANIFEST
     storage_dir.mkdir(parents=True, exist_ok=True)

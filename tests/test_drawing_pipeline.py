@@ -87,3 +87,72 @@ def test_check_prompt_completeness_precision_levels():
     )
     report_3 = check_prompt_completeness(request_3)
     assert report_3.precision == "三级精度"
+
+
+from src.workflow.template_assets import save_template_asset
+import pytest
+
+
+def test_save_template_asset_rejects_invalid_type(tmp_path):
+    """save_template_asset rejects files not in accepted_types."""
+    manifest_path = tmp_path / "manifest.json"
+    asset_dir = tmp_path / "assets"
+
+    with pytest.raises(ValueError, match="not accepted"):
+        save_template_asset(
+            asset_id="fixed_base_map",
+            original_name="test.txt",
+            content=b"fake content",
+            asset_dir=asset_dir,
+            manifest_path=manifest_path,
+        )
+
+
+def test_save_template_asset_accepts_valid_type(tmp_path):
+    """save_template_asset accepts files matching accepted_types."""
+    manifest_path = tmp_path / "manifest.json"
+    asset_dir = tmp_path / "assets"
+
+    from PIL import Image
+    import io
+    img = Image.new("RGB", (10, 10))
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    png_bytes = buf.getvalue()
+
+    entry = save_template_asset(
+        asset_id="fixed_base_map",
+        original_name="test.png",
+        content=png_bytes,
+        asset_dir=asset_dir,
+        manifest_path=manifest_path,
+    )
+    assert entry["asset_id"] == "fixed_base_map"
+
+
+from src.engines.drawing_prompt_templates import (
+    get_or_create_template,
+    generate_drawing_prompt_with_llm,
+    build_drawing_prompt,
+)
+
+
+def test_get_or_create_template_existing():
+    """get_or_create_template returns existing template."""
+    tmpl = get_or_create_template("区位分析图")
+    assert tmpl is not None
+    assert tmpl.name == "区位分析图"
+
+
+def test_get_or_create_template_generic():
+    """get_or_create_template generates generic template for missing drawings."""
+    tmpl = get_or_create_template("封面设计图")
+    assert tmpl is not None
+    assert "封面设计图" in tmpl.name
+
+
+def test_build_drawing_prompt_missing_template():
+    """build_drawing_prompt returns empty for non-existent template."""
+    prompt, sys_prompt = build_drawing_prompt("不存在的图纸XYZ")
+    assert prompt == ""
+    assert sys_prompt == ""
