@@ -6,6 +6,7 @@ from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream, call_llm_engine
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="12 城市设计导则", layout="wide", initial_sidebar_state="collapsed")
@@ -31,10 +32,10 @@ if selected_sub == "📜 导则文本生成":
     render_section_intro("规划导则自动生成", "两步法：先生成要素大纲 → 再扩展为完整导则文本。", eyebrow="LLM Two-Step")
 
     # 加载阶段数据
-    s1 = load_stage_output("05", "diagnosis_report", "")
-    s2 = load_stage_output("06", "case_benchmark", "")
-    s3 = load_stage_output("06", "design_concept", "")
-    s4 = load_stage_output("07", "strategy_matrix", "")
+    s1 = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
+    s2 = load_stage_output("06", SK.CASE_BENCHMARK, "")
+    s3 = load_stage_output("06", SK.DESIGN_CONCEPT, "")
+    s4 = load_stage_output("07", SK.STRATEGY_MATRIX, "")
 
     # 加载空间数据
     try:
@@ -138,7 +139,7 @@ if selected_sub == "📜 导则文本生成":
 
             if isinstance(final, str) and len(final) > 500:
                 st.session_state["stage5_output"] = final
-                save_stage_output("12", "design_guideline", final)
+                save_stage_output("12", SK.DESIGN_GUIDELINE, final)
                 st.success(f"导则文本生成完成（{len(final)} 字）")
 
                 # 导出按钮

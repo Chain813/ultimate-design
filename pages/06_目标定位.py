@@ -7,6 +7,7 @@ from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_keys import SK
 
 st.set_page_config(page_title="06 目标定位", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -38,7 +39,7 @@ if selected_sub == "📚 案例对标分析":
     else:
         st.error("❌ 未找到 docs/开题报告_案例摘要.md")
 
-    s1 = st.session_state.get("stage1_output", load_stage_output("05", "diagnosis_report", ""))
+    s1 = st.session_state.get("stage1_output", load_stage_output("05", SK.DIAGNOSIS_REPORT, ""))
 
     if st.button("📖 生成案例对标报告", type="primary", key="s2_btn"):
         prompt = f"""基于开题报告案例：{case_context[:3000]}
@@ -48,7 +49,7 @@ if selected_sub == "📚 案例对标分析":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 50:
             st.session_state["stage2_output"] = result
-            save_stage_output("06", "case_benchmark", result)
+            save_stage_output("06", SK.CASE_BENCHMARK, result)
 
     if st.session_state.get("stage2_output"):
         st.markdown("#### 📋 案例对标报告")
@@ -69,7 +70,7 @@ elif selected_sub == "💡 设计理念提炼":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 50:
             st.session_state["stage3_output"] = result
-            save_stage_output("06", "design_concept", result)
+            save_stage_output("06", SK.DESIGN_CONCEPT, result)
 
     if st.session_state.get("stage3_output"):
         st.markdown("#### 📋 设计理念报告")

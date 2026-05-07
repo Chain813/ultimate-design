@@ -13,6 +13,7 @@ from src.engines.drawing_prompt_templates import (
     generate_drawing_prompt_with_llm,
 )
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="13 成果表达", layout="wide", initial_sidebar_state="collapsed")
@@ -107,7 +108,7 @@ elif selected_sub == "📤 成果导出中心":
     render_section_intro("成果导出中心", "导出全流程成果文件。", eyebrow="Export Center")
 
     # 导则文本
-    guideline = load_stage_output("12", "design_guideline", "")
+    guideline = load_stage_output("12", SK.DESIGN_GUIDELINE, "")
     if guideline:
         st.download_button(
             "📥 城市设计导则 (Markdown)",
@@ -131,7 +132,7 @@ elif selected_sub == "📤 成果导出中心":
         st.info("请先在 Stage 12 生成导则文本。")
 
     # MPI 报告
-    mpi = load_stage_output("05", "mpi_ranking", [])
+    mpi = load_stage_output("05", SK.MPI_RANKING, [])
     if mpi:
         import pandas as pd
         csv = pd.DataFrame(mpi).to_csv(index=False).encode("utf-8-sig")
@@ -143,7 +144,7 @@ elif selected_sub == "📤 成果导出中心":
         )
 
     # 诊断报告
-    diagnosis = load_stage_output("05", "diagnosis_report", "")
+    diagnosis = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
     if diagnosis:
         st.download_button(
             "📥 前期诊断报告 (Markdown)",

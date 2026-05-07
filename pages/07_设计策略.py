@@ -11,6 +11,7 @@ from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import generate_policy_matrix
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_keys import SK
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
@@ -38,7 +39,7 @@ st.markdown("---")
 if selected_sub == "⚖️ 多主体协商推演":
     render_section_intro("多主体博弈推演", "让三类角色围绕设计策略展开协商。", eyebrow="LLM Stage 04")
 
-    s3 = st.session_state.get("stage3_output", load_stage_output("06", "design_concept", ""))
+    s3 = st.session_state.get("stage3_output", load_stage_output("06", SK.DESIGN_CONCEPT, ""))
     proposal = st.text_area("✍️ 微更新构思或争议点", value=s3[:300] if s3 else "", height=120)
 
     if enable_policy and proposal:
@@ -76,18 +77,18 @@ if selected_sub == "⚖️ 多主体协商推演":
                 time.sleep(0.3)
 
             st.session_state["p4_voting_scores"] = voting_scores
-            save_stage_output("07", "voting_scores", voting_scores)
+            save_stage_output("07", SK.VOTING_SCORES, voting_scores)
 
             sp = f"基于博弈记录生成Markdown表格【问题-策略对应表】：\n{memory[:3000]}\n格式：| 问题 | 策略 | 政策依据 | 空间落位 | 共识度 |"
             stream = call_llm_engine_stream(prompt=sp, system_prompt="高级城市更新研究员。策略须在容积率≤1.4、限高≤18m约束下。", model=model_tag)
             summary = st.write_stream(stream)
             if isinstance(summary, str):
                 st.session_state["stage4_output"] = summary
-                save_stage_output("07", "strategy_matrix", summary)
+                save_stage_output("07", SK.STRATEGY_MATRIX, summary)
 
 elif selected_sub == "📊 共识雷达":
     render_section_intro("动态共识雷达", "查看多主体协商后的共识度分布。", eyebrow="Consensus Radar")
-    voting = st.session_state.get("p4_voting_scores", load_stage_output("07", "voting_scores", {}))
+    voting = st.session_state.get("p4_voting_scores", load_stage_output("07", SK.VOTING_SCORES, {}))
     if voting:
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(

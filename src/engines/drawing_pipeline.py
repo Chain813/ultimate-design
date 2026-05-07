@@ -23,6 +23,7 @@ from src.engines.drawing_prompt_templates import (
 )
 from src.engines.stable_diffusion_engine import SDPipeline, SDResult
 from src.workflow.stage_data_bus import save_stage_output
+from src.workflow.stage_keys import SK
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -201,6 +202,6 @@ class DrawingPipeline:
 
     def _store_result(self, template_name: str, sd_result: SDResult, prompt: str):
         if sd_result.images:
-            save_stage_output("aigc", f"image_{template_name}", sd_result.images[0])
-        save_stage_output("aigc", f"prompt_{template_name}", prompt)
-        save_stage_output("aigc", f"seed_{template_name}", sd_result.seed)
+            save_stage_output("aigc", f"{SK.AIGC_IMAGE}_{template_name}", sd_result.images[0])
+        save_stage_output("aigc", f"{SK.AIGC_PROMPT}_{template_name}", prompt)
+        save_stage_output("aigc", f"{SK.AIGC_SEED}_{template_name}", sd_result.seed)

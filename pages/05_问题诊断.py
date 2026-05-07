@@ -23,6 +23,7 @@ from src.workflow.stage_data_bus import (
     load_stage_output,
     render_evidence_chain_bar,
 )
+from src.workflow.stage_keys import SK
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
@@ -153,9 +154,9 @@ if selected_sub == "📊 MPI 更新潜力评估":
         st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
     # 保存到数据总线
-    save_stage_output("05", "mpi_ranking", df_filtered.to_dict("records"))
-    save_stage_output("05", "top_plot", top_plot)
-    save_stage_output("05", "top_score", top_score)
+    save_stage_output("05", SK.MPI_RANKING, df_filtered.to_dict("records"))
+    save_stage_output("05", SK.TOP_PLOT, top_plot)
+    save_stage_output("05", SK.TOP_SCORE, top_score)
 
 # ═══════════════════════════════════════════
 # 子页面 2: 地块雷达诊断 (原 page12 地块级诊断面板)
@@ -195,7 +196,7 @@ elif selected_sub == "🎯 地块雷达诊断":
         apply_plotly_polar_theme(fig, title=f"{selected_plot} 多维诊断雷达", height=380)
         st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
-        save_stage_output("05", "radar_data", {"plot": selected_plot, "categories": categories, "values": values})
+        save_stage_output("05", SK.RADAR_DATA, {"plot": selected_plot, "categories": categories, "values": values})
     else:
         st.warning("暂无地块诊断数据，请检查 data/shp 目录。")
 
@@ -238,7 +239,7 @@ elif selected_sub == "🔬 AI 前期诊断报告":
             result = st.write_stream(stream)
             if isinstance(result, str) and len(result) > 50:
                 st.session_state["stage1_output"] = result
-                save_stage_output("05", "diagnosis_report", result)
+                save_stage_output("05", SK.DIAGNOSIS_REPORT, result)
                 st.toast("✅ 前期诊断报告生成完成！", icon="📊")
     else:
         st.warning("暂无地块诊断数据。")
@@ -258,9 +259,9 @@ elif selected_sub == "🖼️ 图纸提示词生成":
 # ═══════════════════════════════════════════
 st.markdown("---")
 
-mpi_data = load_stage_output("05", "mpi_ranking", [])
-top_plot_name = load_stage_output("05", "top_plot", "暂无")
-top_mpi = load_stage_output("05", "top_score", 0)
+mpi_data = load_stage_output("05", SK.MPI_RANKING, [])
+top_plot_name = load_stage_output("05", SK.TOP_PLOT, "暂无")
+top_mpi = load_stage_output("05", SK.TOP_SCORE, 0)
 diagnostics = get_plot_diagnostics()
 
 findings = [
