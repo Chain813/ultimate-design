@@ -1,4 +1,4 @@
-﻿"""图纸提示词模板库 —— 为每类缺失图纸预设基于研究区域数据的专业提示词。
+"""图纸提示词模板库 —— 为每类缺失图纸预设基于研究区域数据的专业提示词。
 
 每个模板包含：
 - ``name``         图纸名称
@@ -16,7 +16,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from src.engines.drawing_prompt_engine import (
+    BOOK_CHAPTERS,
     ImagePromptRequest,
+    TemplateNotFoundError,
+    LLMCallError,
     build_image_prompt,
     get_drawing_profile,
 )
@@ -904,6 +907,77 @@ def get_all_template_names() -> list[str]:
     return [t.name for t in DRAWING_TEMPLATES]
 
 
+def get_or_create_template(drawing_name: str) -> DrawingTemplate | None:
+    """Get existing template or generate a generic one."""
+    tmpl = get_template(drawing_name)
+    if tmpl:
+        return tmpl
+    return _generate_generic_template(drawing_name)
+
+
+def _generate_generic_template(drawing_name: str) -> DrawingTemplate | None:
+    """Generate a generic template based on drawing name."""
+    try:
+        profile = get_drawing_profile(drawing_name)
+    except Exception:
+        return None
+
+    chapter = _infer_chapter_from_name(drawing_name)
+    stage = _infer_stage_from_name(drawing_name)
+
+    return DrawingTemplate(
+        name=drawing_name,
+        chapter=chapter,
+        stage=stage,
+        description=f"{drawing_name}（通用模板）",
+        prompt_tmpl=(
+            f"请为以下城市设计项目生成一张\"{drawing_name}\"的 Image 2.0 提示词。\n\n"
+            f"{{data_context}}\n\n"
+            f"图纸要求：\n"
+            f"- {profile.drawing_type}类图纸\n"
+            f"- {profile.precision}\n"
+            f"- A3横版"
+        ),
+    )
+
+
+def _infer_chapter_from_name(drawing_name: str) -> str:
+    """Infer chapter from drawing name keywords."""
+    for chapter, drawings in BOOK_CHAPTERS.items():
+        if drawing_name in drawings:
+            return chapter
+    if any(k in drawing_name for k in ("封面", "目录", "背景", "区位", "沿革", "案例")):
+        return "01 项目认知篇"
+    if any(k in drawing_name for k in ("现状", "诊断", "数据", "调研", "建筑", "道路", "POI")):
+        return "02 数据诊断篇"
+    if any(k in drawing_name for k in ("价值", "评价", "潜力", "敏感")):
+        return "03 价值评估篇"
+    if any(k in drawing_name for k in ("策略", "目标", "理念", "功能", "结构")):
+        return "04 策略生成篇"
+    if any(k in drawing_name for k in ("总平面", "规划", "控制", "系统", "绿地", "风貌")):
+        return "05 总体规划篇"
+    if any(k in drawing_name for k in ("地块", "立面", "节点", "深化")):
+        return "06 重点地块深化篇"
+    return "07 技术推演与实施篇"
+
+
+def _infer_stage_from_name(drawing_name: str) -> str:
+    """Infer stage code from drawing name."""
+    for chapter, drawings in BOOK_CHAPTERS.items():
+        if drawing_name in drawings:
+            chapter_stage_map = {
+                "01 项目认知篇": "01",
+                "02 数据诊断篇": "04",
+                "03 价值评估篇": "05",
+                "04 策略生成篇": "07",
+                "05 总体规划篇": "08",
+                "06 重点地块深化篇": "10",
+                "07 技术推演与实施篇": "13",
+            }
+            return chapter_stage_map.get(chapter, "01")
+    return "01"
+
+
 def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     """构建固定资产约束下的 Image 2.0 图纸提示词。
 
@@ -965,29 +1039,29 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
 
 def generate_drawing_prompt_with_llm(
     template_name: str,
-    model: str = "deepseek-v4-pro",
+    model: str = 'deepseek-v4-pro',
 ) -> str:
-    """调用 DeepSeek 审校固定资产约束提示词。"""
+    '''Call DeepSeek to review prompt. Raises TemplateNotFoundError or LLMCallError on failure.'''
     prompt, sys_prompt = build_drawing_prompt(template_name)
     if not prompt:
-        return f"未找到模板: {template_name}"
-    if "暂不生成最终 Image 2.0 提示词" in prompt:
+        raise TemplateNotFoundError(f'Template not found: {template_name}')
+    if '暂不生成最终 Image 2.0 提示词' in prompt:
         return prompt
 
     from src.engines.llm_engine import call_llm_engine
     try:
-        review_prompt = f"""请审校并轻微整理以下 Image 2.0 图纸提示词。
-
-硬性规则：
-- 必须保留所有“上传底图与资料引用”“固定制图资产”“负面要求”中的约束。
-- 不得把底图、研究范围、重点地块、图框写成可被 AI 重新设计的内容。
-- 不得新增未上传数据、未证明的评价等级、面积、热力强弱或统计数字。
-- 输出仍然是一条可直接用于 Image 2.0 的完整提示词，不输出解释。
-
-{prompt}"""
+        review_prompt = (
+            '请审校并轻微整理以下 Image 2.0 图纸提示词。\n\n'
+            '硬性规则：\n'
+            '- 必须保留所有“上传底图与资料引用”“固定制图资产”“负面要求”中的约束。\n'
+            '- 不得把底图、研究范围、重点地块、图框写成可被 AI 重新设计的内容。\n'
+            '- 不得新增未上传数据、未证明的评价等级、面积、热力强弱或统计数字。\n'
+            '- 输出仍然是一条可直接用于 Image 2.0 的完整提示词，不输出解释。\n\n'
+            f'{prompt}'
+        )
         return call_llm_engine(prompt=review_prompt, system_prompt=sys_prompt, model=model)
     except Exception as e:
-        return f"LLM 调用失败: {e}"
+        raise LLMCallError(f'LLM call failed for {template_name}') from e
 
 
 def _extract_template_requirements(prompt_tmpl: str) -> str:
