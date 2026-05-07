@@ -7,7 +7,9 @@ Usage:
 import base64
 import logging
 import time
+from dataclasses import dataclass, field
 from io import BytesIO
+from typing import Any, Callable, Dict, List, Optional
 
 import requests
 from PIL import Image, ImageDraw
@@ -16,6 +18,32 @@ from src.config.loader import load_global_config
 from src.utils.runtime_flags import is_demo_mode
 
 logger = logging.getLogger("ultimateDESIGN")
+
+
+@dataclass
+class PipelineStep:
+    """A single step in the SD rendering pipeline."""
+    mode: str  # "txt2img" | "img2img" | "inpaint" | "upscale"
+    params: Dict[str, Any] = field(default_factory=dict)
+    controlnet_units: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class SDResult:
+    """Result from an SD pipeline execution."""
+    images: List[Any]  # list of PIL.Image.Image
+    seed: int
+    info: Dict[str, Any]
+    elapsed_seconds: float
+
+
+def encode_image(pil_image, max_dim: int = 1024) -> str:
+    """Encode a PIL Image to base64 JPEG string, thumbnailing if needed."""
+    img_copy = pil_image.copy()
+    img_copy.thumbnail((max_dim, max_dim))
+    buffered = BytesIO()
+    img_copy.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
 def run_realtime_sd(pil_image, prompt, negative_prompt, steps=20, cfg_scale=7.0, denoising=0.55,
