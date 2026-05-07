@@ -29,4 +29,6 @@ def test_sd_exceptions_are_catchable():
         try:
             raise cls("test")
         except SDEngineError:
-            pass  # expected
+            pass
+        else:
+            assert False, f"{cls.__name__} was not raised"
