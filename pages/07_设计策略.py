@@ -2,18 +2,15 @@
 
 import time
 import re
-import json
 import streamlit as st
 import plotly.graph_objects as go
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import generate_policy_matrix
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
-from src.utils.runtime_flags import is_demo_mode
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 

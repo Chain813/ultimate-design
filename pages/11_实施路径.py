@@ -1,11 +1,10 @@
 """阶段 11：实施路径 —— 更新方式分类 + 分期实施 + LLM 五阶段汇总。"""
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
-from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_data_bus import render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 

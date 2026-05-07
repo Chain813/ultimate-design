@@ -1,15 +1,13 @@
 """阶段 01：任务解读 —— 项目边界锁定、任务书/开题报告展示。"""
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav
 from src.ui.streamlit_compat import stretch_width
 from src.ui.module_summary import render_stage_summary
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
 from src.config import DOCS_DIR, META_DIR
 from src.utils.text_io import read_text_with_fallback
-from pathlib import Path
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 
 st.set_page_config(page_title="01 任务解读", layout="wide", initial_sidebar_state="collapsed")

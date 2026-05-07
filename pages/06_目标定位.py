@@ -1,6 +1,6 @@
 """阶段 06：目标定位 —— LLM 案例对标(阶段二) + 设计理念(阶段三)。"""
 
-import os
+from pathlib import Path
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
@@ -31,7 +31,7 @@ if selected_sub == "📚 案例对标分析":
     render_section_intro("案例对标分析", "读取开题报告案例摘要，与阶段一问题清单做对标。", eyebrow="LLM Stage 02")
     case_context = ""
     case_path = "docs/开题报告_案例摘要.md"
-    if os.path.exists(case_path):
+    if Path(case_path).exists():
         with open(case_path, "r", encoding="utf-8") as f:
             case_context = f.read()
         st.success(f"✅ 已加载案例文件（{len(case_context)} 字）")

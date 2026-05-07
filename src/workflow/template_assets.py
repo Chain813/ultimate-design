@@ -59,7 +59,7 @@ TEMPLATE_ASSET_SPECS: tuple[TemplateAssetSpec, ...] = (
         label="固定图框 / 出图版式",
         prompt_channel="固定图框模板",
         required=True,
-        accepted_types=("png", "jpg", "jpeg", "svg", "pdf"),
+        accepted_types=("png", "jpg", "jpeg", "svg", "pdf", "pptx"),
         description="A3/A1/PPT 的图框、标题栏、比例尺、指北针、图例区和信息栏模板。",
         generation_rule="图框作为最终合成层，固定画幅、标题栏、图例区和安全边距，AI 不负责重新设计图框。",
     ),
