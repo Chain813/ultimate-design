@@ -68,6 +68,11 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
             st.markdown("---")
             render_section_intro("一键出图", "自动生成提示词并调用 SD 渲染，全程无需手动干预。", eyebrow="One-Click")
 
+            enable_quality = st.checkbox(
+                "启用质量评估闭环（自动检测显存，下载 Gemma 模型）",
+                key=f"{key_prefix}_quality",
+            )
+
             if st.button("一键出图", type="primary", key=f"{key_prefix}_oneclick"):
                 pipeline = DrawingPipeline()
                 progress_bar = st.progress(0, text="准备中...")
@@ -81,7 +86,10 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
                     )
 
                 with st.spinner("管线执行中..."):
-                    result = pipeline.generate_single(selected_tmpl, mode="auto", on_progress=update_progress)
+                    if enable_quality:
+                        result = pipeline.generate_with_quality_loop(selected_tmpl, on_progress=update_progress)
+                    else:
+                        result = pipeline.generate_single(selected_tmpl, mode="auto", on_progress=update_progress)
 
                 progress_bar.progress(1.0, text="完成!")
                 if result.success:
@@ -89,6 +97,19 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
                     st.session_state[f"{key_prefix}_sd_result"] = result.image
                 else:
                     st.error(f"出图失败：{result.error}")
+
+                if result.success and result.quality_report:
+                    qr = result.quality_report
+                    st.markdown("---")
+                    st.markdown("**质量评估结果**")
+                    col_q1, col_q2, col_q3 = st.columns(3)
+                    col_q1.metric("综合评级", qr.rating)
+                    col_q2.metric("视觉评分", f"{qr.visual_score}/10")
+                    col_q3.metric("内容评分", f"{qr.content_score}/10")
+                    if qr.issue_types:
+                        st.warning(f"发现的问题：{', '.join(qr.issue_types)}")
+                    if qr.suggestions:
+                        st.info(f"修正建议：{', '.join(qr.suggestions)}")
 
             # ---- SD Render Section ----
             st.markdown("---")

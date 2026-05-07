@@ -21,6 +21,11 @@ engines:
     controlnet:
       max_units: 3
       default_module: "canny"
+    quality:
+      vision_model: "auto"
+      text_model: "deepseek-v4-pro"
+      max_retries: 2
+      rating_threshold: "B"
 
 data:
   rag_knowledge_path: "data/rag_knowledge.json"
