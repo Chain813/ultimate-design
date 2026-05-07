@@ -40,3 +40,14 @@ Thumbs.db
 
 # 排除所有 PDF (防止 GitHub 大文件限制)
 *.pdf
+
+# Node.js 依赖
+node_modules/
+
+# 视频生成输出（大文件）
+tools/video_generator/output/
+tools/video_generator/composer/node_modules/
+
+# 临时工作目录
+*.tmp
+*.bak
