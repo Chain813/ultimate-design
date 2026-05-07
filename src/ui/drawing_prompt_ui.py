@@ -225,3 +225,62 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
                     st.text_area("生成的提示词（确认后渲染）", value=r.prompt, height=200, key=f"{key_prefix}_batch_prompt_{r.template_name}")
                 else:
                     st.error(r.error)
+
+    # ---- Version browser ----
+    st.markdown("---")
+    render_section_intro("版本管理", "查看和对比已生成的图纸版本。", eyebrow="Versions")
+
+    from src.engines.version_store import VersionStore
+    from pathlib import Path
+
+    store = VersionStore(Path("output/drawings"))
+
+    all_drawings_with_versions = []
+    if Path("output/drawings").exists():
+        for item in Path("output/drawings").iterdir():
+            if item.is_dir() and item.name != "manifest.json":
+                versions = store.list_versions(item.name)
+                if versions:
+                    all_drawings_with_versions.append(item.name)
+
+    if all_drawings_with_versions:
+        selected_drawing = st.selectbox(
+            "选择图纸查看版本",
+            sorted(all_drawings_with_versions),
+            key=f"{key_prefix}_version_select",
+        )
+
+        if selected_drawing:
+            versions = store.list_versions(selected_drawing)
+            if len(versions) >= 2:
+                col_v1, col_v2 = st.columns(2)
+                with col_v1:
+                    v1_idx = st.selectbox(
+                        "版本 1",
+                        range(len(versions)),
+                        format_func=lambda i: f"{versions[i]['version_id']} ({versions[i].get('timestamp', '')[:10]})",
+                        key=f"{key_prefix}_v1",
+                    )
+                    img1, _ = store.load(selected_drawing, versions[v1_idx]["version_id"])
+                    if img1:
+                        st.image(img1, caption=f"版本 {versions[v1_idx]['version_id']}")
+
+                with col_v2:
+                    v2_idx = st.selectbox(
+                        "版本 2",
+                        range(len(versions)),
+                        format_func=lambda i: f"{versions[i]['version_id']} ({versions[i].get('timestamp', '')[:10]})",
+                        key=f"{key_prefix}_v2",
+                    )
+                    img2, _ = store.load(selected_drawing, versions[v2_idx]["version_id"])
+                    if img2:
+                        st.image(img2, caption=f"版本 {versions[v2_idx]['version_id']}")
+            elif versions:
+                img, meta = store.get_latest(selected_drawing)
+                if img:
+                    st.image(img, caption=f"最新版本: {versions[-1]['version_id']}")
+                    if meta.get("prompt"):
+                        with st.expander("查看提示词"):
+                            st.code(meta["prompt"])
+    else:
+        st.info("暂无已生成的图纸版本。请先使用上方的生成功能。")
