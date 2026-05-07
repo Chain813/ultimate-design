@@ -2,7 +2,8 @@ import streamlit as st
 from PIL import Image as PILImage
 from src.ui.design_system import render_section_intro
 from src.ui.streamlit_compat import stretch_width
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
+from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm, get_all_template_names
+from src.engines.drawing_pipeline import DrawingPipeline
 
 
 def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str):
@@ -62,6 +63,32 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
             with st.spinner("DeepSeek 推理生成中..."):
                 result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
             st.text_area("完整 Image 2.0 英文提示词 (可直接拷贝至 Midjourney/SD)", value=result, height=350, key=f"{key_prefix}_result")
+
+            # ---- One-click render ----
+            st.markdown("---")
+            render_section_intro("一键出图", "自动生成提示词并调用 SD 渲染，全程无需手动干预。", eyebrow="One-Click")
+
+            if st.button("一键出图", type="primary", key=f"{key_prefix}_oneclick"):
+                pipeline = DrawingPipeline()
+                progress_bar = st.progress(0, text="准备中...")
+
+                def update_progress(**kwargs):
+                    step_idx = kwargs.get("step_index", 0)
+                    total = kwargs.get("total_steps", 1)
+                    progress_bar.progress(
+                        (step_idx + 0.5) / total,
+                        text=f"步骤 {step_idx + 1}/{total}...",
+                    )
+
+                with st.spinner("管线执行中..."):
+                    result = pipeline.generate_single(selected_tmpl, mode="auto", on_progress=update_progress)
+
+                progress_bar.progress(1.0, text="完成!")
+                if result.success:
+                    st.image(result.image, caption=f"{selected_tmpl} - 渲染完成")
+                    st.session_state[f"{key_prefix}_sd_result"] = result.image
+                else:
+                    st.error(f"出图失败：{result.error}")
 
             # ---- SD Render Section ----
             st.markdown("---")
@@ -132,3 +159,48 @@ def render_drawing_prompt_ui(stage_code: str, key_prefix: str, stage_title: str)
 
     else:
         st.info("暂无本阶段图纸模板。")
+
+    # ---- Batch generation panel ----
+    st.markdown("---")
+    render_section_intro("批量出图", "一次性选择多张图纸进行批量生成。", eyebrow="Batch Mode")
+
+    all_names = get_all_template_names()
+    selected_templates = st.multiselect(
+        "选择要生成的图纸",
+        all_names,
+        key=f"{key_prefix}_batch_select",
+    )
+
+    batch_mode = st.radio(
+        "生成模式",
+        ["全自动", "确认后渲染"],
+        horizontal=True,
+        key=f"{key_prefix}_batch_mode",
+    )
+
+    if selected_templates and st.button("批量生成", type="primary", key=f"{key_prefix}_batch_run"):
+        pipeline = DrawingPipeline()
+        overall_progress = st.progress(0, text=f"批量生成 0/{len(selected_templates)}")
+
+        def batch_progress(**kwargs):
+            current = kwargs.get("current", 0)
+            total = kwargs.get("total", 1)
+            name = kwargs.get("template_name", "")
+            overall_progress.progress(current / total, text=f"批量生成 {current}/{total}: {name}")
+
+        mode = "auto" if batch_mode == "全自动" else "confirm"
+        results = pipeline.generate_batch(selected_templates, mode=mode, on_progress=batch_progress)
+
+        overall_progress.progress(1.0, text="批量生成完成!")
+
+        success_count = sum(1 for r in results if r.success)
+        st.info(f"完成：{success_count}/{len(results)} 张成功")
+
+        for r in results:
+            with st.expander(f"{r.template_name} - {'成功' if r.success else '失败'}", expanded=not r.success):
+                if r.success and r.image:
+                    st.image(r.image, caption=r.template_name)
+                elif r.success and r.prompt:
+                    st.text_area("生成的提示词（确认后渲染）", value=r.prompt, height=200, key=f"{key_prefix}_batch_prompt_{r.template_name}")
+                else:
+                    st.error(r.error)
