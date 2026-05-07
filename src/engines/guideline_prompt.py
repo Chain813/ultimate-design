@@ -6,7 +6,6 @@ Usage:
     from src.engines.guideline_prompt import build_guideline_prompt
 """
 
-from typing import Dict, Optional
 
 
 GUIDELINE_CHAPTERS = [

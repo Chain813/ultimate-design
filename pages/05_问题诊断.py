@@ -11,7 +11,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-from src.config import SHP_FILES, DATA_FILES
+from src.config import SHP_FILES
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.llm_engine import call_llm_engine_stream
 from src.ui.chart_theme import apply_plotly_theme, apply_plotly_polar_theme, get_chart_palette

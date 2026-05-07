@@ -2,7 +2,7 @@
 
 import streamlit as st
 from pathlib import Path
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_summary_cards
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width

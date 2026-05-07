@@ -1,7 +1,6 @@
 import sys
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-import pytest
 from src.engines.rag_engine import compute_query_embedding
 
 

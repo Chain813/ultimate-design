@@ -12,9 +12,7 @@ from src.engines.drawing_prompt_engine import (
     TemplateNotFoundError,
     LLMCallError,
     check_prompt_completeness,
-    build_image_prompt,
     ImagePromptRequest,
-    get_drawing_profile,
 )
 
 
@@ -132,7 +130,6 @@ def test_save_template_asset_accepts_valid_type(tmp_path):
 
 from src.engines.drawing_prompt_templates import (
     get_or_create_template,
-    generate_drawing_prompt_with_llm,
     build_drawing_prompt,
 )
 

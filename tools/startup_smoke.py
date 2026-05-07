@@ -2,7 +2,6 @@
 
 from pathlib import Path
 import py_compile
-import sys
 
 
 TARGETS = [

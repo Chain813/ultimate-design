@@ -1,6 +1,5 @@
 import json
 import os
-import sys
 
 def compress_geojson(input_path, output_path, precision=6):
     print(f"Compressing {input_path}...")

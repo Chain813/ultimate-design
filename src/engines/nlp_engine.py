@@ -12,7 +12,6 @@ import pandas as pd
 import streamlit as st
 
 from src.config import resolve_path, DATA_FILES
-from src.utils.exceptions import log_and_suppress
 
 logger = logging.getLogger("ultimateDESIGN")
 

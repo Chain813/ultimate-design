@@ -14,7 +14,6 @@ import os
 import json
 import hashlib
 import glob
-from pathlib import Path
 
 
 def extract_pdf_text(filepath, max_pages=30):

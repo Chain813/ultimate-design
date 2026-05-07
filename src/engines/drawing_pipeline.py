@@ -3,16 +3,14 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable, List, Optional
+from dataclasses import dataclass
+from typing import Any, Callable, Optional
 
-from PIL import Image
 
 from src.engines.drawing_prompt_engine import (
     CompletenessReport,
     ImagePromptRequest,
     TemplateNotFoundError,
-    build_image_prompt,
     check_prompt_completeness,
     get_drawing_profile,
     revise_prompt_by_rating,

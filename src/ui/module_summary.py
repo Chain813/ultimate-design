@@ -468,7 +468,6 @@ def _render_llm_summary_button(
 
             # 从数据总线补充
             try:
-                from src.workflow.stage_data_bus import load_stage_output
                 bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
                 for k, v in bus_data.items():
                     if isinstance(v, str) and len(v) < 300:

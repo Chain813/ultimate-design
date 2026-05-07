@@ -1,6 +1,5 @@
 """Canonical project paths for app/pages/tools usage."""
 
-from pathlib import Path
 
 from .runtime import project_root
 

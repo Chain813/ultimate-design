@@ -2,7 +2,6 @@
 
 import streamlit as st
 import subprocess
-import sys
 from pathlib import Path
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav, render_engine_status_alert

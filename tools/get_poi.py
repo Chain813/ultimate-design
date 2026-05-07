@@ -2,7 +2,6 @@ import os
 import requests
 import pandas as pd
 import time
-from pathlib import Path
 from dotenv import load_dotenv
 from src.utils.geo_transform import bd09_to_wgs84
 

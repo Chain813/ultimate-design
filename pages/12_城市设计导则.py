@@ -1,7 +1,7 @@
 """阶段 12：城市设计导则 —— 两步法 LLM 导则文本生成 + Word 导出。"""
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream, call_llm_engine

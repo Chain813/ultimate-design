@@ -3,7 +3,7 @@ from html import escape
 from pathlib import Path
 from src.workflow.city_design_workflow import WORKFLOW_BOARDS, STAGE_LOOKUP, stage_primary_href
 
-from src.utils.service_check import check_engine_status, is_port_alive, EngineStatus
+from src.utils.service_check import check_engine_status
 
 @st.cache_data
 def _read_css_content(css_path: str, mtime: float):
