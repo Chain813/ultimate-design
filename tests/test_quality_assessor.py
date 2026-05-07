@@ -212,5 +212,5 @@ def test_quality_loop_max_retries(mock_revise, mock_assessor_cls):
         template_name="t1", success=True, prompt="revised", image=Image.new("RGB", (64, 64)),
     ))
 
-    result = pipeline.generate_with_quality_loop("t1", max_retries=2)
+    pipeline.generate_with_quality_loop("t1", max_retries=2)
     assert mock_assessor.assess.call_count == 3

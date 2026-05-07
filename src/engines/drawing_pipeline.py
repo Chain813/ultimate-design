@@ -152,7 +152,7 @@ class DrawingPipeline:
         """Generate -> assess -> revise -> regenerate until A/B or max retries."""
         assessor = QualityAssessor()
 
-        for attempt in range(max_retries + 1):
+        for _attempt in range(max_retries + 1):
             result = self.generate_single(template_name, mode="auto", on_progress=on_progress)
             if not result.success:
                 return result

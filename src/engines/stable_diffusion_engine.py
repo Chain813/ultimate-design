@@ -313,7 +313,7 @@ class SDPipeline:
             raise ValueError("No image to upscale -- provide image or chain after a generation step")
 
         tile_size = p.get("tile_size", 512)
-        tile_overlap = p.get("tile_overlap", 32)
+        _tile_overlap = p.get("tile_overlap", 32)
         scale = p.get("scale", 2)
         target_w = img.width * scale
         target_h = img.height * scale
@@ -357,19 +357,19 @@ class SDPipeline:
                     continue
                 else:
                     raise SDAPIError(f"SD API returned {response.status_code}: {response.text[:200]}")
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.ConnectionError as err:
                 if attempt < max_retries:
                     logger.warning("SD connection failed, retry %d/%d...", attempt + 1, max_retries)
                     time.sleep(3)
                     continue
                 raise SDConnectionError(
                     "Cannot connect to SD WebUI. Check that it is running with --api flag."
-                )
-            except requests.exceptions.Timeout:
+                ) from err
+            except requests.exceptions.Timeout as err:
                 raise SDTimeoutError(
                     f"SD processing timed out ({self.timeout}s). "
                     "Try lowering resolution or increasing timeout in config.yaml."
-                )
+                ) from err
         raise SDConnectionError("SD WebUI unreachable after retries.")
 
     def poll_progress(self) -> dict:

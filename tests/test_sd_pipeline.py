@@ -34,7 +34,7 @@ def test_sd_exceptions_are_catchable():
         except SDEngineError:
             pass
         else:
-            assert False, f"{cls.__name__} was not raised"
+            raise AssertionError(f"{cls.__name__} was not raised")
 
 
 from PIL import Image
@@ -178,7 +178,7 @@ def test_add_controlnet_without_step_raises():
     img = Image.new("RGB", (64, 64))
     try:
         pipe.add_controlnet(img, module="canny", model="control_canny")
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "No active step" in str(e)
 
@@ -206,7 +206,7 @@ def test_add_controlnet_respects_max_units(mock_config):
     pipe.add_controlnet(img, module="depth", model="m2")
     try:
         pipe.add_controlnet(img, module="lineart", model="m3")
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "Maximum" in str(e)
 
@@ -272,7 +272,7 @@ def test_upscale_without_image_raises():
     pipe.upscale(scale=2)
     try:
         pipe.run()
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "No image" in str(e)
 
@@ -285,7 +285,7 @@ def test_retry_on_connection_error(mock_post):
     pipe.txt2img(prompt="t", negative_prompt="b", width=64, height=64)
     try:
         pipe.run()
-        assert False, "Should have raised SDConnectionError"
+        raise AssertionError("Should have raised SDConnectionError")
     except SDConnectionError:
         pass
     assert mock_post.call_count == 3
@@ -312,7 +312,7 @@ def test_timeout_raises_sdtimeouterror(mock_post):
     pipe.txt2img(prompt="t", negative_prompt="b", width=64, height=64)
     try:
         pipe.run()
-        assert False, "Should have raised SDTimeoutError"
+        raise AssertionError("Should have raised SDTimeoutError")
     except SDTimeoutError:
         pass
     assert mock_post.call_count == 1
@@ -329,7 +329,7 @@ def test_api_error_raises_sdapierror(mock_post):
     pipe.txt2img(prompt="t", negative_prompt="b", width=64, height=64)
     try:
         pipe.run()
-        assert False, "Should have raised SDAPIError"
+        raise AssertionError("Should have raised SDAPIError")
     except SDAPIError:
         pass
 
@@ -339,7 +339,7 @@ def test_empty_pipeline_raises():
     pipe = SDPipeline()
     try:
         pipe.run()
-        assert False, "Should have raised ValueError"
+        raise AssertionError("Should have raised ValueError")
     except ValueError as e:
         assert "no steps" in str(e)
 
