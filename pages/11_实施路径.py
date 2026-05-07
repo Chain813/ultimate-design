@@ -1,4 +1,4 @@
-﻿"""阶段 11：实施路径 —— 更新方式分类 + 分期实施 + LLM 五阶段汇总。"""
+"""阶段 11：实施路径 —— 更新方式分类 + 分期实施 + LLM 五阶段汇总。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards

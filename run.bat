@@ -72,7 +72,7 @@ if %ERRORLEVEL% EQU 0 (
 if %PYTHON_FOUND% EQU 0 (
     echo [ERROR] gis_ai Python environment not found!
     echo.
-    echo Please run setup_env.bat first, or create manually:
+    echo Please run scripts\setup_env.bat first, or create manually:
     echo   conda create -n gis_ai python=3.10
     echo   conda activate gis_ai
     echo   pip install -r requirements.txt

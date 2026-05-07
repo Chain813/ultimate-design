@@ -26,7 +26,7 @@ from pathlib import Path
 from src.utils.service_check import is_port_alive, OLLAMA_PORT, SD_PORT
 
 # SD 路径配置文件（用户首次使用时需配置）
-CONFIG_PATH = Path("config_daemon.json")
+CONFIG_PATH = Path("config/config_daemon.json")
 
 DEFAULT_CONFIG = {
     "ollama_model": "deepseek-v4-pro",

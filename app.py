@@ -1,9 +1,11 @@
-﻿import streamlit as st
+import streamlit as st
+from src.utils.logger_setup import setup_logger
+
+# 🌟 初始化全局系统日志
+setup_logger()
 import json
 import os
 from pathlib import Path
-import base64
-from html import escape
 from src.ui.design_system import (
     render_page_banner,
     render_section_intro,
@@ -29,19 +31,6 @@ def get_page_route(page_path):
         name = name.split("_", 1)[1]
     name = name.replace(".py", "")
     return name
-
-@st.cache_data(ttl=3600)
-def get_base64_image_v2(image_path):
-    """将本地图片转换为 Base64 编码"""
-    try:
-        abs_path = os.path.abspath(image_path)
-        if not os.path.exists(abs_path):
-            return ""
-        with open(abs_path, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
-    except Exception:
-        return ""
 
 # 加载顶部导航与系统状态警报
 render_top_nav()
@@ -174,9 +163,10 @@ if not engine_status_home.sd or not engine_status_home.gemma:
 # ==========================================
 # 🛡️ 技术监测 HUD (实时探测)
 # ==========================================
-def render_status_hud():
+def render_status_hud(engine_status=None):
     """渲染深度客制化、带技术背书的监测 HUD (已同步全局探测逻辑)"""
-    engine_status = check_engine_status()
+    if engine_status is None:
+        engine_status = check_engine_status()
     sd_online = engine_status.sd
     gemma_online = engine_status.gemma
     hud_stats = get_hud_statistics()
@@ -245,7 +235,7 @@ def render_skyline_hud():
 # 🚀 渲染执行
 # ==========================================
 render_section_intro("平台状态", "先确认底层引擎和资产挂载情况，再进入地图与模块工作流。", eyebrow="Runtime")
-render_status_hud()
+render_status_hud(engine_status_home)
 
 # 🗺️ 街区范围及改造红线 (Project Boundary)
 render_section_intro("街区范围及改造红线", "统一查看研究边界、重点更新单元、建筑底图和辅助图层。", eyebrow="Project Boundary")

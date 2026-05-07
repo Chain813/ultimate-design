@@ -1,4 +1,4 @@
-﻿import os
+import os
 import pandas as pd
 import requests
 import time

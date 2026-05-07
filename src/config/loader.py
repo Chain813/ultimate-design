@@ -19,7 +19,7 @@ logger = logging.getLogger("ultimateDESIGN")
 def load_global_config() -> dict:
     """Load config.yaml as a cached resource."""
     try:
-        config_path = resolve_path("config.yaml")
+        config_path = resolve_path("config/config.yaml")
         with config_path.open("r", encoding="utf-8") as f:
             return yaml.safe_load(f)
     except Exception:

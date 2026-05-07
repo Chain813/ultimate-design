@@ -21,14 +21,14 @@
                     background: radial-gradient(circle, rgba(0,212,255,0.3), transparent 70%);
                     transform: translate(-50%, -50%);"></div>
         <h1 id="title" style="font-size: 80px; font-weight: bold; color: #fff; z-index: 1;
-            text-shadow: 0 0 40px rgba(0,212,255,0.3); opacity: 0; transform: scale(0.8);">
+            text-shadow: 0 0 40px rgba(0,212,255,0.3); opacity: 0;">
           数字孪生·古今共振
         </h1>
-        <p id="subtitle" style="font-size: 36px; color: #94a3b8; margin-top: 24px; z-index: 1; opacity: 0; transform: translateY(20px);">
+        <p id="subtitle" style="font-size: 36px; color: #94a3b8; margin-top: 24px; z-index: 1; opacity: 0;">
           AI赋能下的伪满皇宫周边街区更新规划设计
         </p>
         <div id="divider" style="width: 0; height: 2px; background: #00d4ff; margin: 32px 0; z-index: 1;"></div>
-        <p id="info" style="font-size: 24px; color: #94a3b8; z-index: 1; opacity: 0; transform: translateY(20px);">
+        <p id="info" style="font-size: 24px; color: #94a3b8; z-index: 1; opacity: 0;">
           中国吉林省长春市宽城区 | 约150公顷
         </p>
       </div>
@@ -291,7 +291,7 @@
         </div>
         <div style="text-align: center;">
           <h2 id="concept" style="font-size: 56px; color: #ffd700; text-shadow: 0 0 30px rgba(255,215,0,0.3);
-              opacity: 0; transform: scale(0.9);">「数字孪生·古今共振」</h2>
+              opacity: 0;">「数字孪生·古今共振」</h2>
           <div style="display: flex; justify-content: center; gap: 40px; margin-top: 60px;">
             <div class="dimension" style="background: #111827; border-radius: 16px; padding: 32px; width: 200px;
                  border-top: 4px solid #00d4ff; opacity: 0; transform: translateY(30px);">
@@ -604,10 +604,10 @@
       const tl = gsap.timeline({ paused: true });
 
       // 开场动画 (0-15s)
-      tl.to("#title", { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" }, 0);
-      tl.to("#subtitle", { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0.6);
+      tl.fromTo("#title", { scale: 0.8 }, { opacity: 1, scale: 1, duration: 1.2, ease: "power2.out" }, 0);
+      tl.fromTo("#subtitle", { y: 20 }, { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }, 0.6);
       tl.to("#divider", { width: 300, duration: 0.6, ease: "power2.inOut" }, 1.0);
-      tl.to("#info", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.3);
+      tl.fromTo("#info", { y: 20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 1.3);
 
       // 阶段 01 动画 (15-45s, clip 内相对时间)
       tl.to("#stage-01 .task-card", { opacity: 1, x: 0, duration: 0.8, ease: "power2.out" }, 15);
@@ -633,7 +633,7 @@
       tl.to("#stage-05 .radar-data", { strokeDashoffset: 0, duration: 2, ease: "power2.inOut" }, 166);
 
       // 阶段 06 动画 (215-250s)
-      tl.to("#concept", { opacity: 1, scale: 1, duration: 1, ease: "power2.out" }, 216);
+      tl.fromTo("#concept", { scale: 0.9 }, { opacity: 1, scale: 1, duration: 1, ease: "power2.out" }, 216);
       tl.to("#stage-06 .dimension", { opacity: 1, y: 0, duration: 0.6, ease: "power2.out", stagger: 0.2 }, 218);
 
       // 阶段 07 动画 (250-300s)

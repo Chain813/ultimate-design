@@ -1,4 +1,4 @@
-﻿"""阶段 10：重点地段深化 —— 地块选择 + 街景透视推演 + Before/After。"""
+"""阶段 10：重点地段深化 —— 地块选择 + 街景透视推演 + Before/After。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards

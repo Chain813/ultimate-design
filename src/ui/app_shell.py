@@ -1,4 +1,4 @@
-﻿import streamlit as st
+import streamlit as st
 from html import escape
 from pathlib import Path
 from src.workflow.city_design_workflow import WORKFLOW_BOARDS, STAGE_LOOKUP, stage_primary_href

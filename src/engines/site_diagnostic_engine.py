@@ -19,6 +19,35 @@ from src.engines.rag_engine import retrieve_rag_context
 logger = logging.getLogger("ultimateDESIGN")
 
 
+# ═══════════════════════════════════════════
+# Cached heavy data loaders
+# ═══════════════════════════════════════════
+
+@st.cache_data(ttl=3600)
+def _load_spatial_merge() -> pd.DataFrame:
+    """Cache the expensive Excel + CSV merge used for GVI/SVF metrics."""
+    try:
+        df_pts = pd.read_excel(str(DATA_FILES["points"]))
+        df_gvi = pd.read_csv(str(DATA_FILES["gvi"]))
+        if "Folder" in df_gvi.columns:
+            df_gvi["ID"] = df_gvi["Folder"].str.replace("Point_", "").astype(int)
+            df_gvi = df_gvi.groupby("ID").mean(numeric_only=True).reset_index()
+        return pd.merge(df_pts, df_gvi, on="ID", how="inner")
+    except Exception:
+        logger.warning("Spatial data unavailable for plot diagnostics", exc_info=True)
+        return pd.DataFrame()
+
+
+@st.cache_data(ttl=3600)
+def _load_nlp_data() -> pd.DataFrame:
+    """Cache NLP sentiment CSV."""
+    try:
+        return pd.read_csv(str(DATA_FILES["nlp"]), encoding="utf-8-sig")
+    except Exception:
+        logger.warning("NLP data unavailable for plot diagnostics", exc_info=True)
+        return pd.DataFrame()
+
+
 @st.cache_data(ttl=600)
 def get_plot_diagnostics() -> list:
     """Multi-dimensional diagnosis for each key plot.
@@ -38,22 +67,26 @@ def get_plot_diagnostics() -> list:
     except Exception:
         df_poi = pd.DataFrame()
 
-    try:
-        df_pts = pd.read_excel(str(DATA_FILES["points"]))
-        df_gvi = pd.read_csv(str(DATA_FILES["gvi"]))
-        if "Folder" in df_gvi.columns:
-            df_gvi["ID"] = df_gvi["Folder"].str.replace("Point_", "").astype(int)
-            df_gvi = df_gvi.groupby("ID").mean(numeric_only=True).reset_index()
-        df_spatial = pd.merge(df_pts, df_gvi, on="ID", how="inner")
-    except Exception:
-        logger.warning("Spatial data unavailable for plot diagnostics", exc_info=True)
-        df_spatial = pd.DataFrame()
+    # Use cached loaders instead of re-reading files every call
+    df_spatial = _load_spatial_merge()
+    df_nlp = _load_nlp_data()
 
-    try:
-        df_nlp = pd.read_csv(str(DATA_FILES["nlp"]), encoding="utf-8-sig")
-    except Exception:
-        logger.warning("NLP data unavailable for plot diagnostics", exc_info=True)
-        df_nlp = pd.DataFrame()
+    # Pre-extract coordinate arrays for vectorized bbox filtering
+    poi_coords = None
+    if not df_poi.empty and "Lng" in df_poi.columns:
+        poi_coords = (df_poi["Lng"].values, df_poi["Lat"].values)
+
+    sp_coords = None
+    sp_cols = {}
+    if not df_spatial.empty and "Lng" in df_spatial.columns:
+        sp_coords = (df_spatial["Lng"].values, df_spatial["Lat"].values)
+        for col in ("GVI", "SVF", "Enclosure", "Clutter"):
+            if col in df_spatial.columns:
+                sp_cols[col] = df_spatial[col].values
+
+    global_sentiment = 0.0
+    if not df_nlp.empty and "Score" in df_nlp.columns:
+        global_sentiment = round(float(df_nlp["Score"].mean()), 3)
 
     results = []
     for feat in geo.get("features", []):
@@ -64,12 +97,9 @@ def get_plot_diagnostics() -> list:
         bbox = (min(c[0] for c in coords), max(c[0] for c in coords),
                 min(c[1] for c in coords), max(c[1] for c in coords))
 
-        poi_count = _count_in_bbox(df_poi, bbox)
-        gvi_mean, svf_mean, enc_mean, clu_mean = _spatial_means_in_bbox(df_spatial, bbox)
-
-        sentiment_mean = 0.0
-        if not df_nlp.empty and "Score" in df_nlp.columns:
-            sentiment_mean = round(float(df_nlp["Score"].mean()), 3)
+        # Vectorized bbox filtering
+        poi_count = _count_in_bbox_vec(poi_coords, bbox)
+        gvi_mean, svf_mean, enc_mean, clu_mean = _spatial_means_in_bbox_vec(sp_coords, sp_cols, bbox)
 
         s_i = min(1.0, area_sqm / 150000)
         d_i = min(1.0, poi_count / 20) if poi_count > 0 else 0.3
@@ -84,32 +114,34 @@ def get_plot_diagnostics() -> list:
             "enclosure_mean": enc_mean,
             "clutter_mean": clu_mean,
             "poi_count": poi_count,
-            "sentiment_mean": sentiment_mean,
+            "sentiment_mean": global_sentiment,
             "mpi_score": round(mpi, 1),
         })
 
     return results
 
 
-def _count_in_bbox(df, bbox):
-    if df.empty or "Lng" not in df.columns:
+def _count_in_bbox_vec(coords_tuple, bbox):
+    """Vectorized point-in-bbox count using pre-extracted numpy arrays."""
+    if coords_tuple is None:
         return 0
-    in_bbox = df[(df["Lng"] >= bbox[0]) & (df["Lng"] <= bbox[1]) &
-                 (df["Lat"] >= bbox[2]) & (df["Lat"] <= bbox[3])]
-    return int(len(in_bbox))
+    lngs, lats = coords_tuple
+    mask = (lngs >= bbox[0]) & (lngs <= bbox[1]) & (lats >= bbox[2]) & (lats <= bbox[3])
+    return int(np.count_nonzero(mask))
 
 
-def _spatial_means_in_bbox(df, bbox):
-    if df.empty or "Lng" not in df.columns:
+def _spatial_means_in_bbox_vec(coords_tuple, col_arrays, bbox):
+    """Vectorized spatial metric means using pre-extracted numpy arrays."""
+    if coords_tuple is None:
         return 0.0, 0.0, 0.0, 0.0
-    in_bbox = df[(df["Lng"] >= bbox[0]) & (df["Lng"] <= bbox[1]) &
-                 (df["Lat"] >= bbox[2]) & (df["Lat"] <= bbox[3])]
-    if in_bbox.empty:
+    lngs, lats = coords_tuple
+    mask = (lngs >= bbox[0]) & (lngs <= bbox[1]) & (lats >= bbox[2]) & (lats <= bbox[3])
+    if not np.any(mask):
         return 0.0, 0.0, 0.0, 0.0
-    gvi = round(float(in_bbox["GVI"].mean()), 2) if "GVI" in in_bbox.columns else 0.0
-    svf = round(float(in_bbox["SVF"].mean()), 2) if "SVF" in in_bbox.columns else 0.0
-    enc = round(float(in_bbox["Enclosure"].mean()), 2) if "Enclosure" in in_bbox.columns else 0.0
-    clu = round(float(in_bbox["Clutter"].mean()), 2) if "Clutter" in in_bbox.columns else 0.0
+    gvi = round(float(col_arrays["GVI"][mask].mean()), 2) if "GVI" in col_arrays else 0.0
+    svf = round(float(col_arrays["SVF"][mask].mean()), 2) if "SVF" in col_arrays else 0.0
+    enc = round(float(col_arrays["Enclosure"][mask].mean()), 2) if "Enclosure" in col_arrays else 0.0
+    clu = round(float(col_arrays["Clutter"][mask].mean()), 2) if "Clutter" in col_arrays else 0.0
     return gvi, svf, enc, clu
 
 

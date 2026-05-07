@@ -9,7 +9,6 @@ Usage:
 
 import json
 import logging
-import math
 
 import numpy as np
 import pandas as pd
@@ -25,10 +24,10 @@ logger = logging.getLogger("ultimateDESIGN")
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
-def get_merged_poi_data() -> pd.DataFrame:
+def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
-    df1 = _safe_read_csv("data/Changchun_POI_Real.csv")
-    df2 = _safe_read_csv("data/Changchun_POI_Baidu_New.csv")
+    df1 = _safe_read_csv("data/Changchun_POI_Real.csv", usecols=usecols)
+    df2 = _safe_read_csv("data/Changchun_POI_Baidu_New.csv", usecols=usecols)
 
     if not df1.empty and not df2.empty:
         df_merged = pd.concat([df1, df2], ignore_index=True)
@@ -44,11 +43,11 @@ def get_merged_poi_data() -> pd.DataFrame:
     return df1 if not df1.empty else df2
 
 
-def _safe_read_csv(path: str) -> pd.DataFrame:
+def _safe_read_csv(path: str, usecols=None) -> pd.DataFrame:
     try:
         resolved = resolve_path(path)
         if resolved.exists():
-            return pd.read_csv(str(resolved), encoding="utf-8-sig")
+            return pd.read_csv(str(resolved), encoding="utf-8-sig", usecols=usecols)
     except Exception:
         logger.warning("Could not read %s", path, exc_info=True)
     return pd.DataFrame()
@@ -93,14 +92,10 @@ def _calc_boundary_ha(geojson_path: str):
             geo = json.load(f)
         total = 0.0
         for feat in geo.get("features", []):
-            coords = feat["geometry"]["coordinates"][0]
-            n = len(coords)
-            area_deg = 0.0
-            for i in range(n):
-                j = (i + 1) % n
-                area_deg += coords[i][0] * coords[j][1]
-                area_deg -= coords[j][0] * coords[i][1]
-            area_deg = abs(area_deg) / 2
+            coords = np.array(feat["geometry"]["coordinates"][0])
+            # Vectorized shoelace formula
+            x, y = coords[:, 0], coords[:, 1]
+            area_deg = abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))) / 2
             total += area_deg * 80 * 111 * 100
         return round(total, 1)
     except Exception:
@@ -215,11 +210,13 @@ def get_spatial_data() -> pd.DataFrame:
     if min_v == max_v:
         max_v = min_v + 1
 
-    def _gradient(val):
-        n = (val - min_v) / (max_v - min_v)
-        return [int(255 * (1 - n)), int(200 * math.sin(n * math.pi)), int(255 * n), 255]
-
-    df["Dynamic_Color"] = df["GVI"].apply(_gradient)
+    # Vectorized gradient computation — avoids per-row Python function call
+    n_arr = (df["GVI"].values - min_v) / (max_v - min_v)
+    r = (255 * (1 - n_arr)).astype(int)
+    g = (200 * np.sin(n_arr * np.pi)).astype(int)
+    b = (255 * n_arr).astype(int)
+    a = np.full_like(r, 255)
+    df["Dynamic_Color"] = list(np.column_stack([r, g, b, a]).tolist())
     return df
 
 

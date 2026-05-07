@@ -1,4 +1,4 @@
-﻿"""阶段 05：问题诊断 —— MPI 更新潜力评估、地块雷达、LLM 诊断报告。
+"""阶段 05：问题诊断 —— MPI 更新潜力评估、地块雷达、LLM 诊断报告。
 
 从原 page11 (MPI 计算面板) + page12 (地块雷达) + page14 (LLM 阶段一) 整合。
 """
@@ -65,37 +65,41 @@ if selected_sub == "📊 MPI 更新潜力评估":
         eyebrow="Multi-dimensional Potential Index",
     )
 
-    json_path = SHP_FILES["plots"]
-    if json_path.exists():
-        try:
-            geo_data = json.loads(json_path.read_text(encoding="utf-8"))
-            plot_list = []
-            for feat in geo_data.get("features", []):
-                props = feat.get("properties", {})
-                name = props.get("name", props.get("Name", f"地块_{props.get('OBJECTID', '??')}"))
-                area = props.get("Shape_Area", 50000)
-                pot = min(0.95, 0.5 + (area / 150000) * 0.4)
-                seed_id = props.get("OBJECTID", 0)
-                np.random.seed(seed_id)
-                plot_list.append({
-                    "地块名称": name,
-                    "空间潜力原分": round(pot, 2),
-                    "社会需求原分": round(0.5 + 0.4 * np.random.rand(), 2),
-                    "环境现状评分": round(0.1 + 0.6 * np.random.rand(), 2),
+    @st.cache_data(ttl=3600)
+    def _load_plot_base_data():
+        """缓存 GeoJSON 解析结果，避免每次交互重复读盘。"""
+        _jpath = SHP_FILES["plots"]
+        if _jpath.exists():
+            try:
+                geo_data = json.loads(_jpath.read_text(encoding="utf-8"))
+                plot_list = []
+                for feat in geo_data.get("features", []):
+                    props = feat.get("properties", {})
+                    name = props.get("name", props.get("Name", f"地块_{props.get('OBJECTID', '??')}"))
+                    area = props.get("Shape_Area", 50000)
+                    pot = min(0.95, 0.5 + (area / 150000) * 0.4)
+                    seed_id = props.get("OBJECTID", 0)
+                    np.random.seed(seed_id)
+                    plot_list.append({
+                        "地块名称": name,
+                        "空间潜力原分": round(pot, 2),
+                        "社会需求原分": round(0.5 + 0.4 * np.random.rand(), 2),
+                        "环境现状评分": round(0.1 + 0.6 * np.random.rand(), 2),
+                    })
+                return pd.DataFrame(plot_list)
+            except Exception:
+                return pd.DataFrame({
+                    "地块名称": ["中车老厂区", "光复路历史街区", "铁北断头路节点"],
+                    "空间潜力原分": [0.89, 0.82, 0.74],
+                    "社会需求原分": [0.92, 0.95, 0.65],
+                    "环境现状评分": [0.35, 0.42, 0.28],
                 })
-            base_data = pd.DataFrame(plot_list)
-        except Exception:
-            base_data = pd.DataFrame({
-                "地块名称": ["中车老厂区", "光复路历史街区", "铁北断头路节点"],
-                "空间潜力原分": [0.89, 0.82, 0.74],
-                "社会需求原分": [0.92, 0.95, 0.65],
-                "环境现状评分": [0.35, 0.42, 0.28],
-            })
-    else:
-        base_data = pd.DataFrame({
+        return pd.DataFrame({
             "地块名称": ["数据资产缺失"],
             "空间潜力原分": [0], "社会需求原分": [0], "环境现状评分": [1],
         })
+
+    base_data = _load_plot_base_data()
 
     with st.sidebar:
         st.markdown("### 🎚️ 专家决策模拟 (AHP)")

@@ -1,4 +1,4 @@
-﻿"""阶段 12：城市设计导则 —— LLM 导则文本生成(阶段五) + Word 导出。"""
+"""阶段 12：城市设计导则 —— LLM 导则文本生成(阶段五) + Word 导出。"""
 
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
