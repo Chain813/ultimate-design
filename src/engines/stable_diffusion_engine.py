@@ -7,11 +7,12 @@ Usage:
 """
 
 import base64
+import json
 import logging
 import time
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import requests
 from PIL import Image, ImageDraw
@@ -74,6 +75,35 @@ def _load_config_aigc() -> dict:
     return config.get("engines", {}).get("aigc", {})
 
 
+def _parse_sd_response(data: dict) -> Tuple[Any, int, dict]:
+    """Parse SD API response into (image, seed, info)."""
+    image = _decode_image(data["images"][0])
+    seed = data.get("seed", -1)
+    info = data.get("info", {})
+    if isinstance(info, str):
+        try:
+            info = json.loads(info)
+        except Exception:
+            info = {}
+    return image, seed, info
+
+
+def _build_common_payload(step: PipelineStep) -> dict:
+    """Build common payload fields shared by txt2img/img2img/inpaint."""
+    p = step.params
+    payload = {
+        "steps": p.get("steps", 20),
+        "sampler_name": p.get("sampler_name", "DPM++ 2M Karras"),
+        "cfg_scale": p.get("cfg_scale", 7.0),
+        "seed": p.get("seed", -1),
+    }
+    if step.controlnet_units:
+        payload["alwayson_scripts"] = {
+            "ControlNet": {"args": step.controlnet_units}
+        }
+    return payload
+
+
 # ============================================================
 # SDPipeline
 # ============================================================
@@ -96,6 +126,7 @@ class SDPipeline:
 
     def __init__(self, base_url: str = "", timeout: int = 0):
         aigc = _load_config_aigc()
+        self._aigc = aigc
         self.base_url = base_url or aigc.get("sd_webui_url", "http://127.0.0.1:7860")
         self.timeout = timeout or aigc.get("timeout", 180)
         self._steps: List[PipelineStep] = []
@@ -147,8 +178,7 @@ class SDPipeline:
         return self
 
     def upscale(self, image=None, scale: int = 2, **kwargs) -> "SDPipeline":
-        aigc = _load_config_aigc()
-        upscale_cfg = aigc.get("upscale", {})
+        upscale_cfg = self._aigc.get("upscale", {})
         step = PipelineStep(mode="upscale", params={
             "image": image,
             "scale": scale,
@@ -167,8 +197,7 @@ class SDPipeline:
                        weight: float = 1.0) -> "SDPipeline":
         if self._current_step is None:
             raise ValueError("No active step -- call txt2img/img2img/inpaint first")
-        aigc = _load_config_aigc()
-        max_units = aigc.get("controlnet", {}).get("max_units", 3)
+        max_units = self._aigc.get("controlnet", {}).get("max_units", 3)
         if len(self._current_step.controlnet_units) >= max_units:
             raise ValueError(f"Maximum {max_units} ControlNet units per step")
         self._current_step.controlnet_units.append({
@@ -198,7 +227,9 @@ class SDPipeline:
         last_seed = -1
         last_info = {}
 
-        for step in self._steps:
+        for i, step in enumerate(self._steps):
+            if on_progress:
+                on_progress(step_index=i, total_steps=len(self._steps), mode=step.mode)
             if step.mode == "txt2img":
                 current_image, last_seed, last_info = self._exec_txt2img(step, on_progress)
             elif step.mode == "img2img":
@@ -228,100 +259,52 @@ class SDPipeline:
 
     def _exec_txt2img(self, step: PipelineStep, on_progress) -> tuple:
         p = step.params
-        payload = {
+        payload = _build_common_payload(step)
+        payload.update({
             "prompt": p["prompt"],
             "negative_prompt": p["negative_prompt"],
             "width": p["width"],
             "height": p["height"],
-            "steps": p.get("steps", 20),
-            "sampler_name": p.get("sampler_name", "DPM++ 2M Karras"),
-            "cfg_scale": p.get("cfg_scale", 7.0),
-            "seed": p.get("seed", -1),
-        }
-        if step.controlnet_units:
-            payload["alwayson_scripts"] = {
-                "ControlNet": {"args": step.controlnet_units}
-            }
+        })
         url = f"{self.base_url.rstrip('/')}/sdapi/v1/txt2img"
         data = self._execute_with_retry(url, payload, on_progress)
-        image = _decode_image(data["images"][0])
-        seed = data.get("seed", -1)
-        info = data.get("info", {})
-        if isinstance(info, str):
-            import json
-            try:
-                info = json.loads(info)
-            except Exception:
-                info = {}
-        return image, seed, info
+        return _parse_sd_response(data)
 
     def _exec_img2img(self, step: PipelineStep, current_image, on_progress) -> tuple:
         p = step.params
         init_img = p.get("init_image") or current_image
-        payload = {
+        payload = _build_common_payload(step)
+        payload.update({
             "init_images": [encode_image(init_img)],
             "prompt": p["prompt"],
             "negative_prompt": p["negative_prompt"],
             "denoising_strength": p["denoising"],
-            "steps": p.get("steps", 20),
-            "sampler_name": p.get("sampler_name", "DPM++ 2M Karras"),
-            "cfg_scale": p.get("cfg_scale", 7.0),
-            "seed": p.get("seed", -1),
             "width": p.get("width", init_img.width if hasattr(init_img, 'width') else 512),
             "height": p.get("height", init_img.height if hasattr(init_img, 'height') else 512),
-        }
-        if step.controlnet_units:
-            payload["alwayson_scripts"] = {
-                "ControlNet": {"args": step.controlnet_units}
-            }
+        })
         url = f"{self.base_url.rstrip('/')}/sdapi/v1/img2img"
         data = self._execute_with_retry(url, payload, on_progress)
-        image = _decode_image(data["images"][0])
-        seed = data.get("seed", -1)
-        info = data.get("info", {})
-        if isinstance(info, str):
-            import json
-            try:
-                info = json.loads(info)
-            except Exception:
-                info = {}
-        return image, seed, info
+        return _parse_sd_response(data)
 
     def _exec_inpaint(self, step: PipelineStep, current_image, on_progress) -> tuple:
         p = step.params
         init_img = p.get("init_image") or current_image
         mask_img = p["mask_image"]
-        payload = {
+        payload = _build_common_payload(step)
+        payload.update({
             "init_images": [encode_image(init_img)],
             "mask": encode_image(mask_img),
             "prompt": p["prompt"],
             "negative_prompt": p["negative_prompt"],
             "denoising_strength": p["denoising"],
-            "steps": p.get("steps", 20),
-            "sampler_name": p.get("sampler_name", "DPM++ 2M Karras"),
-            "cfg_scale": p.get("cfg_scale", 7.0),
-            "seed": p.get("seed", -1),
             "mask_blur": p.get("mask_blur", 4),
             "inpainting_fill": p.get("inpainting_fill", 1),
             "inpainting_mask_invert": p.get("inpainting_mask_invert", 0),
             "resize_mode": "Just Resize",
-        }
-        if step.controlnet_units:
-            payload["alwayson_scripts"] = {
-                "ControlNet": {"args": step.controlnet_units}
-            }
+        })
         url = f"{self.base_url.rstrip('/')}/sdapi/v1/img2img"
         data = self._execute_with_retry(url, payload, on_progress)
-        image = _decode_image(data["images"][0])
-        seed = data.get("seed", -1)
-        info = data.get("info", {})
-        if isinstance(info, str):
-            import json
-            try:
-                info = json.loads(info)
-            except Exception:
-                info = {}
-        return image, seed, info
+        return _parse_sd_response(data)
 
     def _exec_upscale(self, step: PipelineStep, current_image, on_progress) -> Any:
         p = step.params
