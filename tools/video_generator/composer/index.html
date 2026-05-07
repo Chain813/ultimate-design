@@ -361,8 +361,10 @@
         </div>
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 40px;">
           <div style="border-radius: 16px; overflow: hidden; border: 2px solid rgba(0,212,255,0.2);
-               background: #111827; height: 500px; display: flex; align-items: center; justify-content: center;">
-            <span style="color: #94a3b8; font-size: 20px;">总平面图 / 鸟瞰效果图</span>
+               background: #111827; height: 500px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <img src="data/images/总平面规划图.png" onerror="this.style.display='none'"
+                 style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+            <span style="color: #94a3b8; font-size: 20px; z-index: 1;">总平面图 / 鸟瞰效果图</span>
           </div>
           <div>
             <h3 style="color: #00d4ff; font-size: 24px; margin-bottom: 24px;">空间结构</h3>
@@ -406,8 +408,10 @@
               <span style="font-size: 24px; color: #94a3b8; font-weight: bold;">道路交通</span>
             </div>
             <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
-                        display: flex; align-items: center; justify-content: center;">
-              <span style="color: #94a3b8;">道路交通规划图</span>
+                        display: flex; align-items: center; justify-content: center; position: relative;">
+              <img src="data/images/道路交通系统规划图.png" onerror="this.style.display='none'"
+                   style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+              <span style="color: #94a3b8; z-index: 1;">道路交通规划图</span>
             </div>
           </div>
           <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
@@ -417,8 +421,10 @@
               <span style="font-size: 24px; color: #4ecdc4; font-weight: bold;">慢行系统</span>
             </div>
             <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
-                        display: flex; align-items: center; justify-content: center;">
-              <span style="color: #94a3b8;">慢行系统规划图</span>
+                        display: flex; align-items: center; justify-content: center; position: relative;">
+              <img src="data/images/慢行系统规划图.png" onerror="this.style.display='none'"
+                   style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+              <span style="color: #94a3b8; z-index: 1;">慢行系统规划图</span>
             </div>
           </div>
           <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
@@ -428,8 +434,10 @@
               <span style="font-size: 24px; color: #ffd700; font-weight: bold;">公共空间</span>
             </div>
             <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
-                        display: flex; align-items: center; justify-content: center;">
-              <span style="color: #94a3b8;">公共空间系统图</span>
+                        display: flex; align-items: center; justify-content: center; position: relative;">
+              <img src="data/images/公共空间系统图.png" onerror="this.style.display='none'"
+                   style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+              <span style="color: #94a3b8; z-index: 1;">公共空间系统图</span>
             </div>
           </div>
           <div class="system-card" style="background: #111827; border-radius: 16px; padding: 32px;
@@ -439,8 +447,10 @@
               <span style="font-size: 24px; color: #34d399; font-weight: bold;">绿地景观</span>
             </div>
             <div style="height: 200px; background: rgba(0,0,0,0.2); border-radius: 8px;
-                        display: flex; align-items: center; justify-content: center;">
-              <span style="color: #94a3b8;">绿地景观系统图</span>
+                        display: flex; align-items: center; justify-content: center; position: relative;">
+              <img src="data/images/绿地景观系统图.png" onerror="this.style.display='none'"
+                   style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+              <span style="color: #94a3b8; z-index: 1;">绿地景观系统图</span>
             </div>
           </div>
         </div>
@@ -458,13 +468,17 @@
         <div style="position: relative; height: 500px; border-radius: 16px; overflow: hidden;
              border: 2px solid rgba(0,212,255,0.3);">
           <div style="position: absolute; inset: 0; background: #111827; display: flex;
-                      align-items: center; justify-content: center;">
-            <span style="color: #34d399; font-size: 24px;">After — AIGC 效果图</span>
+                      align-items: center; justify-content: center; position: relative;">
+            <img src="data/images/重点地块AIGC推演效果图.png" onerror="this.style.display='none'"
+                 style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+            <span style="color: #34d399; font-size: 24px; z-index: 1;">After — AIGC 效果图</span>
           </div>
           <div id="before-clip" style="position: absolute; inset: 0; background: #1e293b;
                display: flex; align-items: center; justify-content: center;
-               clip-path: inset(0 100% 0 0);">
-            <span style="color: #ef4444; font-size: 24px;">Before — 现状照片</span>
+               clip-path: inset(0 100% 0 0); position: relative;">
+            <img src="data/images/现状照片.png" onerror="this.style.display='none'"
+                 style="width: 100%; height: 100%; object-fit: contain; position: absolute; inset: 0;">
+            <span style="color: #ef4444; font-size: 24px; z-index: 1;">Before — 现状照片</span>
           </div>
           <div id="wipe-line" style="position: absolute; top: 0; bottom: 0; width: 4px;
                background: #00d4ff; left: 100%; box-shadow: 0 0 20px rgba(0,212,255,0.8);
