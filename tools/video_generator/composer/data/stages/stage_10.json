@@ -1,0 +1,17 @@
+{
+  "title": "重点地段深化",
+  "data": {
+    "key_plots": [
+      { "name": "站城门户更新地块", "focus": "交通接驳、门户界面、客流导入", "mpi": 85 },
+      { "name": "工业遗产活化地块", "focus": "厂区改造、文创办公、开放街区", "mpi": 72 },
+      { "name": "老旧社区微更新地块", "focus": "社区服务、适老设施、口袋公园", "mpi": 68 },
+      { "name": "历史风貌协调地块", "focus": "界面修补、风貌控制、文化展示", "mpi": 65 },
+      { "name": "文旅活力街巷地块", "focus": "慢行街巷、文创消费、夜间活力", "mpi": 58 }
+    ],
+    "gvi_before": "12%",
+    "gvi_after": "35%",
+    "public_space_before": "2.3ha",
+    "public_space_after": "8.7ha"
+  },
+  "images": {}
+}

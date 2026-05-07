@@ -1,0 +1,21 @@
+{
+  "title": "专项系统设计",
+  "data": {
+    "road_system": {
+      "arterial": ["长春大街", "亚泰大街"],
+      "collector": "次干路 6 条",
+      "local": "支路和街巷 23 条"
+    },
+    "slow_traffic": {
+      "tourist_path": "长春站→伪满皇宫→工业遗产",
+      "resident_path": "社区→菜市场→公园→学校",
+      "cycling_path": "共享单车+专用车道"
+    },
+    "public_space": {
+      "level1": "区域级文化广场 2 处",
+      "level2": "社区级活动场地 5 处",
+      "level3": "街角口袋空间 12 处"
+    }
+  },
+  "images": {}
+}
