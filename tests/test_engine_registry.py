@@ -86,7 +86,15 @@ def test_all_18_symbols_reexported():
         # nlp
         "get_nlp_data",
         # aigc
-        "run_realtime_sd",
+        "run_realtime_sd", "SDPipeline", "SDResult",
+        # quality
+        "QualityAssessor",
+        # pipeline
+        "DrawingPipeline", "PipelineResult",
+        # store
+        "VersionStore", "BatchExporter", "ExportReport",
+        # guideline
+        "build_guideline_prompt", "build_outline_prompt", "build_expansion_prompt",
         # rag
         "load_bge_micro_model", "get_cached_db_embeddings",
         "compute_query_embedding", "retrieve_rag_context",
@@ -98,4 +106,4 @@ def test_all_18_symbols_reexported():
     for name in required:
         assert hasattr(core_engine, name), f"Missing re-export: {name}"
         assert callable(getattr(core_engine, name))
-    assert len(required) == 17, f"Expected 17 symbols, got {len(required)}"
+    assert len(required) == 28, f"Expected 28 symbols, got {len(required)}"

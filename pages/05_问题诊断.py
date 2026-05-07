@@ -14,21 +14,15 @@ import streamlit as st
 from src.config import SHP_FILES, DATA_FILES
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.llm_engine import call_llm_engine_stream
-from src.engines.drawing_prompt_templates import (
-    get_templates_by_stage,
-    build_drawing_prompt,
-    generate_drawing_prompt_with_llm,
-)
 from src.ui.chart_theme import apply_plotly_theme, apply_plotly_polar_theme, get_chart_palette
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary, generate_stage_summary_text
+from src.ui.module_summary import render_stage_summary
 from src.workflow.stage_data_bus import (
     save_stage_output,
     load_stage_output,
     render_evidence_chain_bar,
 )
-from src.utils.runtime_flags import is_demo_mode
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
@@ -258,44 +252,6 @@ elif selected_sub == "🔬 AI 前期诊断报告":
 # ═══════════════════════════════════════════
 elif selected_sub == "🖼️ 图纸提示词生成":
     render_drawing_prompt_ui("05", key_prefix="p5", stage_title="问题诊断")
-
-
-    with st.sidebar:
-        model_tag = st.text_input("DeepSeek 模型标签", value="deepseek-v4-pro", key="p5_draw_model")
-
-    templates = get_templates_by_stage("05")
-    if templates:
-        template_names = [t.name for t in templates]
-        selected_tmpl = st.selectbox("选择图纸模板", template_names, key="p5_draw_sel")
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-
-        st.markdown(f"**图纸说明：** {tmpl.description}")
-        st.markdown(f"**所属章节：** {tmpl.chapter}")
-
-        prompt_text, sys_text = build_drawing_prompt(selected_tmpl)
-        st.text_area("预览：数据注入后的提示词模板", value=prompt_text, height=300, key="p5_draw_preview")
-
-        if st.button(
-            "🧠 调用 DeepSeek 生成完整提示词",
-            type="primary",
-            key="p5_draw_gen",
-            **stretch_width(st.button),
-        ):
-            with st.spinner("正在生成..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl, model=model_tag)
-            st.session_state["p5_generated_prompt"] = result
-
-        if st.session_state.get("p5_generated_prompt"):
-            st.text_area("生成的完整 Image 2.0 提示词", value=st.session_state["p5_generated_prompt"], height=400, key="p5_draw_output")
-            st.download_button(
-                "📥 下载提示词",
-                st.session_state["p5_generated_prompt"],
-                file_name=f"{selected_tmpl}_prompt.md",
-                mime="text/markdown",
-                **stretch_width(st.download_button),
-            )
-    else:
-        st.info("暂无本阶段图纸模板。")
 
 # ═══════════════════════════════════════════
 # 阶段研究小结 (底部)

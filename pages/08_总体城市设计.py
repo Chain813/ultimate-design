@@ -4,10 +4,8 @@ import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
-from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="08 总体城市设计", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -45,25 +43,6 @@ if selected_sub == "🗺️ 概念总平面图生形":
 
 elif selected_sub == "🖼️ 图纸提示词生成":
     render_drawing_prompt_ui("08", key_prefix="p8", stage_title="总体城市设计")
-
-
-    # 合并所有可用的总体设计模板
-    all_names = ["总平面图", "鸟瞰效果图", "功能布局图", "土地利用规划图"]
-    templates = get_templates_by_stage("08")
-    tmpl_names = [t.name for t in templates] if templates else []
-    # 对于没有预设模板的图纸，提供通用生成
-    available = tmpl_names if tmpl_names else all_names
-
-    selected_tmpl = st.selectbox("选择图纸类型", available)
-    if selected_tmpl in tmpl_names:
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 DeepSeek 生成", type="primary", **stretch_width(st.button)):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
-    else:
-        st.info(f"「{selected_tmpl}」暂无预设模板，请使用通用图纸提示词助手。")
 
 st.markdown("---")
 render_stage_summary(

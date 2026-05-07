@@ -4,11 +4,9 @@ import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
-from src.engines.drawing_prompt_templates import get_templates_by_stage, build_drawing_prompt, generate_drawing_prompt_with_llm
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.workflow.stage_data_bus import render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
-from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="09 专项系统设计", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -60,28 +58,6 @@ elif selected_sub == "📐 专项系统分析":
 
 elif selected_sub == "🖼️ 图纸提示词生成":
     render_drawing_prompt_ui("09", key_prefix="p9", stage_title="专项系统设计")
-
-
-    templates = get_templates_by_stage("09")
-    if templates:
-        selected_tmpl = st.selectbox("选择图纸模板", [t.name for t in templates])
-        tmpl = next(t for t in templates if t.name == selected_tmpl)
-        st.markdown(f"**图纸说明：** {tmpl.description}")
-        prompt_text, _ = build_drawing_prompt(selected_tmpl)
-        st.text_area("数据注入后的提示词", value=prompt_text, height=300)
-        if st.button("🧠 调用 DeepSeek 生成", type="primary", **stretch_width(st.button)):
-            with st.spinner("生成中..."):
-                result = generate_drawing_prompt_with_llm(selected_tmpl)
-            st.text_area("完整 Image 2.0 提示词", value=result, height=400)
-            st.download_button(
-                "📥 下载",
-                result,
-                file_name=f"{selected_tmpl}_prompt.md",
-                mime="text/markdown",
-                **stretch_width(st.download_button),
-            )
-    else:
-        st.info("暂无本阶段图纸模板。")
 
 st.markdown("---")
 render_stage_summary(

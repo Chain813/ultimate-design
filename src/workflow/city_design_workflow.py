@@ -30,7 +30,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "early",
         "title": "前期数据获取与现状分析",
-        "path": "pages/01_前期数据获取与现状分析.py",
+        "path": "pages/01_任务解读.py",
         "stages": ["01", "02", "03", "04", "05"],
         "accent": "#60a5fa",
         "summary": "边界、资料、调研、现状和问题诊断。",
@@ -38,7 +38,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "middle",
         "title": "中期概念生成与应对策略",
-        "path": "pages/02_中期概念生成与应对策略.py",
+        "path": "pages/06_目标定位.py",
         "stages": ["06", "07"],
         "accent": "#f59e0b",
         "summary": "愿景目标、设计策略和问题响应。",
@@ -46,7 +46,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "late",
         "title": "后期设计生成与成果表达",
-        "path": "pages/03_后期设计生成与成果表达.py",
+        "path": "pages/08_总体城市设计.py",
         "stages": ["08", "09", "10", "11", "12", "13"],
         "accent": "#34d399",
         "summary": "总体设计、专项深化、实施导则和交付。",

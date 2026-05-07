@@ -22,6 +22,11 @@ from src.engines.spatial_engine import (
     get_spatial_data,
 )
 from src.engines.stable_diffusion_engine import run_realtime_sd, SDPipeline, SDResult
+from src.engines.quality_assessor import QualityAssessor
+from src.engines.drawing_pipeline import DrawingPipeline, PipelineResult
+from src.engines.version_store import VersionStore
+from src.engines.batch_exporter import BatchExporter, ExportReport
+from src.engines.guideline_prompt import build_guideline_prompt, build_outline_prompt, build_expansion_prompt
 from src.utils.runtime_flags import is_demo_mode
 
 __all__ = [
@@ -36,6 +41,15 @@ __all__ = [
     "run_realtime_sd",
     "SDPipeline",
     "SDResult",
+    "QualityAssessor",
+    "DrawingPipeline",
+    "PipelineResult",
+    "VersionStore",
+    "BatchExporter",
+    "ExportReport",
+    "build_guideline_prompt",
+    "build_outline_prompt",
+    "build_expansion_prompt",
     "compute_query_embedding",
     "get_cached_db_embeddings",
     "load_bge_micro_model",

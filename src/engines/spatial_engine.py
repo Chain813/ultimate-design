@@ -27,6 +27,7 @@ logger = logging.getLogger("ultimateDESIGN")
 def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
     df1 = _safe_read_csv("data/Changchun_POI_Real.csv", usecols=usecols)
+    # Changchun_POI_Baidu_New.csv may not exist in all deployments; treat as optional.
     df2 = _safe_read_csv("data/Changchun_POI_Baidu_New.csv", usecols=usecols)
 
     if not df1.empty and not df2.empty:
