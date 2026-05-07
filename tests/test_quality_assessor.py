@@ -87,3 +87,130 @@ def test_detect_vram_fallback():
     with patch("src.engines.quality_assessor.torch", side_effect=ImportError):
         vram = assessor._detect_vram()
     assert vram == 4
+
+
+from PIL import Image
+
+
+@patch("src.engines.quality_assessor.requests.post")
+def test_visual_assessment_calls_ollama(mock_post):
+    mock_post.return_value = MagicMock(
+        status_code=200,
+        json=lambda: {
+            "response": '{"score": 8, "description": "清晰的规划图", "issues": []}'
+        },
+    )
+    assessor = QualityAssessor.__new__(QualityAssessor)
+    assessor.ollama_url = "http://127.0.0.1:11434"
+    assessor.vision_model = "gemma3:4b"
+
+    img = Image.new("RGB", (64, 64))
+    result = assessor._visual_assessment(img, "区位分析图")
+
+    assert result.score == 8.0
+    assert "清晰" in result.description
+    mock_post.assert_called_once()
+
+
+@patch("src.engines.quality_assessor.requests.post")
+def test_visual_assessment_handles_failure(mock_post):
+    mock_post.side_effect = Exception("connection refused")
+    assessor = QualityAssessor.__new__(QualityAssessor)
+    assessor.ollama_url = "http://127.0.0.1:11434"
+    assessor.vision_model = "gemma3:4b"
+
+    img = Image.new("RGB", (64, 64))
+    result = assessor._visual_assessment(img, "test")
+
+    assert result.score == 5.0
+    assert "不可用" in result.issues[0]
+
+
+@patch("src.engines.quality_assessor.requests.post")
+def test_assess_full_pipeline(mock_post):
+    mock_post.return_value = MagicMock(
+        status_code=200,
+        json=lambda: {
+            "response": '{"score": 7, "description": "规划图", "issues": ["文字偏小"]}'
+        },
+    )
+
+    assessor = QualityAssessor.__new__(QualityAssessor)
+    assessor.ollama_url = "http://127.0.0.1:11434"
+    assessor.vision_model = "gemma3:4b"
+    assessor.text_model = "deepseek-v4-pro"
+
+    with patch("src.engines.llm_engine.call_llm_engine") as mock_llm:
+        mock_llm.return_value = '{"score": 8, "issues": [], "suggestions": ["保持风格"]}'
+        img = Image.new("RGB", (64, 64))
+        report = assessor.assess(img, "生成区位分析图", "区位分析图")
+
+    assert report.rating in ("A", "B", "C", "D")
+    assert report.visual_score > 0
+    assert report.content_score > 0
+    assert report.combined_score > 0
+
+
+from src.engines.drawing_pipeline import DrawingPipeline, PipelineResult
+
+
+@patch("src.engines.drawing_pipeline.QualityAssessor")
+@patch("src.engines.drawing_pipeline.revise_prompt_by_rating")
+def test_quality_loop_passes_on_a_rating(mock_revise, mock_assessor_cls):
+    mock_assessor = MagicMock()
+    mock_assessor.assess.return_value = MagicMock(rating="A")
+    mock_assessor_cls.return_value = mock_assessor
+
+    pipeline = DrawingPipeline()
+    pipeline.generate_single = MagicMock(return_value=PipelineResult(
+        template_name="t1", success=True, prompt="p", image=Image.new("RGB", (64, 64)),
+    ))
+
+    result = pipeline.generate_with_quality_loop("t1", max_retries=2)
+    assert result.success is True
+    assert result.quality_report is not None
+    mock_revise.assert_not_called()
+
+
+@patch("src.engines.drawing_pipeline.QualityAssessor")
+@patch("src.engines.drawing_pipeline.revise_prompt_by_rating")
+def test_quality_loop_retries_on_c_rating(mock_revise, mock_assessor_cls):
+    mock_assessor = MagicMock()
+    mock_assessor.assess.side_effect = [
+        MagicMock(rating="C", issue_types=["文字乱码"]),
+        MagicMock(rating="A"),
+    ]
+    mock_assessor_cls.return_value = mock_assessor
+    mock_revise.return_value = "revised prompt"
+
+    pipeline = DrawingPipeline()
+    pipeline.generate_single = MagicMock(return_value=PipelineResult(
+        template_name="t1", success=True, prompt="p", image=Image.new("RGB", (64, 64)),
+    ))
+    pipeline.render_only = MagicMock(return_value=PipelineResult(
+        template_name="t1", success=True, prompt="revised", image=Image.new("RGB", (64, 64)),
+    ))
+
+    result = pipeline.generate_with_quality_loop("t1", max_retries=2)
+    assert result.success is True
+    assert mock_revise.call_count == 1
+
+
+@patch("src.engines.drawing_pipeline.QualityAssessor")
+@patch("src.engines.drawing_pipeline.revise_prompt_by_rating")
+def test_quality_loop_max_retries(mock_revise, mock_assessor_cls):
+    mock_assessor = MagicMock()
+    mock_assessor.assess.return_value = MagicMock(rating="D", issue_types=["严重问题"])
+    mock_assessor_cls.return_value = mock_assessor
+    mock_revise.return_value = "revised"
+
+    pipeline = DrawingPipeline()
+    pipeline.generate_single = MagicMock(return_value=PipelineResult(
+        template_name="t1", success=True, prompt="p", image=Image.new("RGB", (64, 64)),
+    ))
+    pipeline.render_only = MagicMock(return_value=PipelineResult(
+        template_name="t1", success=True, prompt="revised", image=Image.new("RGB", (64, 64)),
+    ))
+
+    result = pipeline.generate_with_quality_loop("t1", max_retries=2)
+    assert mock_assessor.assess.call_count == 3

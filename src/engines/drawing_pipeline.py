@@ -15,7 +15,9 @@ from src.engines.drawing_prompt_engine import (
     build_image_prompt,
     check_prompt_completeness,
     get_drawing_profile,
+    revise_prompt_by_rating,
 )
+from src.engines.quality_assessor import QualityAssessor
 from src.engines.drawing_prompt_templates import (
     build_drawing_prompt,
     generate_drawing_prompt_with_llm,
@@ -36,6 +38,7 @@ class PipelineResult:
     image: Any = None
     error: str = ""
     report: CompletenessReport = None
+    quality_report: Any = None
 
 
 class DrawingPipeline:
@@ -139,6 +142,34 @@ class DrawingPipeline:
             prompt=prompt,
             image=sd_result.images[0] if sd_result.images else None,
         )
+
+    def generate_with_quality_loop(
+        self,
+        template_name: str,
+        max_retries: int = 2,
+        on_progress: Optional[Callable] = None,
+    ) -> PipelineResult:
+        """Generate -> assess -> revise -> regenerate until A/B or max retries."""
+        assessor = QualityAssessor()
+
+        for attempt in range(max_retries + 1):
+            result = self.generate_single(template_name, mode="auto", on_progress=on_progress)
+            if not result.success:
+                return result
+
+            report = assessor.assess(result.image, result.prompt, template_name)
+
+            if report.rating in ("A", "B"):
+                result.quality_report = report
+                return result
+
+            revised = revise_prompt_by_rating(
+                result.prompt, report.rating, report.issue_types
+            )
+            result = self.render_only(template_name, revised, on_progress)
+            result.quality_report = report
+
+        return result
 
     def _validate_assets(self, template_name: str) -> CompletenessReport:
         profile = get_drawing_profile(template_name)
