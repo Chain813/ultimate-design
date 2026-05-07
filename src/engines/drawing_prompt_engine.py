@@ -5,8 +5,35 @@ it refuses or downgrades prompts when the selected drawing lacks required
 spatial/data references.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Sequence
+
+
+# ---- Exceptions ----
+
+class PromptEngineError(Exception):
+    """Base exception for prompt engine errors."""
+
+
+class TemplateNotFoundError(PromptEngineError):
+    """Drawing template not found."""
+
+
+class LLMCallError(PromptEngineError):
+    """LLM API call failed."""
+
+
+# ---- Structured results ----
+
+@dataclass
+class CompletenessReport:
+    """Structured result from prompt completeness check."""
+    can_generate: bool
+    precision: str
+    missing: list = field(default_factory=list)
+    notices: list = field(default_factory=list)
+    template_only: bool = False
+    degraded: bool = False
 
 
 PROJECT_DEFAULTS = {
