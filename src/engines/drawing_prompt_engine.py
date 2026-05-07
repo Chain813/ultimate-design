@@ -369,19 +369,20 @@ def get_drawing_profile(drawing_name: str) -> DrawingProfile:
 
 def build_image_prompt(request: ImagePromptRequest) -> PromptBuildResult:
     profile = get_drawing_profile(request.drawing_name)
-    missing, notices, template_only = check_prompt_completeness(request, profile)
-    if missing and profile.precision == "一级精度":
+    report = check_prompt_completeness(request, profile)
+
+    if report.missing and profile.precision == "一级精度":
         reason = "该图纸属于一级精度图纸，必须上传真实底图和边界数据。"
         return PromptBuildResult(
             can_generate=False,
             prompt="",
             negative_prompt="",
             profile=profile,
-            missing_items=missing,
-            notices=[reason] + notices,
+            missing_items=report.missing,
+            notices=[reason] + report.notices,
             template_only=False,
         )
-    mandatory_missing = [item for item in missing if item not in UPLOAD_CHANNELS]
+    mandatory_missing = [item for item in report.missing if item not in UPLOAD_CHANNELS]
     if mandatory_missing and profile.precision == "二级精度":
         reason = "该图纸属于二级精度图纸，缺少必要主题或表达内容，暂不生成提示词。"
         return PromptBuildResult(
@@ -389,41 +390,43 @@ def build_image_prompt(request: ImagePromptRequest) -> PromptBuildResult:
             prompt="",
             negative_prompt="",
             profile=profile,
-            missing_items=missing,
-            notices=[reason] + notices,
-            template_only=template_only,
+            missing_items=report.missing,
+            notices=[reason] + report.notices,
+            template_only=report.template_only,
         )
-    if missing and profile.precision == "三级精度":
+    if report.missing and profile.precision == "三级精度":
         reason = "该图纸属于三级精度图纸，可生成概念表达提示词，但当前缺少图纸主题、版式或输出比例。"
         return PromptBuildResult(
             can_generate=False,
             prompt="",
             negative_prompt="",
             profile=profile,
-            missing_items=missing,
-            notices=[reason] + notices,
+            missing_items=report.missing,
+            notices=[reason] + report.notices,
             template_only=False,
         )
 
     negative_prompt = build_negative_prompt(profile.precision)
-    prompt = _compose_prompt(request, profile, negative_prompt, template_only)
+    prompt = _compose_prompt(request, profile, negative_prompt, report.template_only)
     return PromptBuildResult(
         can_generate=True,
         prompt=prompt,
         negative_prompt=negative_prompt,
         profile=profile,
-        missing_items=missing,
-        notices=notices,
-        template_only=template_only,
+        missing_items=report.missing,
+        notices=report.notices,
+        template_only=report.template_only,
     )
 
 
-def check_prompt_completeness(request: ImagePromptRequest, profile: DrawingProfile = None):
+def check_prompt_completeness(request: ImagePromptRequest, profile: DrawingProfile = None) -> CompletenessReport:
+    """Check prompt completeness and return structured report."""
     profile = profile or get_drawing_profile(request.drawing_name)
     uploaded = set(request.uploaded_channels or [])
     missing = []
     notices = []
     template_only = False
+    degraded = False
 
     for channel in profile.required_uploads:
         if channel not in uploaded:
@@ -447,6 +450,7 @@ def check_prompt_completeness(request: ImagePromptRequest, profile: DrawingProfi
         data_channels = {"GIS专题图", "空间句法图", "图例参考图", "道路矢量图"}
         if not uploaded.intersection(data_channels):
             template_only = True
+            degraded = True
             notices.append("该图纸属于二级精度图纸，当前缺少真实数据支撑；可生成版式提示词，但不能生成具体分析结论。")
         if not _has_text(request.main_expression):
             missing.append("本图主要表达")
@@ -462,7 +466,18 @@ def check_prompt_completeness(request: ImagePromptRequest, profile: DrawingProfi
             missing.append("画面比例")
 
     missing = _dedupe(missing)
-    return missing, notices, template_only
+    can_generate = len(missing) == 0 or profile.precision == "三级精度"
+    if profile.precision == "一级精度" and missing:
+        can_generate = False
+
+    return CompletenessReport(
+        can_generate=can_generate,
+        precision=profile.precision,
+        missing=missing,
+        notices=notices,
+        template_only=template_only,
+        degraded=degraded,
+    )
 
 
 def build_negative_prompt(precision: str) -> str:
