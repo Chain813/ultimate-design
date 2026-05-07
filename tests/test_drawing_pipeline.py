@@ -156,3 +156,120 @@ def test_build_drawing_prompt_missing_template():
     prompt, sys_prompt = build_drawing_prompt("不存在的图纸XYZ")
     assert prompt == ""
     assert sys_prompt == ""
+
+
+# ============================================================
+# DrawingPipeline tests (Task 5)
+# ============================================================
+
+from unittest.mock import patch, MagicMock
+from PIL import Image
+
+
+def _make_mock_sd_result():
+    """Create a mock SDResult."""
+    from src.engines.stable_diffusion_engine import SDResult
+    return SDResult(
+        images=[Image.new("RGB", (64, 64))],
+        seed=12345,
+        info={},
+        elapsed_seconds=1.0,
+    )
+
+
+def test_pipeline_result_fields():
+    """PipelineResult has all required fields."""
+    from src.engines.drawing_pipeline import PipelineResult
+
+    result = PipelineResult(
+        template_name="区位分析图",
+        success=True,
+        prompt="test prompt",
+        image=Image.new("RGB", (64, 64)),
+    )
+    assert result.template_name == "区位分析图"
+    assert result.success is True
+    assert result.error == ""
+
+
+@patch("src.engines.drawing_pipeline.SDPipeline")
+@patch("src.engines.drawing_pipeline.generate_drawing_prompt_with_llm")
+@patch("src.engines.drawing_pipeline.build_drawing_prompt")
+@patch("src.engines.drawing_pipeline.check_prompt_completeness")
+@patch("src.engines.drawing_pipeline.get_drawing_profile")
+def test_generate_single_auto_mode(mock_profile, mock_check, mock_build, mock_llm, mock_sd):
+    """generate_single in auto mode runs full pipeline."""
+    from src.engines.drawing_pipeline import DrawingPipeline, CompletenessReport
+
+    mock_profile.return_value = MagicMock(
+        precision="三级精度",
+        drawing_type="封面类",
+        name="封面",
+        required_uploads=[],
+    )
+    mock_check.return_value = CompletenessReport(
+        can_generate=True, precision="三级精度", missing=[], notices=[],
+    )
+    mock_build.return_value = ("test prompt", "system prompt")
+    mock_llm.return_value = "final prompt"
+
+    mock_sd_instance = MagicMock()
+    mock_sd_instance.run.return_value = _make_mock_sd_result()
+
+    pipeline = DrawingPipeline(sd_pipeline=mock_sd_instance)
+    result = pipeline.generate_single("封面", mode="auto")
+
+    assert result.success is True
+    assert result.prompt == "final prompt"
+    assert result.image is not None
+
+
+@patch("src.engines.drawing_pipeline.get_drawing_profile")
+def test_generate_single_blocks_on_missing_precision1(mock_profile):
+    """generate_single blocks when 一级精度 has missing assets."""
+    from src.engines.drawing_pipeline import DrawingPipeline
+
+    mock_profile.return_value = MagicMock(
+        precision="一级精度",
+        drawing_type="总体规划类",
+        name="总平面图",
+        required_uploads=["卫星底图", "红线边界图"],
+    )
+
+    pipeline = DrawingPipeline()
+    result = pipeline.generate_single("总平面图", mode="auto")
+
+    assert result.success is False
+    assert len(result.error) > 0
+
+
+def test_generate_batch_multiple():
+    """generate_batch processes multiple templates."""
+    from src.engines.drawing_pipeline import DrawingPipeline
+
+    pipeline = DrawingPipeline()
+    pipeline.generate_single = MagicMock(side_effect=[
+        MagicMock(success=True, template_name="t1"),
+        MagicMock(success=False, template_name="t2", error="missing"),
+    ])
+
+    results = pipeline.generate_batch(["t1", "t2"], mode="auto")
+    assert len(results) == 2
+    assert results[0].success is True
+    assert results[1].success is False
+
+
+def test_generate_batch_progress_callback():
+    """generate_batch calls on_progress for each template."""
+    from src.engines.drawing_pipeline import DrawingPipeline
+
+    pipeline = DrawingPipeline()
+    pipeline.generate_single = MagicMock(return_value=MagicMock(success=True))
+
+    progress_calls = []
+    pipeline.generate_batch(
+        ["t1", "t2", "t3"],
+        mode="auto",
+        on_progress=lambda **kw: progress_calls.append(kw),
+    )
+    assert len(progress_calls) == 3
