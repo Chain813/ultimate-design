@@ -1,0 +1,35 @@
+﻿# ==========================================
+# ⚙️ UltimateDESIGN V2.0 终极全局配置文件
+# ==========================================
+
+engines:
+  llm:
+    ollama_url: "http://127.0.0.1:11434/api/chat"
+    default_model: "deepseek-v4-pro"
+    timeout: 120
+  
+  aigc:
+    sd_webui_url: "http://127.0.0.1:7860"
+    timeout: 180
+    default_sampler: "DPM++ 2M Karras"
+    default_steps: 20
+    default_cfg_scale: 7.0
+    upscale:
+      tile_size: 512
+      tile_overlap: 32
+      target_max_dim: 2048
+    controlnet:
+      max_units: 3
+      default_module: "canny"
+
+data:
+  rag_knowledge_path: "data/rag_knowledge.json"
+  building_footprints: "data/shp/Building_Footprints.geojson"
+  boundary_scope: "data/shp/Boundary_Scope.geojson"
+  key_plots: "data/shp/Key_Plots_District.json"
+  poi_data: "data/Changchun_POI_Real.csv"
+  traffic_data: "data/Changchun_Traffic_Real.csv"
+  nlp_raw_data: "data/CV_NLP_RawData.csv"
+  precise_points: "data/Changchun_Precise_Points.xlsx"
+  gvi_results: "data/GVI_Results_Analysis.csv"
+

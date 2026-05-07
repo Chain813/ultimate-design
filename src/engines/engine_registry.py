@@ -21,7 +21,7 @@ from src.engines.spatial_engine import (
     get_skyline_features,
     get_spatial_data,
 )
-from src.engines.stable_diffusion_engine import run_realtime_sd
+from src.engines.stable_diffusion_engine import run_realtime_sd, SDPipeline, SDResult
 from src.utils.runtime_flags import is_demo_mode
 
 __all__ = [
@@ -34,6 +34,8 @@ __all__ = [
     "get_spatial_data",
     "get_nlp_data",
     "run_realtime_sd",
+    "SDPipeline",
+    "SDResult",
     "compute_query_embedding",
     "get_cached_db_embeddings",
     "load_bge_micro_model",

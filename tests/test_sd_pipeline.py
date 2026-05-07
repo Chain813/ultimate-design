@@ -393,3 +393,15 @@ def test_run_realtime_sd_demo_returns_placeholder(mock_demo):
     result = run_realtime_sd(img, prompt="test", negative_prompt="bad")
     assert isinstance(result, Image.Image)
     assert result.size == (256, 256)
+
+
+def test_engine_registry_exports_run_realtime_sd():
+    from src.engines import engine_registry
+    assert hasattr(engine_registry, "run_realtime_sd")
+    assert callable(engine_registry.run_realtime_sd)
+
+
+def test_engine_registry_exports_sdpipeline():
+    from src.engines import engine_registry
+    assert hasattr(engine_registry, "SDPipeline")
+    assert hasattr(engine_registry, "SDResult")
