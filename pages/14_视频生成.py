@@ -1,8 +1,13 @@
 """阶段 14：视频生成 —— 基于 HyperFrames 的项目汇报视频生成。"""
 
-import streamlit as st
+import json
 import subprocess
+import sys
 from pathlib import Path
+
+import streamlit as st
+import pandas as pd
+
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.workflow.stage_data_bus import render_evidence_chain_bar
@@ -19,7 +24,7 @@ render_page_banner(
 )
 render_evidence_chain_bar("14", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13"])
 
-SUB_OPTIONS = ["🎬 视频渲染", "📋 旁白脚本", "⚙️ 设置"]
+SUB_OPTIONS = ["🎬 视频渲染", "📋 旁白脚本", "🔄 数据同步", "⚙️ 设置"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -224,6 +229,148 @@ elif selected_sub == "📋 旁白脚本":
         file_name="旁白脚本.txt",
         mime="text/plain",
     )
+
+elif selected_sub == "🔄 数据同步":
+    render_section_intro("数据同步", "从项目数据自动生成视频配置，确保视频内容与项目数据一致。", eyebrow="Sync")
+
+    from src.config import DATA_DIR, SHP_DIR
+
+    # 显示当前数据状态
+    st.markdown("### 📊 项目数据状态")
+
+    # 加载统计数据
+    def get_data_stats():
+        stats = {}
+
+        # POI 数据
+        poi_path = DATA_DIR / "Changchun_POI_Real.csv"
+        if poi_path.exists():
+            df = pd.read_csv(poi_path, encoding="utf-8-sig")
+            stats["poi_count"] = len(df)
+        else:
+            stats["poi_count"] = 0
+
+        # 交通数据
+        traffic_path = DATA_DIR / "Changchun_Traffic_Real.csv"
+        if traffic_path.exists():
+            df = pd.read_csv(traffic_path, encoding="utf-8-sig")
+            stats["traffic_count"] = len(df)
+        else:
+            stats["traffic_count"] = 0
+
+        # 街景数据
+        streetview_dir = DATA_DIR / "streetview"
+        if streetview_dir.exists():
+            point_dirs = [d for d in streetview_dir.iterdir() if d.is_dir()]
+            stats["streetview_points"] = len(point_dirs)
+            stats["streetview_images"] = len(point_dirs) * 4
+        else:
+            stats["streetview_points"] = 0
+            stats["streetview_images"] = 0
+
+        # GVI 数据
+        gvi_path = DATA_DIR / "GVI_Results_Analysis.csv"
+        if gvi_path.exists():
+            df = pd.read_csv(gvi_path, encoding="utf-8-sig")
+            stats["gvi_count"] = len(df)
+            if "GVI" in df.columns:
+                stats["gvi_avg"] = round(df["GVI"].mean(), 2)
+        else:
+            stats["gvi_count"] = 0
+            stats["gvi_avg"] = 0
+
+        # 建筑数据
+        buildings_path = SHP_DIR / "Building_Footprints.geojson"
+        if buildings_path.exists():
+            with open(buildings_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            stats["building_count"] = len(data.get("features", []))
+        else:
+            stats["building_count"] = 0
+
+        # 重点地块
+        plots_path = SHP_DIR / "Key_Plots_District.json"
+        if plots_path.exists():
+            with open(plots_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            stats["plots_count"] = len(data.get("features", []))
+        else:
+            stats["plots_count"] = 0
+
+        return stats
+
+    stats = get_data_stats()
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("POI 设施", stats["poi_count"])
+        st.metric("建筑数量", stats["building_count"])
+    with col2:
+        st.metric("街景采样点", stats["streetview_points"])
+        st.metric("街景图片", stats["streetview_images"])
+    with col3:
+        st.metric("GVI 分析", stats["gvi_count"])
+        st.metric("重点地块", stats["plots_count"])
+
+    st.markdown("---")
+
+    # 同步按钮
+    st.markdown("### 🔄 同步项目数据到视频配置")
+
+    if st.button("🔄 同步数据", type="primary", use_container_width=True):
+        with st.spinner("正在同步项目数据..."):
+            try:
+                # 运行数据生成脚本
+                script_path = Path(__file__).resolve().parents[1] / "scripts" / "generate_video_data.py"
+                result = subprocess.run(
+                    [sys.executable, str(script_path)],
+                    capture_output=True,
+                    text=True,
+                    cwd=str(Path(__file__).resolve().parents[1]),
+                )
+
+                if result.returncode == 0:
+                    st.success("✅ 数据同步成功！")
+                    st.code(result.stdout, language="text")
+                else:
+                    st.error(f"❌ 数据同步失败：{result.stderr}")
+
+            except Exception as e:
+                st.error(f"❌ 同步异常：{e}")
+
+    # 显示已同步的数据
+    st.markdown("---")
+    st.markdown("### 📁 已同步的视频数据")
+
+    data_dir = COMPOSER_DIR / "data"
+    if data_dir.exists():
+        # 显示项目数据
+        project_data_path = data_dir / "project_data.json"
+        if project_data_path.exists():
+            with open(project_data_path, "r", encoding="utf-8") as f:
+                project_data = json.load(f)
+
+            st.markdown("#### 项目信息")
+            project = project_data.get("project", {})
+            st.json(project)
+
+            st.markdown("#### 统计数据")
+            project_stats = project_data.get("stats", {})
+            st.json(project_stats)
+
+        # 显示阶段数据
+        st.markdown("#### 阶段数据")
+        stages_dir = data_dir / "stages"
+        if stages_dir.exists():
+            stage_files = sorted(stages_dir.glob("stage_*.json"))
+            for stage_file in stage_files:
+                with open(stage_file, "r", encoding="utf-8") as f:
+                    stage_data = json.load(f)
+                title = stage_data.get("title", stage_file.stem)
+                with st.expander(f"📋 {title}"):
+                    st.json(stage_data.get("data", {}))
+    else:
+        st.warning("数据目录不存在，请先同步数据。")
 
 elif selected_sub == "⚙️ 设置":
     render_section_intro("渲染设置", "配置 HyperFrames 渲染参数。", eyebrow="Settings")

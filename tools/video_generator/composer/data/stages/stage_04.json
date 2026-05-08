@@ -1,13 +1,9 @@
 {
   "title": "现状分析",
   "data": {
-    "building_count": 110289,
-    "avg_height": 12.5,
-    "max_height": 45,
-    "high_rise_ratio": 8.3,
-    "boundary_ha": 150,
-    "poi_count": 1200,
-    "gvi_count": 447
-  },
-  "images": {}
+    "gvi_avg": 8.63,
+    "gvi_max": 77.89,
+    "svf_avg": 30.27,
+    "building_count": 110289
+  }
 }

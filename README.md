@@ -143,16 +143,42 @@ python tools/startup_smoke.py
 
 系统的架构设计实现了**数据与逻辑的彻底解耦**。如果您希望将平台迁移到全新的设计地块，只需替换 `data/` 目录下的底层数据和 GeoJSON 文件即可，**核心代码层无需任何修改**。
 
+**通过 Stage 00 数据准备页面上传数据（推荐）：**
+
+在平台界面中导航到 `00 数据准备` 页面，可按类别上传 16 类数据，系统会自动保存到对应目录并进行质量检查。
+
+**手动放置数据文件：**
+
 ```text
 data/
 ├── shp/
 │   ├── Boundary_Scope.geojson       --- 研究红线底图 (必须)
-│   ├── buildings.geojson            --- 建筑基底（必须包含 Floor 楼层高度字段，用于生成天际线）
+│   ├── Building_Footprints.geojson  --- 建筑基底（必须包含 Floor 楼层高度字段，用于生成天际线）
 │   └── Key_Plots_District.json      --- 5 个重点更新地块边界 (用于 AIGC 局部深化)
 ├── streetview/
-│   └── (您的调研相片库)              --- 街景调研与基底相片，建议按命名规范存储
-├── CV_NLP_RawData.csv               --- 社交媒体舆情与 NLP 分析原始数据集
-└── Changchun_POI_Real.csv           --- 真实 POI 兴趣点数据
+│   └── Point_*/                     --- 街景调研相片，每个点 4 张 (heading_0/90/180/270.jpg)
+├── Changchun_POI_Real.csv           --- 真实 POI 兴趣点数据 (Name, Lat, Lng)
+├── Changchun_Traffic_Real.csv       --- 交通设施数据 (Name, Type, Lat, Lng)
+├── CV_NLP_RawData.csv               --- 社交媒体舆情与 NLP 分析原始数据集 (Text, Keyword, Source)
+├── GVI_Results_Analysis.csv         --- 街景视觉品质指标 (ID, GVI, SVF, Enclosure, Clutter)
+├── Changchun_Precise_Points.csv     --- 采样点坐标 (ID, Lng, Lat)
+├── Building_Years.csv               --- 建筑年代数据 (可选)
+├── House_Prices.csv                 --- 房价数据 (可选)
+├── Traffic_Flow.csv                 --- 交通流量数据 (可选)
+└── rag_knowledge.json               --- RAG 政策法规知识库
+```
+
+**自动化数据获取脚本：**
+
+```bash
+# 获取建筑年代、房价、交通流量等补充数据
+python scripts/fetch_real_estate_data.py
+
+# 获取日照数据
+python scripts/fetch_supplementary_data.py --sunshine
+
+# 获取所有补充数据
+python scripts/fetch_supplementary_data.py --all
 ```
 
 ### 🎬 4. 视频生成工具 (HyperFrames)
@@ -168,7 +194,7 @@ data/
 ```bash
 # 方式一：通过 Streamlit 页面（推荐）
 streamlit run app.py
-# 导航到 14_视频生成 → 选择质量 → 点击渲染
+# 导航到 14_视频生成 → 数据同步 → 选择质量 → 点击渲染
 
 # 方式二：命令行
 cd tools/video_generator/composer
@@ -176,6 +202,8 @@ npm install                    # 首次使用
 npx hyperframes render         # 渲染完整视频
 npx hyperframes preview        # 浏览器实时预览
 ```
+
+**数据同步：** 视频生成页面支持从项目数据自动生成配置，确保视频内容与项目数据一致。在 `14_视频生成` 页面选择「数据同步」模块，点击「同步数据」即可。
 
 **视频内容：** 14 个段落（开场 + 13 阶段），含 3D 全息分层展示、GSAP 动画、Before/After 对比、数字计数器等专业视觉效果。
 
@@ -185,8 +213,10 @@ npx hyperframes preview        # 浏览器实时预览
 
 初次使用 UltimateDESIGN 时，面对众多的面板、图表和 AI 接口可能会略感困惑。请跟随本向导，我们将手把手带您体验一次完整的「循证驱动型街区微更新设计推演」。
 
-### 🟢 阶段一：前期诊断与评估入局 (Stage 01 - 05)
+### 🟢 阶段一：前期诊断与评估入局 (Stage 00 - 05)
 作为规划师，第一步是建立对场地的客观认知框架，避免凭空捏造。
+
+- **Stage 00 数据准备**：上传研究边界、建筑轮廓、POI、交通、街景等原始数据，确保数据完备。支持 16 类数据的上传、获取教程和质量检查。
 
 1. **解读任务书 (Page 01)**：通过顶部的导航栏进入 `01_任务解读`。系统会帮您梳理任务书里的红线限制（如容积率、建筑限高），并提供基于现状的初始区位图提示词。
 2. **沉浸式街景与 3D 底座 (Page 04)**：前往 `04_现状分析`。您将看到巨大的 WebGL 渲染地球，搭载了该片区真实的 150 公顷建筑底座。打开左侧的「光照推演」，观察不同时刻建筑阴影对街道活力的影响。
@@ -221,6 +251,7 @@ ultimateDESIGN/
 ├─ 🧭 pages/                       # 核心视窗：文件名数字前缀决定了导航栏展现与路由执行的顺序
 ├─ 🧬 src/                         # 核心领域代码库：包含所有底层逻辑与可复用套件
 │  ├─ ⚙️ config/                   # 静态变量、路径注册中心、全局配置加载 (`config.yaml`)
+│  ├─ 📊 data/                     # 数据类别定义与辅助函数 (`data_categories.py`)
 │  ├─ 🧠 engines/                  # 计算、大模型、AIGC 逻辑层（严禁在此包含任何 Streamlit UI 代码）
 │  │  ├─ llm_engine.py           # 封装 DeepSeek/Ollama 接口与流式响应
 │  │  ├─ stable_diffusion_engine.py # SDPipeline 统一渲染引擎（txt2img/img2img/inpaint/upscale/多ControlNet）
@@ -233,10 +264,20 @@ ultimateDESIGN/
 │  │  └─ spatial_engine.py       # 封装 GIS 数据解析、MPI 测度与天际线计算
 │  ├─ 🎛️ ui/                       # 全局外壳、原子设计系统组件、定制化图表配色方案
 │  ├─ 🧰 utils/                    # IO 操作、数据转换、环境探测 (`daemon_manager.py`)
-│  └─ 🧩 workflow/                 # 13 阶段工作流状态机映射引擎与跨页面数据总线
+│  └─ 🧩 workflow/                 # 14 阶段工作流状态机映射引擎与跨页面数据总线
 │     ├─ stage_data_bus.py        # 跨阶段数据总线
 │     └─ stage_keys.py            # 阶段数据总线键名常量
-│  ├─ 🎛️ ui/                       # 全局外壳、原子设计系统组件、定制化图表配色方案
+├─ 📜 scripts/                     # 自动化脚本（数据获取、视频生成等）
+│  ├─ fetch_supplementary_data.py # 补充数据获取（日照、交通等）
+│  ├─ fetch_real_estate_data.py   # 房产数据获取（建筑年代、房价）
+│  └─ generate_video_data.py      # 视频配置数据生成
+├─ 🎬 tools/video_generator/       # HyperFrames 视频生成工具
+│  ├─ composer/                   # 合成文件、数据、HTML 模板
+│  └─ output/                     # 渲染输出目录
+├─ 📂 data/                        # 数据资产（通过 Stage 00 上传或手动放置）
+│  ├─ shp/                        # 空间矢量数据（GeoJSON）
+│  ├─ streetview/                 # 街景照片（458 个采样点 × 4 方向）
+│  └─ *.csv / *.json              # 表格数据和知识库
 │  ├─ 🧰 utils/                    # IO 操作、数据转换、环境探测 (`daemon_manager.py`)
 │  └─ 🧩 workflow/                 # 13 阶段工作流状态机映射引擎与跨页面数据总线 (`stage_data_bus.py`)
 ├─ 🎨 assets/                      # 前端静态物料：深度定制的 CSS 样式 (`style.css`)、HTML WebGL 模板

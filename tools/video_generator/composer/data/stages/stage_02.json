@@ -1,14 +1,10 @@
 {
   "title": "资料收集",
   "data": {
-    "sources": [
-      { "name": "空间数据", "count": "110,289", "unit": "建筑基底", "source": "GeoJSON" },
-      { "name": "POI 数据", "count": "1,200", "unit": "条记录", "source": "高德地图" },
-      { "name": "街景影像", "count": "80", "unit": "采样点", "source": "现场调研" },
-      { "name": "舆情数据", "count": "207", "unit": "条分析", "source": "社交媒体" },
-      { "name": "交通数据", "count": "125", "unit": "条记录", "source": "高德交通" },
-      { "name": "GVI 环境品质", "count": "447", "unit": "条记录", "source": "语义分割" }
-    ]
-  },
-  "images": {}
+    "building_count": 110289,
+    "poi_count": 150,
+    "streetview_count": 458,
+    "traffic_count": 125,
+    "nlp_count": 207
+  }
 }

@@ -37,35 +37,32 @@ render_top_nav()
 render_engine_status_alert()
 top_stats = get_hud_statistics()
 
-# 🎬 演示模式：最大化显示区域
+# 🎬 演示模式：最大化显示区域 (使用 style.css 中的 .presentation-active 类)
 if st.session_state.get("presentation_mode", False):
-    st.markdown("""<style>
-        .block-container { max-width: 100% !important; padding: 0.5rem 2rem !important; }
-    </style>""", unsafe_allow_html=True)
-
-# 🧪 隐藏主页原生的侧边栏组件
-st.markdown("""
-<style>
-    [data-testid="collapsedControl"] { display: none !important; }
-    section[data-testid="stSidebar"] { display: none !important; }
-</style>
-""", unsafe_allow_html=True)
+    st.markdown('<div class="presentation-active"></div>', unsafe_allow_html=True)
 
 # ==========================================
 # 📊 模块配置数据 (研究模块 01-04)
 # ==========================================
 MODULES = [
     {
+        "title": "00 数据准备与上传",
+        "desc": "上传研究边界、建筑轮廓、POI、交通、街景、文本评论等各类原始数据。",
+        "image": "assets/03_digital_twin.png",
+        "path": "pages/00_数据准备.py",
+        "btn_label": "进入数据准备"
+    },
+    {
         "title": "01 前期数据获取与现状分析",
         "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
-        "image": "assets/01_data_overview.png",
+        "image": "assets/04_urban_diagnosis.png",
         "path": "pages/01_任务解读.py",
         "btn_label": "进入前期板块"
     },
     {
         "title": "02 中期概念生成与应对策略",
         "desc": "目标定位、设计策略、案例借鉴、协商共识。",
-        "image": "assets/02_strategy_library.png",
+        "image": "assets/06_llm_consultation_v2.png",
         "path": "pages/06_目标定位.py",
         "btn_label": "进入中期板块"
     },
@@ -121,7 +118,7 @@ if not engine_status_home.sd or not engine_status_home.gemma:
         由于标准云端环境缺乏 GPU 算力支持，本系统的两大核心 AI 引擎已自动切换为**预置演示模式 (Demo Mode)**：
         - 🎨 **视觉渲染引擎 (Stable Diffusion)**：生成式风貌推演功能将返回预先渲染好的高质量参考图。
         - 🧠 **决策博弈引擎 (Ollama/Gemma)**：多主体协商对话将返回结构化的预置专家推演剧本。
-        
+
         *注：地图测度引擎 (Deck.GL)、AHP 评估算法、资产管理等核心逻辑不受影响，均可正常交互体验。*
 
         ---
@@ -244,7 +241,8 @@ render_section_intro("街区范围及改造红线", "统一查看研究边界、
 def load_map_data(file_path):
     """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
     path = Path(file_path)
-    if not path.exists(): return None
+    if not path.exists():
+        return None
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
@@ -331,5 +329,38 @@ def render_project_map():
 
 render_project_map()
 render_skyline_hud()
+
+# ==========================================
+# 📊 数据就绪状态
+# ==========================================
+from src.data import get_data_readiness
+readiness = get_data_readiness()
+render_summary_cards([
+    {"value": f"{readiness['loaded']}/{readiness['total']}", "title": "数据完备度", "desc": "已上传数据类别"},
+    {"value": f"{readiness['required_loaded']}/{readiness['required_count']}", "title": "必备数据就绪", "desc": "核心数据完整性"},
+    {"value": "✅ 就绪" if readiness["is_ready"] else "⏳ 待补充", "title": "数据状态", "desc": "可否进入工作流"},
+])
+
+# ==========================================
+# 🏗️ 模块入口卡片
+# ==========================================
+render_section_intro("核心模块入口", "按前期、中期、后期三大板块进入工作流。", eyebrow="Modules")
+
+st.markdown('<div class="module-grid-home">', unsafe_allow_html=True)
+for mod in MODULES:
+    page_route = get_page_route(mod["path"])
+    image_name = mod["image"].split("/")[-1]
+    st.markdown(f'''
+    <div class="module-container">
+        <div class="module-card" style="background-image: url('{get_static_url(image_name)}')">
+            <div class="module-btn-mock">
+                <h4>{mod['title']}</h4>
+                <p>{mod['desc']}</p>
+                <a href="/{page_route}">{mod['btn_label']}</a>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
 st.markdown("<br><br>", unsafe_allow_html=True)

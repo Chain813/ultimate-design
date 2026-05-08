@@ -1,12 +1,11 @@
 {
   "title": "设计策略",
   "data": {
-    "negotiation_result": true,
-    "negotiation": [
-      { "role": "居民代表老王", "color": "#4ecdc4", "quote": "我们只想保留老街坊的味道，别全拆了。" },
-      { "role": "开发商赵总", "color": "#ff6b35", "quote": "容积率至少要1.4，不然算不过来账。" },
-      { "role": "规划师李工", "color": "#00d4ff", "quote": "我建议分区施策，历史区保护、新区适度开发。" }
-    ]
-  },
-  "images": {}
+    "stakeholders": [
+      "居民",
+      "开发商",
+      "规划师"
+    ],
+    "strategy_count": 5
+  }
 }

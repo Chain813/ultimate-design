@@ -1,18 +1,13 @@
 {
   "title": "城市设计导则",
   "data": {
-    "controls": {
-      "max_far": 1.4,
-      "max_height_m": 24,
-      "min_green_ratio": "25%",
-      "heritage_buffer_m": 50
-    },
-    "street_types": [
-      { "name": "文旅主街", "width": "20m" },
-      { "name": "社区生活街", "width": "12m" },
-      { "name": "慢行巷道", "width": "6-8m" },
-      { "name": "景观廊道", "width": "15m" }
+    "controls": [
+      "用地管控",
+      "强度管控",
+      "高度管控",
+      "界面管控",
+      "风貌管控",
+      "公共空间管控"
     ]
-  },
-  "images": {}
+  }
 }

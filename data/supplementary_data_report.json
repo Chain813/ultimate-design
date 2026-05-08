@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-08T21:00:11.652901",
+  "data_sources": [
+    "building_years",
+    "house_prices",
+    "traffic_flow"
+  ],
+  "record_counts": {
+    "building_years": 10,
+    "house_prices": 10,
+    "traffic_flow": 15
+  }
+}

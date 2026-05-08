@@ -1,15 +1,8 @@
 {
   "title": "现场调研",
   "data": {
-    "survey_points": 458,
-    "issues": [
-      { "type": "界面杂乱", "count": 23, "severity": "高" },
-      { "type": "停车混乱", "count": 18, "severity": "中" },
-      { "type": "消极空间", "count": 15, "severity": "中" },
-      { "type": "设施老化", "count": 31, "severity": "高" },
-      { "type": "绿化不足", "count": 27, "severity": "高" },
-      { "type": "交通割裂", "count": 12, "severity": "高" }
-    ]
-  },
-  "images": {}
+    "sampling_points": 458,
+    "total_images": 1832,
+    "directions": 4
+  }
 }

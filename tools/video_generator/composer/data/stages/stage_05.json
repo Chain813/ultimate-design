@@ -1,13 +1,13 @@
 {
   "title": "问题诊断",
   "data": {
-    "mpi_ranking": [
-      { "label": "站城门户", "value": 85, "maxValue": 100 },
-      { "label": "工业遗产", "value": 72, "maxValue": 100 },
-      { "label": "老旧社区", "value": 68, "maxValue": 100 },
-      { "label": "历史风貌", "value": 65, "maxValue": 100 },
-      { "label": "文旅活力", "value": 58, "maxValue": 100 }
+    "key_plots_count": 5,
+    "key_plots": [
+      "农贸水产市场",
+      "食品调料大市场",
+      "市一中北侧",
+      "清禾集贸市场",
+      "中国石油"
     ]
-  },
-  "images": {}
+  }
 }

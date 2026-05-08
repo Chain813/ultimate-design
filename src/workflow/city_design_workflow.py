@@ -8,6 +8,7 @@ from src.ui.design_system import load_design_css
 
 
 CITY_DESIGN_STAGES = [
+    {"code": "00", "title": "数据准备", "focus": "上传项目所需的各类原始数据，确保数据完备性。"},
     {"code": "01", "title": "任务解读", "focus": "明确项目名称、类型、研究范围、设计深度、成果形式和重点问题。"},
     {"code": "02", "title": "资料收集", "focus": "汇总自然、用地、建筑、交通、公共空间、历史文化、人群活动与政策资料。"},
     {"code": "03", "title": "现场调研", "focus": "记录道路街巷、建筑界面、公共空间、商业业态、历史资源和消极空间。"},
@@ -30,10 +31,10 @@ WORKFLOW_BOARDS = [
     {
         "key": "early",
         "title": "前期数据获取与现状分析",
-        "path": "pages/01_任务解读.py",
-        "stages": ["01", "02", "03", "04", "05"],
+        "path": "pages/00_数据准备.py",
+        "stages": ["00", "01", "02", "03", "04", "05"],
         "accent": "#60a5fa",
-        "summary": "边界、资料、调研、现状和问题诊断。",
+        "summary": "数据准备、边界、资料、调研、现状和问题诊断。",
     },
     {
         "key": "middle",
@@ -55,6 +56,17 @@ WORKFLOW_BOARDS = [
 
 
 STAGE_RESOURCE_MAP = {
+    "00": {
+        "board": "early",
+        "status": "已接入",
+        "chart": [("空间数据", 90, "边界/建筑/地块/POI/交通"), ("街景数据", 85, "采样点照片与视觉品质指标"), ("文本数据", 80, "社交媒体评论与政策法规知识库")],
+        "resources": [
+            ("数据上传中心", "/数据准备?sub=数据上传中心"),
+            ("数据获取教程", "/数据准备?sub=数据获取教程"),
+            ("数据质量检查", "/数据准备?sub=数据质量检查"),
+        ],
+        "placeholder": "后续可深化为数据自动校验、格式转换和数据血缘追踪。",
+    },
     "01": {
         "board": "early",
         "status": "已接入",
@@ -199,6 +211,11 @@ def _module_url(page_slug, subpage=None):
 
 
 STAGE_MODULE_MAP = {
+    "00": [
+        {"title": "数据上传中心", "href": "/数据准备?sub=数据上传中心", "desc": "上传空间、POI、街景、文本等各类原始数据。", "kind": "数据模块"},
+        {"title": "数据获取教程", "href": "/数据准备?sub=数据获取教程", "desc": "查看各类数据的详细获取方式和格式要求。", "kind": "教程模块"},
+        {"title": "数据质量检查", "href": "/数据准备?sub=数据质量检查", "desc": "检查已上传数据的完整性和质量。", "kind": "检查模块"},
+    ],
     "01": [
         {"title": "任务书与开题报告解析", "href": _module_url("数据底座与规划策略", "策略语义萃取"), "desc": "任务书、开题报告和政策文本语义萃取。", "kind": "资料模块"},
         {"title": "研究边界与底图核验", "href": _module_url("数据底座与规划策略", "物理底座管理"), "desc": "红线、地块、建筑和基础图层校验。", "kind": "底图模块"},
@@ -297,6 +314,7 @@ def stage_modules(stage_code):
 def stage_primary_href(stage_code):
     """Return the direct URL for a stage's independent page."""
     _STAGE_PAGE_MAP = {
+        "00": "/数据准备",
         "01": "/任务解读",
         "02": "/资料收集",
         "03": "/现场调研",
@@ -360,6 +378,13 @@ def render_stage_workbench(stage_code):
 
 PROJECT_FLOW_STEPS = [
     {
+        "step": "0",
+        "title": "数据准备与上传",
+        "pages": "数据准备页面",
+        "stages": ["00"],
+        "work": "上传研究边界、建筑轮廓、POI、交通、街景、文本评论等各类原始数据，确保数据完备。",
+    },
+    {
         "step": "1",
         "title": "边界与资料先锁定",
         "pages": "首页 + 页面01",
@@ -398,6 +423,33 @@ PROJECT_FLOW_STEPS = [
 
 
 PROJECT_FUNCTION_MAP = [
+    {
+        "page_key": "data_prepare",
+        "page": "数据准备",
+        "subpage": "数据上传中心",
+        "function": "原始数据分类上传",
+        "stages": ["00"],
+        "description": "按类别上传空间边界、建筑轮廓、POI、交通、街景、文本评论等原始数据，自动保存到项目目录。",
+        "output": "各类原始数据文件。",
+    },
+    {
+        "page_key": "data_prepare",
+        "page": "数据准备",
+        "subpage": "数据获取教程",
+        "function": "数据获取方法指南",
+        "stages": ["00"],
+        "description": "查看每类数据的详细获取方式，包括 API 调用、GIS 导出、爬虫脚本等多种方法。",
+        "output": "数据获取教程和代码示例。",
+    },
+    {
+        "page_key": "data_prepare",
+        "page": "数据准备",
+        "subpage": "数据质量检查",
+        "function": "数据完整性与质量校验",
+        "stages": ["00"],
+        "description": "检查已上传数据的完整性、格式正确性、字段完整性和坐标范围合理性。",
+        "output": "数据质量报告和修复建议。",
+    },
     {
         "page_key": "home",
         "page": "首页",

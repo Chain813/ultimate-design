@@ -1,20 +1,11 @@
 {
   "title": "总体城市设计",
   "data": {
-    "structure": {
-      "core": "伪满皇宫文化核心",
-      "axes": ["站城活力发展轴", "工业遗产更新轴"],
-      "districts": ["文旅展示片区", "创意产业片区", "社区生活片区", "站前服务片区"],
-      "nodes": ["门户节点", "文化节点", "社区节点", "生态节点"]
-    },
-    "land_use": {
-      "residential": "35%",
-      "commercial": "15%",
-      "public_service": "12%",
-      "green_space": "18%",
-      "road_traffic": "15%",
-      "heritage_protection": "5%"
-    }
-  },
-  "images": {}
+    "spatial_structure": "一核两轴多片多节点",
+    "core": "伪满皇宫文化核心",
+    "axes": [
+      "站城活力轴",
+      "工业遗产更新轴"
+    ]
+  }
 }

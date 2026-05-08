@@ -1,19 +1,11 @@
 {
   "title": "成果表达",
   "data": {
-    "summary": {
-      "total_area_ha": 150,
-      "building_count": 110289,
-      "key_plots": 5,
-      "template_count": 70,
-      "stages_completed": 13
-    },
-    "innovations": [
-      "数字孪生驱动的循证规划方法",
-      "AI辅助的多主体博弈协商",
-      "AIGC专业图纸自动生成",
-      "全流程数据总线架构"
+    "deliverables": [
+      "A3图册 (≥60页)",
+      "A1展板 (≥3张)",
+      "规划文本",
+      "PPT汇报"
     ]
-  },
-  "images": {}
+  }
 }
