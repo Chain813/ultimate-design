@@ -1,359 +1,326 @@
-[**English**](./README_EN.md) • [**简体中文**](./README.md)
+[**English**](./README_EN.md) · [**简体中文**](./README.md)
 
----
+<div align="center">
 
 # UltimateDESIGN
 
-**长春伪满皇宫周边街区微更新与城市设计决策支持平台**
+**数字孪生 · 古今共振 —— AI 赋能下的城市微更新规划设计决策支持平台**
 
-UltimateDESIGN 是一个面向城乡规划专业城市设计课程、毕业设计和研究展示的 Streamlit 应用。项目由 **15 个专业模块** 组成，贯穿了「前期数据采集 -> 现状诊断 -> 概念策略 -> 设计深化 -> 视频汇报」的完整循证规划工作流。
+*长春伪满皇宫周边街区 · 150 公顷 · 15 模块 · 41 张专业图纸 · 端到端循证工作流*
 
----
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
+[![Tests](https://img.shields.io/badge/Tests-167%20passed-brightgreen?logo=pytest)](./tests/)
+[![License](https://img.shields.io/badge/License-Academic-orange)]()
 
-## 📑 目录 (Table of Contents)
-- [🌟 核心特色与架构基座](#-核心特色与架构基座)
-- [🚀 快速启动 (Quick Start)](#-快速启动-quick-start)
-- [🔧 安装与算力挂载指南 (Installation Guide)](#-安装与算力挂载指南-installation-guide)
-- [👶 城市规划师新手教程 (Beginner Guide)](#-城市规划师新手教程-beginner-guide)
-- [🗂️ 核心文件结构与代码规范 (Project Structure)](#️-核心文件结构与代码规范-project-structure)
-- [☁️ 代码托管与部署规约 (GitHub Upload Guide)](#️-代码托管与部署规约-github-upload-guide)
-- [🐞 报告与反馈](#-报告与反馈)
+</div>
 
 ---
 
-## 🌟 核心特色与架构基座
+## 项目概况
 
-本项目致力于解决传统城市设计中“分析与设计脱节”的痛点，通过引入 AI 辅助决策，构建了一个全链路的数字孪生平台。
-
-- **15 个标准化模块**
-  将复杂的城市设计过程科学拆解为 15 个模块（从 00 数据准备到 14 视频生成）。每个步骤均封装了独立的数据面板、分析模型、AI 提示词生成逻辑与阶段答辩总结，确保全过程“数据驱动、循证设计”。
-- **41 种专业图纸模板覆盖与自动组装**
-  内置 41 种基于 Stable Diffusion 和 ControlNet 的提示词模板。系统会自动提取空间资产（如建筑高度、POI 活力、容积率、用地属性等）注入并格式化为精准的绘图指令，极大降低了规划师使用 AIGC 的门槛。
-- **动态驱动的答辩图表与数据看板**
-  利用 Plotly 引擎，为 13 个阶段的答辩小结自动生成强相关的高级交互图表。包含 AHP-MPI 更新潜力排行、多主体共识度雷达、分期实施甘特图、空间句法热力图等，让汇报更具说服力。
-- **LLM 循证推演逻辑与多方博弈**
-  深度挂载本地模型或云端 API（如 DeepSeek），通过跨阶段数据总线 (`stage_data_bus`) 贯穿全局。特设“三主体博弈”模块，模拟居民、开发商、规划师的诉求冲突，一键生成去 AI 味、专业术语饱满的学术推演段落和策略矩阵。
-- **极速渲染与局部碎片刷新机制**
-  采用基于时效的数据格式缓存优化（`@st.cache_data`），配合 Pydeck/Folium 异步地图挂载与 Streamlit 碎片化重绘（`@st.fragment`）。即使在 150 公顷尺度的基底上进行 3D 渲染和光照推演，也能保障丝滑的交互体验，彻底告别页面卡顿和频繁重载。
-- **端到端 AIGC 渲染管线与地理空间对齐**
-  内置 `SDPipeline` 统一渲染引擎和 `DrawingPipeline` 编排器。系统首创「矢量 -> 光栅 -> 引导」流程，自动将 GeoJSON 路网与用地数据光栅化为 ControlNet 引导图（Canny/Segmentation），确保 AI 生成图纸与 150 公顷研究范围像素级对齐，彻底解决 AIGC 制图的“空间位置幻觉”痛点。集成了 `QualityAssessor` 双重质量评估（Gemma 视觉 + DeepSeek 内容），实现提示词自动修正与质量闭环。
-- **版本管理与图册级批量导出**
-  `VersionStore` 持久化存储每张图纸的全部生成版本（PNG + 元数据 JSON），支持版本对比与回溯。`BatchExporter` 支持一键导出完整图册（70+ 张图纸），增量生成跳过已有版本，按章节组织输出。
-- **两步法导则生成与 RAG 政策检索**
-  城市设计导则采用「要素大纲 → 完整文本」两步法生成，集成 RAG 向量检索自动引用政策法规（城市更新意见、历史文化名城保护规划等），确保导则文本专业、完整、可交付。
-- **HyperFrames 视频答辩汇报**
-  集成 HeyGen HyperFrames 框架，支持一键生成 ~9 分钟的答辩汇报视频（14 段落：开场 + 13 阶段），含 3D 全息分层展示、GSAP 动画、Before/After 对比、数字计数器等专业视觉效果。通过 Stage 14 独立页面操作。
+UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 **Streamlit 全栈决策支持平台**。项目以长春伪满皇宫周边 150 公顷街区为实证对象，将城市设计拆解为 15 个标准化阶段（数据准备 → 现状诊断 → 概念策略 → 设计深化 → 视频汇报），打通「GIS 数据采集 → LLM 循证推演 → AIGC 标准制图 → 视频答辩生成」的完整闭环。
 
 ---
 
-## 🚀 快速启动 (Quick Start)
+## 核心亮点
 
-这份说明旨在为您提供**最短路径**将本项目在本地跑通。对于 Windows 用户，我们提供了极其友好的自动化脚本。
+| 能力 | 说明 |
+|---|---|
+| **15 阶段循证工作流** | 从数据准备到视频汇报，每个阶段独立封装数据面板、AI 推演与答辩图表 |
+| **41 张专业图纸模板** | 基于 SD + ControlNet，自动注入空间资产生成符合规划规范的图纸 |
+| **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
+| **三主体博弈推演** | LLM 驱动居民 / 开发商 / 规划师角色对抗，输出共识度雷达与策略矩阵 |
+| **双重质量闭环** | Gemma 视觉 + DeepSeek 内容双评估，C/D 级图纸自动修正重生成 |
+| **版本化图册导出** | `VersionStore` 全版本回溯 + `BatchExporter` 一键导出 70+ 张图册 |
+| **HyperFrames 视频** | 一键生成 ~9 分钟答辩汇报视频，含 3D 分层展示与 GSAP 动画 |
+| **167 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
 
-### 📦 1. 环境准备与依赖安装
+---
 
-系统推荐使用 **Conda** 进行环境隔离，并要求 **Python 3.12+** (已在 3.14 环境验证通过)。
+## 快速启动
 
-#### 方法一：使用自动化脚本（推荐 Windows 用户）
-1. 克隆代码库并进入目录：
-   ```powershell
-   git clone https://github.com/Chain813/ultimate-design.git
-   cd ultimate-design
-   ```
-2. 双击运行 `setup_env.bat`。该脚本将自动检测 Conda、创建名为 `gis_ai` 的隔离环境，并安装 `requirements.txt` 中的所有依赖。
+### 1. 环境安装
 
-#### 方法二：手动安装
 ```powershell
-# 1. 抓取代码
 git clone https://github.com/Chain813/ultimate-design.git
 cd ultimate-design
 
-# 2. 创建并激活环境
+# 方式 A：自动化脚本（Windows 推荐）
+.\scripts\setup_env.bat
+
+# 方式 B：手动安装
 conda create -n gis_ai python=3.12 -y
 conda activate gis_ai
-
-# 3. 安装依赖
 pip install -r requirements.txt
 ```
 
-### ▶️ 2. 启动总控制台
+### 2. 启动平台
 
-无需预先配置任何复杂的 API Key，您可以直接通过自动化脚本或命令唤醒系统界面。
-
-**使用脚本启动**：直接双击运行 `run.bat`，它会自动检测端口、启动后端并打开浏览器。
-
-**手动命令行启动**：
 ```powershell
-conda activate gis_ai
+# 方式 A：双击 run.bat（自动检测端口并打开浏览器）
+# 方式 B：命令行
 streamlit run app.py
 ```
 
-服务启动后，您的默认浏览器将自动访问（通常是 `http://localhost:8501/`）。
+平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按 `[00]` ~ `[14]` 顺序浏览。
 
-### 🧭 3. 基础页面导航机制
-
-系统取消了传统的侧边栏导航，以释放更多横向展示空间。所有的模块跳转均在 **顶部导航栏 (Top Nav)** 完成。请按照 `[00]` 到 `[14]` 的编号顺序，依次体验城市设计的完整推演流。
-
-### ✅ 4. 健康自检 (Smoke Test)
-
-如果您修改了任何代码，请在提交或部署前运行以下命令以确保系统状态健康：
+### 3. 健康自检
 
 ```powershell
-# 1. 运行核心单元测试 (167 个测试用例)
-python -m pytest
-
-# 2. 运行环境与文件清单检查 (含 15 个页面完整性校验)
-python tools/check_env.py
-
-# 3. 运行数据质量自动化检查 (输出数据质量等级报告)
-python tools/data_quality_check.py
-
-# 4. 运行安全审计扫描 (确保无敏感凭据泄漏)
-python tools/secret_scan.py
-
-# 5. 运行启动冒烟测试 (确保所有页面均能成功编译)
-python tools/startup_smoke.py
+python -m pytest                    # 167 项单元测试
+python tools/check_env.py           # 15 页面完整性校验
+python tools/data_quality_check.py  # 数据质量评级
+python tools/secret_scan.py         # 敏感信息扫描
 ```
 
 ---
 
-## 🔧 安装与算力挂载指南 (Installation Guide)
+## 算力挂载
 
-要激活 UltimateDESIGN 的「完全体」形态（包括 AIGC 推图与 LLM 智能博弈），您需要将本地或云端的算力基础设施与应用进行挂载。我们在系统中内置了**算力守护进程管理器**（位于首页上方），可实时监控引擎状态。
+平台在纯 CPU 模式下即可运行全部分析功能。如需激活 AIGC 制图与 LLM 推演，请挂载以下引擎：
 
-### 🧠 1. 配置大语言模型 API (以 DeepSeek 为例)
+### LLM 引擎（DeepSeek / Ollama）
 
-平台已全面接入 DeepSeek 官方云端 API（或通过 Ollama 部署的本地 Gemma/DeepSeek 模型），为您提供最顶级的推理能力。云端模式**完全不占用本地计算资源（零显存消耗）**。
+```env
+# .env
+DEEPSEEK_API_KEY="<your-api-key>"
+```
 
-1. 前往 [DeepSeek 开放平台](https://platform.deepseek.com/) 注册并获取您的 API Key。
-2. 在项目根目录找到或创建 `.env` 文件。
-3. 填入您的 API 密钥（请替换为您真实的 Key）：
-   ```env
-   DEEPSEEK_API_KEY="<your-deepseek-api-key>"
-   ```
-4. **验证机制**：系统启动后，底层的 `llm_engine.py` 会自动读取该环境变量，并在执行“案例推演”、“多方博弈”等重负荷 NLP 任务时，将请求发送至云端处理。首页的 HUD 面板会亮起🟢绿灯提示“已联机”。
+系统自动读取环境变量，首页 HUD 面板将显示「已联机」。云端模式零显存消耗。
 
-### 🎨 2. 挂载视觉渲染引擎 (Stable Diffusion WebUI)
+### 视觉渲染引擎（Stable Diffusion WebUI）
 
-平台内置的 41 种专业图纸模板需要依托 SD 的强大生图能力及 ControlNet 约束机制（如线稿、深度图控制）。
-
-1. 启动您的本地 SD WebUI 环境（如秋叶整合包或纯净版 WebUI）。
-2. **核心步骤**：必须开启 API 监听模式。在您的启动脚本（如 `webui-user.bat`）中添加以下参数：
+1. 启动本地 SD WebUI，启动参数需包含 `--api --listen`：
    ```bat
    set COMMANDLINE_ARGS=--api --listen --xformers
    ```
-3. **平台内一键启动**：您也可以在 `config_daemon.json` 中配置 SD 的安装路径，然后在平台首页的“算力指挥中心”点击**一键唤醒 SD**。
-4. **验证机制**：确保 SD 运行在默认端口 `127.0.0.1:7860`。回到平台主页，视觉渲染引擎 HUD 指示灯将显示「已联机」。
+2. 确保运行于 `127.0.0.1:7860`，平台将自动检测连接状态。
 
-### 📂 3. 空间数据与资产管理
+### GIS 资产预渲染
 
-系统的架构设计实现了**数据与逻辑的彻底解耦**。如果您希望将平台迁移到全新的设计地块，只需替换 `data/` 目录下的底层数据和 GeoJSON 文件即可，**核心代码层无需任何修改**。
+将矢量 GeoJSON 光栅化为 ControlNet 引导图（路网骨架 / 用地分区 / 卫星底图）：
 
-**通过 Stage 00 数据准备页面上传数据（推荐）：**
+```powershell
+python scripts/render_gis_assets.py
+```
 
-在平台界面中导航到 `00 数据准备` 页面，可按类别上传 16 类数据，系统会自动保存到对应目录并进行质量检查。
+生成资产位于 `static/assets/generated_base/`，用于 AIGC 管线的空间约束输入。
 
-**手动放置数据文件：**
+---
+
+## 数据资产
+
+系统实现了**数据与逻辑的彻底解耦**。迁移到新地块只需替换 `data/` 目录，核心代码无需修改。
+
+### 数据目录结构
 
 ```text
 data/
 ├── shp/
-│   ├── Boundary_Scope.geojson       --- 研究红线底图 (必须)
-│   ├── Building_Footprints.geojson  --- 建筑基底（必须包含 Floor 楼层高度字段，用于生成天际线）
-│   └── Key_Plots_District.json      --- 5 个重点更新地块边界 (用于 AIGC 局部深化)
-├── streetview/
-│   └── Point_*/                     --- 街景调研相片，每个点 4 张 (heading_0/90/180/270.jpg)
-├── Changchun_POI_Real.csv           --- 真实 POI 兴趣点数据 (Name, Lat, Lng)
-├── Changchun_Traffic_Real.csv       --- 交通设施数据 (Name, Type, Lat, Lng)
-├── CV_NLP_RawData.csv               --- 社交媒体舆情与 NLP 分析原始数据集 (Text, Keyword, Source)
-├── GVI_Results_Analysis.csv         --- 街景视觉品质指标 (ID, GVI, SVF, Enclosure, Clutter)
-├── Changchun_Precise_Points.csv     --- 采样点坐标 (ID, Lng, Lat)
-├── Building_Years.csv               --- 建筑年代数据 (可选)
-├── House_Prices.csv                 --- 房价数据 (可选)
-├── Traffic_Flow.csv                 --- 交通流量数据 (可选)
-└── rag_knowledge.json               --- RAG 政策法规知识库
+│   ├── Boundary_Scope.geojson           # 研究范围红线 (必须)
+│   ├── Building_Footprints.geojson      # 建筑基底 (含 Floor 字段)
+│   ├── Key_Plots_District.json          # 5 个重点更新地块边界
+│   ├── landuse_clipped.geojson          # 裁切后的用地分类 (含国标 RGB 色值)
+│   ├── road_network_clipped.geojson     # 裁切后的三级道路网络
+│   └── rail_network_clipped.geojson     # 裁切后的轨道交通网络
+├── streetview/                          # 街景调研照片 (458 点 × 4 方向)
+├── Changchun_POI_Real.csv               # POI 兴趣点 (Name, Lat, Lng)
+├── Changchun_Traffic_Real.csv           # 交通设施 (Name, Type, Lat, Lng)
+├── CV_NLP_RawData.csv                   # 社交媒体舆情原始数据
+├── GVI_Results_Analysis.csv             # 街景绿视率指标
+├── Building_Years.csv                   # 建筑年代 (可选)
+├── House_Prices.csv                     # 房价数据 (可选)
+├── Traffic_Flow.csv                     # 交通流量 (可选)
+└── rag_knowledge.json                   # RAG 政策法规知识库
 ```
 
-**自动化数据获取脚本：**
+### 自动化数据获取
 
-```bash
-# 获取建筑年代、房价、交通流量等补充数据
-python scripts/fetch_real_estate_data.py
-
-# 获取日照数据
-python scripts/fetch_supplementary_data.py --sunshine
-
-# 获取所有补充数据
-python scripts/fetch_supplementary_data.py --all
-
-# [NEW] GIS 矢量数据光栅化（生成 AIGC 空间底稿）
-python scripts/render_gis_assets.py
+```powershell
+python scripts/fetch_real_estate_data.py          # 建筑年代 / 房价
+python scripts/fetch_supplementary_data.py --all  # 日照 / 交通等
+python scripts/clip_city_data.py                  # 裁切城市级数据至研究范围
+python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿)
 ```
-
-### 🎬 4. 视频生成工具 (HyperFrames)
-
-平台内置基于 [HeyGen HyperFrames](https://github.com/heygen-com/hyperframes) 的视频生成工具，可一键生成 ~9 分钟的答辩汇报视频。
-
-**环境要求：**
-- Node.js 22+（[下载](https://nodejs.org/)）
-- FFmpeg（视频编码）
-- Chrome Headless（HTML 渲染，HyperFrames 自动下载）
-
-**使用方式：**
-```bash
-# 方式一：通过 Streamlit 页面（推荐）
-streamlit run app.py
-# 导航到 14_视频生成 → 数据同步 → 选择质量 → 点击渲染
-
-# 方式二：命令行
-cd tools/video_generator/composer
-npm install                    # 首次使用
-npx hyperframes render         # 渲染完整视频
-npx hyperframes preview        # 浏览器实时预览
-```
-
-**数据同步：** 视频生成页面支持从项目数据自动生成配置，确保视频内容与项目数据一致。在 `14_视频生成` 页面选择「数据同步」模块，点击「同步数据」即可。
-
-**视频内容：** 14 个段落（开场 + 13 阶段），含 3D 全息分层展示、GSAP 动画、Before/After 对比、数字计数器等专业视觉效果。
 
 ---
 
-## 👶 城市规划师新手教程 (Beginner Guide)
+## 工作流阶段
 
-初次使用 UltimateDESIGN 时，面对众多的面板、图表和 AI 接口可能会略感困惑。请跟随本向导，我们将手把手带您体验一次完整的「循证驱动型街区微更新设计推演」。
+系统将城市设计过程拆解为三大阶段，每个阶段的输出自动流转至下游：
 
-### 🟢 阶段一：前期诊断与评估入局 (Stage 00 - 05)
-作为规划师，第一步是建立对场地的客观认知框架，避免凭空捏造。
+### 前期：现状诊断（Stage 00-05）
 
-- **Stage 00 数据准备**：上传研究边界、建筑轮廓、POI、交通、街景等原始数据，确保数据完备。支持 16 类数据的上传、获取教程和质量检查。
+| 阶段 | 页面 | 核心能力 |
+|---|---|---|
+| 00 | 数据准备 | 16 类数据上传、质量检查、坐标同步 |
+| 01 | 任务解读 | 任务书解析、红线限制提取、区位图提示词 |
+| 02 | 资料收集 | 语义提取引擎、资产完整度评估 |
+| 03 | 现场调研 | 街景样本库、四方向全景检索 |
+| 04 | 现状分析 | WebGL 3D 建筑底座、POI 聚合、天际线、光照推演 |
+| 05 | 问题诊断 | AHP-MPI 更新潜力排行、地块诊断雷达图 |
 
-1. **解读任务书 (Page 01)**：通过顶部的导航栏进入 `01_任务解读`。系统会帮您梳理任务书里的红线限制（如容积率、建筑限高），并提供基于现状的初始区位图提示词。
-2. **沉浸式街景与 3D 底座 (Page 04)**：前往 `04_现状分析`。您将看到巨大的 WebGL 渲染地球，搭载了该片区真实的 150 公顷建筑底座。打开左侧的「光照推演」，观察不同时刻建筑阴影对街道活力的影响。
-3. **识别潜力黑马 (Page 05)**：进入 `05_问题诊断`，查看「MPI 更新潜力排行榜」与「地块诊断雷达图」。这套综合了 POI、街景绿视率、交通便利度的 AHP-MPI 算法会帮您揪出亟需改造的地段，为后续设计提供硬核证据。
+### 中期：策略推演（Stage 06-07）
 
-### 🟡 阶段二：价值斡旋与策略拟定 (Stage 06 - 07)
-这是整个系统最具 AI 智慧的模块：如何在众口难调的微更新中平衡各方利益？
+| 阶段 | 页面 | 核心能力 |
+|---|---|---|
+| 06 | 目标定位 | LLM 案例对标（新天地 / 国王十字等）、愿景提取 |
+| 07 | 设计策略 | 三主体博弈推演、共识度雷达、策略落地矩阵 |
 
-1. **寻找参照系 (Page 06)**：在 `06_目标定位` 面板，系统会根据前期识别的问题，召唤大语言模型进行「案例对标」，自动比对国内外成功更新案例（如上海新天地、伦敦国王十字）的底层逻辑。
-2. **三主体桌游博弈 (Page 07)**：规划绝不是“一言堂”。进入 `07_设计策略`，开启「多主体推演」引擎。您将目睹系统扮演的【居民代表老王】、【开发商赵总】和【规划师李工】围绕容积率和风貌保留展开激烈辩论。系统会自动评估这套方案的综合接受度，并沉淀出一张「多主体共识度雷达图」及对应的策略落地矩阵。
+### 后期：设计深化与交付（Stage 08-14）
 
-### 🔴 阶段三：视觉转化与归档出库 (Stage 08 - 13)
-理清逻辑后，是时候将策略转化为震撼人心的专业图纸和法定文件了。
-
-1. **概念生形 (Page 08)**：在 `08_总体城市设计` 中调取总平图生形面板。系统组装出精准的 AIGC 指令发送至 Stable Diffusion，生成带有功能分区的概念规划总平图。
-2. **前后对比魔术 (Page 10)**：选取重点地段，进入 `10_重点地段深化`。上传现场破败的街景图，依托 ControlNet 约束，推演未来建成后的高精度效果图 (After)，实现直观的前后对比。
-3. **一键出图与质量闭环**：在任意图纸页面，勾选「启用质量评估闭环」后点击「一键出图」，系统自动完成提示词生成 → SD 渲染 → 双重质量评估（视觉+内容）→ 自动修正重生成的完整闭环。支持批量模式，可一次性选择多张图纸批量生成。
-4. **导则与收网导出 (Page 12 & 13)**：前往 `12_城市设计导则` 生成地块控制图则。最后在 `13_成果表达` 页面，点击生成学术小结，平台会将前 12 个阶段的所有数据流（包含图表、策略、共识度）熔炼为一篇结构严密、可以直接用于答辩的学术终评报告。
-5. **版本管理与图册导出**：所有生成的图片自动保存版本历史，支持版本对比。通过批量导出功能可一键生成完整图册，按章节组织输出。
+| 阶段 | 页面 | 核心能力 |
+|---|---|---|
+| 08 | 总体城市设计 | AIGC 总平面图、ControlNet 空间对齐 |
+| 09 | 专项系统设计 | 交通 / 公共空间 / 风貌 / 文化四大专项 |
+| 10 | 重点地段深化 | 5 地块 Before/After 推演、高精度效果图 |
+| 11 | 实施路径 | 六种更新模式、三期时序甘特图 |
+| 12 | 城市设计导则 | 两步法导则生成、RAG 政策检索、控制图则 |
+| 13 | 成果表达 | 41 图纸总览、学术终评报告、图册批量导出 |
+| 14 | 视频生成 | HyperFrames 答辩视频（14 段落 / ~9 分钟） |
 
 ---
 
-## 🗂️ 核心文件结构与代码规范 (Project Structure)
-
-本项目秉承高内聚、低耦合的软件工程原则，严禁将复杂的 AI 逻辑直接写在前端 UI 文件中。
-
-### 核心目录架构
+## 项目结构
 
 ```text
 ultimateDESIGN/
-├─ 🏠 app.py                       # 首页、平台状态看板、全局地图 2D/3D 基底核心入口
-├─ 🧭 pages/                       # 核心视窗：文件名数字前缀决定了导航栏展现与路由执行的顺序
-├─ 🧬 src/                         # 核心领域代码库：包含所有底层逻辑与可复用套件
-│  ├─ ⚙️ config/                   # 静态变量、路径注册中心、全局配置加载 (`config.yaml`)
-│  ├─ 📊 data/                     # 数据类别定义与辅助函数 (`data_categories.py`)
-│  ├─ 🧠 engines/                  # 计算、大模型、AIGC 逻辑层（严禁在此包含任何 Streamlit UI 代码）
-│  │  ├─ llm_engine.py           # 封装 DeepSeek/Ollama 接口与流式响应
-│  │  ├─ stable_diffusion_engine.py # SDPipeline 统一渲染引擎（txt2img/img2img/inpaint/upscale/多ControlNet）
-│  │  ├─ drawing_pipeline.py     # DrawingPipeline 端到端编排器（一键出图/批量生成/质量闭环）
-│  │  ├─ quality_assessor.py     # QualityAssessor 双重质量评估（Gemma视觉+DeepSeek内容）
-│  │  ├─ version_store.py        # VersionStore 版本持久化存储（PNG+JSON元数据）
-│  │  ├─ batch_exporter.py       # BatchExporter 图册级批量导出
-│  │  ├─ sd_exceptions.py        # SD 渲染引擎自定义异常层次
-│  │  ├─ guideline_prompt.py     # 两步法导则生成提示词模板 + RAG 检索
-│  │  └─ spatial_engine.py       # 封装 GIS 数据解析、MPI 测度与天际线计算
-│  ├─ 🎛️ ui/                       # 全局外壳、原子设计系统组件、定制化图表配色方案
-│  ├─ 🧰 utils/                    # IO 操作、数据转换、环境探测 (`daemon_manager.py`)
-│  └─ 🧩 workflow/                 # 14 阶段工作流状态机映射引擎与跨页面数据总线
-│     ├─ stage_data_bus.py        # 跨阶段数据总线
-│     └─ stage_keys.py            # 阶段数据总线键名常量
-├─ 📜 scripts/                     # 自动化脚本（数据获取、视频生成等）
-│  ├─ fetch_supplementary_data.py # 补充数据获取（日照、交通等）
-│  ├─ fetch_real_estate_data.py   # 房产数据获取（建筑年代、房价）
-│  └─ generate_video_data.py      # 视频配置数据生成
-├─ 🎬 tools/video_generator/       # HyperFrames 视频生成工具
-│  ├─ composer/                   # 合成文件、数据、HTML 模板
-│  └─ output/                     # 渲染输出目录
-├─ 📂 data/                        # 数据资产（通过 Stage 00 上传或手动放置）
-│  ├─ shp/                        # 空间矢量数据（GeoJSON）
-│  ├─ streetview/                 # 街景照片（458 个采样点 × 4 方向）
-│  └─ *.csv / *.json              # 表格数据和知识库
-│  ├─ 🧰 utils/                    # IO 操作、数据转换、环境探测 (`daemon_manager.py`)
-│  └─ 🧩 workflow/                 # 13 阶段工作流状态机映射引擎与跨页面数据总线 (`stage_data_bus.py`)
-├─ 🎨 assets/                      # 前端静态物料：深度定制的 CSS 样式 (`style.css`)、HTML WebGL 模板
-├─ 🗃️ data/                        # 数据仓库：空间底座 (shp)、指标表格、语义分析 RAG 知识库暂存区
-├─ 📄 docs/                        # 规划文书：任务书、开题报告、法定政策资料等参考文件
-├─ 🌐 static/                      # Streamlit Server 静态文件代理目录
-├─ 🛠️ tools/                       # DevOps：环境检查、依赖清理、安全扫描
-│  └─ video_generator/           # HyperFrames 视频生成工具（Python + Node.js）
-├─ ✅ tests/                       # 自动化验证：Pytest 单元测试用例（143 个测试）
+├── app.py                              # 平台入口 / 首页 / 全局地图基底
+├── pages/                              # 15 个阶段页面 (00 ~ 14)
+├── src/                                # 核心领域代码
+│   ├── config/                         # 配置加载 / 路径注册 / 运行时常量
+│   │   ├── loader.py                   #   YAML 配置解析
+│   │   ├── paths.py                    #   全局路径注册中心
+│   │   └── runtime.py                  #   运行时标志位
+│   ├── data/                           # 数据类别定义
+│   ├── engines/                        # 计算 / AI / AIGC 引擎 (严禁 UI 代码)
+│   │   ├── llm_engine.py               #   DeepSeek / Ollama 统一接口
+│   │   ├── stable_diffusion_engine.py  #   SDPipeline (txt2img / img2img / ControlNet)
+│   │   ├── drawing_pipeline.py         #   DrawingPipeline 端到端编排器
+│   │   ├── drawing_prompt_engine.py    #   41 图纸提示词构建器
+│   │   ├── drawing_prompt_templates.py #   图纸模板元数据库
+│   │   ├── quality_assessor.py         #   双重质量评估 (Gemma + DeepSeek)
+│   │   ├── version_store.py            #   版本持久化 (PNG + JSON)
+│   │   ├── batch_exporter.py           #   图册级批量导出
+│   │   ├── spatial_engine.py           #   GIS 解析 / MPI 测度 / 天际线
+│   │   ├── guideline_prompt.py         #   导则生成 + RAG 检索
+│   │   ├── rag_engine.py              #   RAG 向量检索引擎
+│   │   ├── nlp_engine.py              #   NLP 文本分析
+│   │   ├── site_diagnostic_engine.py  #   场地诊断引擎
+│   │   └── social_media_crawler.py    #   社交媒体舆情采集
+│   ├── ui/                             # Streamlit UI 组件
+│   │   ├── app_shell.py               #   全局外壳 / 导航 / 布局
+│   │   ├── design_system.py           #   原子设计系统
+│   │   ├── chart_theme.py             #   Plotly 图表配色
+│   │   ├── drawing_prompt_ui.py       #   AIGC 制图交互面板
+│   │   ├── module_summary.py          #   阶段答辩小结生成器
+│   │   └── output_flow_panel.py       #   成果导出面板
+│   ├── utils/                          # 通用工具
+│   │   ├── daemon_manager.py          #   算力守护进程管理
+│   │   ├── geo_transform.py           #   坐标系转换 (GCJ-02/BD-09/WGS-84)
+│   │   ├── service_check.py           #   引擎连接检测
+│   │   └── document_generator.py      #   文档导出
+│   └── workflow/                       # 工作流引擎
+│       ├── city_design_workflow.py    #   14 阶段状态机
+│       ├── stage_data_bus.py          #   跨阶段数据总线
+│       ├── stage_keys.py             #   总线键名常量
+│       └── template_assets.py        #   固定制图资产管理
+├── scripts/                            # 自动化脚本
+│   ├── setup_env.bat                  #   环境自动安装 (Windows)
+│   ├── clip_city_data.py              #   城市级数据裁切至研究范围
+│   ├── render_gis_assets.py           #   GIS 矢量光栅化 (AIGC 底稿)
+│   ├── run_drawing_export.py          #   高精度图纸批量导出
+│   ├── fetch_supplementary_data.py    #   补充数据获取
+│   ├── fetch_real_estate_data.py      #   房产数据获取
+│   ├── convert_gcj02_to_wgs84.py     #   坐标系批量转换
+│   └── generate_video_data.py        #   视频配置数据生成
+├── tools/                              # DevOps 工具链
+│   ├── check_env.py                   #   环境与页面完整性校验
+│   ├── data_quality_check.py          #   数据质量评级 (A/B/C/D)
+│   ├── secret_scan.py                 #   敏感信息扫描
+│   ├── startup_smoke.py              #   启动冒烟测试
+│   └── video_generator/              #   HyperFrames 视频工具 (Node.js)
+├── tests/                              # 24 个测试模块 / 167 项用例
+├── data/                               # 数据资产 (数据与逻辑解耦)
+├── static/                             # Streamlit 静态资源代理
+├── assets/                             # CSS 样式 / WebGL 模板
+├── config/                             # config.yaml 运行时配置
+├── output/                             # AIGC 图纸输出与版本归档
+├── run.bat                             # 一键启动脚本
+├── requirements.txt                    # Python 依赖
+└── .github/workflows/ci.yml           # CI 流水线
 ```
-
-### 🧭 页面路由与 13 阶段精细映射 (pages/)
-
-- **前期 (诊断阶段)**：`01_任务解读.py` -> `02_资料收集.py` -> `03_现场调研.py` -> `04_现状分析.py` -> `05_问题诊断.py`
-- **中期 (策略阶段)**：`06_目标定位.py` -> `07_设计策略.py`
-- **后期 (设计与导出阶段)**：`08_总体城市设计.py` -> `09_专项系统设计.py` -> `10_重点地段深化.py` -> `11_实施路径.py` -> `12_城市设计导则.py` -> `13_成果表达.py`
-- **视频生成**：`14_视频生成.py`（独立页面，基于 HyperFrames 生成答辩汇报视频）
-
-### ⚡ 性能优化与渲染架构
-
-- **统一数据流式静默缓存 (`@st.cache_data`)**: 对空间数据 IO (GeoJSON 读取) 和高频耗时运算做内存级缓存。绝对禁止在 UI 线程使用阻塞式逻辑。
-- **地图组件静态渲染 (`@st.fragment`)**: 确保主地图的丝滑交互，切换图层或更改光照时仅在局部重绘该地图块，绝不导致整个 App 重启闪烁。
-- **异步大模型推演**: 将复杂的多主体 AI 辩论和生图请求采用流式 (Streaming) 或异步处理，提升用户体验。
 
 ---
 
-## ☁️ 代码托管与部署规约 (GitHub Upload Guide)
+## 技术架构
 
-我们欢迎任何形式的学术探讨与开源贡献。在提交代码前，请遵循以下规范：
+### AIGC 制图管线
 
-### 📦 1. 本地测试与预提交检查
-
-在推送代码之前，请务必在本地运行内置的健康自检工具，确保您的改动没有破坏核心引擎或泄露敏感信息：
-
-```powershell
-# 运行单元测试
-pytest
-
-# 运行安全扫描，防止 API Key 被意外 push
-python tools/secret_scan.py
+```
+GeoJSON 矢量数据                     Stable Diffusion WebUI
+       │                                      ▲
+       ▼                                      │
+  render_gis_assets.py              ┌──────────┴──────────┐
+  (矢量光栅化)                       │   ControlNet 约束    │
+       │                            │  • Canny (路网骨架)   │
+       ├── road_guidance.png ──────▶│  • Seg (用地分区)    │
+       ├── landuse_seg.png ────────▶│                      │
+       └── satellite.png ─────────▶│  • Tile (色彩参考)   │
+                                    └──────────┬──────────┘
+  DrawingPipeline 编排                          │
+       │                                       ▼
+       ├── 提示词构建 (41 模板)          生成专业图纸
+       ├── 质量评估 (A/B/C/D)           (地理空间对齐)
+       ├── 自动修正 & 重生成
+       └── VersionStore 版本归档
 ```
 
-提交信息建议遵循学术与工程融合的 **Conventional Commits** 规范（使用 `feat:`, `fix:`, `docs:`, `refactor:` 等前缀）：
+### 性能优化
+
+- **`@st.cache_data`**：空间数据 I/O 与高频计算的内存级缓存
+- **`@st.fragment`**：地图组件局部重绘，避免全页刷新
+- **流式 LLM**：多主体博弈与案例推演采用 Streaming 异步处理
+
+---
+
+## 代码托管
+
+### 预提交检查
+
+```powershell
+python -m pytest                # 单元测试
+python tools/secret_scan.py     # 密钥扫描
+```
+
+### 提交规范
+
+遵循 **Conventional Commits**：
+
 ```powershell
 git add .
-git commit -m "feat(llm): 升级共识雷达算法权重并增加政策约束"
-```
-
-### 🚀 2. 推送至远程分支
-
-确认无误后，将本地更迭推送到 GitHub 远端仓库的主分支 `main`：
-```powershell
+git commit -m "feat(aigc): 实现 GIS-to-AIGC 空间对齐管线"
 git push origin main
 ```
 
-### ⚙️ 3. 触发 CI/CD 自动化检测
+### CI/CD
 
-推送到 `main` 分支后，如果配置了 GitHub Actions，将会自动触发以下多重检验：
-- Lint 语法与代码风格规范检测
-- 依赖版本兼容性映射探测
-- 核心逻辑单元测试 (通过预植入的 Smoke Test)
-只有通过全部检查的代码才被视为稳定版本。
+推送至 `main` 后自动触发 GitHub Actions：Lint → 密钥扫描 → 单元测试 → 冒烟测试 → 数据质量检查。
 
 ---
 
-## 🐞 报告与反馈
+## 相关文档
 
-- 有关本项目已识别和待修复的错误日志，请参阅 **[`BUG_REPORT.md`](./BUG_REPORT.md)**。
-- 关于项目最近的一次系统级性能体检与架构分析，请参阅 **[`PROJECT_INSPECTION_REPORT.md`](./PROJECT_INSPECTION_REPORT.md)**。
-- 如果在使用过程中遇到任何漏洞、功能建议或配置难题，欢迎随时提交 Issue 至本 GitHub 仓库。我们将定期跟进并维护。
+| 文档 | 说明 |
+|---|---|
+| [BUG_REPORT.md](./BUG_REPORT.md) | 已识别问题与修复日志 |
+| [PROJECT_INSPECTION_REPORT.md](./PROJECT_INSPECTION_REPORT.md) | 系统级架构体检报告 |
+| [GLOSSARY.md](./GLOSSARY.md) | 核心术语释义 (MPI / GVI / ControlNet 等) |
+| [README_EN.md](./README_EN.md) | English Documentation |
+
+---
+
+<div align="center">
+<sub>Built with Streamlit · Stable Diffusion · DeepSeek · GeoPandas · Plotly · HyperFrames</sub>
+</div>

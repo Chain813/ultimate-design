@@ -1,70 +1,197 @@
-[**English**](./README_EN.md) • [**简体中文**](./README.md) • [**🚀 快速启动**](./QUICK_START.md) • [**🔧 安装指南**](./INSTALL_GUIDE.md) • [**👶 新手教程**](./BEGINNER_GUIDE.md) • [**📖 核心术语**](./GLOSSARY.md) • [**☁️ GitHub部署**](./GITHUB_UPLOAD_GUIDE.md)
+[**English**](./README_EN.md) · [**简体中文**](./README.md)
 
----
+<div align="center">
 
 # UltimateDESIGN
 
-**Micro-Renewal & Urban Design Decision Support Platform**
+**Digital Twin · Temporal Resonance — AI-Powered Urban Micro-Renewal Planning & Design Platform**
 
-UltimateDESIGN is a Streamlit application designed for urban planning courses, graduation projects, and research presentations. The project consists of **15 professional modules**, covering the complete evidence-based planning workflow from "data preparation" to "video presentation".
+*Changchun Puppet Emperor's Palace District · 150 ha · 15 Modules · 41 Professional Drawings · End-to-End Evidence-Based Workflow*
 
----
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
+[![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
+[![Tests](https://img.shields.io/badge/Tests-167%20passed-brightgreen?logo=pytest)](./tests/)
+[![License](https://img.shields.io/badge/License-Academic-orange)]()
 
-### 🌟 Core Features & Architecture
-
-- **15-Stage Independent Workflow**
-  Breaks down urban design into 15 standardized steps (from 00 Data Prep to 14 Video Generation), each encapsulating independent functional panels, AI drawing prompt generation logic, and stage defense summaries.
-- **41 Professional Drawing Templates**
-  Built-in 41 prompt templates based on Stable Diffusion and ControlNet. The system automatically extracts spatial assets (e.g., building heights, POI vitality) to inject and format prompts.
-- **Dynamic Defense Charts**
-  Utilizes Plotly to automatically generate highly relevant analysis charts for the defense summaries of the 13 stages, including MPI renewal potential rankings, multi-agent consensus radars, and phased implementation Gantt charts.
-- **LLM Evidence-Based Reasoning Logic**
-  Deep integration with local Gemma models. Through a cross-stage data bus (`stage_data_bus`), it generates academic reasoning paragraphs that are free of "AI flavor" and rich in professional terminology with one click.
-- **High-Speed Rendering & Fragment Refreshing**
-  Employs time-based data format caching optimization (`@st.cache_data`), combined with JS asynchronous map mounting and Streamlit fragment redrawing (`@st.fragment`), ensuring silky-smooth interaction on a 150-hectare base.
+</div>
 
 ---
 
-### 🗂️ Core File Structure & Explanations
+## Overview
 
-```text
-UltimateDESIGN
-├── app.py                       --- Home, platform status, global 2D/3D map base entry
-├── pages/                       --- Core views: divided into Pre, Mid, and Post phases
-│   ├── 00_数据准备.py             --- [Pre] Data ledger, quality check, coordinate sync
-│   ├── 01_任务解读.py             --- [Pre] Project overview, task requirements extraction
-│   ├── 02_资料收集.py             --- [Pre] Semantic extraction engine, asset completeness
-│   ├── 03_现场调研.py             --- [Pre] Street view sample library and retrieval
-│   ├── 04_现状分析.py             --- [Pre] 3D base, POI aggregation, skyline analysis
-│   ├── 05_问题诊断.py             --- [Pre] AHP-MPI model and plot diagnostic radar
-│   ├── 06_目标定位.py             --- [Mid] LLM case benchmarking and vision extraction
-│   ├── 07_设计策略.py             --- [Mid] Tripartite negotiation and RAG policy check
-│   ├── 08_总体城市设计.py         --- [Post] AIGC conceptual master plan generation
-│   ├── 09_专项系统设计.py         --- [Post] Transport/Space/Style/Culture specializations
-│   ├── 10_重点地段深化.py         --- [Post] AIGC Before/After inference for 5 key plots
-│   ├── 11_实施路径.py             --- [Post] Six renewal modes and 3-phase timeline
-│   ├── 12_城市设计导则.py         --- [Post] Spatial control indicators and guideline export
-│   ├── 13_成果表达.py             --- [Post] 41 drawing templates overview and atlas export
-│   └── 14_视频生成.py             --- [Post] HyperFrames AI video presentation generation
-├── src/                         --- Domain code: core logic and reusable components
-│   ├── config/                  --- Static variables, path registration, config loading
-│   ├── engines/                 --- Computation, LLM, AIGC logic (Strictly NO UI here)
-│   ├── ui/                      --- Global shell, atomic design system, chart themes
-│   ├── utils/                   --- IO ops, data conversion, text cleaning utilities
-│   └── workflow/                --- 13-stage workflow mapping engine and data bus
-├── assets/                      --- Frontend statics: CSS styles, HTML WebGL templates
-├── data/                        --- Data warehouse: spatial base, tables, semantic cache
-├── docs/                        --- Planning docs: task briefs, statutory policy materials
-├── static/                      --- Network static resources exposed by Streamlit Server
-├── tools/                       --- DevOps: environment checks and smoke test scripts
-└── tests/                       --- Automated verification: Pytest unit tests
+UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 150-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 15 standardized stages — from data preparation through site diagnostics, conceptual strategy, design detailing, to video presentation — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → AIGC professional drawing generation → defense video production**.
+
+---
+
+## Key Capabilities
+
+| Capability | Description |
+|---|---|
+| **15-Stage Workflow** | Each stage encapsulates independent data panels, AI reasoning, and defense charts |
+| **41 Drawing Templates** | SD + ControlNet auto-injection of spatial assets for planning-standard outputs |
+| **GIS → AIGC Alignment** | Novel Vector→Raster→ControlNet pipeline eliminates spatial hallucination |
+| **Tri-Stakeholder Simulation** | LLM-driven Resident / Developer / Planner role-play with consensus radar output |
+| **Dual Quality Loop** | Gemma visual + DeepSeek content assessment; auto-correction for C/D-rated outputs |
+| **Versioned Atlas Export** | `VersionStore` full history + `BatchExporter` one-click 70+ drawing atlas |
+| **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
+| **167 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+
+---
+
+## Quick Start
+
+### 1. Installation
+
+```powershell
+git clone https://github.com/Chain813/ultimate-design.git
+cd ultimate-design
+
+# Option A: Automated script (Windows)
+.\scripts\setup_env.bat
+
+# Option B: Manual
+conda create -n gis_ai python=3.12 -y && conda activate gis_ai
+pip install -r requirements.txt
+```
+
+### 2. Launch
+
+```powershell
+streamlit run app.py
+# or double-click run.bat
+```
+
+Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
+
+### 3. Health Check
+
+```powershell
+python -m pytest                    # 167 unit tests
+python tools/check_env.py           # 15-page integrity check
+python tools/secret_scan.py         # Credential leak scan
 ```
 
 ---
 
-### 🚀 Quick Exploration
+## Engine Integration
 
-If you are new to this project, we recommend reading in the following order:
-1. Go to **[🚀 快速启动](./QUICK_START.md)** for the simplest running commands.
-2. Read **[👶 新手教程](./BEGINNER_GUIDE.md)** to understand how the urban design workflow maps to the system.
-3. Refer to **[🔧 安装指南](./INSTALL_GUIDE.md)** to complete the local computational configuration for Gemma and SD.
+The platform runs all analytical features in CPU-only mode. To activate AIGC drawing and LLM reasoning:
+
+### LLM Engine (DeepSeek / Ollama)
+
+```env
+# .env
+DEEPSEEK_API_KEY="<your-api-key>"
+```
+
+### Visual Rendering (Stable Diffusion WebUI)
+
+Launch SD WebUI with `--api --listen` flags on `127.0.0.1:7860`.
+
+### GIS Asset Rasterization
+
+```powershell
+python scripts/render_gis_assets.py
+```
+
+Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / landuse segmentation / satellite basemap) stored in `static/assets/generated_base/`.
+
+---
+
+## Workflow Stages
+
+### Diagnostics (Stage 00–05)
+
+| Stage | Page | Core Function |
+|---|---|---|
+| 00 | Data Preparation | 16-category upload, quality check, coordinate sync |
+| 01 | Brief Interpretation | Task brief parsing, constraint extraction |
+| 02 | Data Collection | Semantic extraction engine, asset completeness |
+| 03 | Site Survey | 458-point × 4-direction street view library |
+| 04 | Status Analysis | WebGL 3D building base, POI aggregation, skyline |
+| 05 | Problem Diagnosis | AHP-MPI renewal potential ranking, radar diagnostics |
+
+### Strategy (Stage 06–07)
+
+| Stage | Page | Core Function |
+|---|---|---|
+| 06 | Goal Setting | LLM case benchmarking (Xintiandi / King's Cross) |
+| 07 | Design Strategy | Tri-stakeholder simulation, consensus radar |
+
+### Design & Delivery (Stage 08–14)
+
+| Stage | Page | Core Function |
+|---|---|---|
+| 08 | Overall Urban Design | AIGC masterplan with ControlNet spatial alignment |
+| 09 | Specialized Systems | Transport / Space / Style / Culture subsystems |
+| 10 | Key Plot Detailing | Before/After inference for 5 priority plots |
+| 11 | Implementation Path | 6 renewal modes, 3-phase timeline Gantt chart |
+| 12 | Design Guidelines | Two-step guideline generation + RAG policy retrieval |
+| 13 | Output & Presentation | 41-drawing overview, academic report, atlas export |
+| 14 | Video Generation | HyperFrames defense video (14 segments / ~9 min) |
+
+---
+
+## Project Structure
+
+```text
+ultimateDESIGN/
+├── app.py                              # Entry point / Home / Global map base
+├── pages/                              # 15 stage pages (00–14)
+├── src/
+│   ├── config/                         # YAML config / paths / runtime flags
+│   ├── engines/                        # AI & computation (NO UI code)
+│   │   ├── llm_engine.py              #   DeepSeek / Ollama unified API
+│   │   ├── stable_diffusion_engine.py #   SDPipeline (txt2img / ControlNet)
+│   │   ├── drawing_pipeline.py        #   End-to-end drawing orchestrator
+│   │   ├── quality_assessor.py        #   Dual quality assessment
+│   │   ├── spatial_engine.py          #   GIS parsing / MPI / skyline
+│   │   └── ...                        #   (18 engine modules total)
+│   ├── ui/                             # Streamlit components & theming
+│   ├── utils/                          # I/O, geo transform, service checks
+│   └── workflow/                       # 14-stage state machine & data bus
+├── scripts/                            # Automation (data fetch / GIS render)
+├── tools/                              # DevOps (env check / secret scan / QA)
+├── tests/                              # 24 modules / 167 test cases
+├── data/                               # Spatial & tabular assets (decoupled)
+└── .github/workflows/ci.yml           # CI pipeline
+```
+
+---
+
+## AIGC Pipeline Architecture
+
+```
+GeoJSON Vector Data                   Stable Diffusion WebUI
+       │                                       ▲
+       ▼                                       │
+  render_gis_assets.py              ┌──────────┴──────────┐
+  (Vector Rasterization)            │   ControlNet Units   │
+       │                            │  • Canny (roads)     │
+       ├── road_guidance.png ──────▶│  • Seg (landuse)     │
+       ├── landuse_seg.png ────────▶│  • Tile (satellite)  │
+       └── satellite.png ─────────▶│                      │
+                                    └──────────┬──────────┘
+  DrawingPipeline                              │
+       ├── Prompt Build (41 templates)         ▼
+       ├── Quality Assess (A/B/C/D)    Professional Drawing
+       ├── Auto-Correct & Regenerate   (Spatially Aligned)
+       └── VersionStore Archive
+```
+
+---
+
+## Documentation
+
+| Document | Description |
+|---|---|
+| [BUG_REPORT.md](./BUG_REPORT.md) | Known issues and fix log |
+| [PROJECT_INSPECTION_REPORT.md](./PROJECT_INSPECTION_REPORT.md) | System architecture audit |
+| [GLOSSARY.md](./GLOSSARY.md) | Terminology (MPI / GVI / ControlNet) |
+| [README.md](./README.md) | 中文文档 |
+
+---
+
+<div align="center">
+<sub>Built with Streamlit · Stable Diffusion · DeepSeek · GeoPandas · Plotly · HyperFrames</sub>
+</div>
