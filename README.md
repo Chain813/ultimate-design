@@ -17,13 +17,13 @@
 
 ---
 
-## 项目概况
+## 🌟 项目概况
 
 UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 **Streamlit 全栈决策支持平台**。项目以长春伪满皇宫周边 150 公顷街区为实证对象，将城市设计拆解为 15 个标准化阶段（数据准备 → 现状诊断 → 概念策略 → 设计深化 → 视频汇报），打通「GIS 数据采集 → LLM 循证推演 → AIGC 标准制图 → 视频答辩生成」的完整闭环。
 
 ---
 
-## 核心亮点
+## ✨ 核心亮点
 
 | 能力 | 说明 |
 |---|---|
@@ -38,9 +38,9 @@ UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 *
 
 ---
 
-## 快速启动
+## 🚀 快速启动
 
-### 1. 环境安装
+### 📦 1. 环境安装
 
 ```powershell
 git clone https://github.com/Chain813/ultimate-design.git
@@ -55,7 +55,7 @@ conda activate gis_ai
 pip install -r requirements.txt
 ```
 
-### 2. 启动平台
+### ▶️ 2. 启动平台
 
 ```powershell
 # 方式 A：双击 run.bat（自动检测端口并打开浏览器）
@@ -65,7 +65,7 @@ streamlit run app.py
 
 平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按 `[00]` ~ `[14]` 顺序浏览。
 
-### 3. 健康自检
+### 🩺 3. 健康自检
 
 ```powershell
 python -m pytest                    # 167 项单元测试
@@ -76,11 +76,11 @@ python tools/secret_scan.py         # 敏感信息扫描
 
 ---
 
-## 算力挂载
+## 🖥️ 算力挂载
 
 平台在纯 CPU 模式下即可运行全部分析功能。如需激活 AIGC 制图与 LLM 推演，请挂载以下引擎：
 
-### LLM 引擎（DeepSeek / Ollama）
+### 🧠 LLM 引擎（DeepSeek / Ollama）
 
 ```env
 # .env
@@ -89,7 +89,7 @@ DEEPSEEK_API_KEY="<your-api-key>"
 
 系统自动读取环境变量，首页 HUD 面板将显示「已联机」。云端模式零显存消耗。
 
-### 视觉渲染引擎（Stable Diffusion WebUI）
+### 🎨 视觉渲染引擎（Stable Diffusion WebUI）
 
 1. 启动本地 SD WebUI，启动参数需包含 `--api --listen`：
    ```bat
@@ -97,7 +97,7 @@ DEEPSEEK_API_KEY="<your-api-key>"
    ```
 2. 确保运行于 `127.0.0.1:7860`，平台将自动检测连接状态。
 
-### GIS 资产预渲染
+### 🗺️ GIS 资产预渲染
 
 将矢量 GeoJSON 光栅化为 ControlNet 引导图（路网骨架 / 用地分区 / 卫星底图）：
 
@@ -109,11 +109,11 @@ python scripts/render_gis_assets.py
 
 ---
 
-## 数据资产
+## 🗂️ 数据资产
 
 系统实现了**数据与逻辑的彻底解耦**。迁移到新地块只需替换 `data/` 目录，核心代码无需修改。
 
-### 数据目录结构
+### 📂 数据目录结构
 
 ```text
 data/
@@ -135,7 +135,7 @@ data/
 └── rag_knowledge.json                   # RAG 政策法规知识库
 ```
 
-### 自动化数据获取
+### 🤖 自动化数据获取
 
 ```powershell
 python scripts/fetch_real_estate_data.py          # 建筑年代 / 房价
@@ -146,11 +146,11 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 
 ---
 
-## 工作流阶段
+## 🔄 工作流阶段
 
 系统将城市设计过程拆解为三大阶段，每个阶段的输出自动流转至下游：
 
-### 前期：现状诊断（Stage 00-05）
+### 🟢 前期：现状诊断（Stage 00-05）
 
 | 阶段 | 页面 | 核心能力 |
 |---|---|---|
@@ -161,14 +161,14 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 | 04 | 现状分析 | WebGL 3D 建筑底座、POI 聚合、天际线、光照推演 |
 | 05 | 问题诊断 | AHP-MPI 更新潜力排行、地块诊断雷达图 |
 
-### 中期：策略推演（Stage 06-07）
+### 🟡 中期：策略推演（Stage 06-07）
 
 | 阶段 | 页面 | 核心能力 |
 |---|---|---|
 | 06 | 目标定位 | LLM 案例对标（新天地 / 国王十字等）、愿景提取 |
 | 07 | 设计策略 | 三主体博弈推演、共识度雷达、策略落地矩阵 |
 
-### 后期：设计深化与交付（Stage 08-14）
+### 🔴 后期：设计深化与交付（Stage 08-14）
 
 | 阶段 | 页面 | 核心能力 |
 |---|---|---|
@@ -182,7 +182,7 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 
 ---
 
-## 项目结构
+## 🏗️ 项目结构
 
 ```text
 ultimateDESIGN/
@@ -254,9 +254,9 @@ ultimateDESIGN/
 
 ---
 
-## 技术架构
+## ⚙️ 技术架构
 
-### AIGC 制图管线
+### 🎨 AIGC 制图管线
 
 ```
 GeoJSON 矢量数据                     Stable Diffusion WebUI
@@ -277,7 +277,7 @@ GeoJSON 矢量数据                     Stable Diffusion WebUI
        └── VersionStore 版本归档
 ```
 
-### 性能优化
+### ⚡ 性能优化
 
 - **`@st.cache_data`**：空间数据 I/O 与高频计算的内存级缓存
 - **`@st.fragment`**：地图组件局部重绘，避免全页刷新
@@ -285,16 +285,16 @@ GeoJSON 矢量数据                     Stable Diffusion WebUI
 
 ---
 
-## 代码托管
+## ☁️ 代码托管
 
-### 预提交检查
+### 🛡️ 预提交检查
 
 ```powershell
 python -m pytest                # 单元测试
 python tools/secret_scan.py     # 密钥扫描
 ```
 
-### 提交规范
+### 📝 提交规范
 
 遵循 **Conventional Commits**：
 
@@ -304,13 +304,13 @@ git commit -m "feat(aigc): 实现 GIS-to-AIGC 空间对齐管线"
 git push origin main
 ```
 
-### CI/CD
+### 🔄 CI/CD
 
 推送至 `main` 后自动触发 GitHub Actions：Lint → 密钥扫描 → 单元测试 → 冒烟测试 → 数据质量检查。
 
 ---
 
-## 相关文档
+## 📚 相关文档
 
 | 文档 | 说明 |
 |---|---|

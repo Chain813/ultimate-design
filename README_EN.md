@@ -17,13 +17,13 @@
 
 ---
 
-## Overview
+## 🌟 Overview
 
 UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 150-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 15 standardized stages — from data preparation through site diagnostics, conceptual strategy, design detailing, to video presentation — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → AIGC professional drawing generation → defense video production**.
 
 ---
 
-## Key Capabilities
+## ✨ Key Capabilities
 
 | Capability | Description |
 |---|---|
@@ -38,9 +38,9 @@ UltimateDESIGN is a **full-stack Streamlit decision support platform** built for
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### 1. Installation
+### 📦 1. Installation
 
 ```powershell
 git clone https://github.com/Chain813/ultimate-design.git
@@ -54,7 +54,7 @@ conda create -n gis_ai python=3.12 -y && conda activate gis_ai
 pip install -r requirements.txt
 ```
 
-### 2. Launch
+### ▶️ 2. Launch
 
 ```powershell
 streamlit run app.py
@@ -63,7 +63,7 @@ streamlit run app.py
 
 Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
 
-### 3. Health Check
+### 🩺 3. Health Check
 
 ```powershell
 python -m pytest                    # 167 unit tests
@@ -73,22 +73,22 @@ python tools/secret_scan.py         # Credential leak scan
 
 ---
 
-## Engine Integration
+## 🖥️ Engine Integration
 
 The platform runs all analytical features in CPU-only mode. To activate AIGC drawing and LLM reasoning:
 
-### LLM Engine (DeepSeek / Ollama)
+### 🧠 LLM Engine (DeepSeek / Ollama)
 
 ```env
 # .env
 DEEPSEEK_API_KEY="<your-api-key>"
 ```
 
-### Visual Rendering (Stable Diffusion WebUI)
+### 🎨 Visual Rendering (Stable Diffusion WebUI)
 
 Launch SD WebUI with `--api --listen` flags on `127.0.0.1:7860`.
 
-### GIS Asset Rasterization
+### 🗺️ GIS Asset Rasterization
 
 ```powershell
 python scripts/render_gis_assets.py
@@ -98,9 +98,9 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 
 ---
 
-## Workflow Stages
+## 🔄 Workflow Stages
 
-### Diagnostics (Stage 00–05)
+### 🟢 Diagnostics (Stage 00–05)
 
 | Stage | Page | Core Function |
 |---|---|---|
@@ -111,14 +111,14 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 04 | Status Analysis | WebGL 3D building base, POI aggregation, skyline |
 | 05 | Problem Diagnosis | AHP-MPI renewal potential ranking, radar diagnostics |
 
-### Strategy (Stage 06–07)
+### 🟡 Strategy (Stage 06–07)
 
 | Stage | Page | Core Function |
 |---|---|---|
 | 06 | Goal Setting | LLM case benchmarking (Xintiandi / King's Cross) |
 | 07 | Design Strategy | Tri-stakeholder simulation, consensus radar |
 
-### Design & Delivery (Stage 08–14)
+### 🔴 Design & Delivery (Stage 08–14)
 
 | Stage | Page | Core Function |
 |---|---|---|
@@ -132,7 +132,7 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 
 ---
 
-## Project Structure
+## 🏗️ Project Structure
 
 ```text
 ultimateDESIGN/
@@ -159,7 +159,7 @@ ultimateDESIGN/
 
 ---
 
-## AIGC Pipeline Architecture
+## ⚙️ AIGC Pipeline Architecture
 
 ```
 GeoJSON Vector Data                   Stable Diffusion WebUI
@@ -181,7 +181,7 @@ GeoJSON Vector Data                   Stable Diffusion WebUI
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 | Document | Description |
 |---|---|
