@@ -43,12 +43,17 @@
 
 ## BUG-008：重点地块 POI 覆盖统计显示 0
 
-- 严重级别：中 → **已确认为数据覆盖问题**
-- 诊断结论：
-  - 农贸水产市场 / 食品大市场：完全超出 POI 数据纬度范围（地块纬度 43.906-43.908，POI 最大纬度 43.905）
-  - 市一中北侧：边缘重叠但无 POI 落入
-  - 清禾集贸市场 / 中国石油：bbox 内有少量候选但多边形精确匹配无命中
+- 严重级别：高 → **已修复**
+- 根因诊断：
+  - **坐标系混用**：`Key_Plots_District.json` 和 `Boundary_Scope.geojson` 使用 GCJ-02（火星坐标系），而 POI 数据经 `bd09_to_wgs84()` 转换后为 WGS-84。两套坐标系在长春地区存在约 0.003~0.006° 偏移，导致 point-in-polygon 判定系统性失败。
+  - CRS 偏移诊断结果：无偏移=10命中, GCJ-02补偿=50命中, BD-09补偿=83命中 → 确认为 GCJ-02 偏移。
 - 修复内容：
-  1. `_count_poi_for_geometry()` 返回值扩展为 3 元组，新增 `coverage_note` 字段。
-  2. 诊断卡新增「覆盖诊断」列，明确标注 "超出POI采集范围" / "范围内无POI命中" / "bbox有候选但多边形内无命中"。
-  3. 新增 `scripts/fetch_expanded_poi.py` 扩展采集脚本，搜索范围扩大至 Lat 43.89-43.913，覆盖全部重点地块。
+  1. 新增 `scripts/convert_gcj02_to_wgs84.py` 精确投影转换工具，使用与 `geo_transform.py` 一致的算法逐点转换。
+  2. 已将 `Key_Plots_District.json` 和 `Boundary_Scope.geojson` 转换为 WGS-84 (EPSG:4326)，原始文件备份为 `.gcj02_backup`。
+  3. 转换后 5 地块 POI 命中从 10 → 50（BBox）/ 0 → 35（polygon 精确）。
+- 修复后状态：
+  - 食品调料大市场: 0 → **22** POI
+  - 清禾集贸市场: 0 → **11** POI
+  - 市一中北侧: 0 → **1** POI
+  - 中国石油: 2 → **1** POI (polygon 精确匹配)
+  - 农贸水产市场: 0 → **0** POI (确认为真实稀疏区域，200m 内仅 9 个 POI 分布在地块外围)
