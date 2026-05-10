@@ -6,14 +6,14 @@
 
 **Micro-Renewal & Urban Design Decision Support Platform**
 
-UltimateDESIGN is a Streamlit application designed for urban planning courses, graduation projects, and research presentations. The project strictly organizes pages according to **13 professional stages**, covering the complete evidence-based planning workflow from "pre-analysis" to "mid-term concept strategies" to "post-design detailing and export".
+UltimateDESIGN is a Streamlit application designed for urban planning courses, graduation projects, and research presentations. The project consists of **15 professional modules**, covering the complete evidence-based planning workflow from "data preparation" to "video presentation".
 
 ---
 
 ### 🌟 Core Features & Architecture
 
-- **13-Stage Independent Workflow**
-  Breaks down urban design into 13 standardized steps, each encapsulating independent functional panels, AI drawing prompt generation logic, and stage defense summaries.
+- **15-Stage Independent Workflow**
+  Breaks down urban design into 15 standardized steps (from 00 Data Prep to 14 Video Generation), each encapsulating independent functional panels, AI drawing prompt generation logic, and stage defense summaries.
 - **41 Professional Drawing Templates**
   Built-in 41 prompt templates based on Stable Diffusion and ControlNet. The system automatically extracts spatial assets (e.g., building heights, POI vitality) to inject and format prompts.
 - **Dynamic Defense Charts**
@@ -31,6 +31,7 @@ UltimateDESIGN is a Streamlit application designed for urban planning courses, g
 UltimateDESIGN
 ├── app.py                       --- Home, platform status, global 2D/3D map base entry
 ├── pages/                       --- Core views: divided into Pre, Mid, and Post phases
+│   ├── 00_数据准备.py             --- [Pre] Data ledger, quality check, coordinate sync
 │   ├── 01_任务解读.py             --- [Pre] Project overview, task requirements extraction
 │   ├── 02_资料收集.py             --- [Pre] Semantic extraction engine, asset completeness
 │   ├── 03_现场调研.py             --- [Pre] Street view sample library and retrieval
@@ -43,7 +44,8 @@ UltimateDESIGN
 │   ├── 10_重点地段深化.py         --- [Post] AIGC Before/After inference for 5 key plots
 │   ├── 11_实施路径.py             --- [Post] Six renewal modes and 3-phase timeline
 │   ├── 12_城市设计导则.py         --- [Post] Spatial control indicators and guideline export
-│   └── 13_成果表达.py             --- [Post] 41 drawing templates overview and atlas export
+│   ├── 13_成果表达.py             --- [Post] 41 drawing templates overview and atlas export
+│   └── 14_视频生成.py             --- [Post] HyperFrames AI video presentation generation
 ├── src/                         --- Domain code: core logic and reusable components
 │   ├── config/                  --- Static variables, path registration, config loading
 │   ├── engines/                 --- Computation, LLM, AIGC logic (Strictly NO UI here)

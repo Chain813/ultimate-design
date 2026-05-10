@@ -63,15 +63,21 @@ for q in queries:
                                 "Address": item.get("address", "")
                             })
             elif response.get("status") in [302, 240, 210, 211]:
-                print(f"Error: API 配额不足或未开放对应权限 (状态码: {response.get('status')})。中断提取。")
-                sys.exit(1)
+                print(f"Error: API 配额不足或未开放对应权限 (状态码: {response.get('status')})。跳过该分类。")
+                break
             else:
                 print(f"Warning: API 报错 ({response.get('status')}): {response.get('message')}")
                 break
         except Exception as e:
             print(f"Error: 网络出错：{e}")
-            sys.exit(1)
-        time.sleep(0.2) # 适当加速
+            break
+        time.sleep(0.2) 
+
+    # Save progress after each category
+    if len(poi_list) > 0:
+        df_tmp = pd.DataFrame(poi_list)
+        df_tmp.to_csv("data/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
+        print(f"  -> {q} 分类处理完成，累计暂存 {len(df_tmp)} 个 POI")
 
 if len(poi_list) > 0:
     df = pd.DataFrame(poi_list)
