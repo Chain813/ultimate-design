@@ -24,13 +24,13 @@ def compress_geojson(input_path, output_path, precision=6):
         # Keep only essential attributes
         props = feature.get('properties', {})
         new_props = {}
-        
+
         # Whitelist of essential fields
         keep_fields = ['Class', 'is_historical', 'prop_style', 'hist_name', 'hist_batch', 'Floor', 'Name', 'name']
         for field in keep_fields:
             if field in props:
                 new_props[field] = props[field]
-        
+
         feature['properties'] = new_props
         feature['geometry']['coordinates'] = round_coords(feature['geometry'].get('coordinates', []))
         compressed_features.append(feature)
@@ -43,7 +43,7 @@ def compress_geojson(input_path, output_path, precision=6):
 
     orig_size = os.path.getsize(input_path) / (1024 * 1024)
     new_size = os.path.getsize(output_path) / (1024 * 1024)
-    print(f"Compression Complete!")
+    print("Compression Complete!")
     print(f"   Original: {orig_size:.2f} MB")
     print(f"   Now: {new_size:.2f} MB")
     print(f"   Reduction: {((orig_size - new_size) / orig_size) * 100:.1f}%")

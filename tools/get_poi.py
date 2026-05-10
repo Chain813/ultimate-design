@@ -38,14 +38,14 @@ for q in queries:
     print(f"正在抓取分类: {q}...")
     for page_num in range(20):
         url = f"https://api.map.baidu.com/place/v2/search?query={q}&location={CENTER_LAT},{CENTER_LNG}&radius={RADIUS}&output=json&ak={AK}&coord_type=1&page_size=20&page_num={page_num}"
-        
+
         try:
             response = requests.get(url, timeout=10).json()
             if response.get("status") == 0:
                 results = response.get("results", [])
                 if not results:
                     break
-                
+
                 for item in results:
                     uid = item.get("uid")
                     if uid not in seen_uids:

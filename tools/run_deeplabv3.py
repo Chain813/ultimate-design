@@ -24,13 +24,13 @@ def evaluate_gvi(image_path):
     """利用语义分割模型量化绿视率"""
     img = Image.open(image_path).convert('RGB')
     input_tensor = preprocess(img).unsqueeze(0).to(device)
-    
+
     with torch.no_grad(): # 停止梯度计算，加速推理
         output = model(input_tensor)['out']
-    
+
     # 提取像素级特征矩阵
     mask = torch.argmax(output, dim=1).squeeze().cpu().numpy()
-    
+
     # Pascal VOC class 16 = potted plant (唯一植被类别)
     # 注意：VOC 仅含盆栽类，无法识别行道树/草坪，GVI 会偏低
     # 如需精确街景绿视率，推荐使用 urban_image_segmentation.py (Cityscapes class 8 = Vegetation)
@@ -48,7 +48,7 @@ for subdir, _dirs, files in os.walk(root_path):
     folder_name = os.path.basename(subdir)
     if not folder_name.startswith("Point_"):
         continue
-        
+
     for file in files:
         if file.endswith(".jpg"):
             try:

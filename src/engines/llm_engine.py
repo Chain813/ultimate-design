@@ -78,7 +78,7 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
 
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
-    
+
     url = "https://api.deepseek.com/chat/completions"
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
     api_key = os.getenv("DEEPSEEK_API_KEY")
@@ -113,7 +113,7 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
             logger.warning("DeepSeek call failed", exc_info=True)
             return f"无法连接到 DeepSeek API: {str(e)}"
 
-    return f"无法连接到 DeepSeek API，请检查网络或代理设置。"
+    return "无法连接到 DeepSeek API，请检查网络或代理设置。"
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
@@ -131,7 +131,7 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
 
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
-    
+
     url = "https://api.deepseek.com/chat/completions"
     timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
     api_key = os.getenv("DEEPSEEK_API_KEY")

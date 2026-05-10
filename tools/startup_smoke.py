@@ -6,6 +6,7 @@ import py_compile
 
 TARGETS = [
     "app.py",
+    "pages/00_数据准备.py",
     "pages/01_任务解读.py",
     "pages/02_资料收集.py",
     "pages/03_现场调研.py",
@@ -19,6 +20,7 @@ TARGETS = [
     "pages/11_实施路径.py",
     "pages/12_城市设计导则.py",
     "pages/13_成果表达.py",
+    "pages/14_视频生成.py",
 ]
 
 

@@ -33,7 +33,7 @@ SHP_FILES = {
 # IMPORTANT: Streamlit's static serving behavior varies between local, Docker, and Cloud.
 # 1. Locally, it often serves at /static/.
 # 2. In Docker/Cloud, it may serve at /app/static/.
-# 3. We use /app/static/ as the base, but map3d_standalone.html now includes 
+# 3. We use /app/static/ as the base, but map3d_standalone.html now includes
 #    an automatic 404 fallback to /static/ for maximum resilience on Streamlit Cloud.
 STATIC_URL_PREFIX = "/app/static/"
 

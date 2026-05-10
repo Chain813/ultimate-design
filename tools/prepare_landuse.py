@@ -7,12 +7,12 @@ if hasattr(sys.stdout, 'reconfigure'):
 
 def prepare_landuse():
     print("🚀 开始土地利用数据裁剪流程...")
-    
+
     # 1. 设置路径
     boundary_path = "data/shp/Boundary_Scope.geojson"
     input_gpkg = r"E:\资料\EULUC_China_20.gpkg"
     output_path = "data/shp/landuse.geojson"
-    
+
     if not os.path.exists(boundary_path):
         print(f"❌ 错误: 找不到边界文件 {boundary_path}")
         return
@@ -22,7 +22,7 @@ def prepare_landuse():
     boundary = gpd.read_file(boundary_path)
     if boundary.crs is None:
         boundary.set_crs("EPSG:4326", inplace=True)
-    
+
     bbox = boundary.total_bounds # [minx, miny, maxx, maxy]
     print(f"📍 研究范围 BBox: {bbox}")
 
@@ -31,11 +31,11 @@ def prepare_landuse():
     try:
         # 使用 bbox 参数可以极大提高读取速度，pyogrio 引擎支持此操作
         landuse = gpd.read_file(
-            input_gpkg, 
-            bbox=tuple(bbox), 
+            input_gpkg,
+            bbox=tuple(bbox),
             engine="pyogrio"
         )
-        
+
         if landuse.empty:
             print("⚠️ 警告: 该范围内未发现土地利用数据。")
             return

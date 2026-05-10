@@ -40,25 +40,25 @@ def sync_building_landuse():
     # 4. Apply rules
     # Initialize columns (preserve any existing historical labels)
     existing_hist = buildings['prop_style'] == 'historical'
-    
+
     buildings['landuse_class'] = joined['Class'].values
-    
+
     park_mask = buildings['landuse_class'] == 10
     hist_mask = buildings['landuse_class'] == 9
-    
+
     # Tag park buildings
     buildings.loc[park_mask, 'is_historical'] = False
     buildings.loc[park_mask, 'prop_style'] = 'park'
     buildings.loc[park_mask, 'hist_name'] = '公园绿地区域'
     buildings.loc[park_mask, 'hist_batch'] = 'G-绿地'
-    
+
     # Tag admin/historical zone buildings (only if not already tagged)
     new_hist = hist_mask & ~existing_hist
     buildings.loc[new_hist, 'is_historical'] = True
     buildings.loc[new_hist, 'prop_style'] = 'historical'
     buildings.loc[new_hist, 'hist_name'] = '行政办公/历史保护区域'
     buildings.loc[new_hist, 'hist_batch'] = 'A-保护'
-    
+
     # Drop temp column
     buildings.drop(columns=['landuse_class'], inplace=True)
 
@@ -66,7 +66,7 @@ def sync_building_landuse():
     n_park = (buildings['prop_style'] == 'park').sum()
     n_hist = (buildings['prop_style'] == 'historical').sum()
     n_normal = (buildings['prop_style'] == 'normal').sum()
-    print(f"\n📊 Results:")
+    print("\n📊 Results:")
     print(f"  🟢 Park/Green buildings: {n_park}")
     print(f"  🟣 Historical/Protected buildings: {n_hist}")
     print(f"  ⬜ Normal buildings: {n_normal}")

@@ -213,6 +213,7 @@ def generate_plot_cards(plots_path: Path, gvi_path: Path, poi_path: Path) -> lis
                     "area_ha": round(area_sqm / 10000, 2),
                     "poi_count": 0,
                     "poi_method": "missing_geometry",
+                    "coverage_note": "几何数据缺失",
                     "bbox": None,
                 }
             )
@@ -227,7 +228,7 @@ def generate_plot_cards(plots_path: Path, gvi_path: Path, poi_path: Path) -> lis
             "max_lat": max(lats),
         }
 
-        poi_count, poi_method = _count_poi_for_geometry(df_poi, geometry, bbox)
+        poi_count, poi_method, coverage_note = _count_poi_for_geometry(df_poi, geometry, bbox)
 
         cards.append(
             {
@@ -235,6 +236,7 @@ def generate_plot_cards(plots_path: Path, gvi_path: Path, poi_path: Path) -> lis
                 "area_ha": round(area_sqm / 10000, 2),
                 "poi_count": poi_count,
                 "poi_method": poi_method,
+                "coverage_note": coverage_note,
                 "bbox": bbox,
             }
         )
@@ -254,7 +256,17 @@ def _iter_lng_lat_pairs(coords):
 
 def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) -> tuple:
     if df_poi.empty or "Lng" not in df_poi.columns or "Lat" not in df_poi.columns:
-        return 0, "polygon"
+        return 0, "polygon", "POI数据为空"
+
+    # Check if plot bbox overlaps with POI data range at all
+    poi_lat_min, poi_lat_max = df_poi["Lat"].min(), df_poi["Lat"].max()
+    poi_lng_min, poi_lng_max = df_poi["Lng"].min(), df_poi["Lng"].max()
+
+    lat_overlap = not (bbox["max_lat"] < poi_lat_min or bbox["min_lat"] > poi_lat_max)
+    lng_overlap = not (bbox["max_lng"] < poi_lng_min or bbox["min_lng"] > poi_lng_max)
+
+    if not lat_overlap or not lng_overlap:
+        return 0, "polygon", "超出POI采集范围"
 
     candidates = df_poi[
         (df_poi["Lng"] >= bbox["min_lng"])
@@ -263,10 +275,10 @@ def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) ->
         & (df_poi["Lat"] <= bbox["max_lat"])
     ]
     if candidates.empty:
-        return 0, "polygon"
+        return 0, "polygon", "范围内无POI命中"
 
     if Point is None or shape is None:
-        return int(len(candidates)), "bbox_fallback"
+        return int(len(candidates)), "bbox_fallback", "缺少GIS依赖,使用bbox粗筛"
 
     try:
         plot_geom = shape(geometry)
@@ -275,9 +287,10 @@ def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) ->
             point = Point(float(row["Lng"]), float(row["Lat"]))
             if plot_geom.contains(point) or plot_geom.touches(point):
                 count += 1
-        return count, "polygon"
+        note = "" if count > 0 else "bbox有候选但多边形内无命中"
+        return count, "polygon", note
     except Exception:
-        return int(len(candidates)), "bbox_fallback"
+        return int(len(candidates)), "bbox_fallback", "几何异常,使用bbox粗筛"
 
 
 def main():
@@ -317,7 +330,8 @@ def main():
         DATA_REGISTRY["POI"]["path"],
     )
     for card in cards:
-        print(f"  🏗️ {card['name']}: {card['area_ha']} ha, POI覆盖 {card['poi_count']} 个 ({card['poi_method']})")
+        note = f" [{card['coverage_note']}]" if card.get('coverage_note') else ""
+        print(f"  🏗️ {card['name']}: {card['area_ha']} ha, POI覆盖 {card['poi_count']} 个 ({card['poi_method']}){note}")
 
     # 输出 Markdown 报告
     md_path = ROOT / "docs" / "STAGE2_DATA_QUALITY_REPORT.md"
@@ -352,10 +366,11 @@ def main():
                 f.write("\n")
 
         f.write("## 4. 重点地块诊断卡\n\n")
-        f.write("| 地块名称 | 面积(ha) | POI覆盖 | 统计方式 |\n")
-        f.write("| --- | --- | --- | --- |\n")
+        f.write("| 地块名称 | 面积(ha) | POI覆盖 | 统计方式 | 覆盖诊断 |\n")
+        f.write("| --- | --- | --- | --- | --- |\n")
         for card in cards:
-            f.write(f"| {card['name']} | {card['area_ha']} | {card['poi_count']} | {card['poi_method']} |\n")
+            note = card.get('coverage_note', '')
+            f.write(f"| {card['name']} | {card['area_ha']} | {card['poi_count']} | {card['poi_method']} | {note} |\n")
 
     print(f"\n✅ 报告已生成: {md_path}")
     print("=" * 60)

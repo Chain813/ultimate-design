@@ -34,7 +34,7 @@ def main():
     print("="*50)
     print("  --- Project Runtime Diagnostics")
     print("="*50)
-    
+
     print("\n[1/3] Checking Python version...")
     print(f"Current version: {sys.version}")
     if sys.version_info < (3, 8):
@@ -52,10 +52,10 @@ def main():
                 if not pkg or pkg.startswith("#"):
                     continue
                 import_name = package_import_name(pkg)
-                
+
                 if not check_package(import_name):
                     missing.append(pkg)
-        
+
         if missing:
             print(f"[ERROR] Missing packages: {', '.join(missing)}")
             print(">>> Run: pip install -r requirements.txt")
@@ -73,6 +73,7 @@ def main():
         "src/engines/social_media_crawler.py",
         "src/engines/urban_image_segmentation.py",
         "tools/run_deeplabv3.py",
+        "pages/00_数据准备.py",
         "pages/01_任务解读.py",
         "pages/02_资料收集.py",
         "pages/03_现场调研.py",
@@ -86,14 +87,15 @@ def main():
         "pages/11_实施路径.py",
         "pages/12_城市设计导则.py",
         "pages/13_成果表达.py",
+        "pages/14_视频生成.py",
         "src/utils/geo_transform.py",
     ]
-    
+
     missing_files = []
     for f in critical_files:
         if not (project_root / f).exists():
             missing_files.append(f)
-            
+
     if missing_files:
         print("[ERROR] Missing critical files:")
         for mf in missing_files:

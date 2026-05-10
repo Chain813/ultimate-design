@@ -45,7 +45,7 @@ if selected_sub == "📍 重点地块选择":
             with st.expander(f"🏷️ {plot_type}", expanded=False):
                 st.markdown(f"**定位：** {cfg['desc']}")
                 candidates = [d["name"] for d in diags]
-                selected = st.selectbox(f"选择地块", candidates, key=f"p10_{plot_type}")
+                selected = st.selectbox("选择地块", candidates, key=f"p10_{plot_type}")
                 d = next(dd for dd in diags if dd["name"] == selected)
                 c1, c2, c3, c4 = st.columns(4)
                 c1.metric("MPI", d["mpi_score"])

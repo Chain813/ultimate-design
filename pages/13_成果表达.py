@@ -61,7 +61,7 @@ if selected_sub == "📋 图纸提示词总览":
     selected_tmpl = st.selectbox("选择模板生成完整提示词", [t.name for t in filtered], key="p13_tmpl")
     if selected_tmpl:
         tmpl = next(t for t in DRAWING_TEMPLATES if t.name == selected_tmpl)
-        
+
         st.markdown("#### 📤 渲染底图与合成图框上传")
         col_img1, col_img2, col_img3 = st.columns(3)
         with col_img1:

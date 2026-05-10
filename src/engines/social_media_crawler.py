@@ -96,7 +96,7 @@ def wait_for_login(driver, url, platform_name, countdown=60):
     time.sleep(3)
     print("\n" + "*" * 50)
     print(f"  ⚠️  请立即使用手机 {platform_name} App 扫码登录！")
-    print(f"  ⚠️  登录成功后无需任何操作，系统将自动接管。")
+    print("  ⚠️  登录成功后无需任何操作，系统将自动接管。")
     print("*" * 50)
     for c in range(countdown, 0, -5):
         print(f"  ⏱️  剩余等待时间: {c} 秒...")
@@ -367,7 +367,7 @@ def extract_douyin_search(soup, keyword):
 
     # 暴力扫描兜底：提取页面中所有像视频标题的文本
     if len(data) < 3:
-        print(f"   -> 结构化提取不足，启用暴力扫描...")
+        print("   -> 结构化提取不足，启用暴力扫描...")
         for t in soup.find_all(string=True):
             txt = t.strip()
             if 6 < len(txt) < 200 and keyword[0:2] in txt:

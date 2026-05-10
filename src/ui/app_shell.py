@@ -27,7 +27,7 @@ def load_global_css():
 def render_top_nav():
     """下一代全景悬停导航栏 (Multi-level Hover Dropdown)"""
     load_global_css()
-    
+
     nav_data = [
         {
             "lab": board["title"],
@@ -41,92 +41,92 @@ def render_top_nav():
     ]
 
     # 💎 CSS3 悬停交互引擎
-    st.markdown(f"""
+    st.markdown("""
     <style>
-    :root {{ --apple-bg: rgba(22, 22, 23, 0.85); }}
-    
+    :root { --apple-bg: rgba(22, 22, 23, 0.85); }
+
     /* 🍏 Apple 风格顶部主轴 (对比度优化版) */
-    .nav-bar {{
+    .nav-bar {
         position: fixed; top: 0; left: 0; width: 100%; height: 50px; /* 锁定 50px 高度 */
         background: var(--apple-bg);
         backdrop-filter: saturate(180%) blur(20px);
         display: flex; justify-content: center; align-items: center;
         z-index: 999999; border-bottom: 1px solid rgba(255,255,255,0.08);
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-    }}
-    
-    .nav-container {{
+    }
+
+    .nav-container {
         width: 100%; max-width: 1000px; display: flex; justify-content: space-around;
         padding: 0 20px;
-    }}
-    
-    .nav-item {{
+    }
+
+    .nav-item {
         color: rgba(245, 245, 247, 0.95); font-size: 13px; font-weight: 600; /* 回归 13px */
         cursor: pointer; position: relative;
         height: 50px; display: flex; align-items: center;
         padding: 0 15px; letter-spacing: 0.03em;
         text-shadow: 0 1px 2px rgba(0,0,0,0.5);
         transition: color 0.3s;
-    }}
-    
-    .nav-item:hover {{ color: #ffffff; text-shadow: 0 0 10px rgba(0, 113, 227, 0.5); }}
-    
+    }
+
+    .nav-item:hover { color: #ffffff; text-shadow: 0 0 10px rgba(0, 113, 227, 0.5); }
+
     /* 彻底杜绝主页及所有链接的下划线与蓝色 (全状态封锁) */
-    .nav-bar a, .nav-bar a:link, .nav-bar a:visited, .nav-bar a:active {{
+    .nav-bar a, .nav-bar a:link, .nav-bar a:visited, .nav-bar a:active {
         text-decoration: none !important;
         color: rgba(245, 245, 247, 0.95) !important;
-    }}
-    .nav-bar a:hover {{
+    }
+    .nav-bar a:hover {
         color: #ffffff !important;
-    }}
-    
+    }
+
     /* 🍏 全宽沉浸下拉菜单 (跟随 50px 偏移) */
-    .dropdown-content {{
+    .dropdown-content {
         position: fixed; top: 50px; left: 0; width: 100vw; height: 0;
         background: rgba(10, 10, 12, 0.98);
         backdrop-filter: saturate(180%) blur(40px);
         overflow: hidden; opacity: 0; visibility: hidden;
         /* 核心：增加 0.1s 的闭合延迟 (transition-delay) */
-        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s, 
-                    opacity 0.3s ease 0.1s, 
+        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+                    opacity 0.3s ease 0.1s,
                     visibility 0s linear 0.5s;
         display: flex; justify-content: center;
         border-bottom: 1px solid rgba(255,255,255,0.1);
-    }}
-    
+    }
+
     /* 激活态：取消延迟，实现瞬时开启 */
-    .nav-item:hover .dropdown-content {{
+    .nav-item:hover .dropdown-content {
         height: 360px; opacity: 1; visibility: visible;
         transition-delay: 0s;
-    }}
-    
-    .submenu-container {{
+    }
+
+    .submenu-container {
         width: 100%; max-width: 1000px; padding: 40px 20px;
         display: flex; gap: 80px; align-items: flex-start;
-    }}
-    
-    .submenu-column {{ display: flex; flex-direction: column; gap: 12px; }}
-    .submenu-title {{ color: #a1a1a6; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }}
-    
-    .dropdown-item {{
+    }
+
+    .submenu-column { display: flex; flex-direction: column; gap: 12px; }
+    .submenu-title { color: #a1a1a6; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+
+    .dropdown-item {
         color: #ffffff; font-size: 20px; font-weight: 700; text-decoration: none !important;
         transition: color 0.2s, transform 0.2s; white-space: nowrap;
         text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    }}
-    
-    .dropdown-item:hover {{ color: #0071e3; }} /* Apple Blue 强调色 */
-    
+    }
+
+    .dropdown-item:hover { color: #0071e3; } /* Apple Blue 强调色 */
+
     /* 让子项逐个浮现的微动效 */
-    .nav-item:hover .dropdown-item {{
+    .nav-item:hover .dropdown-item {
         animation: fadeInUp 0.5s ease forwards; opacity: 0;
-    }}
-    @keyframes fadeInUp {{
-        from {{ opacity: 0; transform: translateY(10px); }}
-        to {{ opacity: 1; transform: translateY(0); }}
-    }}
+    }
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
     /* 🍏 Apple 风格分段控制器 (Segmented Control) 独立胶囊版 */
-    div[data-testid="stRadio"] > div[role="radiogroup"] {{
+    div[data-testid="stRadio"] > div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: wrap !important;
@@ -137,19 +137,19 @@ def render_top_nav():
         max-width: 100% !important;
         gap: 12px !important; /* 增加胶囊间的间隙 */
         margin: 15px 0 !important;
-    }}
-    
+    }
+
     /* 🚀 外科手术式：仅隐藏第一个子容器（圆圈），强制显示文字 */
-    div[data-testid="stRadio"] label > div:first-child {{
+    div[data-testid="stRadio"] label > div:first-child {
         display: none !important;
         width: 0 !important;
         height: 0 !important;
         position: absolute !important;
-    }}
-    
+    }
+
     /* 强力保活：确保文字及其父容器可见 */
     div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"],
-    div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {{
+    div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
         visibility: visible !important;
         display: block !important;
         opacity: 1 !important;
@@ -157,18 +157,18 @@ def render_top_nav():
         width: 100% !important;
         text-align: center !important;
         margin: 0 !important;
-    }}
+    }
 
     /* 极致去除 BaseWeb 的背景与阴影干扰 */
     div[data-testid="stRadio"] [data-baseweb="radio"],
-    div[data-testid="stRadio"] [role="radiogroup"] div {{
+    div[data-testid="stRadio"] [role="radiogroup"] div {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
-    }}
-    
+    }
+
     /* 每一个选项都成为一个独立的胶囊 */
-    div[data-testid="stRadio"] label {{
+    div[data-testid="stRadio"] label {
         flex: 0 1 auto !important;
         background: rgba(255, 255, 255, 0.06) !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
@@ -178,46 +178,46 @@ def render_top_nav():
         cursor: pointer !important;
         margin: 0 !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
-    }}
-    
+    }
+
     /* 选中状态：页面变亮，呈现亮色胶囊 */
-    div[data-testid="stRadio"] label:has(input:checked) {{
+    div[data-testid="stRadio"] label:has(input:checked) {
         background: #818cf8 !important; /* 核心亮度来源 */
         border: 1px solid #a5b4fc !important;
         box-shadow: 0 0 20px rgba(129, 140, 248, 0.5), 0 4px 10px rgba(0,0,0,0.3) !important;
         transform: scale(1.05) !important; /* 选中的轻微放大感 */
-    }}
-    
+    }
+
     /* 文字颜色在选中时强制设为极高对比度的纯白 */
-    div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {{
+    div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
         font-size: 14px !important;
         font-weight: 600 !important;
         color: rgba(255, 255, 255, 0.6) !important;
         transition: color 0.3s !important;
-    }}
-    
-    div[data-testid="stRadio"] label:has(input:checked) p {{
+    }
+
+    div[data-testid="stRadio"] label:has(input:checked) p {
         color: #ffffff !important;
         font-weight: 800 !important;
         text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-    }}
-    
+    }
+
     /* 悬停态：细腻的亮度提升 */
-    div[data-testid="stRadio"] label:hover:not(:has(input:checked)) {{
+    div[data-testid="stRadio"] label:hover:not(:has(input:checked)) {
         background: rgba(255, 255, 255, 0.12) !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
         transform: translateY(-2px);
-    }}
-    
+    }
+
     /* 弥补顶部高度 */
-    .stApp {{ margin-top: 50px !important; }}
+    .stApp { margin-top: 50px !important; }
     </style>
     """, unsafe_allow_html=True)
 
     # --- 🏗️ 构造全宽导航 HTML ---
     nav_html = '<div class="nav-bar"><div class="nav-container">'
     nav_html += '<a href="/" target="_self" class="nav-item" style="text-decoration: none !important; color: rgba(245, 245, 247, 0.95) !important; font-weight: 900 !important; font-size: 24px !important;">主页</a>'
-    
+
     for item in nav_data:
         nav_html += f'''
         <div class="nav-item">
@@ -230,9 +230,9 @@ def render_top_nav():
         # 子项横向分布 (如果子项多，可以分 Column，目前先统一排布)
         for sub in item['subs']:
             nav_html += f'<a href="{escape(sub["href"])}" target="_self" class="dropdown-item">{escape(sub["label"])}</a>'
-        
+
         nav_html += '</div></div></div></div>'
-    
+
     nav_html += '</div></div>'
     st.markdown(nav_html, unsafe_allow_html=True)
 

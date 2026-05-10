@@ -9,6 +9,17 @@ PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{12,}"),
     re.compile(r"(?i)Baidu_Map_AK\s*=\s*(?!YOUR_)[A-Za-z0-9]{10,}"),
 ]
+# Tutorial / documentation placeholder patterns that are safe to ignore
+KNOWN_SAFE_PATTERNS = [
+    re.compile(r"(?i)your_\w+_key"),
+    re.compile(r"(?i)your_\w+_ak"),
+    re.compile(r"(?i)YOUR_BAIDU_MAP_AK"),
+    re.compile(r"(?i)YOUR_DEEPSEEK_API_KEY"),
+    re.compile(r'(?i)API_KEY\s*=\s*"your_'),
+    re.compile(r"(?i)ghp_xxxx"),
+    re.compile(r"(?i)AIzaSyx"),
+    re.compile(r"(?i)PLACEHOLDER"),
+]
 SCANNED_SUFFIXES = {".py", ".md", ".txt", ".yaml", ".yml", ".toml"}
 SCANNED_FILENAMES = {".env"}
 
@@ -59,6 +70,9 @@ def main() -> int:
 
         for line_number, line in enumerate(text.splitlines(), start=1):
             if any(pattern.search(line) for pattern in PATTERNS):
+                # Skip known-safe tutorial/placeholder patterns
+                if any(safe.search(line) for safe in KNOWN_SAFE_PATTERNS):
+                    continue
                 findings.append((rel, line_number))
 
     if findings:

@@ -267,7 +267,7 @@ diagnostics = get_plot_diagnostics()
 findings = [
     {
         "point": f"基于 AHP-MPI 模型，{top_plot_name} 以 {top_mpi:.1f} 分位居更新优先级首位",
-        "evidence": f"评价维度：空间潜力、社会需求、环境紧迫度三维加权"
+        "evidence": "评价维度：空间潜力、社会需求、环境紧迫度三维加权"
     },
     {
         "point": f"共识别 {len(mpi_data)} 个候选更新单元进入优先排行",

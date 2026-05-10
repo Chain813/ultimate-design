@@ -495,7 +495,7 @@ def _render_llm_summary_button(
             unsafe_allow_html=True,
         )
         st.download_button(
-            f"📥 导出小结",
+            "📥 导出小结",
             st.session_state[session_key],
             file_name=f"Stage{stage_code}_答辩小结.md",
             mime="text/markdown",

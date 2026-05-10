@@ -27,7 +27,7 @@ render_page_banner(
         {"value": "4 项", "label": "核心痛点", "meta": "开题报告现状诊断结论"},
     ],
 )
-render_evidence_chain_bar("01", ["01", "02", "03", "04", "05"])
+render_evidence_chain_bar("01", ["00", "01", "02", "03", "04", "05"])
 
 SUB_OPTIONS = ["📋 项目概况", "📄 任务书与开题报告", "🖼️ 图纸提示词生成"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
@@ -68,17 +68,17 @@ elif selected_sub == "📄 任务书与开题报告":
                 )
             else:
                 st.warning("未找到任务书文件。")
-            
+
             mission_path = META_DIR / "mission_text.txt"
             if mission_path.exists():
                 mission_text = read_text_with_fallback(mission_path)
                 with st.expander("👁️ 查看任务书核心摘录", expanded=True):
                     # HTML formatting for a sleek, dark-themed scrollable text block
                     st.markdown(
-                        f'''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6; 
-                        max-height:280px; overflow-y:auto; padding:12px; 
+                        f'''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6;
+                        max-height:280px; overflow-y:auto; padding:12px;
                         background:rgba(0,0,0,0.25); border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
-                        {mission_text[:1800].replace(chr(10), "<br>")}</div>''', 
+                        {mission_text[:1800].replace(chr(10), "<br>")}</div>''',
                         unsafe_allow_html=True
                     )
 
@@ -97,11 +97,11 @@ elif selected_sub == "📄 任务书与开题报告":
                 )
             else:
                 st.warning("未找到开题报告文件。")
-            
+
             with st.expander("👁️ 查看核心框架提纲", expanded=True):
                 st.markdown(
-                    '''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6; 
-                    max-height:280px; overflow-y:auto; padding:12px; 
+                    '''<div style="font-size:13px; color:rgba(255,255,255,0.75); line-height:1.6;
+                    max-height:280px; overflow-y:auto; padding:12px;
                     background:rgba(0,0,0,0.25); border-radius:8px; border: 1px solid rgba(255,255,255,0.05);">
                     <b style="color:rgba(255,255,255,0.9);">第一部分：现状研判与问题痛点</b><br>
                     • 历史文脉断裂与空间感知弱化<br>
@@ -111,7 +111,7 @@ elif selected_sub == "📄 任务书与开题报告":
                     数字孪生驱动的“古今共振”街区微更新规划<br><br>
                     <b style="color:rgba(255,255,255,0.9);">第三部分：拟采用的核心技术路线</b><br>
                     <code>GIS底座构建</code> ➔ <code>多源数据语义萃取</code> ➔ <code>AHP-MPI 潜力评估</code> ➔ <code>AIGC (SD/ControlNet) 推演</code>
-                    </div>''', 
+                    </div>''',
                     unsafe_allow_html=True
                 )
 
