@@ -221,6 +221,57 @@ def get_spatial_data() -> pd.DataFrame:
     return df
 
 
+# ═══════════════════════════════════════════
+# Road, Rail and Landuse loading
+# ═══════════════════════════════════════════
+
+@st.cache_data(ttl=3600)
+def get_road_network() -> gpd.GeoDataFrame:
+    """Load the clipped road network data."""
+    try:
+        import geopandas as gpd
+        path = resolve_path(str(SHP_FILES["roads"]))
+        if path.exists():
+            return gpd.read_file(str(path))
+    except Exception:
+        logger.warning("Failed to load road network", exc_info=True)
+    return gpd.GeoDataFrame()
+
+@st.cache_data(ttl=3600)
+def get_rail_network() -> gpd.GeoDataFrame:
+    """Load the clipped rail network data."""
+    try:
+        import geopandas as gpd
+        path = resolve_path(str(SHP_FILES["rails"]))
+        if path.exists():
+            return gpd.read_file(str(path))
+    except Exception:
+        logger.warning("Failed to load rail network", exc_info=True)
+    return gpd.GeoDataFrame()
+
+@st.cache_data(ttl=3600)
+def get_landuse_data() -> gpd.GeoDataFrame:
+    """Load the clipped landuse data with standardized colors."""
+    try:
+        import geopandas as gpd
+        path = resolve_path(str(SHP_FILES["landuse"]))
+        if path.exists():
+            return gpd.read_file(str(path))
+    except Exception:
+        logger.warning("Failed to load landuse data", exc_info=True)
+    return gpd.GeoDataFrame()
+
+def get_landuse_legend() -> list[dict]:
+    """Get unique landuse types and their colors for legend display."""
+    gdf = get_landuse_data()
+    if gdf.empty or "Type" not in gdf.columns or "Color" not in gdf.columns:
+        return []
+    
+    # Drop duplicates to get unique type-color pairs
+    legend = gdf[["Type", "Color", "GB_Code"]].drop_duplicates().sort_values("GB_Code")
+    return legend.to_dict("records")
+
+
 def _generate_demo_spatial_data() -> pd.DataFrame:
     """Fallback demo data when source files are absent."""
     np.random.seed(42)

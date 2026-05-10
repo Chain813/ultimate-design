@@ -14,11 +14,14 @@ build/
 # 本地环境变量
 .env
 
-# 离线大数据与媒体文件 (排除大文件，但保留核心底座数据以供 GitHub Clone)
+# 离线大数据与媒体文件 (排除 GB 级大文件)
 data/streetview/
 data/raw_images/
 data/template_assets/
 archive/
+data/shp/road_network.json
+data/shp/rail_network.json
+data/shp/Building_Footprints.geojson
 
 # 日志与临时元数据
 *.log

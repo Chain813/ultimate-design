@@ -25,6 +25,9 @@ SHP_FILES = {
     "boundary": SHP_DIR / "Boundary_Scope.geojson",
     "plots": SHP_DIR / "Key_Plots_District.json",
     "buildings": SHP_DIR / "Building_Footprints.geojson",
+    "roads": SHP_DIR / "road_network_clipped.geojson",
+    "rails": SHP_DIR / "rail_network_clipped.geojson",
+    "landuse": SHP_DIR / "landuse_clipped.geojson",
 }
 
 # ==========================================

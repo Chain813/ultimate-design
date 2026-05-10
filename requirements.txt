@@ -7,10 +7,10 @@ openpyxl==3.1.5
 requests==2.32.3
 plotly==6.6.0
 pillow==11.3.0
-torch==2.11.0
-torchvision==0.22.0
-transformers==5.5.4
-numpy==2.4.3
+torch>=2.5.0
+torchvision>=0.20.0
+transformers>=4.40.0
+numpy>=1.26.0
 jieba==0.42.1
 beautifulsoup4==4.12.3
 folium==0.20.0

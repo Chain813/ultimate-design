@@ -80,13 +80,28 @@ for q in queries:
         print(f"  -> {q} 分类处理完成，累计暂存 {len(df_tmp)} 个 POI")
 
 if len(poi_list) > 0:
-    df = pd.DataFrame(poi_list)
+    df_new = pd.DataFrame(poi_list)
     os.makedirs("data", exist_ok=True)
+    
+    output_path = "data/Changchun_POI_Real.csv"
+    if os.path.exists(output_path):
+        try:
+            df_old = pd.read_csv(output_path, encoding="utf-8-sig")
+            # 合并并去重（按名称和坐标）
+            df_final = pd.concat([df_old, df_new], ignore_index=True)
+            df_final = df_final.drop_duplicates(subset=["Name", "Lat", "Lng"])
+            print(f"📊 已与现有数据合并。新增: {len(df_final) - len(df_old)} 个, 总计: {len(df_final)} 个")
+        except Exception as e:
+            print(f"⚠️ 读取旧数据失败: {e}，将直接覆盖")
+            df_final = df_new
+    else:
+        df_final = df_new
+
     # 保存为系统标准 POI 文件
-    df.to_csv("data/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
+    df_final.to_csv(output_path, index=False, encoding="utf-8-sig")
     # 同时保留一个带分类的备份
-    df.to_csv("data/Changchun_POI_Baidu_Full.csv", index=False, encoding="utf-8-sig")
-    print(f"Success: 抓取完成！共获得 {len(df)} 个多维度 POI 数据，已同步至系统底座。")
+    df_final.to_csv("data/Changchun_POI_Baidu_Full.csv", index=False, encoding="utf-8-sig")
+    print(f"Success: 抓取完成并已去重！当前系统底座 POI 总数: {len(df_final)}")
 else:
-    print("Error: 未抓取到数据，请检查 AK 权限或网络环境。")
+    print("Error: 未抓取到新数据，请检查 AK 权限或网络环境。")
 

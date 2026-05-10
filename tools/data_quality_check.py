@@ -68,8 +68,11 @@ GEO_REGISTRY = {
     "研究范围边界": ROOT / "data" / "shp" / "Boundary_Scope.geojson",
     "重点地块": ROOT / "data" / "shp" / "Key_Plots_District.json",
     "建筑轮廓": ROOT / "data" / "shp" / "Building_Footprints.geojson",
+    "道路网 (Clipped)": ROOT / "data" / "shp" / "road_network_clipped.geojson",
+    "铁路网 (Clipped)": ROOT / "data" / "shp" / "rail_network_clipped.geojson",
+    "用地现状 (Clipped)": ROOT / "data" / "shp" / "landuse_clipped.geojson",
 }
-ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name")
+ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name", "Type")
 
 
 def check_csv_or_excel(name: str, cfg: dict) -> dict:
@@ -174,6 +177,12 @@ def check_geojson(name: str, path: Path) -> dict:
         report["status"] = "WARNING"
 
     # 检查属性完整性
+    required_props = []
+    if "landuse_clipped" in str(path):
+        required_props = ["Type", "Color", "GB_Code"]
+    elif "network_clipped" in str(path):
+        required_props = ["Type"]
+
     for i, feat in enumerate(features[:10]):
         props = feat.get("properties", {})
         geom = feat.get("geometry", {})
@@ -181,6 +190,10 @@ def check_geojson(name: str, path: Path) -> dict:
             report["issues"].append(f"Feature #{i} 缺少坐标数据")
         if not any(props.get(field) not in (None, "") for field in ID_FIELDS):
             report["issues"].append(f"Feature #{i} 缺少稳定标识字段 ({'/'.join(ID_FIELDS)})")
+        
+        for rp in required_props:
+            if rp not in props:
+                report["issues"].append(f"Feature #{i} 缺少必需属性: {rp}")
 
     report["grade"] = "A" if not report["issues"] else "B"
     return report
