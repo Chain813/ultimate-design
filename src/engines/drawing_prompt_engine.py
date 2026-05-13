@@ -371,39 +371,20 @@ def build_image_prompt(request: ImagePromptRequest) -> PromptBuildResult:
     profile = get_drawing_profile(request.drawing_name)
     report = check_prompt_completeness(request, profile)
 
-    if report.missing and profile.precision == "一级精度":
-        reason = "该图纸属于一级精度图纸，必须上传真实底图和边界数据。"
+    if report.missing:
+        # 核心逻辑修改：不再因为缺少资产而拒绝生成，而是切换到“示意/降级”模式
+        notices = [f"检测到缺少资产：{'、'.join(report.missing)}。系统已自动切换至‘示意/概念表达模式’以确保正常出图。"] + report.notices
+        negative_prompt = build_negative_prompt(profile.precision)
+        # 强制标记为示意模式，允许 AI 脑补
+        prompt = _compose_prompt(request, profile, negative_prompt, template_only=True)
         return PromptBuildResult(
-            can_generate=False,
-            prompt="",
-            negative_prompt="",
+            can_generate=True, # 始终允许生成
+            prompt=prompt,
+            negative_prompt=negative_prompt,
             profile=profile,
             missing_items=report.missing,
-            notices=[reason] + report.notices,
-            template_only=False,
-        )
-    mandatory_missing = [item for item in report.missing if item not in UPLOAD_CHANNELS]
-    if mandatory_missing and profile.precision == "二级精度":
-        reason = "该图纸属于二级精度图纸，缺少必要主题或表达内容，暂不生成提示词。"
-        return PromptBuildResult(
-            can_generate=False,
-            prompt="",
-            negative_prompt="",
-            profile=profile,
-            missing_items=report.missing,
-            notices=[reason] + report.notices,
-            template_only=report.template_only,
-        )
-    if report.missing and profile.precision == "三级精度":
-        reason = "该图纸属于三级精度图纸，可生成概念表达提示词，但当前缺少图纸主题、版式或输出比例。"
-        return PromptBuildResult(
-            can_generate=False,
-            prompt="",
-            negative_prompt="",
-            profile=profile,
-            missing_items=report.missing,
-            notices=[reason] + report.notices,
-            template_only=False,
+            notices=notices,
+            template_only=True,
         )
 
     negative_prompt = build_negative_prompt(profile.precision)

@@ -1,4 +1,4 @@
-﻿# ==========================================
+# ==========================================
 # ⚙️ UltimateDESIGN V2.0 终极全局配置文件
 # ==========================================
 
@@ -29,12 +29,11 @@ engines:
 
 data:
   rag_knowledge_path: "data/rag_knowledge.json"
-  building_footprints: "data/shp/Building_Footprints.geojson"
-  boundary_scope: "data/shp/Boundary_Scope.geojson"
-  key_plots: "data/shp/Key_Plots_District.json"
-  poi_data: "data/Changchun_POI_Real.csv"
-  traffic_data: "data/Changchun_Traffic_Real.csv"
-  nlp_raw_data: "data/CV_NLP_RawData.csv"
-  precise_points: "data/Changchun_Precise_Points.xlsx"
-  gvi_results: "data/GVI_Results_Analysis.csv"
-
+  building_footprints: "data/gis/Building_Footprints.geojson"
+  boundary_scope: "data/gis/Boundary_Scope.geojson"
+  key_plots: "data/gis/Key_Plots_District.json"
+  poi_data: "data/csv/Changchun_POI_Real.csv"
+  traffic_data: "data/csv/Changchun_Traffic_Real.csv"
+  nlp_raw_data: "data/csv/CV_NLP_RawData.csv"
+  precise_points: "data/csv/Changchun_Precise_Points.xlsx"
+  gvi_results: "data/csv/GVI_Results_Analysis.csv"

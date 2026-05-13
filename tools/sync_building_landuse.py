@@ -19,7 +19,7 @@ def sync_building_landuse():
     print(f"  Landuse polygons: {len(landuse)}")
 
     print("  Loading buildings...")
-    buildings = gpd.read_file("data/shp/Building_Footprints.geojson")
+    buildings = gpd.read_file("data/gis/Building_Footprints.geojson")
     if 'building_id' not in buildings.columns:
         buildings.insert(0, 'building_id', [f"B{idx + 1:06d}" for idx in range(len(buildings))])
     print(f"  Buildings: {len(buildings)}")
@@ -73,7 +73,7 @@ def sync_building_landuse():
 
     # 6. Save to both locations
     print("\n💾 Saving updated GeoJSON...")
-    buildings.to_file("data/shp/Building_Footprints.geojson", driver='GeoJSON')
+    buildings.to_file("data/gis/Building_Footprints.geojson", driver='GeoJSON')
     buildings.to_file("static/buildings.geojson", driver='GeoJSON')
     print("✅ Done! Both data and static files synchronized.")
 

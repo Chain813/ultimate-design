@@ -1,4 +1,4 @@
-# ultimateDESIGN Bug 报告
+﻿# ultimateDESIGN Bug 报告
 
 生成时间：2026-05-10 (第二次更新)
 

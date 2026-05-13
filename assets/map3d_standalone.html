@@ -34,6 +34,8 @@
         const poi_data = /*__POI_DATA__*/null/*__END_POI__*/;
         const traffic_data = /*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/;
         const landuse_data = /*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/;
+        const rail_data = /*__RAIL_DATA__*/null/*__END_RAIL__*/;
+        const road_data = /*__ROAD_DATA__*/null/*__END_ROAD__*/;
         // 🚀 接收 3D/2D 模式配置
         const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
 
@@ -227,6 +229,86 @@
                         const fallback = url.replace('/app/', '/');
                         console.warn(`[System] Landuse 404 at ${url}, retrying fallback: ${fallback}`);
                         return fetch(fallback);
+                    }
+                    return res;
+                }).then(res => res.json())
+            }));
+        }
+
+        // 🚆 图层 2.6：铁路与轨道交通
+        if (rail_data) {
+            const RAIL_COLORS = {
+                1: [120, 120, 120, 220],   // 铁路 (深灰)
+                2: [0, 120, 255, 220],     // 地铁 (蓝)
+                3: [0, 200, 120, 220],     // 轻轨 (青绿)
+                4: [180, 180, 180, 180]    // 其他 (浅灰)
+            };
+            const RAIL_WIDTH = {
+                1: 4,  // 铁路
+                2: 3,  // 地铁
+                3: 2,  // 轻轨
+                4: 1   // 其他
+            };
+            let railUrl = rail_data;
+            if (typeof rail_data === 'string' && rail_data.startsWith('/') && !rail_data.startsWith('//')) {
+                try {
+                    const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                    railUrl = parentOrigin + rail_data;
+                } catch(e) {}
+            }
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'rail-layer',
+                data: railUrl,
+                stroked: true,
+                filled: false,
+                getLineColor: d => RAIL_COLORS[d.properties.level] || RAIL_COLORS[4],
+                getLineWidth: d => RAIL_WIDTH[d.properties.level] || 1,
+                lineWidthMinPixels: 1,
+                parameters: { depthTest: true },
+                pickable: true,
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        return fetch(url.replace('/app/', '/'));
+                    }
+                    return res;
+                }).then(res => res.json())
+            }));
+        }
+
+        // 🛣️ 图层 2.7：道路网
+        if (road_data) {
+            const ROAD_COLORS = {
+                1: [255, 200, 60, 200],    // 一级道路 (金黄)
+                2: [255, 140, 50, 180],    // 二级道路 (橙)
+                3: [200, 200, 200, 150],   // 三级道路 (浅灰)
+                4: [160, 160, 160, 120]    // 其他道路 (暗灰)
+            };
+            const ROAD_WIDTH = {
+                1: 5,  // 一级
+                2: 3,  // 二级
+                3: 2,  // 三级
+                4: 1   // 其他
+            };
+            let roadUrl = road_data;
+            if (typeof road_data === 'string' && road_data.startsWith('/') && !road_data.startsWith('//')) {
+                try {
+                    const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                    roadUrl = parentOrigin + road_data;
+                } catch(e) {}
+            }
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'road-layer',
+                data: roadUrl,
+                stroked: true,
+                filled: false,
+                getLineColor: d => ROAD_COLORS[d.properties.level] || ROAD_COLORS[4],
+                getLineWidth: d => ROAD_WIDTH[d.properties.level] || 1,
+                lineWidthMinPixels: 1,
+                parameters: { depthTest: true },
+                pickable: true,
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        return fetch(url.replace('/app/', '/'));
                     }
                     return res;
                 }).then(res => res.json())
@@ -443,6 +525,18 @@
                 }
                 if (layer.id === 'plots-layer') {
                     return { html: `<b>🏗️ 重点更新地块: ${name || '未命名'}</b>` };
+                }
+                if (layer.id === 'rail-layer') {
+                    const RAIL_NAMES = { 1: '铁路', 2: '地铁', 3: '轻轨', 4: '其他' };
+                    const rname = object.properties.name || '未命名';
+                    const rtype = RAIL_NAMES[object.properties.level] || '未知';
+                    return { html: `<b>🚆 ${rtype}: ${rname}</b>` };
+                }
+                if (layer.id === 'road-layer') {
+                    const ROAD_NAMES = { 1: '一级道路', 2: '二级道路', 3: '三级道路', 4: '其他道路' };
+                    const rname = object.properties.name || '未命名';
+                    const rtype = ROAD_NAMES[object.properties.level] || '未知';
+                    return { html: `<b>🛣️ ${rtype}: ${rname}</b>` };
                 }
                 if (layer.id === 'col-layer') {
                     return { html: `<b>📊 指标采集点 (ID: ${object.ID || 'N/A'})</b><br>数值水平: ${object[col_payload?.metric] ? parseFloat(object[col_payload.metric]).toFixed(3) : '未知'}` };

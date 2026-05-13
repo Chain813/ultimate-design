@@ -197,7 +197,7 @@ class SDPipeline:
                        weight: float = 1.0) -> "SDPipeline":
         if self._current_step is None:
             raise ValueError("No active step -- call txt2img/img2img/inpaint first")
-        max_units = self._aigc.get("controlnet", {}).get("max_units", 3)
+        max_units = self._aigc.get("controlnet", {}).get("max_units", 5)
         if len(self._current_step.controlnet_units) >= max_units:
             raise ValueError(f"Maximum {max_units} ControlNet units per step")
         self._current_step.controlnet_units.append({

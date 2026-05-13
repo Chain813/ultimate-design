@@ -10,11 +10,26 @@
 
 from __future__ import annotations
 
+import time
 from html import escape
 
+import requests
 import streamlit as st
 from src.ui.design_system import load_design_css
 from src.ui.streamlit_compat import stretch_width
+
+
+@st.cache_data(ttl=60)
+def _scan_local_models() -> list[str]:
+    """Scan local Ollama instance for available models."""
+    try:
+        resp = requests.get("http://127.0.0.1:11434/api/tags", timeout=2)
+        if resp.status_code == 200:
+            models = resp.json().get("models", [])
+            return [m["name"] for m in models]
+    except Exception:
+        pass
+    return []
 
 
 def render_stage_summary(
@@ -448,10 +463,19 @@ def _render_llm_summary_button(
 
     session_key = f"llm_summary_{stage_code}"
 
+    # --- 模型下拉选择 ---
+    local_models = _scan_local_models()
+    api_models = ["deepseek-chat", "deepseek-reasoner"]
+    all_models = local_models + [m for m in api_models if m not in local_models]
+    if not all_models:
+        all_models = ["deepseek-chat"]
+
     col1, col2 = st.columns([3, 1])
     with col2:
-        model_tag = st.text_input(
-            "模型", value="deepseek-v4-pro",
+        model_tag = st.selectbox(
+            "模型",
+            options=all_models,
+            index=0,
             key=f"summary_model_{stage_code}",
             label_visibility="collapsed",
         )
@@ -461,28 +485,69 @@ def _render_llm_summary_button(
             key=f"summary_btn_{stage_code}",
             **stretch_width(st.button),
         ):
-            # 收集数据上下文
+            # --- 进度条 ---
+            progress = st.progress(0, text="正在收集阶段数据...")
+
+            # 收集当前阶段数据上下文
             data_lines = [f"阶段：{stage_code} {stage_name}", f"方法论：{methodology}"]
             for idx, f in enumerate(findings):
                 data_lines.append(f"发现{idx+1}：{f.get('point', '')} (依据: {f.get('evidence', '')})")
 
-            # 从数据总线补充
+            progress.progress(0.15, text="正在读取跨阶段数据总线...")
+
+            # 从数据总线补充 —— 当前阶段
             try:
                 bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
                 for k, v in bus_data.items():
-                    if isinstance(v, str) and len(v) < 300:
-                        data_lines.append(f"[总线] {k}: {v}")
+                    if isinstance(v, str) and len(v) < 500:
+                        data_lines.append(f"[本阶段总线] {k}: {v}")
                     elif isinstance(v, (int, float)):
-                        data_lines.append(f"[总线] {k}: {v}")
+                        data_lines.append(f"[本阶段总线] {k}: {v}")
             except Exception:
                 pass
 
+            progress.progress(0.30, text="正在汇总前期阶段成果...")
+
+            # 从数据总线补充 —— 所有已完成的前期阶段
+            try:
+                all_bus = st.session_state.get("stage_bus", {})
+                for other_code, other_data in all_bus.items():
+                    if other_code == stage_code or not isinstance(other_data, dict):
+                        continue
+                    for k, v in other_data.items():
+                        if isinstance(v, str) and len(v) < 300:
+                            data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
+                        elif isinstance(v, (int, float)):
+                            data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
+            except Exception:
+                pass
+
+            # 读取已有 AI 小结作为上下文
+            for prev_code in sorted(st.session_state.keys()):
+                if prev_code.startswith("llm_summary_") and prev_code != session_key:
+                    prev_text = st.session_state[prev_code]
+                    if isinstance(prev_text, str) and len(prev_text) > 30:
+                        prev_stage = prev_code.replace("llm_summary_", "")
+                        data_lines.append(f"[Stage {prev_stage} 已有小结] {prev_text[:200]}")
+
+            progress.progress(0.45, text="正在构建推理提示词...")
+
             data_context = "\n".join(data_lines)
+
+            progress.progress(0.50, text=f"正在调用 {model_tag} 生成答辩小结...")
+
             result = generate_stage_summary_text(
                 stage_code, stage_name, data_context, model=model_tag
             )
+
+            progress.progress(0.95, text="正在整理输出...")
+
             if result:
                 st.session_state[session_key] = result
+
+            progress.progress(1.0, text="答辩小结生成完成！")
+            time.sleep(0.5)
+            progress.empty()
 
     if st.session_state.get(session_key):
         st.markdown(
@@ -531,20 +596,28 @@ def generate_stage_summary_text(
     from src.engines.llm_engine import call_llm_engine
 
     prompt = f"""你是城乡规划专业毕业设计的答辩评审专家。
-请根据以下"{stage_name}"阶段的数据分析结果，撰写一段精炼的阶段研究小结。
+请根据以下"{stage_name}"阶段的数据分析结果以及前期各阶段的已有成果，撰写一段完整的阶段研究小结。
+
+本阶段小结不仅需要总结当前阶段的发现，还需要体现与前期阶段数据的关联性和递进逻辑，使答辩委员会能够理解整个研究的系统性。
 
 硬性要求：
 1. **真实性第一**：严禁编造任何数字、面积、POI 数量或地块名称。
-2. **严丝合缝**：所有发现必须在“数据上下文”中找到对应依据。如果数据中没有提到的内容，绝对不要出现。
-3. **专业表达**：使用城乡规划专业术语（如：空间绩效、形态约束、功能错位等）。
-4. **结构清晰**：列出 3-5 条核心发现，每条必须标注其数据来源或依据。
-5. **后续支撑**：最后一句明确说明本阶段结论对后续设计的支撑作用。
-6. **字数限制**：总字数控制在 250 字左右。
+2. **严丝合缝**：所有发现必须在"数据上下文"中找到对应依据。如果数据中没有提到的内容，绝对不要出现。
+3. **专业表达**：使用城乡规划专业术语（如：空间绩效、形态约束、功能错位、空间句法、TOD 等）。
+4. **结构清晰**：列出 5-8 条核心发现，每条必须标注其数据来源或依据。
+5. **跨阶段关联**：至少引用 1-2 项前期阶段的数据或结论，说明本阶段如何承接和深化前期成果。
+6. **后续支撑**：最后一段明确说明本阶段结论对后续设计决策的支撑作用。
+7. **字数要求**：总字数控制在 500-800 字，确保内容充实、论证完整。
 
-数据上下文：
-{data_context[:3500]}
+数据上下文（包含当前阶段数据、数据总线指标以及前期阶段成果）：
+{data_context[:6000]}
 """
-    sys_prompt = "你是城乡规划专业答辩委员会成员。你极其严谨，宁缺毋滥，禁止虚构任何未在上下文中出现的事实或数据。禁止输出技术代码或 JSON 格式，只输出专业文本。"
+    sys_prompt = (
+        "你是城乡规划专业答辩委员会成员，拥有丰富的城市更新与历史街区保护经验。"
+        "你极其严谨，宁缺毋滥，禁止虚构任何未在上下文中出现的事实或数据。"
+        "你需要综合分析当前阶段与前期阶段的数据，展现系统性研究思维。"
+        "禁止输出技术代码或 JSON 格式，只输出专业文本。"
+    )
 
     try:
         result = call_llm_engine(prompt=prompt, system_prompt=sys_prompt, model=model)

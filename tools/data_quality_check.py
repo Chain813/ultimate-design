@@ -37,27 +37,27 @@ except ImportError:  # pragma: no cover - optional GIS dependency fallback
 # ==========================================
 DATA_REGISTRY = {
     "POI": {
-        "path": ROOT / "data" / "Changchun_POI_Real.csv",
+        "path": ROOT / "data" / "csv" / "Changchun_POI_Real.csv",
         "required_cols": ["Name", "Lat", "Lng"],
         "lat_range": (43.85, 43.95),
         "lng_range": (125.30, 125.40),
     },
     "交通": {
-        "path": ROOT / "data" / "Changchun_Traffic_Real.csv",
+        "path": ROOT / "data" / "csv" / "Changchun_Traffic_Real.csv",
         "required_cols": ["Name", "Lat", "Lng"],
         "lat_range": (43.85, 43.95),
         "lng_range": (125.30, 125.40),
     },
     "NLP 舆情": {
-        "path": ROOT / "data" / "CV_NLP_RawData.csv",
+        "path": ROOT / "data" / "csv" / "CV_NLP_RawData.csv",
         "required_cols": ["Text", "Keyword", "Source"],
     },
     "GVI 环境品质": {
-        "path": ROOT / "data" / "GVI_Results_Analysis.csv",
+        "path": ROOT / "data" / "csv" / "GVI_Results_Analysis.csv",
         "required_cols": ["GVI", "SVF", "Enclosure", "Clutter"],
     },
     "精确点位": {
-        "path": ROOT / "data" / "Changchun_Precise_Points.xlsx",
+        "path": ROOT / "data" / "csv" / "Changchun_Precise_Points.xlsx",
         "required_cols": ["ID", "Lng", "Lat"],
         "lat_range": (43.85, 43.95),
         "lng_range": (125.30, 125.40),
@@ -65,12 +65,12 @@ DATA_REGISTRY = {
 }
 
 GEO_REGISTRY = {
-    "研究范围边界": ROOT / "data" / "shp" / "Boundary_Scope.geojson",
-    "重点地块": ROOT / "data" / "shp" / "Key_Plots_District.json",
-    "建筑轮廓": ROOT / "data" / "shp" / "Building_Footprints.geojson",
-    "道路网 (Clipped)": ROOT / "data" / "shp" / "road_network_clipped.geojson",
-    "铁路网 (Clipped)": ROOT / "data" / "shp" / "rail_network_clipped.geojson",
-    "用地现状 (Clipped)": ROOT / "data" / "shp" / "landuse_clipped.geojson",
+    "研究范围边界": ROOT / "data" / "gis" / "Boundary_Scope.geojson",
+    "重点地块": ROOT / "data" / "gis" / "Key_Plots_District.json",
+    "建筑轮廓": ROOT / "data" / "gis" / "Building_Footprints.geojson",
+    "道路网 (Clipped)": ROOT / "data" / "gis" / "road_clipped.geojson",
+    "铁路网 (Clipped)": ROOT / "data" / "gis" / "rail_clipped.geojson",
+    "用地现状 (Clipped)": ROOT / "data" / "gis" / "landuse_clipped.geojson",
 }
 ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name", "Type")
 

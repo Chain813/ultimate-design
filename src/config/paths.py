@@ -5,30 +5,38 @@ from .runtime import project_root
 
 ROOT_DIR = project_root()
 DATA_DIR = ROOT_DIR / "data"
-SHP_DIR = DATA_DIR / "shp"
+CSV_DIR = DATA_DIR / "csv"
+GIS_DIR = DATA_DIR / "gis"
 ASSETS_DIR = ROOT_DIR / "assets"
 STATIC_DIR = ROOT_DIR / "static"
 DOCS_DIR = ROOT_DIR / "docs"
 META_DIR = DATA_DIR / "meta"
 STREETVIEW_DIR = DATA_DIR / "streetview"
 
+# Backward-compatible aliases
+SHP_DIR = GIS_DIR
+
 DATA_FILES = {
-    "poi": DATA_DIR / "Changchun_POI_Real.csv",
-    "traffic": DATA_DIR / "Changchun_Traffic_Real.csv",
-    "nlp": DATA_DIR / "CV_NLP_RawData.csv",
-    "gvi": DATA_DIR / "GVI_Results_Analysis.csv",
-    "points": DATA_DIR / "Changchun_Precise_Points.xlsx",
+    "poi": CSV_DIR / "Changchun_POI_Real.csv",
+    "traffic": CSV_DIR / "Changchun_Traffic_Real.csv",
+    "nlp": CSV_DIR / "CV_NLP_RawData.csv",
+    "gvi": CSV_DIR / "GVI_Results_Analysis.csv",
+    "points": CSV_DIR / "Changchun_Precise_Points.xlsx",
     "rag": DATA_DIR / "rag_knowledge.json",
 }
 
-SHP_FILES = {
-    "boundary": SHP_DIR / "Boundary_Scope.geojson",
-    "plots": SHP_DIR / "Key_Plots_District.json",
-    "buildings": SHP_DIR / "Building_Footprints.geojson",
-    "roads": SHP_DIR / "road_network_clipped.geojson",
-    "rails": SHP_DIR / "rail_network_clipped.geojson",
-    "landuse": SHP_DIR / "landuse_clipped.geojson",
+GIS_FILES = {
+    "boundary": GIS_DIR / "Boundary_Scope.geojson",
+    "plots": GIS_DIR / "Key_Plots_District.json",
+    "buildings": GIS_DIR / "Building_Footprints.geojson",
+    "roads": GIS_DIR / "road_clipped.geojson",
+    "rails": GIS_DIR / "rail_clipped.geojson",
+    "landuse": GIS_DIR / "landuse_clipped.geojson",
+    "protected": STATIC_DIR / "protected_buildings.geojson",
 }
+
+# Backward-compatible alias
+SHP_FILES = GIS_FILES
 
 # ==========================================
 # 🌐 Web Static Routing Configuration

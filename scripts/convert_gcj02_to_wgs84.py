@@ -108,8 +108,8 @@ def main():
     print("=" * 60)
 
     files_to_convert = [
-        ("data/shp/Key_Plots_District.json", "重点地块"),
-        ("data/shp/Boundary_Scope.geojson", "研究范围边界"),
+        ("data/gis/Key_Plots_District.json", "重点地块"),
+        ("data/gis/Boundary_Scope.geojson", "研究范围边界"),
     ]
 
     for rel_path, label in files_to_convert:
@@ -133,9 +133,9 @@ def main():
     print("=" * 60)
     print("转换后验证")
     import pandas as pd
-    poi = pd.read_csv(ROOT / "data/Changchun_POI_Real.csv", encoding="utf-8-sig")
+    poi = pd.read_csv(ROOT / "data/csv/Changchun_POI_Real.csv", encoding="utf-8-sig")
 
-    with open(ROOT / "data/shp/Key_Plots_District.json", encoding="utf-8") as f:
+    with open(ROOT / "data/gis/Key_Plots_District.json", encoding="utf-8") as f:
         geo = json.load(f)
 
     total_bbox_hits = 0

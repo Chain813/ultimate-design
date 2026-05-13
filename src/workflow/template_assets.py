@@ -91,6 +91,15 @@ TEMPLATE_ASSET_SPECS: tuple[TemplateAssetSpec, ...] = (
         generation_rule="专题分类和图例逻辑必须来自上传文件，不能虚构不存在的用地或评价等级。",
     ),
     TemplateAssetSpec(
+        asset_id="historic_buildings",
+        label="保护建筑 / 紫线区域",
+        prompt_channel="GIS专题图",
+        required=False,
+        accepted_types=("geojson", "json", "svg", "png", "jpg", "jpeg", "pdf", "zip"),
+        description="紫线范围内的历史保护建筑、文保单位或工业遗产轮廓。",
+        generation_rule="紫线范围内的建筑必须被绝对保留，不允许 AI 改变其体量、轮廓和基本材质。",
+    ),
+    TemplateAssetSpec(
         asset_id="legend_reference",
         label="图例 / 色彩 / 风格参考",
         prompt_channel="图例参考图",

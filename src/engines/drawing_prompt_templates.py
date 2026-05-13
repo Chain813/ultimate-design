@@ -39,8 +39,9 @@ class DrawingTemplate:
     description: str
     prompt_tmpl: str
     sys_prompt: str = (
-        "你是城乡规划专业的固定资产制图提示词审校器。必须保留底图、研究范围、重点地块和图框约束；"
-        "不得把缺失资产的图纸改写成可直接出图的提示词。"
+        "你是一名顶级城市规划视觉设计师和 AI 艺术提示词工程师。你的任务是基于项目数据生成竞赛级（Competition Grade）的图纸提示词。"
+        "必须遵循：1. 极简主义建筑美学（参考 BIG/Sasaki 风格）；2. 专业的规划色彩规范（如国标用地色）；3. 严谨的空间逻辑（基于 GIS 约束）；4. 避免任何低质量修饰词。"
+        "提示词必须结构化，包含：核心主体、专业风格、材质/光影、视角（如 Isometric/Top-down）以及 8k 高分辨率参数。"
     )
     data_deps: list[str] = field(default_factory=list)
 
@@ -97,16 +98,16 @@ DRAWING_TEMPLATES: list[DrawingTemplate] = [
         chapter="01 项目认知篇",
         stage="01",
         description="长春市—宽城区—伪满皇宫周边三级区位图",
-        prompt_tmpl="""请为以下城市设计项目生成一张"区位分析图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a professional, competition-grade "Regional Context Analysis Map" prompt.
 
 {data_context}
 
-图纸要求：
-- 采用三级嵌套式区位表达：长春市全域→宽城区→研究范围
-- 红色虚线标注研究范围，蓝色标注重点地块
-- 标注长春站、伊通河、伪满皇宫等关键地标
-- A3横版，左侧大区位、右侧研究范围放大
-- 底色为蓝灰色调，避免过于鲜艳""",
+Style Requirement (Inspired by Awesome-AIGC-Architecture): 
+- Professional urban planning atlas style, minimalist vector graphics, soft pastel color palette (Blue-Grey tone).
+- Viewpoint: Multi-scale nested view, clean map layouts.
+- Key Elements: Highlight boundaries with red dashed lines, core landmarks with precise labeling symbols.
+- Quality: 8k resolution, architectural visualization, flat design, clean typography, masterpiece.
+- Negative Prompt: Messy labels, dark colors, photorealistic chaos, distorted geography.""",
     ),
     DrawingTemplate(
         name="周边关系图",
@@ -302,18 +303,19 @@ DRAWING_TEMPLATES: list[DrawingTemplate] = [
         chapter="04 策略生成篇",
         stage="07",
         description="一核两轴多片多节点的空间结构",
-        prompt_tmpl="""请为以下城市设计项目生成一张"空间结构规划图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a minimalist "Spatial Structure Planning Diagram" prompt.
 
 {data_context}
 
-图纸要求：
-- 表达"一核、两轴、多片、多节点"的空间结构
-- 一核：伪满皇宫文化核心
-- 两轴：站城活力发展轴 + 工业遗产更新轴
-- 多片：文旅展示片区、创意产业片区、社区生活片区、站前服务片区
-- 多节点：门户节点、文化节点、社区节点、生态节点
-- 用粗线表达轴线、色块表达片区、圆点表达节点
-- A3横版，底图为简化建筑肌理""",
+Visual Identity (Inspired by Awesome-AIGC-Architecture):
+- Style: Minimalist architectural diagram, clean vector lines, high-contrast flat design.
+- Elements: 
+  · Core: "Emperor's Palace Cultural Core" as a glowing golden circle.
+  · Axes: "Vitality Axis" and "Industrial Heritage Axis" as thick, soft-colored arrows.
+  · Nodes: Precise geometric dots for key intersections.
+- Rendering: Soft shadows, white background, professional planning aesthetics (Sasaki style).
+- Quality: 8k, vector graphics, clean lines, professional CAD style.
+- Negative Prompt: Messy textures, photorealistic chaos, dark background, organic scribbles.""" ,
     ),
 
     # ---- 阶段 09 专项系统 ----
@@ -360,18 +362,18 @@ DRAWING_TEMPLATES: list[DrawingTemplate] = [
         chapter="05 总体规划篇",
         stage="09",
         description="文化广场、社区活动场、口袋公园、街角空间层级网络",
-        prompt_tmpl="""请为以下城市设计项目生成一张"公共空间系统图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a professional "Public Space System Map" prompt.
 
 {data_context}
 
-图纸要求：
-- 构建三级公共空间层级：
-  · 一级：区域级文化广场（红色大圆）
-  · 二级：社区级活动场地（橙色中圆）
-  · 三级：街角口袋空间（绿色小圆）
-- 用绿色廊道连接各级公共空间
-- 标注步行5分钟服务半径覆盖
-- A3横版""",
+Visual Identity (Inspired by Awesome-AIGC-Architecture):
+- Style: Professional urban ecology diagram, soft green and orange palette, clean geometric hierarchy.
+- Elements: 
+  · Hierarchy: Large red circles for major squares, orange dots for community spaces, green dots for pocket parks.
+  · Network: Soft green corridors connecting nodes, 5-minute walking radius circles with 20% transparency.
+- View: Top-down orthographic map, minimalist architectural footprints in light grey.
+- Quality: 8k, architectural visualization, clean topography, masterwork.
+- Negative Prompt: Overcrowded labels, messy textures, low-resolution icons, dark mood.""",
     ),
     DrawingTemplate(
         name="历史文化展示系统图",
@@ -659,42 +661,35 @@ DRAWING_TEMPLATES: list[DrawingTemplate] = [
         chapter="05 总体规划篇",
         stage="08",
         description="更新后的总体空间布局、道路系统和功能分区（任务书必做图）",
-        prompt_tmpl="""请为以下城市设计项目生成一张"总平面规划图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a high-fidelity "Urban Masterplan" prompt for a professional design competition.
 
 {data_context}
 
-图纸要求：
-- 这是任务书要求的核心图纸
-- 在建筑肌理底图上表达更新后的空间方案：
-  · 保留建筑（灰色）
-  · 改造建筑（蓝色）
-  · 新建建筑（红色轮廓）
-  · 拆除后开放空间（绿色）
-- 标注道路系统（主次支路不同线宽）
-- 标注重要节点和公共空间
-- 配合指北针、比例尺、图例
-- A3横版，标准城市设计总平面图表达""",
+Visual Identity (Inspired by Awesome-AIGC-Architecture):
+- Style: Bjarke Ingels Group (BIG) style minimalist masterplan, crisp vector lines, professional planning color scheme.
+- Color Palette: Yellow for residential, Red for commercial, Green for open space, Grey for roads, Soft shadows for building heights.
+- Rendering: Soft global illumination, paper-texture background, professional CAD-like precision.
+- Viewpoint: Orthographic top-down view, isometric building volumes (3D extrusions).
+- Elements: Precise road network hierarchy, clear building footprints, well-defined public squares, historic sites highlighted in warm gold.
+- Quality: 8k, architectural visualization, hyper-detailed planning, masterwork.
+- Negative Prompt: Organic chaos, messy strokes, photorealistic forest, blurry textures, distorted perspective.""",
     ),
     DrawingTemplate(
         name="土地利用规划图",
         chapter="05 总体规划篇",
         stage="08",
         description="更新后的用地类型分类与面积比例",
-        prompt_tmpl="""请为以下城市设计项目生成一张"土地利用规划图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a professional "Land Use Planning Map" prompt.
 
 {data_context}
 
-图纸要求：
-- 按国标用地分类色彩标注：
-  · 居住用地（黄色）
-  · 商业服务设施（红色）
-  · 公共管理与公共服务（粉红色）
-  · 绿地与广场（绿色）
-  · 道路与交通（灰色）
-  · 文化遗产保护用地（棕色）
-  · 工业用地(保留)（蓝色）
-- 右侧附用地平衡表（面积、比例）
-- A3横版""",
+Visual Identity (Inspired by Awesome-AIGC-Architecture):
+- Style: Standard urban planning color scheme, clean vector blocks, professional legend mapping.
+- Color Logic: Yellow (Residential), Red (Commercial), Green (Parks), Grey (Infrastructure), Brown (Heritage).
+- Rendering: Flat design, soft ambient occlusion between blocks, clean white background.
+- Elements: Accurate land-use parcels, clear boundary linework, minimalist land-use codes (R/B/G).
+- Quality: 8k, professional GIS-to-Map style, clean typography.
+- Negative Prompt: Blurry boundaries, organic color bleed, messy gradients, distorted text.""",
     ),
     DrawingTemplate(
         name="建筑高度控制图",
@@ -778,20 +773,17 @@ DRAWING_TEMPLATES: list[DrawingTemplate] = [
         chapter="06 重点地段篇",
         stage="10",
         description="重点街道的立面色彩、材质、檐口线控制",
-        prompt_tmpl="""请为以下城市设计项目生成一张"沿街立面设计图"的 Image 2.0 提示词。
+        prompt_tmpl="""Generate a professional "Street Facade Renewal Design" prompt.
 
 {data_context}
 
-图纸要求：
-- 选取1-2条重点街道绘制展开立面
-- 标注现状问题（色彩杂乱、材质不统一、广告遮挡）
-- 标注设计控制要求：
-  · 檐口线控制高度
-  · 色彩方案（暖灰色系为主基调）
-  · 底层界面开放度（≥70%通透率）
-  · 招牌导视统一规范
-- Before/After 对比展示
-- A3横版""",
+Visual Identity (Inspired by Awesome-AIGC-Architecture):
+- Style: Clean architectural elevation rendering, soft morning lighting, professional material expression.
+- Elements: Unified cornice lines, warm-grey stone textures, glass storefronts with 70% transparency, minimalist signage.
+- View: Parallel street elevation, orthographic, before/after comparison layout.
+- Ambience: People walking, trees in planters, realistic but clean urban scene.
+- Quality: 8k, architectural photography style, Unsplash quality, clean lines, professional CAD elevation.
+- Negative Prompt: Messy wires, neon chaos, low-quality brick textures, distorted windows, rain.""",
     ),
     DrawingTemplate(
         name="节点平面深化图",

@@ -125,7 +125,7 @@ set MAX_RETRIES=10
 set RETRY_COUNT=0
 
 :check_port
-netstat -ano | findstr ":%SERVER_PORT% " | findstr "LISTENING" >nul
+netstat -ano | findstr /C:":!SERVER_PORT! " | findstr "LISTENING" >nul
 if %ERRORLEVEL% EQU 0 (
     set /a RETRY_COUNT+=1
     if !RETRY_COUNT! GEQ !MAX_RETRIES! (
@@ -133,8 +133,8 @@ if %ERRORLEVEL% EQU 0 (
         pause
         exit /b 1
     )
-    set /a SERVER_PORT+=1
     echo [WARN] Port !SERVER_PORT! in use, trying next...
+    set /a SERVER_PORT+=1
     goto :check_port
 )
 
@@ -152,13 +152,10 @@ echo   Port: !SERVER_PORT!
 echo ----------------------------------------------------------------
 echo.
 
-echo [4/4] Finalizing and launching browser...
+echo [4/4] Launching Streamlit server...
 echo.
 
-REM Explicitly start browser to ensure it opens
-start http://localhost:!SERVER_PORT!
-
-REM Start Streamlit with detected port and headless disabled
+REM Streamlit opens the browser automatically with --server.headless false
 if defined PYTHON_PATH (
     %PYTHON_PATH% -m streamlit run "%~dp0app.py" --server.headless false --server.enableStaticServing=true --server.port !SERVER_PORT!
 ) else (

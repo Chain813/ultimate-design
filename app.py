@@ -256,7 +256,7 @@ def _load_map_html_template():
 def _load_traffic_json():
     """缓存交通数据的 JSON 序列化结果。"""
     try:
-        df_tr = pd.read_csv("data/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
+        df_tr = pd.read_csv("data/csv/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
         return json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
     except Exception:
         return "null"
@@ -283,7 +283,7 @@ def render_project_map():
     )
     is_3d_mode = "3D" in view_mode
 
-    layer_cols = st.columns(6)
+    layer_cols = st.columns(8)
     with layer_cols[0]:
         show_boundary = st.checkbox("🔲 规划红线", value=True, key="map_boundary")
     with layer_cols[1]:
@@ -296,17 +296,23 @@ def render_project_map():
         show_traffic = st.checkbox("🚦 交通拥堵热点", value=False, key="map_traffic")
     with layer_cols[5]:
         show_landuse = st.checkbox("🧬 规划用地底色", value=False, key="map_landuse")
+    with layer_cols[6]:
+        show_rail = st.checkbox("🚆 铁路轨道", value=False, key="map_rail")
+    with layer_cols[7]:
+        show_road = st.checkbox("🛣️ 道路网", value=False, key="map_road")
 
     show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key="map_lighting")
     sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key="map_sun_time")
 
     # 1. 使用缓存函数获取序列化数据，避免重复计算
     b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
-    bound_data_json = json.dumps(load_map_data("data/shp/Boundary_Scope.geojson")) if show_boundary else "null"
-    plots_data_json = json.dumps(load_map_data("data/shp/Key_Plots_District.json")) if show_plots else "null"
+    bound_data_json = json.dumps(load_map_data("data/gis/Boundary_Scope.geojson")) if show_boundary else "null"
+    plots_data_json = json.dumps(load_map_data("data/gis/Key_Plots_District.json")) if show_plots else "null"
     poi_data_json = _load_poi_json() if show_poi else "null"
     traffic_data_json = _load_traffic_json() if show_traffic else "null"
     landuse_data_json = f"'{get_static_url('landuse.geojson')}'" if show_landuse else "null"
+    rail_data_json = f"'{get_static_url('rail_clipped.geojson')}'" if show_rail else "null"
+    road_data_json = f"'{get_static_url('road_clipped.geojson')}'" if show_road else "null"
 
     # 2. 从缓存读取 HTML 模板骨架
     try:
@@ -317,6 +323,8 @@ def render_project_map():
         html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
         html_template = html_template.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
         html_template = html_template.replace("/*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/", landuse_data_json)
+        html_template = html_template.replace("/*__RAIL_DATA__*/null/*__END_RAIL__*/", rail_data_json)
+        html_template = html_template.replace("/*__ROAD_DATA__*/null/*__END_ROAD__*/", road_data_json)
         html_template = html_template.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d_mode else "false")
         html_template = html_template.replace("/*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/", "true" if show_lighting else "false")
         html_template = html_template.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))

@@ -26,9 +26,9 @@ logger = logging.getLogger("ultimateDESIGN")
 @st.cache_data(ttl=3600)
 def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
-    df1 = _safe_read_csv("data/Changchun_POI_Real.csv", usecols=usecols)
+    df1 = _safe_read_csv("data/csv/Changchun_POI_Real.csv", usecols=usecols)
     # Changchun_POI_Baidu_New.csv may not exist in all deployments; treat as optional.
-    df2 = _safe_read_csv("data/Changchun_POI_Baidu_New.csv", usecols=usecols)
+    df2 = _safe_read_csv("data/csv/Changchun_POI_Baidu_New.csv", usecols=usecols)
 
     if not df1.empty and not df2.empty:
         df_merged = pd.concat([df1, df2], ignore_index=True)
@@ -65,7 +65,7 @@ def get_hud_statistics() -> dict:
     stats["poi_count"] = _safe_count(get_merged_poi_data, "N/A")
     stats["nlp_count"] = _safe_count_csv(str(DATA_FILES["nlp"]), "N/A")
     stats["gvi_count"] = _safe_count_csv(str(DATA_FILES["gvi"]), "N/A")
-    stats["boundary_ha"] = _calc_boundary_ha("data/shp/Boundary_Scope.geojson")
+    stats["boundary_ha"] = _calc_boundary_ha("data/gis/Boundary_Scope.geojson")
     return stats
 
 
@@ -168,6 +168,33 @@ def _ensure_crs(gdf, default_crs: str = "EPSG:4326"):
     return gdf
 
 
+def _normalize_to_wgs84(gdf):
+    """Ensure GeoDataFrame uses WGS-84 with longitude-first axis order.
+
+    Handles CRS84 vs EPSG:4326 ambiguity and missing CRS declarations.
+    All downstream code (bbox queries, map rendering, point-in-polygon)
+    assumes WGS-84 longitude-first, so every loader must call this.
+    """
+    if gdf.empty:
+        return gdf
+    if gdf.crs is None:
+        gdf = gdf.set_crs("EPSG:4326", allow_override=True)
+    # CRS84 and EPSG:4326 share the same datum (WGS-84) but differ in
+    # declared axis order.  GeoPandas internally normalises both to lon/lat,
+    # so to_epsg() returns 4326 for both.  The check below catches any
+    # genuinely different CRS (e.g. projected or local) and reprojects.
+    try:
+        epsg = gdf.crs.to_epsg()
+    except Exception:
+        epsg = None
+    if epsg is not None and epsg != 4326:
+        try:
+            gdf = gdf.to_crs("EPSG:4326")
+        except Exception:
+            logger.warning("CRS reprojection to EPSG:4326 failed, keeping original CRS")
+    return gdf
+
+
 def _project_for_geometry_ops(buildings, boundary):
     try:
         target_crs = boundary.estimate_utm_crs() or buildings.estimate_utm_crs()
@@ -226,40 +253,40 @@ def get_spatial_data() -> pd.DataFrame:
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=3600)
-def get_road_network() -> gpd.GeoDataFrame:
+def get_road_network() -> "pd.DataFrame":
     """Load the clipped road network data."""
     try:
         import geopandas as gpd
         path = resolve_path(str(SHP_FILES["roads"]))
         if path.exists():
-            return gpd.read_file(str(path))
+            return _normalize_to_wgs84(gpd.read_file(str(path)))
     except Exception:
         logger.warning("Failed to load road network", exc_info=True)
-    return gpd.GeoDataFrame()
+    return pd.DataFrame()
 
 @st.cache_data(ttl=3600)
-def get_rail_network() -> gpd.GeoDataFrame:
+def get_rail_network() -> "pd.DataFrame":
     """Load the clipped rail network data."""
     try:
         import geopandas as gpd
         path = resolve_path(str(SHP_FILES["rails"]))
         if path.exists():
-            return gpd.read_file(str(path))
+            return _normalize_to_wgs84(gpd.read_file(str(path)))
     except Exception:
         logger.warning("Failed to load rail network", exc_info=True)
-    return gpd.GeoDataFrame()
+    return pd.DataFrame()
 
 @st.cache_data(ttl=3600)
-def get_landuse_data() -> gpd.GeoDataFrame:
+def get_landuse_data() -> "pd.DataFrame":
     """Load the clipped landuse data with standardized colors."""
     try:
         import geopandas as gpd
         path = resolve_path(str(SHP_FILES["landuse"]))
         if path.exists():
-            return gpd.read_file(str(path))
+            return _normalize_to_wgs84(gpd.read_file(str(path)))
     except Exception:
         logger.warning("Failed to load landuse data", exc_info=True)
-    return gpd.GeoDataFrame()
+    return pd.DataFrame()
 
 def get_landuse_legend() -> list[dict]:
     """Get unique landuse types and their colors for legend display."""

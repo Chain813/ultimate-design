@@ -1,4 +1,4 @@
-"""数据类别定义和辅助函数。
+﻿"""数据类别定义和辅助函数。
 
 从 Stage 0 数据准备页面提取的独立模块，包含所有数据类别的定义、
 检查函数和工具函数。
@@ -39,7 +39,7 @@ import processing
 layer = iface.activeLayer()
 
 # 设置输出路径
-output_path = "data/shp/Boundary_Scope.geojson"
+output_path = "data/gis/Boundary_Scope.geojson"
 
 # 导出为 GeoJSON
 processing.run("native:savefeatures", {
@@ -82,7 +82,7 @@ out skel qt;''',
                 },
             ],
             "sample_fields": "type: FeatureCollection, features: [{geometry: Polygon, properties: {name, area}}]",
-            "reference": "参考文件：data/shp/Boundary_Scope.geojson",
+            "reference": "参考文件：data/gis/Boundary_Scope.geojson",
         },
     },
     {
@@ -140,11 +140,11 @@ class BuildingHandler(osmium.SimpleHandler):
                     pass
 
 # 使用示例
-handler = BuildingHandler("data/shp/Boundary_Scope.geojson")
+handler = BuildingHandler("data/gis/Boundary_Scope.geojson")
 handler.apply_file("changchun.osm.pbf")
 
 geojson = {"type": "FeatureCollection", "features": handler.buildings}
-with open("data/shp/Building_Footprints.geojson", "w", encoding="utf-8") as f:
+with open("data/gis/Building_Footprints.geojson", "w", encoding="utf-8") as f:
     json.dump(geojson, f, ensure_ascii=False, indent=2)
 
 print(f"提取了 {len(handler.buildings)} 个建筑")''',
@@ -182,7 +182,7 @@ url = f"http://t0.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSIO
                 },
             ],
             "sample_fields": "geometry: Polygon, properties: {Floor: 6, levels: 6, building: residential}",
-            "reference": "参考文件：data/shp/Building_Footprints.geojson (36.9MB)",
+            "reference": "参考文件：data/gis/Building_Footprints.geojson (36.9MB)",
         },
     },
     {
@@ -242,7 +242,7 @@ QgsProject.instance().addMapLayer(layer)
 
 # 导出为 GeoJSON
 QgsVectorFileWriter.writeAsVectorFormat(
-    layer, "data/shp/Key_Plots_District.json",
+    layer, "data/gis/Key_Plots_District.json",
     "utf-8", layer.crs(), "GeoJSON"
 )''',
                     "tip": "地块划分应结合用地性质、更新潜力和设计重点。",
@@ -259,7 +259,7 @@ QgsVectorFileWriter.writeAsVectorFormat(
                 },
             ],
             "sample_fields": "type: FeatureCollection, features: [{geometry: Polygon, properties: {id: 1, name: 伪满皇宫周边}}]",
-            "reference": "参考文件：data/shp/Key_Plots_District.json",
+            "reference": "参考文件：data/gis/Key_Plots_District.json",
         },
     },
     {
@@ -293,7 +293,7 @@ import json
 API_KEY = "your_amap_key"  # 替换为你的 API Key
 
 # 研究范围边界坐标 (从 Boundary_Scope.geojson 提取)
-with open("data/shp/Boundary_Scope.geojson", "r", encoding="utf-8") as f:
+with open("data/gis/Boundary_Scope.geojson", "r", encoding="utf-8") as f:
     boundary = json.load(f)
 
 # 提取边界坐标
@@ -348,7 +348,7 @@ while True:
 
 # 保存为 CSV
 df = pd.DataFrame(all_pois)
-df.to_csv("data/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
+df.to_csv("data/csv/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
 
 print(f"获取了 {len(all_pois)} 个 POI")''',
                     "tip": "高德 API 每日调用次数有限，建议使用企业认证提升配额。",
@@ -404,14 +404,14 @@ while True:
         break
 
 df = pd.DataFrame(all_pois)
-df.to_csv("data/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
+df.to_csv("data/csv/Changchun_POI_Real.csv", index=False, encoding="utf-8-sig")
 
 print(f"获取了 {len(all_pois)} 个 POI")''',
                     "tip": "百度地图坐标系为 BD-09，需转换为 WGS-84。",
                 },
             ],
             "sample_fields": "Name: 椒爱水煮鱼川菜, Lat: 43.897, Lng: 125.338",
-            "reference": "参考文件：data/Changchun_POI_Real.csv",
+            "reference": "参考文件：data/csv/Changchun_POI_Real.csv",
         },
     },
     {
@@ -471,7 +471,7 @@ for poi_type in traffic_types:
             })
 
 df = pd.DataFrame(all_facilities)
-df.to_csv("data/Changchun_Traffic_Real.csv", index=False, encoding="utf-8-sig")
+df.to_csv("data/csv/Changchun_Traffic_Real.csv", index=False, encoding="utf-8-sig")
 
 print(f"获取了 {len(all_facilities)} 个交通设施")''',
                     "tip": "可结合公交线路数据做更深入的可达性分析。",
@@ -512,7 +512,7 @@ for station in stations:
         station["Lng"] = float(lng)
 
 df = pd.DataFrame(stations)
-df.to_csv("data/Changchun_Traffic_Real.csv", index=False, encoding="utf-8-sig")''',
+df.to_csv("data/csv/Changchun_Traffic_Real.csv", index=False, encoding="utf-8-sig")''',
                     "tip": "官方数据更准确，但可能需要申请或付费。",
                 },
                 {
@@ -537,7 +537,7 @@ out body;''',
                 },
             ],
             "sample_fields": "Name: 伪满皇宫, Type: 交通设施, Lat: 43.901, Lng: 125.341",
-            "reference": "参考文件：data/Changchun_Traffic_Real.csv",
+            "reference": "参考文件：data/csv/Changchun_Traffic_Real.csv",
         },
     },
     {
@@ -568,7 +568,7 @@ import os
 import time
 
 # 读取采样点坐标
-points = pd.read_csv("data/Changchun_Precise_Points.csv")
+points = pd.read_csv("data/csv/Changchun_Precise_Points.csv")
 
 # 百度地图 API (需要申请)
 API_KEY = "your_baidu_key"
@@ -630,7 +630,7 @@ print("街景数据获取完成！")''',
 import pandas as pd
 import os
 
-points = pd.read_csv("data/Changchun_Precise_Points.csv")
+points = pd.read_csv("data/csv/Changchun_Precise_Points.csv")
 API_KEY = "your_tencent_key"
 
 output_dir = "data/streetview"
@@ -682,7 +682,7 @@ raw_dir = "raw_photos"
 output_dir = "data/streetview"
 
 # 读取采样点坐标表
-points = pd.read_csv("data/Changchun_Precise_Points.csv")
+points = pd.read_csv("data/csv/Changchun_Precise_Points.csv")
 
 # 假设照片按 Point_ID 顺序拍摄
 photos = sorted(glob.glob(os.path.join(raw_dir, "*.jpg")))
@@ -766,7 +766,7 @@ for keyword in keywords:
         time.sleep(2)  # 控制请求频率
 
 df = pd.DataFrame(all_comments)
-df.to_csv("data/CV_NLP_RawData.csv", index=False, encoding="utf-8-sig")
+df.to_csv("data/csv/CV_NLP_RawData.csv", index=False, encoding="utf-8-sig")
 
 print(f"获取了 {len(all_comments)} 条评论")''',
                     "tip": "注意遵守平台服务条款，控制爬取频率。",
@@ -802,7 +802,7 @@ for shop_id in shop_ids:
     time.sleep(3)
 
 df = pd.DataFrame(all_comments)
-df.to_csv("data/CV_NLP_RawData.csv", index=False, encoding="utf-8-sig")''',
+df.to_csv("data/csv/CV_NLP_RawData.csv", index=False, encoding="utf-8-sig")''',
                     "tip": "大众点评反爬较严格，建议使用官方 API 或代理池。",
                 },
                 {
@@ -816,7 +816,7 @@ df.to_csv("data/CV_NLP_RawData.csv", index=False, encoding="utf-8-sig")''',
                 },
             ],
             "sample_fields": "Text: 受邀来长春参观，第一站是伪满皇宫..., Keyword: 长春伪满皇宫, Source: 新浪微博",
-            "reference": "参考文件：data/CV_NLP_RawData.csv",
+            "reference": "参考文件：data/csv/CV_NLP_RawData.csv",
         },
     },
     {
@@ -912,7 +912,7 @@ for point_dir in streetview_dir.iterdir():
         print(f"Point_{point_id} done")
 
 df = pd.DataFrame(results)
-df.to_csv("data/GVI_Results_Analysis.csv", index=False)
+df.to_csv("data/csv/GVI_Results_Analysis.csv", index=False)
 
 print(f"处理完成，共 {len(results)} 个采样点")''',
                     "tip": "需要 GPU 支持，处理 400+ 采样点约需 1-2 小时。",
@@ -991,7 +991,7 @@ for point_dir in sorted(streetview_dir.iterdir()):
 
 df = pd.DataFrame(results)
 df = df.sort_values("ID").reset_index(drop=True)
-df.to_csv("data/GVI_Results_Analysis.csv", index=False)
+df.to_csv("data/csv/GVI_Results_Analysis.csv", index=False)
 
 print(f"处理完成，共 {len(results)} 个采样点")''',
                     "tip": "简化版精度较低，但无需 GPU 且处理速度快。",
@@ -1007,7 +1007,7 @@ print(f"处理完成，共 {len(results)} 个采样点")''',
                 },
             ],
             "sample_fields": "ID: 1, GVI: 6.42, SVF: 42.71, Enclosure: 49.87, Clutter: 2.09",
-            "reference": "参考文件：data/GVI_Results_Analysis.csv",
+            "reference": "参考文件：data/csv/GVI_Results_Analysis.csv",
         },
     },
     {
@@ -1037,7 +1037,7 @@ from qgis.core import *
 import processing
 
 # 加载研究范围边界
-boundary_layer = QgsVectorLayer("data/shp/Boundary_Scope.geojson", "boundary", "ogr")
+boundary_layer = QgsVectorLayer("data/gis/Boundary_Scope.geojson", "boundary", "ogr")
 extent = boundary_layer.extent()
 
 # 创建渔网 (50米间距)
@@ -1075,7 +1075,7 @@ for i, feat in enumerate(layer.getFeatures()):
 
 import pandas as pd
 df = pd.DataFrame(features)
-df.to_csv("data/Changchun_Precise_Points.csv", index=False)
+df.to_csv("data/csv/Changchun_Precise_Points.csv", index=False)
 
 print(f"生成了 {len(features)} 个采样点")''',
                     "tip": "采样密度影响分析精度和计算量，建议 50 米间距。",
@@ -1095,7 +1095,7 @@ import pandas as pd
 from shapely.geometry import Point
 
 # 读取研究范围边界
-boundary = gpd.read_file("data/shp/Boundary_Scope.geojson")
+boundary = gpd.read_file("data/gis/Boundary_Scope.geojson")
 boundary_geom = boundary.geometry.iloc[0]
 
 # 计算边界框
@@ -1125,15 +1125,15 @@ df["ID"] = df.index + 1
 df = df[["ID", "Lng", "Lat"]]
 
 # 保存
-df.to_csv("data/Changchun_Precise_Points.csv", index=False)
-df.to_excel("data/Changchun_Precise_Points.xlsx", index=False)
+df.to_csv("data/csv/Changchun_Precise_Points.csv", index=False)
+df.to_excel("data/csv/Changchun_Precise_Points.xlsx", index=False)
 
 print(f"生成了 {len(df)} 个采样点")''',
                     "tip": "间距 0.000625 度约等于 50 米 (在长春纬度)。",
                 },
             ],
             "sample_fields": "ID: 1, Lng: 125.3398763, Lat: 43.89209257",
-            "reference": "参考文件：data/Changchun_Precise_Points.csv",
+            "reference": "参考文件：data/csv/Changchun_Precise_Points.csv",
         },
     },
     {
@@ -1287,7 +1287,7 @@ print(f"构建了 {len(knowledge_base)} 个知识块")''',
                         "1. 确保已配置百度地图 API Key (.env 文件)",
                         "2. 运行命令: python scripts/fetch_supplementary_data.py --building",
                         "3. 脚本会自动从百度百科查询建筑信息",
-                        "4. 结果保存到 data/Building_Years.csv",
+                        "4. 结果保存到 data/csv/Building_Years.csv",
                     ],
                     "code_example": '''# 直接运行脚本
 python scripts/fetch_supplementary_data.py --building
@@ -1320,7 +1320,7 @@ df = fetcher.fetch_all()''',
                 },
             ],
             "sample_fields": "name: 新发小区, build_year: 1995, lng: 125.34, lat: 43.89",
-            "reference": "参考文件：data/Building_Years.csv",
+            "reference": "参考文件：data/csv/Building_Years.csv",
         },
     },
     {
@@ -1341,7 +1341,7 @@ df = fetcher.fetch_all()''',
                         "1. 确保已配置百度地图 API Key (.env 文件)",
                         "2. 运行命令: python scripts/fetch_supplementary_data.py --traffic",
                         "3. 脚本会获取研究区域内主要道路的实时路况",
-                        "4. 结果保存到 data/Traffic_Flow.csv",
+                        "4. 结果保存到 data/csv/Traffic_Flow.csv",
                     ],
                     "code_example": '''# 直接运行脚本
 python scripts/fetch_supplementary_data.py --traffic
@@ -1390,7 +1390,7 @@ for road in roads:
                 },
             ],
             "sample_fields": "road_name: 人民大街, congestion_level: 2, congestion_desc: 缓行, speed: 25",
-            "reference": "参考文件：data/Traffic_Flow.csv",
+            "reference": "参考文件：data/csv/Traffic_Flow.csv",
         },
     },
     {
@@ -1411,7 +1411,7 @@ for road in roads:
                         "1. 确保已配置百度地图 API Key (.env 文件)",
                         "2. 运行命令: python scripts/fetch_supplementary_data.py --price",
                         "3. 脚本会获取研究区域内的小区和估算房价",
-                        "4. 结果保存到 data/House_Prices.csv",
+                        "4. 结果保存到 data/csv/House_Prices.csv",
                     ],
                     "code_example": '''# 直接运行脚本
 python scripts/fetch_supplementary_data.py --price''',
@@ -1439,12 +1439,12 @@ prices = [
 ]
 
 df = pd.DataFrame(prices)
-df.to_csv("data/House_Prices.csv", index=False, encoding="utf-8-sig")''',
+df.to_csv("data/csv/House_Prices.csv", index=False, encoding="utf-8-sig")''',
                     "tip": "贝壳数据更新及时，但需要手动收集。",
                 },
             ],
             "sample_fields": "name: 新发小区, price_per_sqm: 6500, source: 贝壳找房",
-            "reference": "参考文件：data/House_Prices.csv",
+            "reference": "参考文件：data/csv/House_Prices.csv",
         },
     },
     {
@@ -1464,7 +1464,7 @@ df.to_csv("data/House_Prices.csv", index=False, encoding="utf-8-sig")''',
                     "steps": [
                         "1. 运行命令: python scripts/fetch_supplementary_data.py --price",
                         "2. 脚本会生成基准地价模板数据",
-                        "3. 结果保存到 data/Land_Prices.csv",
+                        "3. 结果保存到 data/csv/Land_Prices.csv",
                     ],
                     "code_example": '''# 运行脚本
 python scripts/fetch_supplementary_data.py --price''',
@@ -1482,7 +1482,7 @@ python scripts/fetch_supplementary_data.py --price''',
                 },
             ],
             "sample_fields": "zone: 一级地, description: 人民大街沿线, base_price: 4500",
-            "reference": "参考文件：data/Land_Prices.csv",
+            "reference": "参考文件：data/csv/Land_Prices.csv",
         },
     },
     {
@@ -1586,7 +1586,7 @@ print(solar_pos[['apparent_elevation', 'azimuth']])''',
                 },
             ],
             "sample_fields": "month: 12, sunshine_hours: 6.5, max_altitude: 22.5",
-            "reference": "参考文件：data/Sunshine_Annual.csv",
+            "reference": "参考文件：data/csv/Sunshine_Annual.csv",
         },
     },
 ]

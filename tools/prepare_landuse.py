@@ -9,9 +9,9 @@ def prepare_landuse():
     print("🚀 开始土地利用数据裁剪流程...")
 
     # 1. 设置路径
-    boundary_path = "data/shp/Boundary_Scope.geojson"
+    boundary_path = "data/gis/Boundary_Scope.geojson"
     input_gpkg = r"E:\资料\EULUC_China_20.gpkg"
-    output_path = "data/shp/landuse.geojson"
+    output_path = "data/gis/landuse.geojson"
 
     if not os.path.exists(boundary_path):
         print(f"❌ 错误: 找不到边界文件 {boundary_path}")

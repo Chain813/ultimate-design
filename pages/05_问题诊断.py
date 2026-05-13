@@ -198,7 +198,7 @@ elif selected_sub == "🎯 地块雷达诊断":
 
         save_stage_output("05", SK.RADAR_DATA, {"plot": selected_plot, "categories": categories, "values": values})
     else:
-        st.warning("暂无地块诊断数据，请检查 data/shp 目录。")
+        st.warning("暂无地块诊断数据，请检查 data/gis 目录。")
 
 # ═══════════════════════════════════════════
 # 子页面 3: AI 前期诊断报告 (原 page14 阶段一)

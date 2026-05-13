@@ -3,9 +3,9 @@ import geopandas as gpd
 sys.stdout.reconfigure(encoding="utf-8")
 
 files = [
-    ("data/shp/road_network_clipped.geojson", "道路网"),
-    ("data/shp/rail_network_clipped.geojson", "铁路网"),
-    ("data/shp/landuse_clipped.geojson", "用地现状"),
+    ("data/gis/road_clipped.geojson", "道路网"),
+    ("data/gis/rail_clipped.geojson", "铁路网"),
+    ("data/gis/landuse_clipped.geojson", "用地现状"),
 ]
 
 for f, label in files:

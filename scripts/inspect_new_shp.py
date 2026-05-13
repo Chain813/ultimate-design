@@ -7,7 +7,7 @@ def get_first(c):
         return c
     return get_first(c[0])
 
-for fpath in ['data/shp/road_network.json', 'data/shp/rail_network.json']:
+for fpath in ['data/gis/raw/road_network.json', 'data/gis/raw/rail_network.json']:
     print(f'--- {fpath} ---')
     if not Path(fpath).exists():
         print("FILE NOT FOUND")

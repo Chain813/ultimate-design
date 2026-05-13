@@ -3,9 +3,12 @@
 from .loader import load_global_config, load_rag_knowledge
 from .paths import (
     ASSETS_DIR,
+    CSV_DIR,
     DATA_DIR,
     DATA_FILES,
     DOCS_DIR,
+    GIS_DIR,
+    GIS_FILES,
     META_DIR,
     ROOT_DIR,
     SHP_DIR,
@@ -23,6 +26,8 @@ __all__ = [
     "load_rag_knowledge",
     "ROOT_DIR",
     "DATA_DIR",
+    "CSV_DIR",
+    "GIS_DIR",
     "SHP_DIR",
     "ASSETS_DIR",
     "STATIC_DIR",
@@ -30,6 +35,7 @@ __all__ = [
     "DOCS_DIR",
     "META_DIR",
     "DATA_FILES",
+    "GIS_FILES",
     "SHP_FILES",
     "get_static_url",
 ]

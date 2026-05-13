@@ -11,7 +11,7 @@ if sys.stdout and hasattr(sys.stdout, "reconfigure"):
 
 # 配置路径
 ROOT = Path(__file__).resolve().parent.parent
-DATA_DIR = ROOT / "data/shp"
+DATA_DIR = ROOT / "data/gis"
 OUTPUT_DIR = ROOT / "static/assets/generated_base"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 

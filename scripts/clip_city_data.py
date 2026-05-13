@@ -20,7 +20,7 @@ def clip_and_process():
     log("="*60)
 
     # 1. 获取研究范围 BBox
-    boundary_path = ROOT / "data/shp/Boundary_Scope.geojson"
+    boundary_path = ROOT / "data/gis/Boundary_Scope.geojson"
     gdf_boundary = gpd.read_file(boundary_path)
     bbox = gdf_boundary.total_bounds
     bbox_buffered = (bbox[0]-0.005, bbox[1]-0.005, bbox[2]+0.005, bbox[3]+0.005)
@@ -57,23 +57,23 @@ def clip_and_process():
     tasks = [
         {
             "src": "static/landuse.geojson",
-            "dst": "data/shp/landuse_clipped.geojson",
+            "dst": "data/gis/landuse_clipped.geojson",
             "label": "用地现状 (53MB)",
             "map_field": "Class",
             "mapping": LANDUSE_MAPPING,
             "mode": "landuse"
         },
         {
-            "src": "data/shp/rail_network.json",
-            "dst": "data/shp/rail_network_clipped.geojson",
+            "src": "data/gis/raw/rail_network.json",
+            "dst": "data/gis/rail_clipped.geojson",
             "label": "铁路网 (155MB)",
             "map_field": "level",
             "mapping": RAIL_MAPPING,
             "mode": "standard"
         },
         {
-            "src": "data/shp/road_network.json",
-            "dst": "data/shp/road_network_clipped.geojson",
+            "src": "data/gis/raw/road_network.json",
+            "dst": "data/gis/road_clipped.geojson",
             "label": "道路网 (4.1GB)",
             "map_field": "level",
             "mapping": ROAD_MAPPING,

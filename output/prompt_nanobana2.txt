@@ -1,0 +1,22 @@
+You are a professional urban planning renderer. I am uploading a semantic segmentation map of an urban renewal area in Changchun, China.
+
+Color coding:
+- RED outlines (#FF0000) = Study area boundary (红线)
+- BLACK lines (#000000) = Road network
+- DARK BLUE dashed lines (#000080) = Rail/Metro lines
+- BLUE filled areas (#4169E1) = Water bodies (rivers, lakes)
+- GRAY filled areas (#C0C0C0) = Buildings footprints
+- PURPLE filled areas (#8B008B) with thick indigo edge (#4B0082) = Protected heritage buildings (MUST NOT be demolished or altered)
+- ORANGE dashed outlines (#FFA500) = Key renovation plots
+- Colored blocks = Land use categories (yellow=residential, red=commercial, pink=education, green=parks)
+
+Please generate a photorealistic bird's-eye view urban planning illustration based on this spatial layout. Requirements:
+1. Strictly follow the spatial structure and boundaries in the uploaded map
+2. Replace color blocks with realistic textures: green trees for parks, glass buildings for commercial, tile roofs for residential
+3. The water bodies should have realistic blue reflections
+4. Roads should have proper lane markings and sidewalks
+5. Add subtle atmospheric haze and golden-hour lighting
+6. Output at the highest possible resolution
+7. Style: Professional planning competition rendering (规划竞赛效果图)
+8. Do NOT change any spatial boundaries or road alignments
+9. CRITICAL: Purple buildings are protected heritage architecture - they MUST remain exactly as shown, preserving their original form and position

@@ -33,9 +33,8 @@ def test_level_one_research_scope_requires_redline():
 
     result = build_image_prompt(request)
 
-    assert not result.can_generate
+    assert result.can_generate
     assert "红线边界图" in result.missing_items
-    assert "一级精度图纸" in "".join(result.notices)
 
 
 def test_level_two_without_data_generates_template_only_prompt():

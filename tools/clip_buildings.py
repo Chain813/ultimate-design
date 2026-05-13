@@ -3,12 +3,12 @@ import shutil
 
 print("Loading datasets...", flush=True)
 try:
-    buildings = gpd.read_file('data/shp/Building_Footprints.geojson')
+    buildings = gpd.read_file('data/gis/Building_Footprints.geojson')
     if 'building_id' not in buildings.columns:
         buildings.insert(0, 'building_id', [f"B{idx + 1:06d}" for idx in range(len(buildings))])
     print("Total buildings loaded:", len(buildings), flush=True)
 
-    boundary = gpd.read_file('data/shp/Boundary_Scope.geojson')
+    boundary = gpd.read_file('data/gis/Boundary_Scope.geojson')
 
     boundary_geom = boundary.geometry.unary_union
     minx, miny, maxx, maxy = boundary_geom.bounds
@@ -24,11 +24,11 @@ try:
     if len(buildings_clipped) > 0 and len(buildings_clipped) < len(buildings):
         # 备份原文件
         print("Backing up Original...", flush=True)
-        shutil.copyfile('data/shp/Building_Footprints.geojson', 'data/shp/Building_Footprints_Original.geojson.bak')
+        shutil.copyfile('data/gis/Building_Footprints.geojson', 'data/gis/Building_Footprints_Original.geojson.bak')
 
         # 写入裁剪后的数据
         print("Saving optimized GeoJSON...", flush=True)
-        buildings_clipped.to_file('data/shp/Building_Footprints.geojson', driver='GeoJSON')
+        buildings_clipped.to_file('data/gis/Building_Footprints.geojson', driver='GeoJSON')
         print("Optimization complete!", flush=True)
     else:
         print("No clipping needed or clipping failed (0 results).", flush=True)
