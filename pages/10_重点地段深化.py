@@ -34,12 +34,80 @@ st.set_page_config(page_title="10 重点地段深化", layout="wide", initial_si
 render_top_nav()
 render_engine_status_alert()
 
+graphic_svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+  <defs>
+    <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
+    </linearGradient>
+    <linearGradient id="g_ai" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.25)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.95)"/>
+    </linearGradient>
+    <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(16, 185, 129, 0.25)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.95)"/>
+    </linearGradient>
+    
+    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_emerald" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <circle cx="340" cy="100" r="110" fill="none" stroke="rgba(99, 102, 241, 0.15)" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <circle cx="340" cy="100" r="75" fill="none" stroke="rgba(56, 189, 248, 0.2)" stroke-width="1" stroke-dasharray="4,2"/>
+
+  <path d="M 340 100 L 185 45" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="208,53 200,48 205,58" fill="#38bdf8"/>
+
+  <path d="M 340 100 L 185 155" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="208,147 205,142 200,152" fill="#38bdf8"/>
+
+  <path d="M 340 100 L 495 45" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="472,53 475,58 480,48" fill="#38bdf8"/>
+
+  <path d="M 340 100 L 495 155" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_emerald)"/>
+  <polygon points="472,147 480,152 475,142" fill="#10b981"/>
+
+  <circle cx="340" cy="100" r="42" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2.5" filter="url(#f_cyan)"/>
+  <text x="340" y="96" fill="#38bdf8" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">重点地块</text>
+  <text x="340" y="112" fill="#bae6fd" font-size="10" font-family="sans-serif" text-anchor="middle">微观深化中枢</text>
+
+  <rect x="110" y="24" width="130" height="42" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
+  <text x="175" y="41" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">空间诊断雷达图</text>
+  <text x="175" y="55" fill="#94a3b8" font-size="9" font-family="sans-serif" text-anchor="middle">六维诊断 & 瓶颈分析</text>
+
+  <rect x="110" y="134" width="130" height="42" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
+  <text x="175" y="151" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">控规指标反推</text>
+  <text x="175" y="165" fill="#94a3b8" font-size="9" font-family="sans-serif" text-anchor="middle">开发容积率/密度反推</text>
+
+  <rect x="440" y="24" width="130" height="42" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
+  <text x="505" y="41" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">目标人群行为画像</text>
+  <text x="505" y="55" fill="#94a3b8" font-size="9" font-family="sans-serif" text-anchor="middle">群体细分与NLP诉求</text>
+
+  <rect x="440" y="134" width="130" height="42" rx="6" fill="url(#g_out)" stroke="#10b981" stroke-width="2" filter="url(#f_emerald)"/>
+  <text x="505" y="151" fill="#10b981" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">地块改造深化方案</text>
+  <text x="505" y="165" fill="#e2e8f0" font-size="9" font-family="sans-serif" text-anchor="middle">空间方案与街景比对</text>
+</svg>
+"""
+
 render_page_banner(
     title="重点地段深化",
     description="对每个重点地块进行微观级深化设计：空间诊断雷达图、控制性详细指标反推、"
                 "目标人群行为画像和完整的地块改造设计方案。",
     eyebrow="Stage 10",
     tags=["地块诊断雷达", "控规指标反推", "人群画像", "深化设计", "Before/After"],
+    graphic_html=graphic_svg
 )
 render_evidence_chain_bar("10", ["08", "09", "10"])
 
