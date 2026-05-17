@@ -32,12 +32,95 @@ st.set_page_config(page_title="07 设计策略", layout="wide", initial_sidebar_
 render_top_nav()
 render_engine_status_alert()
 
+graphic_svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+  <defs>
+    <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
+    </linearGradient>
+    <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(16, 185, 129, 0.15)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+    </linearGradient>
+    
+    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_emerald" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Left Side: Stacked Roles to Center Loop -->
+  <path d="M 150 45 C 185 45, 175 100, 200 100" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 150 100 L 200 100" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_cyan)"/>
+  <path d="M 150 155 C 185 155, 175 100, 200 100" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <!-- Left Stacked Role Nodes -->
+  <rect x="10" y="25" width="140" height="40" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="42" fill="#38bdf8" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">居民代表</text>
+  <text x="80" y="56" fill="#94a3b8" font-size="10" font-family="sans-serif" text-anchor="middle">权益与民生诉求</text>
+
+  <rect x="10" y="80" width="140" height="40" rx="6" fill="url(#g_base)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
+  <text x="80" y="97" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">开发运营商</text>
+  <text x="80" y="111" fill="#bae6fd" font-size="10" font-family="sans-serif" text-anchor="middle">资本与产业导入</text>
+
+  <rect x="10" y="135" width="140" height="40" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
+  <text x="80" y="152" fill="#38bdf8" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">专业规划师</text>
+  <text x="80" y="166" fill="#94a3b8" font-size="10" font-family="sans-serif" text-anchor="middle">空间与合规控制</text>
+
+  <!-- Center Loop Track -->
+  <path d="M 350 37 L 455 100 L 350 163 L 245 100 Z" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
+  
+  <!-- Loop Direction Arrows -->
+  <polygon points="402,65 406,72 397,71" fill="#6366f1"/>
+  <polygon points="402,135 397,129 406,128" fill="#6366f1"/>
+  <polygon points="297,135 293,128 302,129" fill="#6366f1"/>
+  <polygon points="297,65 302,71 293,72" fill="#6366f1"/>
+
+  <!-- Loop Nodes -->
+  <rect x="290" y="20" width="120" height="34" rx="6" fill="url(#g_base)" stroke="#6366f1" stroke-width="1"/>
+  <text x="350" y="41" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">政策引导 (RAG)</text>
+
+  <rect x="410" y="83" width="90" height="34" rx="6" fill="url(#g_base)" stroke="#6366f1" stroke-width="1"/>
+  <text x="455" y="104" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">产业导入</text>
+
+  <rect x="290" y="146" width="120" height="34" rx="6" fill="url(#g_base)" stroke="#6366f1" stroke-width="1"/>
+  <text x="350" y="167" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">经济盘活 (反哺)</text>
+
+  <rect x="200" y="83" width="90" height="34" rx="6" fill="url(#g_base)" stroke="#6366f1" stroke-width="1"/>
+  <text x="245" y="104" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">空间更新</text>
+
+  <!-- Connection: Center Loop to Right Output -->
+  <path d="M 500 100 L 540 100" fill="none" stroke="#10b981" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_emerald)"/>
+  <polygon points="535,96 540,100 535,104" fill="#10b981"/>
+
+  <!-- Right Output Card -->
+  <rect x="540" y="40" width="130" height="120" rx="10" fill="url(#g_out)" stroke="#10b981" stroke-width="2" filter="url(#f_emerald)"/>
+  <text x="605" y="65" fill="#10b981" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">策略共识矩阵</text>
+  <text x="605" y="90" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 带政策依据 (RAG)</text>
+  <text x="605" y="110" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 空间精确落位</text>
+  <text x="605" y="130" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 三方利益最优解</text>
+
+  <circle cx="150" cy="100" r="4" fill="#38bdf8"/>
+  <circle cx="200" cy="100" r="4" fill="#38bdf8"/>
+</svg>
+"""
+
 render_page_banner(
     title="设计策略",
     description="三方角色（居民/运营商/规划师）围绕'政策引导→产业导入→经济盘活→空间更新'"
-                "的良性循环展开协同推演，形成带政策依据和空间落位的策略矩阵。",
+                "的良性循环展开协同推演，形成带政策依据 and 空间落位的策略矩阵。",
     eyebrow="Stage 07",
     tags=["政经良性循环", "三方协同", "RAG 政策校验", "策略矩阵"],
+    graphic_html=graphic_svg
 )
 render_evidence_chain_bar("07", ["05", "06", "07"])
 
