@@ -35,6 +35,8 @@ assets/default_cover.jpg
 # 内部文档与代理运行痕迹
 docs/
 .agents/
+.claude/
+
 
 # IDE & 系统文件
 .vscode/
