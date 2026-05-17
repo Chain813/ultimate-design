@@ -348,6 +348,7 @@ def main():
 
     # 输出 Markdown 报告
     md_path = ROOT / "docs" / "STAGE2_DATA_QUALITY_REPORT.md"
+    md_path.parent.mkdir(parents=True, exist_ok=True)
     with open(md_path, "w", encoding="utf-8") as f:
         f.write("# 第二阶段数据质量检查报告 (自动生成)\n\n")
         f.write(f"生成时间: {pd.Timestamp.now().strftime('%Y-%m-%d %H:%M')}\n\n")
