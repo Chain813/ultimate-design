@@ -116,19 +116,19 @@ render_page_banner(
 render_summary_cards(
     [
         {
-            "icon": f'<img src="{get_static_url("icon_assessment.png")}" alt="Assessment" />',
+            "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
             "value": "动态空间评价", 
             "title": "Spatial Assessment", 
             "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。"
         },
         {
-            "icon": f'<img src="{get_static_url("icon_rendering.png")}" alt="Rendering" />',
+            "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette"><path d="M12 22C17.52 22 22 17.52 22 12C22 9.8 20.2 8 18 8H16C15.4 8 15 7.6 15 7V5C15 2.8 13.2 1 11 1C5.5 1 1 5.5 1 11C1 17.1 4.9 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/></svg>',
             "value": "生成式视觉推演", 
             "title": "Generative Pre-rendering", 
             "desc": "将保护要求与设计策略转成可比选的空间图景。"
         },
         {
-            "icon": f'<img src="{get_static_url("icon_decision.png")}" alt="Decision" />',
+            "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
             "value": "多主体协同测算", 
             "title": "Multi-agent Decision", 
             "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。"

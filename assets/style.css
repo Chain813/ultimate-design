@@ -115,7 +115,7 @@ h2 {
 .page-banner-map-preview img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     filter: brightness(1.0) contrast(1.1);
 }
 
