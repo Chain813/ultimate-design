@@ -1816,7 +1816,7 @@ hr {
    ========================================== */
 
 .page-banner-graphic {
-    flex: 0 0 auto;
+    flex: 0 0 520px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
