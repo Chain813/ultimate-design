@@ -94,7 +94,7 @@ h2 {
 .page-banner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
 .page-banner-map-preview {
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1932 / 2500;
     height: 560px;
     border-radius: 28px;
     overflow: hidden;
@@ -102,8 +102,10 @@ h2 {
     background: #0f172a;
     box-shadow: 0 40px 90px rgba(0,0,0,0.8), 0 0 40px rgba(99, 102, 241, 0.2);
     transform: perspective(1800px) rotateY(-25deg) rotateX(5deg);
+    transform-origin: right center;
     transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
-    margin-left: 30px;
+    margin-left: 40px;
+    margin-right: -10px;
 }
 
 .page-banner-map-preview:hover {
