@@ -29,12 +29,52 @@ st.set_page_config(page_title="06 目标定位", layout="wide", initial_sidebar_
 render_top_nav()
 render_engine_status_alert()
 
+graphic_svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 300" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg_grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.7)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.7)"/>
+    </linearGradient>
+    <filter id="glow_cyan" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="glow_indigo" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <path d="M 180 80 C 220 80, 220 150, 250 150" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6,6" opacity="0.8"/>
+  <path d="M 180 220 C 220 220, 220 150, 250 150" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6,6" opacity="0.8"/>
+  <path d="M 280 150 L 320 150" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="6,6" opacity="0.8"/>
+  <polygon points="315,145 320,150 315,155" fill="#6366f1"/>
+
+  <rect x="20" y="50" width="160" height="60" rx="8" fill="url(#bg_grad)" stroke="#475569" stroke-width="1"/>
+  <text x="100" y="75" fill="#e2e8f0" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="600">全域空间数据</text>
+  <text x="100" y="95" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">土地利用 / POI / GVI</text>
+
+  <rect x="20" y="190" width="160" height="60" rx="8" fill="url(#bg_grad)" stroke="#475569" stroke-width="1"/>
+  <text x="100" y="215" fill="#e2e8f0" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="600">前期诊断结果</text>
+  <text x="100" y="235" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">MPI 潜力排行 / 痛点</text>
+
+  <circle cx="250" cy="150" r="30" fill="url(#bg_grad)" stroke="#38bdf8" stroke-width="2" filter="url(#glow_cyan)"/>
+  <text x="250" y="155" fill="#38bdf8" font-size="16" font-family="sans-serif" text-anchor="middle" font-weight="bold">AI</text>
+
+  <rect x="320" y="105" width="160" height="90" rx="10" fill="url(#bg_grad)" stroke="#6366f1" stroke-width="2" filter="url(#glow_indigo)"/>
+  <text x="400" y="140" fill="#6366f1" font-size="16" font-family="sans-serif" text-anchor="middle" font-weight="bold">宏观设计目标</text>
+  <text x="400" y="165" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="600">区域经济策划体系</text>
+</svg>
+"""
+
 render_page_banner(
     title="目标定位",
     description="基于全域空间数据（土地利用、POI、GVI、MPI）和前期诊断结果，"
                 "制定覆盖整个研究范围的宏观设计目标与区域经济策划体系。",
     eyebrow="Stage 06",
     tags=["全域目标", "空间数据驱动", "经济策划", "案例借鉴"],
+    graphic_html=graphic_svg
 )
 render_evidence_chain_bar("06", ["05", "06", "07"])
 
