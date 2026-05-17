@@ -18,6 +18,7 @@ from src.ui.app_shell import (
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
+from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 import pandas as pd
 import streamlit.components.v1 as components
 
@@ -42,38 +43,61 @@ if st.session_state.get("presentation_mode", False):
     st.markdown('<div class="presentation-active"></div>', unsafe_allow_html=True)
 
 # ==========================================
-# 📊 模块配置数据 (研究模块 01-04)
+# 📊 模块配置数据 (按四板块分组)
 # ==========================================
-MODULES = [
+MODULE_SECTIONS = [
     {
-        "title": "00 数据准备与上传",
-        "desc": "上传研究边界、建筑轮廓、POI、交通、街景、文本评论等各类原始数据。",
-        "image": "assets/03_digital_twin.png",
-        "path": "pages/00_数据准备.py",
-        "btn_label": "进入数据准备"
+        "label": "数据准备",
+        "badge_class": "badge-data",
+        "modules": [
+            {
+                "title": "数据准备与上传",
+                "desc": "上传研究边界、建筑轮廓、POI、交通、街景、文本评论等各类原始数据。",
+                "image": "assets/03_digital_twin.png",
+                "path": "pages/00_数据准备.py",
+            },
+        ],
     },
     {
-        "title": "01 前期数据获取与现状分析",
-        "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
-        "image": "assets/04_urban_diagnosis.png",
-        "path": "pages/01_任务解读.py",
-        "btn_label": "进入前期板块"
+        "label": "前期",
+        "badge_class": "badge-early",
+        "modules": [
+            {
+                "title": "前期数据获取与现状分析",
+                "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
+                "image": "assets/04_urban_diagnosis.png",
+                "path": "pages/01_任务解读.py",
+            },
+        ],
     },
     {
-        "title": "02 中期概念生成与应对策略",
-        "desc": "目标定位、设计策略、案例借鉴、协商共识。",
-        "image": "assets/06_llm_consultation_v2.png",
-        "path": "pages/06_目标定位.py",
-        "btn_label": "进入中期板块"
+        "label": "中期",
+        "badge_class": "badge-mid",
+        "modules": [
+            {
+                "title": "中期概念生成与应对策略",
+                "desc": "目标定位、设计策略、案例借鉴、协商共识。",
+                "image": "assets/06_llm_consultation_v2.png",
+                "path": "pages/06_目标定位.py",
+            },
+        ],
     },
     {
-        "title": "03 后期设计生成与成果表达",
-        "desc": "总体设计、专项系统、重点深化、实施路径、导则和成果表达。",
-        "image": "assets/05_design_inference.png",
-        "path": "pages/08_总体城市设计.py",
-        "btn_label": "进入后期板块"
-    }
+        "label": "后期",
+        "badge_class": "badge-late",
+        "modules": [
+            {
+                "title": "后期设计生成与成果表达",
+                "desc": "总体设计、专项系统、重点深化、实施路径、导则和成果表达。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/08_总体城市设计.py",
+            },
+        ],
+    },
 ]
+
+# Flatten for backward-compatible counting
+MODULES = [mod for section in MODULE_SECTIONS for mod in section["modules"]]
 
 render_page_banner(
     title="长春伪满皇宫周边街区微更新支持平台",
@@ -86,18 +110,38 @@ render_page_banner(
         {"value": top_stats["poi_count"], "label": "POI 资产", "meta": "挂载到空间活力诊断的数据点"},
         {"value": top_stats["gvi_count"], "label": "街景样本", "meta": "支撑环境品质与风貌分析"},
     ],
+    image_url=f"{get_static_url('research_scope_2d.png')}?v=19"
 )
+
 render_summary_cards(
     [
-        {"value": "动态空间评价", "title": "Spatial Assessment", "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。"},
-        {"value": "生成式视觉推演", "title": "Generative Pre-rendering", "desc": "将保护要求与设计策略转成可比选的空间图景。"},
-        {"value": "多主体协同测算", "title": "Multi-agent Decision", "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。"},
+        {
+            "icon": f'<img src="{get_static_url("icon_assessment.png")}" alt="Assessment" />',
+            "value": "动态空间评价", 
+            "title": "Spatial Assessment", 
+            "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。"
+        },
+        {
+            "icon": f'<img src="{get_static_url("icon_rendering.png")}" alt="Rendering" />',
+            "value": "生成式视觉推演", 
+            "title": "Generative Pre-rendering", 
+            "desc": "将保护要求与设计策略转成可比选的空间图景。"
+        },
+        {
+            "icon": f'<img src="{get_static_url("icon_decision.png")}" alt="Decision" />',
+            "value": "多主体协同测算", 
+            "title": "Multi-agent Decision", 
+            "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。"
+        },
     ]
 )
 st.markdown(
     """
     <div class="content-panel">
-        <h3>研究范围声明与系统口径</h3>
+        <div class="content-panel-header">
+            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+            <h3>研究范围声明与系统口径</h3>
+        </div>
         <p><strong>当前基址合规性：</strong>系统所呈现的建筑三维模型、基础表格和街景照片等核心数据，
         均严格落在《任务书》与《开题报告》限定的研究区域内。</p>
         <p><strong>未来跨城拓展性：</strong>系统采用界面与数据分离的方式，只需替换地图与数据表即可迁移到新的研究片区，而不必重写核心逻辑。</p>
@@ -237,105 +281,7 @@ render_status_hud(engine_status_home)
 # 🗺️ 街区范围及改造红线 (Project Boundary)
 render_section_intro("街区范围及改造红线", "统一查看研究边界、重点更新单元、建筑底图和辅助图层。", eyebrow="Project Boundary")
 
-@st.cache_data(ttl=3600)
-def load_map_data(file_path):
-    """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
-    path = Path(file_path)
-    if not path.exists():
-        return None
-    with open(path, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-@st.cache_data(ttl=3600)
-def _load_map_html_template():
-    """缓存 HTML 模板读取，避免每次交互都重新读磁盘。"""
-    with open("assets/map3d_standalone.html", "r", encoding="utf-8") as f:
-        return f.read()
-
-@st.cache_data(ttl=3600)
-def _load_traffic_json():
-    """缓存交通数据的 JSON 序列化结果。"""
-    try:
-        df_tr = pd.read_csv("data/csv/Changchun_Traffic_Real.csv", encoding='utf-8-sig').fillna("")
-        return json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-    except Exception:
-        return "null"
-
-@st.cache_data(ttl=3600)
-def _load_poi_json():
-    """缓存 POI 数据的 JSON 序列化结果。"""
-    try:
-        from src.engines.spatial_engine import get_merged_poi_data
-        df_poi = get_merged_poi_data().fillna("")
-        if not df_poi.empty:
-            return json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
-    except Exception:
-        pass
-    return "null"
-
-@st.fragment
-def render_project_map():
-    """使用 @st.fragment 封装地图，图层切换只刷新本块，不重跑整页。"""
-    view_mode = st.radio(
-        "🗺️ 视图模式",
-        ["🦅 3D 仿真视角", "🗺️ 2D 空间肌理"],
-        index=0, horizontal=True, key="global_map_view_mode"
-    )
-    is_3d_mode = "3D" in view_mode
-
-    layer_cols = st.columns(8)
-    with layer_cols[0]:
-        show_boundary = st.checkbox("🔲 规划红线", value=True, key="map_boundary")
-    with layer_cols[1]:
-        show_plots = st.checkbox("✴️ 重点更新单元", value=True, key="map_plots")
-    with layer_cols[2]:
-        show_buildings = st.checkbox("🏢 建筑轮廓", value=True, key="map_buildings")
-    with layer_cols[3]:
-        show_poi = st.checkbox("📍 POI 设施分布", value=False, key="map_poi")
-    with layer_cols[4]:
-        show_traffic = st.checkbox("🚦 交通拥堵热点", value=False, key="map_traffic")
-    with layer_cols[5]:
-        show_landuse = st.checkbox("🧬 规划用地底色", value=False, key="map_landuse")
-    with layer_cols[6]:
-        show_rail = st.checkbox("🚆 铁路轨道", value=False, key="map_rail")
-    with layer_cols[7]:
-        show_road = st.checkbox("🛣️ 道路网", value=False, key="map_road")
-
-    show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key="map_lighting")
-    sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key="map_sun_time")
-
-    # 1. 使用缓存函数获取序列化数据，避免重复计算
-    b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
-    bound_data_json = json.dumps(load_map_data("data/gis/Boundary_Scope.geojson")) if show_boundary else "null"
-    plots_data_json = json.dumps(load_map_data("data/gis/Key_Plots_District.json")) if show_plots else "null"
-    poi_data_json = _load_poi_json() if show_poi else "null"
-    traffic_data_json = _load_traffic_json() if show_traffic else "null"
-    landuse_data_json = f"'{get_static_url('landuse.geojson')}'" if show_landuse else "null"
-    rail_data_json = f"'{get_static_url('rail_clipped.geojson')}'" if show_rail else "null"
-    road_data_json = f"'{get_static_url('road_clipped.geojson')}'" if show_road else "null"
-
-    # 2. 从缓存读取 HTML 模板骨架
-    try:
-        html_template = _load_map_html_template()
-        html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
-        html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)
-        html_template = html_template.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data_json)
-        html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)
-        html_template = html_template.replace("/*__TRAFFIC_DATA__*/null/*__END_TRAFFIC__*/", traffic_data_json)
-        html_template = html_template.replace("/*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/", landuse_data_json)
-        html_template = html_template.replace("/*__RAIL_DATA__*/null/*__END_RAIL__*/", rail_data_json)
-        html_template = html_template.replace("/*__ROAD_DATA__*/null/*__END_ROAD__*/", road_data_json)
-        html_template = html_template.replace("/*__IS_3D__*/true/*__END_IS_3D__*/", "true" if is_3d_mode else "false")
-        html_template = html_template.replace("/*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/", "true" if show_lighting else "false")
-        html_template = html_template.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))
-        st.markdown("""<style>
-            iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
-        </style>""", unsafe_allow_html=True)
-        components.html(html_template, height=650, scrolling=False)
-    except Exception as e:
-        st.error(f"地图组件核心加载失败: {str(e)}")
-
-render_project_map()
+render_digital_twin_map(key_suffix="home")
 render_skyline_hud()
 
 # ==========================================
@@ -350,25 +296,36 @@ render_summary_cards([
 ])
 
 # ==========================================
-# 🏗️ 模块入口卡片
+# 🏗️ 模块入口卡片 (四板块分组 · 小型卡片)
 # ==========================================
-render_section_intro("核心模块入口", "按前期、中期、后期三大板块进入工作流。", eyebrow="Modules")
+render_section_intro("核心模块入口", "按数据准备、前期、中期、后期四大板块进入工作流。", eyebrow="Modules")
 
-st.markdown('<div class="module-grid-home">', unsafe_allow_html=True)
-for mod in MODULES:
-    page_route = get_page_route(mod["path"])
-    image_name = mod["image"].split("/")[-1]
+for section in MODULE_SECTIONS:
+    # 板块标题
     st.markdown(f'''
-    <div class="module-container">
-        <div class="module-card" style="background-image: url('{get_static_url(image_name)}')">
-            <div class="module-btn-mock">
-                <h4>{mod['title']}</h4>
-                <p>{mod['desc']}</p>
-                <a href="/{page_route}">{mod['btn_label']}</a>
-            </div>
-        </div>
+    <div class="module-section-title">
+        <span class="section-badge {section['badge_class']}">{section['label']}</span>
+        <span>{section['label']}板块</span>
     </div>
     ''', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
 
-st.markdown("<br><br>", unsafe_allow_html=True)
+    # 该板块下的模块卡片
+    st.markdown('<div class="module-grid-home">', unsafe_allow_html=True)
+    for mod in section["modules"]:
+        page_route = get_page_route(mod["path"])
+        image_name = mod["image"].split("/")[-1]
+        st.markdown(f'''
+        <div class="module-container">
+            <a href="/{page_route}" target="_self" class="module-card">
+                <img class="card-thumb" src="{get_static_url(image_name)}" alt="{mod['title']}" />
+                <div class="card-body">
+                    <h4>{mod['title']}</h4>
+                    <p>{mod['desc']}</p>
+                </div>
+                <span class="card-arrow">›</span>
+            </a>
+        </div>
+        ''', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown("<br>", unsafe_allow_html=True)

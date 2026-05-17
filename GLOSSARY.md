@@ -1,61 +1,57 @@
-﻿[**English**](./README_EN.md) · [**简体中文**](./README.md)
+[**English**](./README_EN.md) · [**简体中文**](./README.md)
 
 ---
 
 # 核心术语库 (Glossary)
 
-本文件梳理了系统内的特定专业缩写、指标名词与底层概念。
+本文件系统地梳理了 `ultimateDESIGN` 城乡规划智能推演平台中涉及的专业规划词汇、AI 引擎概念、GIS 数据处理机制与底层软件架构架构。这些术语是理解平台全栈运作逻辑（Stage 00-14）的核心基石。
 
 ---
 
-## 空间度量与指标
+## 一、 城市空间度量与诊断指标 (Spatial Metrics & Diagnostics)
 
-| 术语 | 全称 | 说明 |
+| 术语 | 英文全称 | 核心说明 |
 |---|---|---|
-| **MPI** | Micro-renewal Potential Index | 微更新潜力指数。融合建筑破损度、设施匮乏度、街景杂乱度等多因子，量化各地块更新迫切性 |
-| **GVI** | Green View Index | 绿视率。通过语义分割计算街景照片中绿色植被像素占比 |
-| **SVF** | Sky View Factor | 天空开敞度。衡量观测点天空未被建筑遮挡的立体角比例 |
-| **AHP** | Analytic Hierarchy Process | 层次分析法。用于确定 MPI 各因子的权重系数 |
+| **MPI** | Micro-renewal Potential Index | **微更新潜力指数**。本项目独创的量化模型，融合建筑破损度、设施匮乏度、街景杂乱度等多重因子，计算各地块的更新迫切性（得分越高表示越亟需更新）。在 Stage 05 中输出核心排名。 |
+| **GVI** | Green View Index | **绿视率**。通过对街景图片 (Streetview) 进行 CV 语义分割，测算绿色植被在人眼视域中的像素占比。是衡量步行空间生态品质的核心量化指标。 |
+| **SVF** | Sky View Factor | **天空开敞度**。衡量观测点天空未被建筑物遮挡的立体角比例，用于评估街道空间的压抑感与自然采光潜力。 |
+| **AHP** | Analytic Hierarchy Process | **层次分析法**。用于通过专家打分或多因子权重推演，确定 MPI 各诊断指标的权重系数，保证诊断结果符合在地性。 |
+| **POI** | Point of Interest | **兴趣点**。代表地图上的商铺、医院、学校等实体。平台通过对海量 POI 进行核密度分析 (KDE) 评估片区的活力与功能混杂度。 |
+| **AO** | Ambient Occlusion | **环境光遮蔽**。在图纸重渲染中使用的术语，指计算环境光在物体交接处的衰减，用于增强城市体量建筑的三维立体厚重感。 |
 
 ---
 
-## AI 与算力引擎
+## 二、 人工智能与推演引擎 (AI & Cognitive Engines)
 
-| 术语 | 说明 |
-|---|---|
-| **AIGC** | AI-Generated Content。本项目聚焦于生成总平面图、轴测图、改造效果图等专业规划图纸 |
-| **ControlNet** | SD 生态插件，通过 Canny 边缘 / 深度图 / 语义分割等条件对 AI 绘画进行精准空间约束 |
-| **Canny** | ControlNet 预处理器之一，提取图像边缘线。本项目用于锁定路网骨架结构 |
-| **Segmentation** | ControlNet 预处理器之一，识别图像语义区域。本项目用于锁定用地分区布局 |
-| **SDPipeline** | 平台内置的 SD 统一渲染引擎，支持 txt2img / img2img / inpainting / upscale / 多 ControlNet 叠加 |
-| **DrawingPipeline** | 端到端图纸编排器，串联提示词构建 → SD 渲染 → 质量评估 → 版本归档 |
-| **QualityAssessor** | 双重质量评估：Gemma 视觉评估图面完整性 + DeepSeek 内容评估专业准确性 |
-| **DeepSeek** | 云端大语言模型 API，用于案例推演、多主体博弈、学术文本生成等重负荷 NLP 任务 |
-| **Ollama / Gemma** | 本地大语言模型运行框架 / 轻量级模型，用于离线推理与视觉评估 |
-| **RAG** | Retrieval-Augmented Generation。通过向量检索自动引用政策法规，增强导则生成的专业性 |
+| 术语 | 英文 / 概念 | 核心说明 |
+|---|---|---|
+| **AIGC** | AI-Generated Content | **人工智能生成内容**。在本项目中，专指利用 LLM 和视觉模型辅助生成总平面图、空间鸟瞰图、局部透视图与方案说明文本的闭环系统。 |
+| **Web LLM 重绘协同** | Human-in-the-loop Web Rendering | **人机协同的纯净重绘流**。抛弃了不可控的本地大显存渲染方案，系统输出严格限定了线条、颜色的结构底图与专用“防篡改提示词”，用户经由网页版 Gemini 1.5 Pro 或 ChatGPT-4o 进行竞赛级的材质覆盖与光影增强（Stage 10 / Stage 13）。 |
+| **DeepSeek API** | DeepSeek Large Language Model | 云端大模型接口。作为平台的主力逻辑推演引擎，负责城市设计案例对标 (Stage 06)、多主体利益博弈 (Stage 07)、策略矩阵推演及长篇报告撰写等需要超长上下文与深度思考的任务。 |
+| **Ollama / Gemma** | Local Open Source LLM | 本地开源小模型运行框架。用于对数据安全性要求高、或用于辅助执行高频断言和简单视觉诊断分析（如本地轻量化的断点评估）。 |
+| **RAG** | Retrieval-Augmented Generation | **检索增强生成**。结合向量数据库，让 AI 在生成《城市设计导则》时，强制从长春市及国家城乡规划法规与标准规范文本库中提取出处，消除“AI 幻觉”，确保条文严谨 (Stage 12)。 |
+| **Tri-stakeholder Game** | 三主体博弈沙盘 | 平台在 Stage 07 中建立的动态平衡模型：要求 AI 推演方案必须在“政府 (公共利益)”、“开发商 (经济回报)”与“在地居民 (民生改善)”之间寻找纳什均衡点。 |
 
 ---
 
-## GIS 数据管线
+## 三、 GIS 空间数据管线 (GIS & Data Pipeline)
 
-| 术语 | 说明 |
-|---|---|
-| **矢量光栅化** | 将 GeoJSON 矢量数据渲染为像素图像（PNG），供 ControlNet 作为空间约束输入 |
-| **空间对齐** | 确保 AI 生成的图纸内容与真实地理坐标系 (WGS-84 / EPSG:3857) 像素级对齐 |
-| **GCJ-02** | 火星坐标系，中国国内地图服务常用。需转换为 WGS-84 后方可与国际数据叠合 |
-| **BD-09** | 百度坐标系，在 GCJ-02 基础上二次加偏。POI 数据需经 `bd09_to_wgs84()` 转换 |
-| **国标用地色值** | 遵循中国城乡用地分类标准 (GB 50137-2011) 的 RGB 配色方案 |
+| 术语 | 英文 / 概念 | 核心说明 |
+|---|---|---|
+| **Python 矢量制图直出** | Vector Direct Drafting | 使用 `GeoPandas` 和 `Matplotlib`，在无损精度下直接将底座坐标渲染为图纸（纯色块与线稿）。这保障了图纸的空间拓扑关系完全忠于真实的地理坐标，绝不产生物理世界的扭曲变形 (Stage 13)。 |
+| **GCJ-02 / WGS-84** | 坐标系标准 | **GCJ-02** 是国内特有的火星坐标系；**WGS-84** 是国际标准坐标系。平台所有获取的 POI 数据、边界数据均被底层系统强制执行纠偏清洗，统一并轨为 WGS-84 / EPSG:3857 以对齐国际标准。 |
+| **国标用地色值** | GB Landuse Color Palette | 平台强制遵循《城市用地分类与规划建设用地标准 (GB 50137-2011)》。引擎层预置了居住用地 (黄)、商业用地 (红)、绿地 (绿) 等十余种 16 进制标准色表，渲染图纸时严格映射。 |
+| **矢量裁切** | Vector Clipping | 空间处理脚本 (`clip_city_data.py`) 的核心动作。将城市级几 GB 级的庞大路网与水系，按项目设定的 150 公顷红线多边形进行布尔求交裁切，大幅降低前端显存消耗。 |
 
 ---
 
-## 软件工程架构
+## 四、 平台架构与工程组件 (Software Architecture)
 
-| 术语 | 说明 |
-|---|---|
-| **Stage Data Bus** | 跨阶段数据总线 (`st.session_state["stage_bus"]`)，打破页面间数据孤岛 |
-| **`@st.fragment`** | Streamlit 局部重绘装饰器，避免地图交互时全页刷新 |
-| **`@st.cache_data`** | Streamlit 内存级缓存，用于空间数据 I/O 与高频计算的性能优化 |
-| **Deck.GL** | Uber 开源 WebGL 框架，承载 150 公顷尺度的建筑底座 3D 渲染 |
-| **VersionStore** | 版本持久化存储（PNG + JSON 元数据），支持全历史回溯与版本对比 |
-| **BatchExporter** | 图册级批量导出，支持一键生成 70+ 张专业图纸 |
-| **HyperFrames** | HeyGen 开源视频框架，用于生成 ~9 分钟的答辩汇报视频 |
+| 术语 | 英文 / 概念 | 核心说明 |
+|---|---|---|
+| **Stage Data Bus** | 跨阶段数据总线 | 贯穿全生命周期的神经枢纽。所有页面共用 `st.session_state["stage_bus"]`。前一个阶段的推演成果（如 Stage 05 的痛点报告）会被无损持久化，并直接投喂给后一个阶段（如 Stage 12 生成导则、Stage 14 生成视频分镜脚本）作为 AI 的历史记忆。 |
+| **自动红头图框封装** | Automated Title Block Framing | 利用 `PIL` (Python Imaging Library) 构建的工程排版引擎 (`frame_generator.py`)。它接收原始底图或重绘后的高清图，全自动嵌入学术级 A3 图框中，生成包含 AI 智能摘要、自定义标题与比例尺、指北针的成品图板。 |
+| **智能分镜脚本系统** | Dynamic Storyboard Director | 彻底取代笨重且高容错率的第三方视频渲染库，转而在 Stage 14 为用户动态生成基于其真实推演数据的“马克飞象 / Markdown 录屏分镜指导书”，明确每分钟的鼠标动作与解说台词。 |
+| **Deck.GL** | 空间可视化框架 | Uber 开源的高性能 WebGL 数据可视化引擎，承载平台主页面及分析页面中 150 公顷尺度的建筑白模、热力图及三维空间底座交互。 |
+| **`@st.fragment`** | 局部重绘装饰器 | Streamlit 1.30+ 引入的关键性能特性。用于将复杂的 3D 地图组件隔离，使得用户在操作表单控件时无需触发整个页面的昂贵重绘。 |
+| **BatchExporter** | 成果批量导出库 | 统一处理 CSV 报表、Word 红头文件 (采用 `python-docx` 生成) 及 Markdown 规划文本打包的工厂模块，在 Stage 13 提供“一键下载项目全案文件包”功能。 |

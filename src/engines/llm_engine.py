@@ -71,7 +71,7 @@ def _select_demo_response(system_prompt: str) -> str:
 # ═══════════════════════════════════════════
 
 def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                    model: str = "deepseek-v4-pro") -> str:
+                    model: str = "deepseek-v4-flash") -> str:
     """Call DeepSeek API (non-streaming). Falls back to demo responses."""
     if is_demo_mode():
         return _select_demo_response(system_prompt)
@@ -117,7 +117,7 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                           model: str = "deepseek-v4-pro"):
+                           model: str = "deepseek-v4-flash"):
     """Call DeepSeek API (streaming generator). Falls back to character-by-character demo."""
     if is_demo_mode():
         text = _select_demo_response(system_prompt)

@@ -15,7 +15,7 @@ from src.config import SHP_FILES
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.llm_engine import call_llm_engine_stream
 from src.ui.chart_theme import apply_plotly_theme, apply_plotly_polar_theme, get_chart_palette
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_diagnosis_pipeline_hud
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
 from src.workflow.stage_data_bus import (
@@ -41,6 +41,7 @@ render_page_banner(
         {"value": "3", "label": "核心维度", "meta": "可交互调权"},
         {"value": "DeepSeek", "label": "诊断引擎", "meta": "本地大模型"},
     ],
+    graphic_html=render_diagnosis_pipeline_hud(as_html=True)
 )
 
 render_evidence_chain_bar("05", ["01", "02", "03", "04", "05"])

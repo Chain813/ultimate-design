@@ -27,8 +27,22 @@ class SK:
     NEGOTIATION_RESULT = "negotiation_result"
     VOTING_SCORES = "voting_scores"
 
-    # Stage 08 总体设计
+    # Stage 08 总体城市设计
     MASTER_PLAN = "master_plan"
+    SPATIAL_STRUCTURE = "spatial_structure"
+    LANDUSE_SANDBOX = "landuse_sandbox"
+
+    # Stage 09 专项系统设计
+    TRAFFIC_SYSTEM = "traffic_system"
+    PUBLIC_SPACE = "public_space"
+    BUILDING_FORM = "building_form"
+    LANDSCAPE_STYLE = "landscape_style"
+
+    # Stage 10 重点地段深化
+    PLOT_DESIGN = "plot_design"
+    PLOT_METRICS = "plot_metrics"
+    PLOT_PERSONAS = "plot_personas"
+    BEFORE_AFTER = "before_after"
 
     # Stage 12 城市设计导则
     DESIGN_GUIDELINE = "design_guideline"

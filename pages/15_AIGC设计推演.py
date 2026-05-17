@@ -389,7 +389,7 @@ scene_description = st.text_area(
 
 col_ai, col_model = st.columns([3, 1])
 with col_ai:
-    ds_model = st.text_input("AI 模型", value="deepseek-chat", key="aigc_ds_model", label_visibility="collapsed")
+    ds_model = st.text_input("AI 模型", value="deepseek-v4-flash", key="aigc_ds_model", label_visibility="collapsed")
 with col_model:
     pass
 

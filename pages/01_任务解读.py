@@ -1,7 +1,7 @@
 """阶段 01：任务解读 —— 项目边界锁定、任务书/开题报告展示。"""
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.design_system import render_page_banner, render_section_intro, render_mission_decoding_hud
 from src.ui.app_shell import render_top_nav
 from src.ui.streamlit_compat import stretch_width
 from src.ui.module_summary import render_stage_summary
@@ -26,6 +26,7 @@ render_page_banner(
         {"value": "5 个", "label": "深化地段", "meta": "任务书要求重点设计单元"},
         {"value": "4 项", "label": "核心痛点", "meta": "开题报告现状诊断结论"},
     ],
+    graphic_html=render_mission_decoding_hud(as_html=True),
 )
 render_evidence_chain_bar("01", ["00", "01", "02", "03", "04", "05"])
 

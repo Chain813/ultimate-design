@@ -465,10 +465,10 @@ def _render_llm_summary_button(
 
     # --- 模型下拉选择 ---
     local_models = _scan_local_models()
-    api_models = ["deepseek-chat", "deepseek-reasoner"]
+    api_models = ["deepseek-v4-flash", "deepseek-v4-pro"]
     all_models = local_models + [m for m in api_models if m not in local_models]
     if not all_models:
-        all_models = ["deepseek-chat"]
+        all_models = ["deepseek-v4-flash"]
 
     col1, col2 = st.columns([3, 1])
     with col2:

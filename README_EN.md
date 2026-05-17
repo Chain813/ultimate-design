@@ -122,13 +122,13 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 
 | Stage | Page | Core Function |
 |---|---|---|
-| 08 | Overall Urban Design | AIGC masterplan with ControlNet spatial alignment |
-| 09 | Specialized Systems | Transport / Space / Style / Culture subsystems |
-| 10 | Key Plot Detailing | Before/After inference for 5 priority plots |
+| 08 | Overall Urban Design | Spatial structure generation, Interactive landuse sandbox, AIGC masterplan |
+| 09 | Specialized Systems | Transport & TOD / 15-min city / Skyline control / Heritage landscape planning |
+| 10 | Key Plot Detailing | Radar diagnostics, Regulatory metrics, Micro-personas, Deep design schemes |
 | 11 | Implementation Path | 6 renewal modes, 3-phase timeline Gantt chart |
 | 12 | Design Guidelines | Two-step guideline generation + RAG policy retrieval |
-| 13 | Output & Presentation | 41-drawing overview, academic report, atlas export |
-| 14 | Video Generation | HyperFrames defense video (14 segments / ~9 min) |
+| 13 | Output & Presentation | Python map rendering, Web LLM redraw prompts, Auto PIL title block |
+| 14 | Video Generation | Dynamic data injection, storyboard script generation for screen recording |
 
 ---
 

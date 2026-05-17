@@ -8,7 +8,7 @@ import streamlit as st
 
 from src.config import DATA_DIR
 from src.data import DATA_CATEGORIES, check_data_exists, get_data_readiness, get_data_size
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_data_pipeline
 from src.ui.app_shell import render_top_nav
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
 
@@ -179,6 +179,8 @@ def run_quality_check():
 # 页面顶部
 readiness = get_data_readiness()
 
+pipeline_html = render_data_pipeline(as_html=True)
+
 render_page_banner(
     title="数据准备",
     description="上传项目所需的各类原始数据，确保后续分析流程数据完备。",
@@ -189,6 +191,7 @@ render_page_banner(
         {"value": "25+", "label": "数据文件", "meta": "支撑 13 阶段工作流"},
         {"value": "6 种", "label": "数据格式", "meta": "CSV / GeoJSON / XLSX / JPG / TIF"},
     ],
+    graphic_html=pipeline_html
 )
 render_evidence_chain_bar("00", ["00", "01", "02", "03", "04", "05"])
 

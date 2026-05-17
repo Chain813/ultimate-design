@@ -9,7 +9,7 @@ import streamlit as st
 from markitdown import MarkItDown
 
 from src.config import DATA_FILES, SHP_FILES
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_rag_pipeline_hud
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.output_flow_panel import render_output_flow_prompt_panel
@@ -33,6 +33,7 @@ render_page_banner(
     description="汇总空间数据资产、策略语义萃取和物理底座管理，确保数据基础完备。",
     eyebrow="Stage 02",
     tags=["空间数据资产", "语义萃取", "数据完备度"],
+    graphic_html=render_rag_pipeline_hud(as_html=True),
 )
 render_evidence_chain_bar("02", ["01", "02", "03", "04", "05"])
 

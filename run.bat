@@ -11,12 +11,26 @@ echo ================================================================
 echo.
 
 REM ==========================================
-REM Step 1: Check Python Environment
+REM Step 1: Check Python Environment (with caching)
 REM ==========================================
 echo [1/4] Checking Python environment...
 echo.
 
 set PYTHON_FOUND=0
+set CACHE_FILE=%~dp0.python_path
+
+REM Check cache first
+if exist "%CACHE_FILE%" (
+    set /p PYTHON_PATH=<"%CACHE_FILE%"
+    if exist "!PYTHON_PATH!" (
+        echo [OK] Found cached Python: !PYTHON_PATH!
+        set PYTHON_FOUND=1
+        goto :check_deps
+    ) else (
+        echo [INFO] Cached path invalid, rescanning...
+        del "%CACHE_FILE%" 2>nul
+    )
+)
 
 REM Check for Anaconda in common root locations (E:, F:, D:, etc.)
 for %%d in (E F D G H I J K L) do (
@@ -24,12 +38,14 @@ for %%d in (E F D G H I J K L) do (
         echo [OK] Found Python: %%d:\anaconda3\envs\gis_ai\python.exe
         set "PYTHON_PATH=%%d:\anaconda3\envs\gis_ai\python.exe"
         set PYTHON_FOUND=1
+        echo !PYTHON_PATH!>"%CACHE_FILE%"
         goto :check_deps
     )
     if exist "%%d:\anaconda\envs\gis_ai\python.exe" (
         echo [OK] Found Python: %%d:\anaconda\envs\gis_ai\python.exe
         set "PYTHON_PATH=%%d:\anaconda\envs\gis_ai\python.exe"
         set PYTHON_FOUND=1
+        echo !PYTHON_PATH!>"%CACHE_FILE%"
         goto :check_deps
     )
 )
@@ -39,6 +55,7 @@ if exist "%USERPROFILE%\anaconda3\envs\gis_ai\python.exe" (
     echo [OK] Found Python: %USERPROFILE%\anaconda3\envs\gis_ai\python.exe
     set PYTHON_PATH=%USERPROFILE%\anaconda3\envs\gis_ai\python.exe
     set PYTHON_FOUND=1
+    echo !PYTHON_PATH!>"%CACHE_FILE%"
     goto :check_deps
 )
 
@@ -46,6 +63,7 @@ if exist "%USERPROFILE%\miniconda3\envs\gis_ai\python.exe" (
     echo [OK] Found Python: %USERPROFILE%\miniconda3\envs\gis_ai\python.exe
     set PYTHON_PATH=%USERPROFILE%\miniconda3\envs\gis_ai\python.exe
     set PYTHON_FOUND=1
+    echo !PYTHON_PATH!>"%CACHE_FILE%"
     goto :check_deps
 )
 
@@ -54,6 +72,7 @@ if exist "C:\ProgramData\Anaconda3\envs\gis_ai\python.exe" (
     echo [OK] Found Python: C:\ProgramData\Anaconda3\envs\gis_ai\python.exe
     set PYTHON_PATH=C:\ProgramData\Anaconda3\envs\gis_ai\python.exe
     set PYTHON_FOUND=1
+    echo !PYTHON_PATH!>"%CACHE_FILE%"
     goto :check_deps
 )
 

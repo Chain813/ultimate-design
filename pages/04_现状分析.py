@@ -4,12 +4,13 @@
 """
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_analysis_pipeline_hud
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
+from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 
 st.set_page_config(page_title="04 现状分析", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -28,6 +29,7 @@ render_page_banner(
         {"value": f"{sky.get('avg_height', 0)} m", "label": "平均高度", "meta": "建筑形态"},
         {"value": f"{sky.get('high_rise_ratio', 0)}%", "label": "高层占比", "meta": "天际线控制"},
     ],
+    graphic_html=render_analysis_pipeline_hud(as_html=True)
 )
 render_evidence_chain_bar("04", ["01", "02", "03", "04", "05"])
 
@@ -45,7 +47,8 @@ if selected_sub == "🏙️ 3D 现状全息底座":
         {"value": stats.get("gvi_count", "N/A"), "title": "街景样本", "desc": "GVI/SVF 采样点"},
     ])
 
-    st.info("💡 完整的 3D 交互底座请前往原 **现状空间全景诊断** 页面查看。本页面提供数据概览和图纸生成功能。")
+    render_digital_twin_map(key_suffix="stage04")
+    render_skyline_hud()
 
     save_stage_output("04", "poi_count", stats.get("poi_count", 0))
     save_stage_output("04", "building_count", sky.get("building_count", 0))

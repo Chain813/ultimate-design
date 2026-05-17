@@ -5,7 +5,7 @@
 engines:
   llm:
     ollama_url: "http://127.0.0.1:11434/api/chat"
-    default_model: "deepseek-v4-pro"
+    default_model: "deepseek-v4-flash"
     timeout: 120
   
   aigc:
@@ -23,7 +23,7 @@ engines:
       default_module: "canny"
     quality:
       vision_model: "auto"
-      text_model: "deepseek-v4-pro"
+      text_model: "deepseek-v4-flash"
       max_retries: 2
       rating_threshold: "B"
 
