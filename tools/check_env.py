@@ -48,9 +48,11 @@ def main():
     if requirements_path.exists():
         with requirements_path.open("r", encoding="utf-8") as f:
             for line in f:
-                pkg = line.split("==")[0].strip()
-                if not pkg or pkg.startswith("#"):
+                line = line.strip()
+                if not line or line.startswith("#"):
                     continue
+                import re
+                pkg = re.split(r'==|>=|<=|>|<|~=', line)[0].strip()
                 import_name = package_import_name(pkg)
 
                 if not check_package(import_name):
