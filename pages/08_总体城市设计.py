@@ -36,6 +36,71 @@ render_engine_status_alert()
 stats = get_hud_statistics()
 sky = get_skyline_features()
 
+graphic_svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+  <defs>
+    <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
+    </linearGradient>
+    <linearGradient id="g_ai" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.1)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+    </linearGradient>
+    <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(99, 102, 241, 0.2)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+    </linearGradient>
+    
+    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_emerald" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <path d="M 160 55 C 180 55, 180 45, 200 45" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 55 C 180 55, 180 155, 200 155" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="3,3"/>
+  <path d="M 160 145 C 180 145, 180 45, 200 45" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="3,3"/>
+  <path d="M 160 145 C 180 145, 180 155, 200 155" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+  <path d="M 360 45 C 385 45, 385 100, 410 100" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
+  <path d="M 360 155 C 385 155, 385 100, 410 100" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
+  <polygon points="405,96 410,100 405,104" fill="#6366f1"/>
+
+  <rect x="10" y="35" width="150" height="40" rx="6" fill="url(#g_base)" stroke="#10b981" stroke-width="1.5" filter="url(#f_emerald)"/>
+  <text x="85" y="52" fill="#10b981" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">前期策略框架</text>
+  <text x="85" y="66" fill="#a7f3d0" font-size="9" font-family="sans-serif" text-anchor="middle">Stage 07 共识协议</text>
+
+  <rect x="10" y="125" width="150" height="40" rx="6" fill="url(#g_base)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
+  <text x="85" y="142" fill="#38bdf8" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">全域空间数据</text>
+  <text x="85" y="156" fill="#bae6fd" font-size="9" font-family="sans-serif" text-anchor="middle">土地利用与建筑总量</text>
+
+  <rect x="200" y="25" width="160" height="40" rx="8" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
+  <text x="280" y="42" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">LLM 空间结构推演</text>
+  <text x="280" y="56" fill="#38bdf8" font-size="10" font-family="sans-serif" text-anchor="middle" font-weight="bold">DeepSeek 深度策划</text>
+
+  <rect x="200" y="135" width="160" height="40" rx="8" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
+  <text x="280" y="152" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">用地优化沙盘模拟</text>
+  <text x="280" y="166" fill="#38bdf8" font-size="10" font-family="sans-serif" text-anchor="middle" font-weight="bold">功能占比与冲击计算</text>
+
+  <rect x="410" y="70" width="160" height="60" rx="10" fill="url(#g_out)" stroke="#6366f1" stroke-width="2" filter="url(#f_indigo)"/>
+  <text x="490" y="97" fill="#6366f1" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">概念总平面 AIGC 生形</text>
+  <text x="490" y="117" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle">辅助形体生成与落位</text>
+
+  <circle cx="160" cy="55" r="3" fill="#10b981"/>
+  <circle cx="160" cy="145" r="3" fill="#38bdf8"/>
+  <circle cx="410" cy="100" r="3" fill="#6366f1"/>
+</svg>
+"""
+
 render_page_banner(
     title="总体城市设计",
     description="基于前期策略框架与全域空间数据，通过 LLM 深度推演完成空间结构策划、"
@@ -47,6 +112,7 @@ render_page_banner(
         {"value": f"{sky.get('avg_height', 0)} m", "label": "平均层高", "meta": "形态参考"},
         {"value": f"{sky.get('building_count', 0)}", "label": "建筑总量", "meta": "栋"},
     ],
+    graphic_html=graphic_svg
 )
 render_evidence_chain_bar("08", ["07", "08", "09", "10"])
 
