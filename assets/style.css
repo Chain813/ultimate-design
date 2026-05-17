@@ -75,9 +75,9 @@ h2 {
     backdrop-filter: blur(12px);
     border: 1px solid rgba(99, 102, 241, 0.15);
     border-radius: 28px;
-    padding: 45px;
+    padding: 45px 25px 45px 45px;
     margin-bottom: 35px;
-    gap: 40px;
+    gap: 50px;
     position: relative;
     overflow: hidden;
 }
@@ -91,7 +91,7 @@ h2 {
 }
 
 .page-banner-copy { min-width: 0; }
-.page-banner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.page-banner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; width: 100%; }
 
 .page-banner-map-preview {
     aspect-ratio: 1932 / 2500;
@@ -105,7 +105,7 @@ h2 {
     transform-origin: right center;
     transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
     margin-left: 40px;
-    margin-right: -10px;
+    margin-right: -5px;
 }
 
 .page-banner-map-preview:hover {
@@ -1893,8 +1893,9 @@ hr {
 
 .page-banner-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    width: 100%;
 }
 
 .page-banner-metric,
