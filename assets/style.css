@@ -94,7 +94,7 @@ h2 {
 .page-banner-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
 
 .page-banner-map-preview {
-    flex: 1.8;
+    aspect-ratio: 1 / 1;
     height: 560px;
     border-radius: 28px;
     overflow: hidden;
@@ -115,12 +115,12 @@ h2 {
 .page-banner-map-preview img {
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     filter: brightness(1.0) contrast(1.1);
 }
 
 @media (max-width: 1500px) {
-    .page-banner-map-preview { height: 380px; flex: 1.2; }
+    .page-banner-map-preview { height: 380px; }
 }
 
 @media (max-width: 1200px) {
