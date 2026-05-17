@@ -1816,8 +1816,10 @@ hr {
    ========================================== */
 
 .page-banner-graphic {
-    width: 100%;
-    min-height: 220px;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
 }
 
 .page-banner-copy h1 {
