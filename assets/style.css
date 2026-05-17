@@ -1814,35 +1814,6 @@ hr {
 /* ==========================================
    PAGE BANNERS / CONTENT PANELS
    ========================================== */
-.page-banner {
-    display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 40px;
-    align-items: center;
-    margin: 12px 0 24px 0;
-    padding: 40px 30px;
-    border-radius: 18px;
-    background:
-        linear-gradient(135deg, rgba(17, 24, 39, 0.88), rgba(30, 41, 59, 0.78)),
-        radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 35%);
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.32);
-    overflow: hidden;
-}
-
-.page-banner-content {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.page-banner-graphic,
-.page-banner-map-preview {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
 
 .page-banner-graphic {
     width: 100%;
@@ -2243,20 +2214,11 @@ hr {
 
 @media (max-width: 960px) {
     .page-banner {
-        grid-template-columns: 1fr;
         padding: 24px 20px;
-    }
-
-    .page-banner-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
 @media (max-width: 640px) {
-    .page-banner-grid {
-        grid-template-columns: 1fr;
-    }
-
     .summary-grid {
         grid-template-columns: 1fr;
     }
