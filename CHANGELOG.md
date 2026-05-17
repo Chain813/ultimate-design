@@ -26,6 +26,7 @@
 * **全面硬化敏感信息泄露防线**：
   * 扫描并验证了本地环境，确保所有实际运行的百度 AK 和 DeepSeek API 密钥均安全存放在外部忽略文件 `.env` 中，代码没有任何硬编码的敏感信息。
   * **Git 历史脏数据擦除**：检测到过往开发 Commit 中曾不慎硬编码暴露过百度地图 AK 与 DeepSeek 接口密钥。使用专业的 `git-filter-repo` 工具在项目所有的 **107 个历史 Commit** 中全面覆写检索，对上述两组敏感字符串进行了无损替换（用 `YOUR_BAIDU_MAP_AK` 与 `YOUR_DEEPSEEK_API_KEY` 完美覆盖），并强制推送到 GitHub 覆盖，彻底杜绝了因历史 Commit 被追溯而导致的安全泄露风险。
+  * **Claude Code 本地配置安全隔离**：将 Claude Code 本地授权配置文件所在的 `.claude/` 文件夹添加至 `.gitignore` 进行安全忽略；并使用 `git-filter-repo --path .claude/ --invert-paths` 命令，**将历史 Commit 记录中已提交的 `.claude/settings.local.json` 彻底抹去**，同时已在云端 GitHub 仓库完成覆盖，百分之百保证其不在公共网络上可见。
   * 升级 `.gitignore` 配置，新增了 `.gemini/`（AI 代理缓存）、`scratch/`（临时便签空间）和 `output/`（高保真渲染图等大文件）的忽略规则，防止由于误操作而将冗余数据和缓存上传至 GitHub。
 
 ### 📚 文档体系更新
