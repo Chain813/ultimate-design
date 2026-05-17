@@ -88,12 +88,14 @@ def render_summary_cards(cards):
     parts = ['<div class="summary-grid">']
     for card in cards:
         icon_html = f'<div class="summary-icon">{card["icon"]}</div>' if "icon" in card else ""
+        svg_html = f'<div class="summary-svg-chart" style="margin-top: 15px; opacity: 0.9;">{card["svg_chart"]}</div>' if "svg_chart" in card else ""
         parts.append(
             '<div class="summary-card">'
             f"{icon_html}"
             f'<span class="summary-value">{escape(str(card.get("value", "")))}</span>'
             f'<h4>{escape(str(card.get("title", "")))}</h4>'
             f'<p>{escape(str(card.get("desc", "")))}</p>'
+            f"{svg_html}"
             "</div>"
         )
     parts.append("</div>")

@@ -119,19 +119,90 @@ render_summary_cards(
             "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>',
             "value": "动态空间评价", 
             "title": "Spatial Assessment", 
-            "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。"
+            "desc": "以地块、建筑、街景和设施数据为基础诊断更新潜力。",
+            "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+    </linearGradient>
+    <filter id="glow1" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <path d="M 110 35 L 160 35" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M 260 35 L 310 35" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#475569" stroke-width="1.5" />
+  <text x="55" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">多源空间数据</text>
+  <rect x="160" y="15" width="100" height="40" rx="8" fill="url(#grad1)" stroke="#38bdf8" stroke-width="1.5" filter="url(#glow1)" />
+  <text x="210" y="39" fill="#38bdf8" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">AHP-MPI 测度</text>
+  <rect x="310" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#475569" stroke-width="1.5" />
+  <text x="365" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">潜力排行雷达</text>
+  <polygon points="155,31 160,35 155,39" fill="#38bdf8" />
+  <polygon points="305,31 310,35 305,39" fill="#38bdf8" />
+</svg>"""
         },
         {
             "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-palette"><path d="M12 22C17.52 22 22 17.52 22 12C22 9.8 20.2 8 18 8H16C15.4 8 15 7.6 15 7V5C15 2.8 13.2 1 11 1C5.5 1 1 5.5 1 11C1 17.1 4.9 22 12 22Z"/><circle cx="7.5" cy="10.5" r="1.5" fill="currentColor"/><circle cx="11.5" cy="7.5" r="1.5" fill="currentColor"/><circle cx="16.5" cy="9.5" r="1.5" fill="currentColor"/></svg>',
             "value": "生成式视觉推演", 
             "title": "Generative Pre-rendering", 
-            "desc": "将保护要求与设计策略转成可比选的空间图景。"
+            "desc": "将保护要求与设计策略转成可比选的空间图景。",
+            "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
+  <defs>
+    <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+    </linearGradient>
+    <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <path d="M 120 20 L 140 20 L 140 35 L 160 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" fill="none" />
+  <path d="M 120 50 L 140 50 L 140 35 L 160 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" fill="none" />
+  <path d="M 260 35 L 300 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="5" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#475569" stroke-width="1" />
+  <text x="60" y="22" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">空间控制 (ControlNet)</text>
+  <rect x="0" y="39" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#475569" stroke-width="1" />
+  <text x="60" y="56" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">AI 润色提示词 (Prompt)</text>
+  <rect x="160" y="15" width="100" height="40" rx="8" fill="url(#grad2)" stroke="#a855f7" stroke-width="1.5" filter="url(#glow2)" />
+  <text x="210" y="39" fill="#a855f7" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">SD 渲染推演</text>
+  <rect x="300" y="15" width="120" height="40" rx="8" fill="url(#grad2)" stroke="#475569" stroke-width="1.5" />
+  <text x="360" y="39" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="600">Before/After 街景</text>
+  <polygon points="155,31 160,35 155,39" fill="#a855f7" />
+  <polygon points="295,31 300,35 295,39" fill="#a855f7" />
+</svg>"""
         },
         {
             "icon": '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
             "value": "多主体协同测算", 
             "title": "Multi-agent Decision", 
-            "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。"
+            "desc": "模拟居民、开发商与规划师之间的协商与约束平衡。",
+            "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
+  <defs>
+    <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+    </linearGradient>
+    <filter id="glow3" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <path d="M 80 35 L 120 35" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M 280 35 L 320 35" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="15" width="80" height="40" rx="8" fill="url(#grad3)" stroke="#475569" stroke-width="1.5" />
+  <text x="40" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">策划议题</text>
+  <rect x="120" y="15" width="160" height="40" rx="8" fill="url(#grad3)" stroke="#10b981" stroke-width="1.5" filter="url(#glow3)" />
+  <text x="200" y="31" fill="#10b981" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">居民/运营商/规划师 协同</text>
+  <text x="200" y="47" fill="#10b981" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">+ RAG 政策校验</text>
+  <rect x="320" y="15" width="100" height="40" rx="8" fill="url(#grad3)" stroke="#475569" stroke-width="1.5" />
+  <text x="370" y="31" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">共识雷达</text>
+  <text x="370" y="47" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">&amp; 策略矩阵</text>
+  <polygon points="115,31 120,35 115,39" fill="#10b981" />
+  <polygon points="315,31 320,35 315,39" fill="#10b981" />
+</svg>"""
         },
     ]
 )
