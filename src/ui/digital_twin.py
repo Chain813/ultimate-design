@@ -135,7 +135,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
         html_template = html_template.replace("/*__SUN_TIME__*/10/*__END_SUN_TIME__*/", str(sun_time))
         
         st.markdown("""<style>
-            iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(99, 102, 241, 0.4); box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+            iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04); }
         </style>""", unsafe_allow_html=True)
         components.html(html_template, height=height, scrolling=False)
     except Exception as e:

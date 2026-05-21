@@ -8,19 +8,19 @@
     <script src="https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.js"></script>
     <link href="https://unpkg.com/maplibre-gl@3.3.0/dist/maplibre-gl.css" rel="stylesheet" />
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background-color: #0d1321; }
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #f5f5f7; }
         #map-container { width: 100vw; height: 100vh; position: absolute; }
         /* 定制化 Tooltip 样式，保持沉浸感 */
         .deck-tooltip {
             font-family: 'Inter', sans-serif;
-            background: rgba(15, 23, 42, 0.85) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
             backdrop-filter: blur(10px) !important;
-            border: 1px solid rgba(99, 102, 241, 0.4) !important;
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
             border-radius: 8px !important;
-            color: #e2e8f0 !important;
+            color: #1d1d1f !important;
             font-size: 13px !important;
             padding: 10px 15px !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
         }
     </style>
 </head>
@@ -108,9 +108,9 @@
                     if (props.action === 'retain' || s === 'historical') return [168, 85, 247, IS_XRAY ? 40 : 230]; // 留: Purple
                     if (props.action === 'retain_park' || s === 'park') return [0, 190, 0, IS_XRAY ? 40 : 230]; // 保护绿地: Green
                 }
-                if (s === 'historical') return [153, 0, 255, 255];
+                if (s === 'historical') return [255, 149, 0, 230];
                 if (s === 'park') return [0, 190, 0, 230];
-                return [173, 216, 230, IS_XRAY ? 40 : 200];
+                return [255, 255, 255, IS_XRAY ? 40 : 230];
             },
             getLineColor: d => {
                 const props = d.properties || {};
@@ -123,9 +123,9 @@
                     return [51, 65, 85, 200]; // Dark grey outline for normal buildings in X-Ray
                 }
                 const s = props.prop_style;
-                if (s === 'historical') return [255, 255, 255, 255];
+                if (s === 'historical') return [217, 119, 6, 240];
                 if (s === 'park') return [200, 255, 200, 200];
-                return [255, 255, 255, 120];
+                return [200, 200, 204, 180];
             },
             lineWidthMinPixels: IS_XRAY ? 1.5 : 1,
             pickable: true,
@@ -178,8 +178,8 @@
                 data: bound_data,
                 stroked: true,
                 filled: true,
-                getFillColor: [239, 68, 68, 60],
-                getLineColor: [239, 68, 68, 150],
+                getFillColor: [255, 59, 48, 20],
+                getLineColor: [255, 59, 48, 200],
                 getLineWidth: 3,
                 pickable: false
             }));
@@ -465,7 +465,7 @@
         
         const deckInstance = new deck.DeckGL({
             container: 'map-container',
-            mapStyle: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+            mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
             effects: (is_3d && show_lighting) ? [lightingEffect] : [],
             initialViewState: {
                 latitude: 43.903,
@@ -559,8 +559,8 @@
     </script>
 
     <!-- 🖱️ 鼠标交互引导 HUD -->
-    <div style="position: absolute; top: 15px; right: 15px; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 12px 18px; color: rgba(248, 250, 252, 0.9); font-family: 'Inter', sans-serif; font-size: 13px; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100;">
-        <div style="margin-bottom: 6px; font-weight: 700; color: #818cf8; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">视角控制</div>
+    <div style="position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px; padding: 12px 18px; color: #1d1d1f; font-family: 'Inter', sans-serif; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); z-index: 100;">
+        <div style="margin-bottom: 6px; font-weight: 700; color: #0071e3; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">视角控制</div>
         <div style="display: flex; gap: 10px; flex-direction: column;">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px;">
                 <span>🖱️ 左键拖动</span>
@@ -578,8 +578,8 @@
     </div>
 
     <!-- 🗺️ 动态图例面板 -->
-    <div id="map-legend" style="position: absolute; bottom: 35px; right: 15px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 12px; padding: 15px; color: rgba(248, 250, 252, 0.9); font-family: 'Inter', sans-serif; box-shadow: 0 5px 20px rgba(0,0,0,0.5); z-index: 100; min-width: 180px; max-height: calc(100vh - 150px); overflow-y: auto;">
-        <div style="margin-bottom: 12px; font-weight: 800; color: #a5b4fc; font-size: 13.5px; letter-spacing: 0.05em; border-bottom: 1px solid rgba(99,102,241,0.3); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+    <div id="map-legend" style="position: absolute; bottom: 35px; right: 15px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px; padding: 15px; color: #1d1d1f; font-family: 'Inter', sans-serif; box-shadow: 0 4px 20px rgba(0,0,0,0.06); z-index: 100; min-width: 180px; max-height: calc(100vh - 150px); overflow-y: auto;">
+        <div style="margin-bottom: 12px; font-weight: 800; color: #1d1d1f; font-size: 13.5px; letter-spacing: 0.05em; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 8px; display: flex; align-items: center; gap: 6px;">
             <span>📋</span> 空间资产图例 (Legend)
         </div>
         <div id="legend-content" style="display: flex; flex-direction: column; gap: 9px;">
@@ -593,21 +593,21 @@
         let lHtml = "";
         const addItem = (cssBg, text) => {
             lHtml += `<div style="display: flex; align-items: center; gap: 10px;">
-                <div style="width: 14px; height: 14px; border-radius: 3px; background: ${cssBg}; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0;"></div>
-                <span style="font-size: 11.5px; color: rgba(248, 250, 252, 0.95); white-space: nowrap;">${text}</span>
+                <div style="width: 14px; height: 14px; border-radius: 3px; background: ${cssBg}; border: 1px solid rgba(0,0,0,0.08); flex-shrink: 0;"></div>
+                <span style="font-size: 11.5px; color: #1d1d1f; white-space: nowrap;">${text}</span>
             </div>`;
         };
         const addGradientItem = (gradient, text, minText="低", maxText="高") => {
             lHtml += `<div style="margin-top: 4px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 6px;">
-                <span style="font-size: 11.5px; color: rgba(248, 250, 252, 0.95);">${text}</span>
-                <div style="height: 10px; width: 100%; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: ${gradient};"></div>
-                <div style="display: flex; justify-content: space-between; font-size: 10px; color: rgba(148, 163, 184, 0.8); line-height: 1;">
+                <span style="font-size: 11.5px; color: #1d1d1f;">${text}</span>
+                <div style="height: 10px; width: 100%; border-radius: 4px; border: 1px solid rgba(0,0,0,0.08); background: ${gradient};"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 10px; color: #86868b; line-height: 1;">
                     <span>${minText}</span><span>${maxText}</span>
                 </div>
             </div>`;
         };
 
-        if (bound_data) addItem("rgba(239, 68, 68, 0.25)", "空间研究红线边界");
+        if (bound_data) addItem("rgba(255, 59, 48, 0.2)", "空间研究红线边界");
         if (plots_data) addItem("rgba(220, 38, 38, 0.5)", "重点微更新锚点地块");
         
         if (b_data) {
@@ -616,8 +616,8 @@
                 addItem("rgba(250, 204, 21, 0.8)", "功能置换 (综合改造)");
                 addItem("rgba(239, 68, 68, 0.9)", "拆除腾退 (塌缩消隐)");
             } else {
-                addItem("rgba(153, 0, 255, 1)", "受保护历史风貌建筑");
-                addItem("rgba(173, 216, 230, 0.78)", "现状一般建筑肌理");
+                addItem("rgba(255, 149, 0, 0.9)", "受保护历史风貌建筑");
+                addItem("rgba(255, 255, 255, 0.9)", "现状一般建筑肌理");
             }
         }
         
@@ -635,7 +635,7 @@
         if (heat_payload) addGradientItem("linear-gradient(90deg, rgba(59,130,246,0.6), rgba(16,185,129,0.8), rgba(239,68,68,1))", "社会感知诉求能量场 (2D热力)");
         
         if (landuse_data) {
-            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #818cf8; font-size: 11px; border-bottom: 1px solid rgba(99,102,241,0.2); padding-bottom: 4px;">法定用地性质配置 (GB/T 50337-2018)</div>`;
+            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #0071e3; font-size: 11px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 4px;">法定用地性质配置 (GB/T 50337-2018)</div>`;
             addItem("rgba(255, 255, 0, 0.62)", "R 城乡居住用地");
             addItem("rgba(191, 0, 0, 0.62)", "C2 商务办公用地");
             addItem("rgba(255, 0, 0, 0.62)", "C1 商业服务业用地");
