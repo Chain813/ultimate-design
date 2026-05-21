@@ -1,20 +1,26 @@
+import argparse
 import geopandas as gpd
 import os
 import sys
+from src.config.paths import DATA_DIR, GIS_DIR
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-def prepare_landuse():
+def prepare_landuse(gpkg_path: str = None):
     print("🚀 开始土地利用数据裁剪流程...")
 
     # 1. 设置路径
-    boundary_path = "data/gis/Boundary_Scope.geojson"
-    input_gpkg = r"E:\资料\EULUC_China_20.gpkg"
-    output_path = "data/gis/landuse.geojson"
+    boundary_path = str(GIS_DIR / "Boundary_Scope.geojson")
+    input_gpkg = gpkg_path or str(DATA_DIR / "raw" / "EULUC_China_20.gpkg")
+    output_path = str(GIS_DIR / "landuse.geojson")
 
     if not os.path.exists(boundary_path):
         print(f"❌ 错误: 找不到边界文件 {boundary_path}")
+        return
+
+    if not os.path.exists(input_gpkg):
+        print(f"❌ 错误: 找不到土地利用数据 {input_gpkg}")
         return
 
     # 2. 读取边界并获取 Bounding Box
@@ -55,4 +61,8 @@ def prepare_landuse():
         print(f"❌ 发生错误: {e}")
 
 if __name__ == "__main__":
-    prepare_landuse()
+    parser = argparse.ArgumentParser(description="裁剪全国土地利用数据至研究范围")
+    parser.add_argument("--source", type=str, default=None,
+                        help="EULUC gpkg 文件路径 (默认: data/raw/EULUC_China_20.gpkg)")
+    args = parser.parse_args()
+    prepare_landuse(gpkg_path=args.source)

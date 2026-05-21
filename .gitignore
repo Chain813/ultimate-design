@@ -18,6 +18,7 @@ build/
 # 离线大数据与媒体文件 (排除 GB 级大文件)
 data/streetview/
 data/raw_images/
+data/raw/
 data/template_assets/
 archive/
 data/gis/raw/road_network.json

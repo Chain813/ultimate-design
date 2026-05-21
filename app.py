@@ -110,7 +110,7 @@ render_page_banner(
         {"value": top_stats["poi_count"], "label": "POI 资产", "meta": "挂载到空间活力诊断的数据点"},
         {"value": top_stats["gvi_count"], "label": "街景样本", "meta": "支撑环境品质与风貌分析"},
     ],
-    image_url=f"{get_static_url('research_scope_2d.png')}?v=19"
+    image_url=f"{get_static_url('research_scope_2d.png')}?v=20"
 )
 
 render_summary_cards(

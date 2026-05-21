@@ -38,7 +38,7 @@ class HighPrecisionPipeline(DrawingPipeline):
         
         main_expr = f"Professional Masterplan: {template_name}. Dark mode, vector style."
         request = ImagePromptRequest(
-            chapter="05 总体规划篇",
+            chapter="05 整体概念设计和更新",
             drawing_name=template_name,
             drawing_type=profile.drawing_type,
             aspect_ratio="A3横版",
@@ -91,7 +91,7 @@ def run_standard_export():
     exporter = BatchExporter(pipeline, store)
 
     # 导出核心规划图
-    target_drawings = ["总平面规划图", "土地利用规划图", "道路交通系统规划图"]
+    target_drawings = ["总平面规划图", "道路交通系统规划图"]
     
     # 强制重新生成以确保 ControlNet 生效
     report = exporter.export_selected(target_drawings, skip_existing=False)

@@ -99,7 +99,15 @@ elif selected_sub == "🖼️ 图册自动组装":
     with col_form:
         st.markdown("### 图框内容配置")
         drawing_title = st.text_input("图纸标题", value="核心地段空间节点分析图")
-        chapter_name = st.selectbox("章节名", ["01 项目认知篇", "02 数据诊断篇", "03 价值评估篇", "04 策略生成篇", "05 总体规划篇"])
+        chapter_name = st.selectbox("章节名", [
+            "01 项目认知篇",
+            "02 数据诊断篇",
+            "03 价值评估篇",
+            "04 策略生成篇",
+            "05 整体概念设计和更新",
+            "06 重点地段更新改造设计",
+            "07 技术推演与实施篇"
+        ])
         drawing_num = st.text_input("图纸编号", value="DR-001")
         
         # 尝试调用 LLM 写总结

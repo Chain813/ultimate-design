@@ -321,7 +321,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     # ---- 阶段 09 专项系统 ----
     DrawingTemplate(
         name="道路交通系统规划图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="主次支路、内部慢行街巷、停车组织（任务书必做图）",
         prompt_tmpl="""请为以下城市设计项目生成一张"道路交通系统规划图"的 Image 2.0 提示词。
@@ -341,7 +341,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     ),
     DrawingTemplate(
         name="慢行系统规划图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="游客路径、居民路径、骑行路径、无障碍路径",
         prompt_tmpl="""请为以下城市设计项目生成一张"慢行系统规划图"的 Image 2.0 提示词。
@@ -359,7 +359,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     ),
     DrawingTemplate(
         name="公共空间系统图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="文化广场、社区活动场、口袋公园、街角空间层级网络",
         prompt_tmpl="""Generate a professional "Public Space System Map" prompt.
@@ -377,7 +377,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     ),
     DrawingTemplate(
         name="历史文化展示系统图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="文化游线、展示节点、导视系统、历史界面（项目特色必做图）",
         prompt_tmpl="""请为以下城市设计项目生成一张"历史文化展示系统图"的 Image 2.0 提示词。
@@ -658,7 +658,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     # ---- 阶段 08 总体城市设计 (新增) ----
     DrawingTemplate(
         name="总平面规划图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="08",
         description="更新后的总体空间布局、道路系统和功能分区（任务书必做图）",
         prompt_tmpl="""Generate a high-fidelity "Urban Masterplan" prompt for a professional design competition.
@@ -675,25 +675,8 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
 - Negative Prompt: Organic chaos, messy strokes, photorealistic forest, blurry textures, distorted perspective.""",
     ),
     DrawingTemplate(
-        name="土地利用规划图",
-        chapter="05 总体规划篇",
-        stage="08",
-        description="更新后的用地类型分类与面积比例",
-        prompt_tmpl="""Generate a professional "Land Use Planning Map" prompt.
-
-{data_context}
-
-Visual Identity (Inspired by Awesome-AIGC-Architecture):
-- Style: Standard urban planning color scheme, clean vector blocks, professional legend mapping.
-- Color Logic: Yellow (Residential), Red (Commercial), Green (Parks), Grey (Infrastructure), Brown (Heritage).
-- Rendering: Flat design, soft ambient occlusion between blocks, clean white background.
-- Elements: Accurate land-use parcels, clear boundary linework, minimalist land-use codes (R/B/G).
-- Quality: 8k, professional GIS-to-Map style, clean typography.
-- Negative Prompt: Blurry boundaries, organic color bleed, messy gradients, distorted text.""",
-    ),
-    DrawingTemplate(
         name="建筑高度控制图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="08",
         description="方案态的建筑高度分区控制（核心区≤9m，一般区≤18m）",
         prompt_tmpl="""请为以下城市设计项目生成一张"建筑高度控制图"的 Image 2.0 提示词。
@@ -714,7 +697,7 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
     # ---- 阶段 09 补充 ----
     DrawingTemplate(
         name="绿地景观系统图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="绿廊、节点绿地、口袋公园、街道绿化的系统规划",
         prompt_tmpl="""请为以下城市设计项目生成一张"绿地景观系统图"的 Image 2.0 提示词。
@@ -724,15 +707,15 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
 图纸要求：
 - 绿色主廊道：伊通河生态带联系
 - 绿色次廊道：街道绿化带、铁路沿线绿化
-- 深绿色：区域公园和大型绿地
-- 中绿色：社区公园和口袋公园（标注面积）
+- 深绿色：区域公园 and 大型绿地
+- 中绿色：社区公园 and 口袋公园（标注面积）
 - 浅绿色：街道绿化覆盖
 - 标注绿化率数据：现状vs规划目标
 - A3横版，突出绿色网络的连通性""",
     ),
     DrawingTemplate(
         name="风貌控制分区图",
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         stage="09",
         description="历史风貌区、协调风貌区、现代风貌区的色彩与材质控制",
         prompt_tmpl="""请为以下城市设计项目生成一张"风貌控制分区图"的 Image 2.0 提示词。
@@ -948,9 +931,9 @@ def _infer_chapter_from_name(drawing_name: str) -> str:
     if any(k in drawing_name for k in ("策略", "目标", "理念", "功能", "结构")):
         return "04 策略生成篇"
     if any(k in drawing_name for k in ("总平面", "规划", "控制", "系统", "绿地", "风貌")):
-        return "05 总体规划篇"
+        return "05 整体概念设计和更新"
     if any(k in drawing_name for k in ("地块", "立面", "节点", "深化")):
-        return "06 重点地块深化篇"
+        return "06 重点地段更新改造设计"
     return "07 技术推演与实施篇"
 
 
@@ -963,8 +946,8 @@ def _infer_stage_from_name(drawing_name: str) -> str:
                 "02 数据诊断篇": "04",
                 "03 价值评估篇": "05",
                 "04 策略生成篇": "07",
-                "05 总体规划篇": "08",
-                "06 重点地块深化篇": "10",
+                "05 整体概念设计和更新": "08",
+                "06 重点地段更新改造设计": "10",
                 "07 技术推演与实施篇": "13",
             }
             return chapter_stage_map.get(chapter, "01")

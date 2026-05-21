@@ -56,7 +56,7 @@ def test_level_two_without_data_generates_template_only_prompt():
 
 def test_level_one_complete_prompt_includes_reference_constraints():
     request = _base_request(
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         drawing_name="道路交通系统规划图",
         uploaded_channels=["卫星底图", "红线边界图", "道路矢量图", "图例参考图", "固定图框模板"],
         main_expression="表达道路等级、交通组织和慢行衔接",

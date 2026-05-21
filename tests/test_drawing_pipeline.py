@@ -62,7 +62,7 @@ def test_check_prompt_completeness_returns_report():
 def test_check_prompt_completeness_precision_levels():
     """Different precision levels produce different validation behavior."""
     request_1 = ImagePromptRequest(
-        chapter="05 总体规划篇",
+        chapter="05 整体概念设计和更新",
         drawing_name="总平面图",
         drawing_type="总体规划类",
         aspect_ratio="A3横版",
