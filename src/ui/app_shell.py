@@ -43,7 +43,7 @@ def render_top_nav():
     # 💎 CSS3 悬停交互引擎
     st.markdown("""
     <style>
-    :root { --apple-bg: rgba(22, 22, 23, 0.85); }
+    :root { --apple-bg: rgba(255, 255, 255, 0.8); }
 
     /* 🍏 Apple 风格顶部主轴 (对比度优化版) */
     .nav-bar {
@@ -51,7 +51,7 @@ def render_top_nav():
         background: var(--apple-bg);
         backdrop-filter: saturate(180%) blur(20px);
         display: flex; justify-content: center; align-items: center;
-        z-index: 999999; border-bottom: 1px solid rgba(255,255,255,0.08);
+        z-index: 999999; border-bottom: 1px solid rgba(0, 0, 0, 0.08);
         font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
     }
 
@@ -61,68 +61,79 @@ def render_top_nav():
     }
 
     .nav-item {
-        color: rgba(245, 245, 247, 0.95); font-size: 13px; font-weight: 600; /* 回归 13px */
+        color: rgba(0, 0, 0, 0.8); font-size: 13px; font-weight: 600; /* 回归 13px */
         cursor: pointer; position: relative;
         height: 50px; display: flex; align-items: center;
         padding: 0 15px; letter-spacing: 0.03em;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        text-shadow: none;
         transition: color 0.3s;
     }
 
-    .nav-item:hover { color: #ffffff; text-shadow: 0 0 10px rgba(0, 113, 227, 0.5); }
+    .nav-item:hover { color: #0071e3; }
 
     /* 彻底杜绝主页及所有链接的下划线与蓝色 (全状态封锁) */
     .nav-bar a, .nav-bar a:link, .nav-bar a:visited, .nav-bar a:active {
         text-decoration: none !important;
-        color: rgba(245, 245, 247, 0.95) !important;
+        color: rgba(0, 0, 0, 0.8) !important;
     }
     .nav-bar a:hover {
-        color: #ffffff !important;
+        color: #0071e3 !important;
     }
 
-    /* 🍏 全宽沉浸下拉菜单 (跟随 50px 偏移) */
+    /* 🍏 卡片式悬浮下拉菜单 (跟随 50px 偏移) */
     .dropdown-content {
-        position: fixed; top: 50px; left: 0; width: 100vw; height: 0;
-        background: rgba(10, 10, 12, 0.98);
-        backdrop-filter: saturate(180%) blur(40px);
+        position: absolute; top: 50px; left: 50%; transform: translateX(-50%) translateY(10px);
+        width: 240px; max-height: 0;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(25px) saturate(190%);
+        border-radius: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
         overflow: hidden; opacity: 0; visibility: hidden;
-        /* 核心：增加 0.1s 的闭合延迟 (transition-delay) */
-        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
-                    opacity 0.3s ease 0.1s,
-                    visibility 0s linear 0.5s;
-        display: flex; justify-content: center;
-        border-bottom: 1px solid rgba(255,255,255,0.1);
+        transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s,
+                    opacity 0.25s ease 0.1s,
+                    visibility 0s linear 0.4s,
+                    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) 0.1s;
+        z-index: 999999;
     }
 
-    /* 激活态：取消延迟，实现瞬时开启 */
+    /* 尖角 */
+    .dropdown-content::before {
+        content: "";
+        position: absolute; top: -6px; left: 50%; transform: translateX(-50%) rotate(45deg);
+        width: 10px; height: 10px; background: rgba(255, 255, 255, 0.85);
+        border-left: 1px solid rgba(0, 0, 0, 0.06);
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+        z-index: 1;
+    }
+
+    /* 激活态：取消延迟，实现渐近开启 */
     .nav-item:hover .dropdown-content {
-        height: 360px; opacity: 1; visibility: visible;
+        max-height: 320px; opacity: 1; visibility: visible;
+        transform: translateX(-50%) translateY(0);
         transition-delay: 0s;
     }
 
     .submenu-container {
-        width: 100%; max-width: 1000px; padding: 40px 20px;
-        display: flex; gap: 80px; align-items: flex-start;
+        width: 100%; padding: 16px 12px;
+        display: flex; flex-direction: column; gap: 12px;
+        box-sizing: border-box;
     }
 
-    .submenu-column { display: flex; flex-direction: column; gap: 12px; }
-    .submenu-title { color: #a1a1a6; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .submenu-column { display: flex; flex-direction: column; gap: 6px; width: 100%; }
+    .submenu-title { color: #86868b; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; padding-left: 12px; }
 
     .dropdown-item {
-        color: #ffffff; font-size: 20px; font-weight: 700; text-decoration: none !important;
-        transition: color 0.2s, transform 0.2s; white-space: nowrap;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        color: #1d1d1f; font-size: 14px; font-weight: 500; text-decoration: none !important;
+        transition: background-color 0.2s, color 0.2s; white-space: nowrap;
+        padding: 8px 12px; border-radius: 8px;
+        display: block; width: 100%; box-sizing: border-box;
+        text-shadow: none;
     }
 
-    .dropdown-item:hover { color: #0071e3; } /* Apple Blue 强调色 */
-
-    /* 让子项逐个浮现的微动效 */
-    .nav-item:hover .dropdown-item {
-        animation: fadeInUp 0.5s ease forwards; opacity: 0;
-    }
-    @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+    .dropdown-item:hover { 
+        background-color: rgba(0, 113, 227, 0.08);
+        color: #0071e3 !important; 
     }
 
     /* 🍏 Apple 风格分段控制器 (Segmented Control) 独立胶囊版 */
@@ -170,43 +181,43 @@ def render_top_nav():
     /* 每一个选项都成为一个独立的胶囊 */
     div[data-testid="stRadio"] label {
         flex: 0 1 auto !important;
-        background: rgba(255, 255, 255, 0.06) !important;
-        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        background: rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
         padding: 10px 24px !important;
         border-radius: 50px !important; /* 纯圆形胶囊 */
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         cursor: pointer !important;
         margin: 0 !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
     }
 
     /* 选中状态：页面变亮，呈现亮色胶囊 */
     div[data-testid="stRadio"] label:has(input:checked) {
-        background: #818cf8 !important; /* 核心亮度来源 */
-        border: 1px solid #a5b4fc !important;
-        box-shadow: 0 0 20px rgba(129, 140, 248, 0.5), 0 4px 10px rgba(0,0,0,0.3) !important;
-        transform: scale(1.05) !important; /* 选中的轻微放大感 */
+        background: #0071e3 !important; /* 核心亮度来源 */
+        border: 1px solid #0071e3 !important;
+        box-shadow: 0 4px 12px rgba(0, 113, 227, 0.25) !important;
+        transform: scale(1.02) !important; /* 选中的轻微放大感 */
     }
 
     /* 文字颜色在选中时强制设为极高对比度的纯白 */
     div[data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
         font-size: 14px !important;
         font-weight: 600 !important;
-        color: rgba(255, 255, 255, 0.6) !important;
+        color: #48484a !important;
         transition: color 0.3s !important;
     }
 
     div[data-testid="stRadio"] label:has(input:checked) p {
         color: #ffffff !important;
         font-weight: 800 !important;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        text-shadow: none !important;
     }
 
     /* 悬停态：细腻的亮度提升 */
     div[data-testid="stRadio"] label:hover:not(:has(input:checked)) {
-        background: rgba(255, 255, 255, 0.12) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        transform: translateY(-2px);
+        background: rgba(0, 0, 0, 0.06) !important;
+        border: 1px solid rgba(0, 0, 0, 0.12) !important;
+        transform: translateY(-1px);
     }
 
     /* 弥补顶部高度 */
@@ -216,7 +227,7 @@ def render_top_nav():
 
     # --- 🏗️ 构造全宽导航 HTML ---
     nav_html = '<div class="nav-bar"><div class="nav-container">'
-    nav_html += '<a href="/" target="_self" class="nav-item" style="text-decoration: none !important; color: rgba(245, 245, 247, 0.95) !important; font-weight: 900 !important; font-size: 24px !important;">主页</a>'
+    nav_html += '<a href="/" target="_self" class="nav-item" style="text-decoration: none !important; color: #1d1d1f !important; font-weight: 900 !important; font-size: 24px !important;">主页</a>'
 
     for item in nav_data:
         nav_html += f'''
@@ -242,7 +253,7 @@ def render_top_nav():
 show_nav_bar = render_top_nav
 
 def render_engine_status_alert():
-    """渲染极具冲击力的引擎未启动引导提示 (Apple/Cyber 风格)"""
+    """渲染极具冲击力的引擎未启动引导提示 (Apple/Light 风格)"""
     status = check_engine_status()
 
     # 只有当任一引擎离线时才显示
@@ -251,27 +262,27 @@ def render_engine_status_alert():
         if not status.sd:
             alerts.append(
 '<div style="display:flex; align-items:center; gap:18px;">'
-'<span style="font-size:26px; filter:drop-shadow(0 0 8px rgba(239,68,68,0.5));">🎨</span>'
+'<span style="font-size:26px;">🎨</span>'
 '<div>'
-'<strong style="color:#fca5a5; font-size:15px; display:block; font-weight:800; letter-spacing:0.02em; text-shadow:0 2px 4px rgba(0,0,0,0.5);">视觉渲染引擎 (Stable Diffusion) 未启动</strong>'
-'<p style="color:rgba(248,250,252,0.85); font-size:13px; margin:4px 0 0 0; line-height:1.4;">请启动 SD WebUI 并确保开启 <code style="background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:6px; color:#f87171; font-family:monospace; border:1px solid rgba(239,68,68,0.2);">--api</code> 模式 (监听端口 7860)</p>'
+'<strong style="color:#d70015; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">视觉渲染引擎 (Stable Diffusion) 未启动</strong>'
+'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请启动 SD WebUI 并确保开启 <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#d70015; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">--api</code> 模式 (监听端口 7860)</p>'
 '</div>'
 '</div>'
             )
         if not status.gemma:
             alerts.append(
 '<div style="display:flex; align-items:center; gap:18px;">'
-'<span style="font-size:26px; filter:drop-shadow(0 0 8px rgba(239,68,68,0.5));">🧠</span>'
+'<span style="font-size:26px;">🧠</span>'
 '<div>'
-'<strong style="color:#fca5a5; font-size:15px; display:block; font-weight:800; letter-spacing:0.02em; text-shadow:0 2px 4px rgba(0,0,0,0.5);">决策博弈引擎 (Ollama/Gemma) 未就绪</strong>'
-'<p style="color:rgba(248,250,252,0.85); font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.4); padding:2px 6px; border-radius:6px; color:#f87171; font-family:monospace; border:1px solid rgba(239,68,68,0.2);">ollama run deepseek-v4-pro</code> (监听端口 11434)</p>'
+'<strong style="color:#d70015; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">决策博弈引擎 (Ollama/Gemma) 未就绪</strong>'
+'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#d70015; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">ollama run deepseek-v4-pro</code> (监听端口 11434)</p>'
 '</div>'
 '</div>'
             )
 
         st.markdown(f"""
-<div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(185, 28, 28, 0.12)); border: 1px solid rgba(239, 68, 68, 0.45); border-radius: 16px; padding: 22px 28px; margin: 30px 0; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 12px 45px rgba(0, 0, 0, 0.35), inset 0 0 20px rgba(239, 68, 68, 0.08); backdrop-filter: blur(25px) saturate(180%); position: relative; z-index: 9999;">
-<div style="position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #ef4444; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);"></div>
+<div style="background: rgba(255, 59, 48, 0.05); border: 1px solid rgba(255, 59, 48, 0.15); border-radius: 16px; padding: 22px 28px; margin: 30px 0; display: flex; flex-direction: column; gap: 20px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04); backdrop-filter: blur(25px) saturate(180%); position: relative; z-index: 9999;">
+<div style="position: absolute; top: 0; left: 0; width: 5px; height: 100%; background: #ff3b30;"></div>
 {"".join(alerts)}
 </div>
 """, unsafe_allow_html=True)
