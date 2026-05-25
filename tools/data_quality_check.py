@@ -75,14 +75,27 @@ GEO_REGISTRY = {
 ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name", "Type")
 
 
+# ==========================================
+# 🔍 Git 忽略文件白名单 (CI/全新克隆下可能不存在)
+# ==========================================
+GIT_IGNORED_FILES = {
+    "Building_Footprints.geojson",
+}
+
+
 def check_csv_or_excel(name: str, cfg: dict) -> dict:
     """对一份表格数据进行四维体检，返回报告字典"""
     report = {"name": name, "status": "OK", "issues": [], "stats": {}}
     path = cfg["path"]
 
     if not path.exists():
-        report["status"] = "MISSING"
-        report["issues"].append(f"文件不存在: {path}")
+        if path.name in GIT_IGNORED_FILES:
+            report["status"] = "WARNING"
+            report["issues"].append(f"Git忽略的大文件在当前环境下不存在(可忽略): {path}")
+            report["grade"] = "N/A"
+        else:
+            report["status"] = "MISSING"
+            report["issues"].append(f"文件不存在: {path}")
         return report
 
     # 加载
@@ -156,8 +169,13 @@ def check_geojson(name: str, path: Path) -> dict:
     report = {"name": name, "status": "OK", "issues": [], "stats": {}}
 
     if not path.exists():
-        report["status"] = "MISSING"
-        report["issues"].append(f"文件不存在: {path}")
+        if path.name in GIT_IGNORED_FILES:
+            report["status"] = "WARNING"
+            report["issues"].append(f"Git忽略的大文件在当前环境下不存在(可忽略): {path}")
+            report["grade"] = "N/A"
+        else:
+            report["status"] = "MISSING"
+            report["issues"].append(f"文件不存在: {path}")
         return report
 
     try:

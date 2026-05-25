@@ -3,7 +3,7 @@ import sys
 from PIL import Image, ImageDraw, ImageFont
 
 def process_a3_layout(map_path, output_path):
-    template = Image.open('static/a3_layout_preview.png').convert('RGB')
+    template = Image.open('static/a3_layout_preview_full.png').convert('RGB')
     map_img = Image.open(map_path).convert('RGB')
     windrose = Image.open('assets/长春市风玫瑰.png')
     
@@ -58,8 +58,9 @@ def process_a3_layout(map_path, output_path):
     draw.rectangle([1900, 1632, 2300, 1664], fill=(241, 245, 249))
     draw.text((1905, 1638), "图纸: 规划研究范围图", fill=(29, 29, 31), font=font_tb)
     
-    template.save(output_path)
-    print("A3 scope image processed successfully.")
+    cropped_template = template.crop((100, 260, 2340, 1844))
+    cropped_template.save(output_path)
+    print("A3 scope image processed successfully (cropped to paper boundary).")
 
 if __name__ == '__main__':
     if len(sys.argv) < 3:

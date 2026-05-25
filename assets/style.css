@@ -95,7 +95,7 @@ h2 {
 .page-banner-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; width: 100%; }
 
 .page-banner-map-preview {
-    aspect-ratio: 2440 / 2000;
+    aspect-ratio: 1705 / 1369;
     height: 560px;
     border-radius: 28px;
     overflow: hidden;

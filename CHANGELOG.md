@@ -4,6 +4,14 @@
 
 ---
 
+## [v4.1.0] - 2026-05-25
+### ⚙️ DevOps & CI/CD 稳定性加固
+* **修复了因 Git 忽略文件缺失导致 CI 报错的 Bug**：由于 35MB 的大文件 `data/gis/Building_Footprints.geojson` 被 `.gitignore` 排除，这导致在 GitHub Actions 干净环境中运行 `tools/data_quality_check.py` 会因为检测到该文件缺失而判定为 critical 的 `MISSING` 并返回退出码 1，阻断了 `smoke` 和 `test` job。
+* **白名单降级处理**：在 `tools/data_quality_check.py` 中引入 `GIT_IGNORED_FILES` 白名单，将缺失的 Git 忽略大文件自动判定为 `WARNING` 状态并设评级为 `N/A`，不会触发非 0 退出码，保障 CI 无障碍通畅跑通。
+* **审计并同步更新文档**：更新了 `BUG_REPORT.md` 与 `PROJECT_INSPECTION_REPORT.md` 相关的体检结论与修复记录。
+
+---
+
 ## [v4.0.0] - 2026-05-17
 ### 🛠️ 工作流与 AI 技能 (Skills) 增强
 * **自动更新日志技能**：在本项目根目录 `.gemini/skills/update_changelog.md` 中新增了一项定制技能，强制约束 AI 以后每次在本项目中执行任务时，必须自动在 `CHANGELOG.md` 中记录更新。

@@ -1,6 +1,6 @@
 # ultimateDESIGN 项目检查报告
 
-**生成时间**：2026-05-20（第五次更新）
+**生成时间**：2026-05-25（第六次更新）
 
 ---
 
@@ -15,9 +15,9 @@
 | 项目类型 | Streamlit 城市设计决策支持平台 |
 | 主入口 | `app.py` |
 | 页面体系 | `pages/00_数据准备.py` ~ `pages/14_视频生成.py`（15 个） |
-| 引擎模块 | `src/engines/`（18 个：LLM / SD / Drawing / Quality / Spatial / RAG 等） |
+| 引擎模块 | `src/engines/`（19 个：LLM / SD / Drawing / Quality / Spatial / RAG 等） |
 | UI 组件 | `src/ui/`（8 个：外壳 / 设计系统 / 图表配色 / 制图面板等） |
-| 工具函数 | `src/utils/`（9 个：守护进程 / 坐标转换 / 服务检测等） |
+| 工具函数 | `src/utils/`（8 个：坐标转换 / 服务检测等） |
 | 工作流 | `src/workflow/`（5 个：状态机 / 数据总线 / 资产 management 等） |
 | 自动化脚本 | `scripts/`（14 个：含 GIS 裁切 / 光栅化 / 数据获取等） |
 | DevOps | `tools/`（14 个：环境检查 / 数据质量 / 密钥扫描 / 冒烟测试等） |
@@ -33,7 +33,7 @@
 | **环境诊断** | `python tools/check_env.py` | **通过**，15 页面全部存在，解析无误 |
 | **启动冒烟测试** | `python tools/startup_smoke.py` | **通过**，测试页面及启动健康度正常 |
 | **密钥扫描** | `python tools/secret_scan.py` | **通过**（检出 .env 的本地 key 为预期行为） |
-| **数据质量** | `python tools/data_quality_check.py` | **通过**，评级 A，生成报告无误 |
+| **数据质量** | `python tools/data_quality_check.py` | **通过**，评级 A，缺失的 Git 忽略大文件自动降级为警告，不抛出非 0 退出码，确保 CI 通畅 |
 | **Git 历史审计** | `git log -S <key>` | 百度 AK 存于 3 个历史提交 |
 | **GIS 裁切验证** | `python scripts/verify_clipped.py` | **通过**，3 个裁切数据集完整 |
 | **GIS 光栅化** | `python scripts/render_gis_assets.py` | **通过**，3 张引导图已生成 |
@@ -68,6 +68,7 @@
 - **凭据隔离**：本地 `.env` 正常排除，保证凭证不上传 GitHub。
 - **GIS 管线闭环**：矢量→裁切→光栅化→ControlNet 全链路验证通过。
 - **视觉品质卓越**：全景图及子图无任何重合遮挡、黑框、像素截断毛刺，比例完美。
+- **CI 稳定性过关**：修复了因 `Building_Footprints.geojson` 大文件被 Git 忽略导致 CI 阶段报错的 Bug，确保 GitHub Actions 无障碍跑通。
 
 ## 6. 遗留事项
 
@@ -80,4 +81,4 @@
 ---
 
 报告人：Antigravity  
-日期：2026-05-20
+日期：2026-05-25

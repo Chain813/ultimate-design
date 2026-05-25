@@ -941,8 +941,13 @@ def generate_a3_layout_preview():
     for i, char in enumerate(h_text):
         draw_centered_text(draw, char, ( (15 * SCALE + 50 * SCALE) // 2, (paper_y1 + paper_y2) // 2 + start_y_offset + i * 15 * SCALE ), (100, 116, 139), dimension_font_small)
 
-    img.save(os.path.join(OUTPUT_DIR, "a3_layout_preview.png"), "PNG")
-    print("A3 layout template preview generated!")
+    # Save the uncropped full template for use as a base in other scripts
+    img.save(os.path.join(OUTPUT_DIR, "a3_layout_preview_full.png"), "PNG")
+    
+    # Save the cropped version for preview
+    cropped_img = img.crop((paper_x1, paper_y1, paper_x2, paper_y2))
+    cropped_img.save(os.path.join(OUTPUT_DIR, "a3_layout_preview.png"), "PNG")
+    print("A3 layout template preview generated (cropped)!")
 
 # -------------------------------------------------------------
 # Run All Generators

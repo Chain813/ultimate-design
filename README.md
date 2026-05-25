@@ -207,17 +207,15 @@ ultimateDESIGN/
 │   │   ├── guideline_prompt.py         #   导则生成 + RAG 检索
 │   │   ├── rag_engine.py              #   RAG 向量检索引擎
 │   │   ├── nlp_engine.py              #   NLP 文本分析
-│   │   ├── site_diagnostic_engine.py  #   场地诊断引擎
-│   │   └── social_media_crawler.py    #   社交媒体舆情采集
+│   │   └── site_diagnostic_engine.py  #   场地诊断引擎
 │   ├── ui/                             # Streamlit UI 组件
-│   │   ├── app_shell.py               #   全局外壳 / 导航 / 布局
+│   │   ├── app_shell.py               #   全局外壳 /导航 / 布局
 │   │   ├── design_system.py           #   原子设计系统
 │   │   ├── chart_theme.py             #   Plotly 图表配色
 │   │   ├── drawing_prompt_ui.py       #   AIGC 制图交互面板
 │   │   ├── module_summary.py          #   阶段答辩小结生成器
 │   │   └── output_flow_panel.py       #   成果导出面板
 │   ├── utils/                          # 通用工具
-│   │   ├── daemon_manager.py          #   算力守护进程管理
 │   │   ├── geo_transform.py           #   坐标系转换 (GCJ-02/BD-09/WGS-84)
 │   │   ├── service_check.py           #   引擎连接检测
 │   │   └── document_generator.py      #   文档导出
@@ -233,6 +231,7 @@ ultimateDESIGN/
 │   ├── run_drawing_export.py          #   高精度图纸批量导出
 │   ├── fetch_supplementary_data.py    #   补充数据获取
 │   ├── fetch_real_estate_data.py      #   房产数据获取
+│   ├── fetch_social_sentiment.py      #   社交媒体舆情采集
 │   ├── convert_gcj02_to_wgs84.py     #   坐标系批量转换
 │   └── generate_video_data.py        #   视频配置数据生成
 ├── tools/                              # DevOps 工具链

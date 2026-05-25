@@ -62,3 +62,8 @@ tools/video_generator/composer/node_modules/
 scratch/
 output/
 
+# 坐标系备份与系统跟踪文件夹
+*.gcj02_backup
+.superpowers/
+
+

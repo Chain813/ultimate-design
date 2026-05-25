@@ -11,9 +11,14 @@
 import json
 import sys
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
+
+# Windows 终端 UTF-8 编码修复
+if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 
 # 确保项目根目录在 sys.path 中
 ROOT = Path(__file__).resolve().parent.parent
@@ -25,8 +30,8 @@ CACHE_FILE = DATA_DIR / "precomputed_metrics.json"
 
 def convert_xlsx_to_parquet():
     """将 Changchun_Precise_Points.xlsx 转为 Parquet 格式。"""
-    xlsx_path = DATA_DIR / "Changchun_Precise_Points.xlsx"
-    parquet_path = DATA_DIR / "Changchun_Precise_Points.parquet"
+    xlsx_path = DATA_DIR / "csv" / "Changchun_Precise_Points.xlsx"
+    parquet_path = DATA_DIR / "csv" / "Changchun_Precise_Points.parquet"
 
     if not xlsx_path.exists():
         print(f"[跳过] {xlsx_path.name} 不存在")
@@ -39,7 +44,7 @@ def convert_xlsx_to_parquet():
 
 def precompute_boundary_area():
     """预计算研究边界面积并缓存。"""
-    geojson_path = DATA_DIR / "shp" / "Boundary_Scope.geojson"
+    geojson_path = DATA_DIR / "gis" / "Boundary_Scope.geojson"
     if not geojson_path.exists():
         print(f"[跳过] {geojson_path.name} 不存在")
         return {}
@@ -62,13 +67,14 @@ def precompute_boundary_area():
 def precompute_data_counts():
     """预计算 POI/GVI/NLP 行数。"""
     counts = {}
+    csv_dir = DATA_DIR / "csv"
     for key, filename in [
         ("poi_real_count", "Changchun_POI_Real.csv"),
-        ("poi_baidu_count", "Changchun_POI_Baidu_New.csv"),
+        ("poi_baidu_count", "Changchun_POI_Baidu_Full.csv"),
         ("gvi_count", "GVI_Results_Analysis.csv"),
         ("nlp_count", "CV_NLP_RawData.csv"),
     ]:
-        path = DATA_DIR / filename
+        path = csv_dir / filename
         if path.exists():
             df = pd.read_csv(str(path), encoding="utf-8-sig")
             counts[key] = len(df)
@@ -76,6 +82,7 @@ def precompute_data_counts():
         else:
             print(f"[跳过] {filename} 不存在")
     return counts
+
 
 
 def main():
