@@ -66,4 +66,16 @@ output/
 *.gcj02_backup
 .superpowers/
 
+# IDE, 工具与索引目录
+.codegraph/
 
+# 本地数据格式转换与预计算静态指标缓存
+*.parquet
+data/precomputed_metrics.json
+
+# 本地 Claude Code 启动脚本
+start_cc.bat
+
+# 本地生成的超大底图与图册输出
+static/assets/generated_base/satellite_cropped.png
+static/atlas/
