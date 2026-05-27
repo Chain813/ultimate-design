@@ -19,7 +19,7 @@
 
 ## 🌟 项目概况
 
-UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 **Streamlit 全栈决策支持平台**。项目以长春伪满皇宫周边 170.2 公顷街区为实证对象，将城市设计拆解为 17 个标准化阶段（数据准备 → 现状诊断 → 概念策略 → 设计深化 → 视频汇报 → 智能体技能手册），打通「GIS 数据采集 → LLM 循证推演 → AIGC 标准制图 → 视频答辩生成」的完整闭环。
+UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 **Streamlit 全栈决策支持平台**。项目以长春伪满皇宫周边 170.2 公顷街区为实证对象，将城市设计拆解为 17 个标准化阶段（数据准备 → 现状诊断 → 概念策略 → 总体与专项设计 → 成果表达与视频生成 → AIGC推演与智能体技能手册），打通「GIS 数据采集 → LLM 循证推演 → AIGC 标准制图 → 视频答辩生成」的完整闭环。
 
 ---
 
@@ -28,7 +28,7 @@ UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 *
 | 能力 | 说明 |
 |---|---|
 | **17 阶段循证工作流** | 从数据准备到视频汇报及技能集成，每个阶段独立封装数据面板、AI 推演与答辩图表 |
-| **26 张专业图纸模板** | 基于 SD + ControlNet，自动注入空间资产生成符合规划规范的图纸 |
+| **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范的 A3 图册 |
 | **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
 | **三主体博弈推演** | LLM 驱动居民 / 开发商 / 规划师角色对抗，输出共识度雷达与策略矩阵 |
 | **双重质量闭环** | Gemma 视觉 + DeepSeek 内容双评估，C/D 级图纸自动修正重生成 |
@@ -180,6 +180,13 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 | 13 | 成果表达 | Python 空间底图渲染、Web LLM 重绘提示词、PIL 自动红头图框封装 |
 | 14 | 视频生成 | 动态数据注入、录屏导演分镜脚本生成 |
 
+### 🟣 深化与集成：AIGC 与智能体技能（Stage 15-16）
+
+| 阶段 | 页面 | 核心能力 |
+|---|---|---|
+| 15 | AIGC设计推演 | 3D意向生成、控制网精细渲染、Before/After 对比 |
+| 16 | 制图与设计智能体Skill手册 | 规划绘图技能元指令定义、Skill 动态调试与手册导出 |
+
 ---
 
 ## 🏗️ 项目结构
@@ -187,7 +194,7 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 ```text
 ultimateDESIGN/
 ├── app.py                              # 平台入口 / 首页 / 全局地图基底
-├── pages/                              # 15 个阶段页面 (00 ~ 14)
+├── pages/                              # 17 个阶段页面 (00 ~ 16)
 ├── src/                                # 核心领域代码
 │   ├── config/                         # 配置加载 / 路径注册 / 运行时常量
 │   │   ├── loader.py                   #   YAML 配置解析
@@ -200,6 +207,9 @@ ultimateDESIGN/
 │   │   ├── drawing_pipeline.py         #   DrawingPipeline 端到端编排器
 │   │   ├── drawing_prompt_engine.py    #   41 图纸提示词构建器
 │   │   ├── drawing_prompt_templates.py #   图纸模板元数据库
+│   │   ├── frame_generator.py          #   A3 图框图纸组装引擎
+│   │   ├── urban_image_segmentation.py #   街景图像分割引擎
+│   │   ├── engine_registry.py          #   AI/AIGC 引擎注册表
 │   │   ├── quality_assessor.py         #   双重质量评估 (Gemma + DeepSeek)
 │   │   ├── version_store.py            #   版本持久化 (PNG + JSON)
 │   │   ├── batch_exporter.py           #   图册级批量导出
@@ -220,7 +230,7 @@ ultimateDESIGN/
 │   │   ├── service_check.py           #   引擎连接检测
 │   │   └── document_generator.py      #   文档导出
 │   └── workflow/                       # 工作流引擎
-│       ├── city_design_workflow.py    #   14 阶段状态机
+│       ├── city_design_workflow.py    #   17 阶段状态机
 │       ├── stage_data_bus.py          #   跨阶段数据总线
 │       ├── stage_keys.py             #   总线键名常量
 │       └── template_assets.py        #   固定制图资产管理
@@ -235,6 +245,7 @@ ultimateDESIGN/
 │   ├── convert_gcj02_to_wgs84.py     #   坐标系批量转换
 │   └── generate_video_data.py        #   视频配置数据生成
 ├── tools/                              # DevOps 工具链
+│   ├── drawings/                      #   A3 规划图册独立绘制模块 (dr_004.py ~ dr_slow_traffic.py)
 │   ├── check_env.py                   #   环境与页面完整性校验
 │   ├── data_quality_check.py          #   数据质量评级 (A/B/C/D)
 │   ├── secret_scan.py                 #   敏感信息扫描

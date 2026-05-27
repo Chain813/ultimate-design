@@ -6,7 +6,7 @@
 
 **Digital Twin · Temporal Resonance — AI-Powered Urban Micro-Renewal Planning & Design Platform**
 
-*Changchun Puppet Emperor's Palace District · 150 ha · 15 Modules · 41 Professional Drawings · End-to-End Evidence-Based Workflow*
+*Changchun Puppet Emperor's Palace District · 170.2 ha · 17 Modules · 26 Professional Drawings · End-to-End Evidence-Based Workflow*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
@@ -19,7 +19,7 @@
 
 ## 🌟 Overview
 
-UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 150-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 15 standardized stages — from data preparation through site diagnostics, conceptual strategy, design detailing, to video presentation — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → AIGC professional drawing generation → defense video production**.
+UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 170.2-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 17 standardized stages — from data preparation through site diagnostics, conceptual strategy, overall/specialized systems, design detailing, to presentation video and AIGC inference — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → Python/PIL A3 drawing generation → AIGC design inference → defense video production**.
 
 ---
 
@@ -27,8 +27,8 @@ UltimateDESIGN is a **full-stack Streamlit decision support platform** built for
 
 | Capability | Description |
 |---|---|
-| **15-Stage Workflow** | Each stage encapsulates independent data panels, AI reasoning, and defense charts |
-| **41 Drawing Templates** | SD + ControlNet auto-injection of spatial assets for planning-standard outputs |
+| **17-Stage Workflow** | Each stage encapsulates independent data panels, AI reasoning, and defense charts |
+| **26 Drawing Templates** | High-precision vector maps generated via Python and automatically assembled with standard A3 title blocks via PIL |
 | **GIS → AIGC Alignment** | Novel Vector→Raster→ControlNet pipeline eliminates spatial hallucination |
 | **Tri-Stakeholder Simulation** | LLM-driven Resident / Developer / Planner role-play with consensus radar output |
 | **Dual Quality Loop** | Gemma visual + DeepSeek content assessment; auto-correction for C/D-rated outputs |
@@ -130,6 +130,13 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 13 | Output & Presentation | Python map rendering, Web LLM redraw prompts, Auto PIL title block |
 | 14 | Video Generation | Dynamic data injection, storyboard script generation for screen recording |
 
+### 🟣 AIGC & Agent Skills (Stage 15–16)
+
+| Stage | Page | Core Function |
+|---|---|---|
+| 15 | AIGC Design Inference | 3D visual generation, ControlNet rendering, before/after contrast |
+| 16 | Drawing Agent Skills | Planning drawing skill meta-instructions, interactive debugging & manual export |
+
 ---
 
 ## 🏗️ Project Structure
@@ -137,21 +144,25 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 ```text
 ultimateDESIGN/
 ├── app.py                              # Entry point / Home / Global map base
-├── pages/                              # 15 stage pages (00–14)
+├── pages/                              # 17 stage pages (00–16)
 ├── src/
 │   ├── config/                         # YAML config / paths / runtime flags
 │   ├── engines/                        # AI & computation (NO UI code)
 │   │   ├── llm_engine.py              #   DeepSeek / Ollama unified API
 │   │   ├── stable_diffusion_engine.py #   SDPipeline (txt2img / ControlNet)
 │   │   ├── drawing_pipeline.py        #   End-to-end drawing orchestrator
+│   │   ├── frame_generator.py         #   PIL standard frame assembly
+│   │   ├── urban_image_segmentation.py#   Street view segmentation engine
+│   │   ├── engine_registry.py         #   AI engine registry
 │   │   ├── quality_assessor.py        #   Dual quality assessment
 │   │   ├── spatial_engine.py          #   GIS parsing / MPI / skyline
-│   │   └── ...                        #   (18 engine modules total)
+│   │   └── ...                        #   (20 engine modules total)
 │   ├── ui/                             # Streamlit components & theming
 │   ├── utils/                          # I/O, geo transform, service checks
-│   └── workflow/                       # 14-stage state machine & data bus
+│   └── workflow/                       # 17-stage state machine & data bus
 ├── scripts/                            # Automation (data fetch / GIS render)
 ├── tools/                              # DevOps (env check / secret scan / QA)
+│   ├── drawings/                      #   A3 layout rendering modules (dr_004.py ~ dr_slow_traffic.py)
 ├── tests/                              # 24 modules / 167 test cases
 ├── data/                               # Spatial & tabular assets (decoupled)
 └── .github/workflows/ci.yml           # CI pipeline
