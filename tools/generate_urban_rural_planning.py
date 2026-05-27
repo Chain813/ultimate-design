@@ -220,11 +220,8 @@ def generate_urban_rural_planning_mindmap():
                 draw.text((right_leaf_x + 18, ty), bullet, fill=(71, 85, 105), font=node_desc_font)
                 ty += 18
 
-    # Bottom Legend / Footer Panel
-    draw.rectangle([0, canvas_h - 60, canvas_w, canvas_h], fill=(248, 250, 252))
-    draw.line([(0, canvas_h - 60), (canvas_w, canvas_h - 60)], fill=(226, 232, 240), width=1)
-    footer_text = "提示：本工作流涵盖了总体规划、控制性与修建性详细规划、城市设计及其实施阶段的核心内容体系。"
-    draw.text((40, canvas_h - 40), footer_text, fill=(71, 85, 105), font=subtitle_font)
+    # Bottom Legend / Footer Panel - removed, kept as clean white space
+    pass
 
     # Save
     img.save(os.path.join(OUTPUT_DIR, "urban_rural_planning_mindmap.png"), "PNG")

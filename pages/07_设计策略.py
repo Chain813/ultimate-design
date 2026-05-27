@@ -229,6 +229,31 @@ if selected_sub == "⚖️ 多主体协同推演":
                     "color": "#6366f1",
                 },
             }
+            # 动态满意度计算逻辑
+            def calculate_dynamic_satisfaction(memory_text: str):
+                scores = {
+                    "👥 居民代表（老王）": 50.0,
+                    "💰 文旅运营商（赵总）": 50.0,
+                    "📐 规划师（李工）": 50.0
+                }
+                community_keywords = ["绿", "公园", "配套", "社区", "医院", "菜市", "养老", "口袋", "老年", "居民", "人行道", "活动", "活动中心", "休憩"]
+                developer_keywords = ["容积率", "收益", "文旅", "商业", "民宿", "运营", "产业", "投资", "回报", "品牌", "特色餐饮", "盈利", "客流", "商铺"]
+                planner_keywords = ["历史保护", "紫线", "限高", "合规", "风貌", "条例", "保护区", "天际线", "视廊", "数据", "红线", "导则", "退让", "绿地率"]
+                
+                for kw in community_keywords:
+                    if kw in memory_text:
+                        scores["👥 居民代表（老王）"] += 7.0
+                for kw in developer_keywords:
+                    if kw in memory_text:
+                        scores["💰 文旅运营商（赵总）"] += 7.0
+                for kw in planner_keywords:
+                    if kw in memory_text:
+                        scores["📐 规划师（李工）"] += 7.0
+                        
+                for k in scores:
+                    scores[k] = min(100.0, max(0.0, scores[k]))
+                return scores
+
             voting_scores = {}
             memory = ""
             for name, cfg in roles.items():
@@ -246,10 +271,10 @@ if selected_sub == "⚖️ 多主体协同推演":
                         if "【正式回复】" in resp else resp
                     )
                     memory += f"[{name}]: {clean}\n---\n"
-                    m = re.search(r"<SCORE:\s*(\d+)\s*>", resp)
-                    voting_scores[name] = max(0, min(100, int(m.group(1)) if m else 50))
                 time.sleep(0.3)
 
+            # 根据协商的全文语义进行实际效用满意度换算
+            voting_scores = calculate_dynamic_satisfaction(memory)
             st.session_state["p4_voting_scores"] = voting_scores
             save_stage_output("07", SK.VOTING_SCORES, voting_scores)
 
@@ -291,6 +316,13 @@ elif selected_sub == "📊 共识雷达":
         ))
         apply_plotly_polar_theme(fig, title="三方协同共识度", height=380, radial_range=[0, 100])
         st.plotly_chart(fig, **stretch_width(st.plotly_chart))
+        
+        # 满意度预警机制
+        under_60_roles = [k for k, v in voting.items() if v < 60]
+        if under_60_roles:
+            st.warning(f"⚠️ 当前共识满意度较低：{', '.join(under_60_roles)} 的满意度低于 60%，存在主体利益受损，建议在上方重新发起策划协商以盘活良性循环。")
+        else:
+            st.success("✅ 三方达成高度共识！所有主体的利益满意度均达到 60% 以上，协同性高。")
     else:
         st.warning("暂无共识数据，请先完成多主体协同推演。")
 

@@ -23,7 +23,7 @@ def clip_and_process():
     boundary_path = ROOT / "data/gis/Boundary_Scope.geojson"
     gdf_boundary = gpd.read_file(boundary_path)
     bbox = gdf_boundary.total_bounds
-    bbox_buffered = (bbox[0]-0.005, bbox[1]-0.005, bbox[2]+0.005, bbox[3]+0.005)
+    bbox_buffered = (bbox[0]-0.02, bbox[1]-0.015, bbox[2]+0.02, bbox[3]+0.015)
 
     # 2. 定义高精度映射字典
     LANDUSE_MAPPING = {
