@@ -4,6 +4,22 @@
 
 ---
 
+## [v4.3.0] - 2026-05-27
+### 🧹 项目结构清理与 Git 隔离优化
+* **清理本地冗余备份与临时调试文件**：
+  * 彻底删除了本地残留的旧格式备份文件（如 `data/csv/GVI_Results_Analysis.csv.old_format_backup`、`static/research_scope_2d.png.bak`）及调试过程中生成的临时测试图（如 `static/temp_*.png`），释放了磁盘空间，净化了开发工作区。
+* **完善 Git 隔离机制 (`.gitignore`)**：
+  * 在 `.gitignore` 中新增了对于 IDE 代码索引（`.codegraph/`）、本地优化后的 Parquet 数据文件（`*.parquet`）、本地指标缓存（`precomputed_metrics.json`）以及 Claude Code 本地启动脚本（`start_cc.bat`）的忽略规则。
+  * 将高分辨率裁剪卫星底图（`satellite_cropped.png`，约 21.4MB）与本地运行生成的 A3 图册输出目录（`static/atlas/`）排除在版本控制之外，避免无关大文件和临时生成物污染 GitHub 仓库。
+* **规范核心源文件与资产的版本控制**：
+  * 将新拆分的 `tools/drawings/` 图纸绘制核心脚本文件夹（包含 26 个具体的 A3 绘图独立模块脚本，如 `dr_004.py` 等）正式添加到 Git 追踪中，确保云端部署环境功能完整。
+  * 将图册自动组装所需的模版底图 `static/a3_layout_preview_full.png` 与主页 Banner 展示图 `static/research_scope_2d_cropped.png` 纳入版本控制，修正了静态文件缺失导致的部分异常。
+* **CI 测试与代码质量验证**：
+  * 本地运行 `pytest` 确保 167 个单元测试用例 100% 通过。
+  * 本地运行 `ruff check` 确保代码格式和语法 100% 规范无误。
+  * 成功将所有暂存更改推送至远程仓库 `https://github.com/Chain813/ultimate-design.git`，保证工作树完全干净 (`working tree clean`)。
+
+
 ## [v4.2.0] - 2026-05-26
 ### 🎨 规划图册高精度重构与代码解耦
 * **绘图代码完全解耦与模块化**：
