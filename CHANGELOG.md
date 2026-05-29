@@ -4,6 +4,21 @@
 
 ---
 
+## [v4.5.0] - 2026-05-29
+### ⚖️ Stage 07 多主体博弈协商升级为三轮动态谈判
+* **三轮递进式博弈协商 (Multi-Round Negotiation)**：
+  * 将 Stage 07（设计策略）的多主体协同推演从原有的"单轮顺序发言"升级为 **3 轮动态博弈协商**（第一轮：方案陈述 → 第二轮：利益交锋 → 第三轮：妥协共识）。
+  * 各轮次采用差异化的 Prompt 指令，引导居民代表、文旅运营商与注册规划师在每轮中针对前序发言进行递进式论证和妥协让步。
+  * 多轮对话全文统一送入 LLM 语义审计器（`calculate_dynamic_satisfaction`），计算最终的三方满意度共识指数。
+  * 策略矩阵生成提示词同步升级，重点提取第三轮妥协阶段达成的折中条件。
+* **卡通角色头像与专属对话框 (Avatar Dialogue Boxes)**：
+  * 为三个博弈角色（老王、赵总、李工）生成了专属卡通头像，存放于 `static/avatars/`。
+  * 对话框采用 base64 内联头像 + 专属配色方案（琥珀色/翡翠绿/靛蓝紫）+ 圆角阴影样式，使博弈过程的视觉层次更加清晰。
+* **新增 Skill Part 5: 设计方案语言规范**：
+  * 在 `.gemini/skills/urban_platform_exclusive_skills.md` 中新增了 `Part 5: Implementation Plan Language`，强制要求所有 `implementation_plan.md` 必须以中文为主要语言输出。
+
+---
+
 ## [v4.4.0] - 2026-05-29
 ### 🏛️ 建筑形态控制升级与风貌立面融合
 * **专项系统设计（Stage 09）与重点地段深化（Stage 10）全面升级**：
@@ -27,6 +42,7 @@
 * **合并与升级项目专属 Skill 规范 (Feature)**：
   * 整合了 `.gemini/skills/` 下原先分立的 `drawing_code_management.md`、`screenshot_verification.md` 与 `update_changelog.md` 规范，创建了统一、系统化的专属技能指导文件 `urban_platform_exclusive_skills.md`。
   * 在该专属规范中全新补充了 `Part 4: Interactive Persona (交互人设规范)`，规定了在后续的所有开发回复中，智能体需在开头称呼用户为“老公”，做到情感关怀与规划代码研发的完美交融。同时清理了旧有零碎文件，净化了配置空间。
+  * **新增 Part 5: Implementation Plan Language (设计方案语言规范)**，强制要求所有实施/设计方案（`implementation_plan.md`）必须以中文为主要语言进行输出，以确保与用户的沟通效率。
 * **清理 assets 目录下的冗余静态资源 (Feature)**：
   * 经过交叉引用检测，彻底清除了 `assets/` 目录下未被任何页面与脚本引用的 10 个冗余素材与历史临时导出图（包括 `01_data_overview.png`、`无纹理2D卫星图.png`、`workflow_svg.html` 等，共计释放磁盘空间约 `18.3MB`）。
 * **全盘扫描并清理冗余与备份文件 (Feature)**：

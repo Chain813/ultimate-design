@@ -1,13 +1,15 @@
-"""阶段 07：设计策略 —— 多主体协同良性循环推演 + 共识雷达。
+"""阶段 07：设计策略 —— 多主体多轮博弈协商推演 + 共识雷达。
 
-三方角色（居民代表、开发运营商、规划师）不再产生对立冲突，
-而是围绕"政策引导→产业导入→经济反哺→空间更新"的良性循环展开协同推演。
+三方角色（居民代表、开发运营商、规划师）围绕"政策引导→产业导入→经济反哺→空间更新"
+的良性循环展开 **3 轮动态博弈协商**（陈述→交锋→妥协），最终形成带政策依据的策略矩阵。
 
 所有讨论都必须基于 Stage 05/06 的量化空间数据。
 """
 
+import base64
 import time
 import re
+from pathlib import Path
 import streamlit as st
 import plotly.graph_objects as go
 from src.ui.design_system import render_page_banner, render_section_intro
@@ -141,10 +143,10 @@ st.markdown("---")
 
 if selected_sub == "⚖️ 多主体协同推演":
     render_section_intro(
-        "政策-经济-空间良性循环推演",
-        "三方角色不再对立冲突，而是围绕如何利用伪满皇宫文化IP、"
-        "盘活区域经济、反哺全域公共空间展开协同策划。",
-        eyebrow="Synergistic Loop",
+        "三轮动态博弈协商推演",
+        "三方角色（居民/运营商/规划师）围绕伪满皇宫文化IP与区域经济盘活，"
+        "展开 3 轮递进式博弈协商：**陈述→交锋→妥协**，最终形成带政策依据的策略矩阵。",
+        eyebrow="Multi-Round Negotiation",
     )
 
     # 加载上游数据
@@ -291,38 +293,92 @@ if selected_sub == "⚖️ 多主体协同推演":
                     scores[k] = min(100.0, max(0.0, scores[k]))
                 return scores
 
+            # ── 头像加载 ──
+            _avatar_dir = Path("static/avatars")
+            _avatar_map = {
+                "🏠 居民代表（老王）": _avatar_dir / "avatar_laowang.png",
+                "💰 文旅运营商（赵总）": _avatar_dir / "avatar_zhaozong.png",
+                "📐 规划师（李工）": _avatar_dir / "avatar_ligong.png",
+            }
+            _color_map = {
+                "🏠 居民代表（老王）": ("#f59e0b", "#fffbeb", "#b45309"),
+                "💰 文旅运营商（赵总）": ("#10b981", "#ecfdf5", "#065f46"),
+                "📐 规划师（李工）": ("#6366f1", "#eef2ff", "#3730a3"),
+            }
+
+            def _load_avatar_b64(path: Path) -> str:
+                if path.exists():
+                    return base64.b64encode(path.read_bytes()).decode()
+                return ""
+
+            def _render_dialogue(name: str, text: str, round_label: str):
+                border_c, bg_c, text_c = _color_map.get(name, ("#94a3b8", "#f8fafc", "#334155"))
+                avatar_b64 = _load_avatar_b64(_avatar_map.get(name, Path("")))
+                avatar_html = (
+                    f'<img src="data:image/png;base64,{avatar_b64}" '
+                    f'style="width:52px;height:52px;border-radius:50%;object-fit:cover;'
+                    f'border:2px solid {border_c};flex-shrink:0;" />'
+                ) if avatar_b64 else f'<div style="width:52px;height:52px;border-radius:50%;background:{border_c};flex-shrink:0;"></div>'
+                st.markdown(f"""
+                <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;">
+                    {avatar_html}
+                    <div style="flex:1;background:{bg_c};border-left:4px solid {border_c};
+                                border-radius:8px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                        <div style="font-weight:700;color:{text_c};font-size:1.05em;margin-bottom:4px;">
+                            {name} <span style="font-size:0.8em;color:#94a3b8;font-weight:400;">· {round_label}</span>
+                        </div>
+                        <div style="color:#1e293b;font-size:0.95em;line-height:1.65;">{text}</div>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # ── 多轮博弈主循环 ──
+            NUM_ROUNDS = 3
+            ROUND_LABELS = ["第一轮：方案陈述", "第二轮：利益交锋", "第三轮：妥协共识"]
+            ROUND_INSTRUCTIONS = [
+                "请基于策划议题提出你的初步方案与核心利益诉求。",
+                "请阅读前一轮各方的方案，指出你认为的核心冲突焦点，并表达你的交锋意见。",
+                "请基于前两轮的讨论，提出具体的折中妥协条件（例如用配建公共设施换取指标让步），给出你的最终支持度。",
+            ]
+
             voting_scores = {}
             memory = ""
-            for name, cfg in roles.items():
-                st.markdown(f"**{name}**")
-                dp = f"针对以下策划议题发表建设性方案：\n{proposal}"
-                if memory:
-                    dp += f"\n\n【其他方的建设性方案】：\n{memory}"
-                stream = call_llm_engine_stream(
-                    prompt=dp, system_prompt=cfg["system"], model=model_tag,
-                )
-                resp = st.write_stream(stream)
-                if isinstance(resp, str):
-                    clean = (
-                        resp.split("【正式回复】")[-1].split("<SCORE:")[0].strip()
-                        if "【正式回复】" in resp else resp
+            for round_idx in range(NUM_ROUNDS):
+                st.subheader(f"🔄 {ROUND_LABELS[round_idx]}")
+                round_memory = ""
+                for name, cfg in roles.items():
+                    dp = f"【当前轮次】{ROUND_LABELS[round_idx]}\n{ROUND_INSTRUCTIONS[round_idx]}\n\n策划议题：\n{proposal}"
+                    if memory:
+                        dp += f"\n\n【前序各轮发言记录】：\n{memory[-3000:]}"
+                    if round_memory:
+                        dp += f"\n\n【本轮已有发言】：\n{round_memory}"
+                    stream = call_llm_engine_stream(
+                        prompt=dp, system_prompt=cfg["system"], model=model_tag,
                     )
-                    memory += f"[{name}]: {clean}\n---\n"
-                time.sleep(0.3)
+                    resp = st.write_stream(stream)
+                    if isinstance(resp, str):
+                        clean = (
+                            resp.split("【正式回复】")[-1].split("<SCORE:")[0].strip()
+                            if "【正式回复】" in resp else resp
+                        )
+                        _render_dialogue(name, clean, ROUND_LABELS[round_idx])
+                        round_memory += f"[{name}]: {clean}\n---\n"
+                    time.sleep(0.3)
+                memory += f"\n=== {ROUND_LABELS[round_idx]} ===\n{round_memory}"
 
-            # 根据协商的全文语义进行实际效用满意度换算
+            # 根据多轮协商全文语义进行实际效用满意度换算
             voting_scores = calculate_dynamic_satisfaction(memory)
             st.session_state["p4_voting_scores"] = voting_scores
             save_stage_output("07", SK.VOTING_SCORES, voting_scores)
 
             # 生成策略矩阵
             sp = (
-                f"基于三方协同推演记录，生成Markdown表格【策略矩阵】：\n{memory[:3000]}\n\n"
+                f"基于三方 **3轮博弈协商** 推演记录，生成Markdown表格【策略矩阵】：\n{memory[:4000]}\n\n"
                 f"格式：| 策略方向 | 具体举措 | 政策依据 | 空间落位 | 资金逻辑 | 协同度 |\n\n"
                 f"要求：\n"
                 f"1. 每条策略必须有明确的空间落位（具体到哪个地块或哪条路段）\n"
                 f"2. 必须体现'政策→产业→经济→空间'的良性循环逻辑\n"
-                f"3. 各方立场相辅相成，不得有冲突条目"
+                f"3. 重点体现第三轮妥协阶段达成的折中条件"
             )
             stream = call_llm_engine_stream(
                 prompt=sp,
@@ -370,12 +426,12 @@ elif selected_sub == "🖼️ 图纸提示词生成":
 st.markdown("---")
 render_stage_summary(
     stage_code="07",
-    title="三方协同策略矩阵与良性循环",
+    title="三轮博弈协商策略矩阵与良性循环",
     findings=[
-        {"point": "三方角色（居民/运营商/规划师）围绕文化IP经济盘活展开协同策划", "evidence": "LLM 三方协同推演"},
-        {"point": "策略矩阵包含策略-举措-政策依据-空间落位-资金逻辑对应关系", "evidence": "协同推演自动汇总"},
-        {"point": "构建'政策精准引导→文旅产业导入→经济反哺公共空间→人居价值双提升'闭环", "evidence": "全域空间数据驱动"},
+        {"point": "三方角色（居民/运营商/规划师）经过 3 轮递进式博弈协商达成共识", "evidence": "LLM 多轮动态博弈推演"},
+        {"point": "策略矩阵包含策略-举措-政策依据-空间落位-资金逻辑对应关系", "evidence": "多轮协商自动汇总"},
+        {"point": "第三轮妥协阶段产出具体的折中条件与利益交换方案", "evidence": "全域空间数据驱动"},
     ],
-    methodology="基于 DeepSeek API 的三方协同推演 + RAG 政策合规预审 + 全域空间数据注入",
-    implication="为总体城市设计（Stage 08）提供了策略框架、空间落位指引和政策-经济闭环逻辑",
+    methodology="基于 DeepSeek API 的三轮动态博弈协商 + RAG 政策合规预审 + 全域空间数据注入",
+    implication="为总体城市设计（Stage 08）提供了经过多轮博弈验证的策略框架与空间落位指引",
 )
