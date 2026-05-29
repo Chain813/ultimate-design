@@ -26,6 +26,7 @@ data/gis/raw/rail_network.json
 data/gis/Building_Footprints.geojson
 
 # 日志与临时元数据
+logs/
 *.log
 *.err
 *.err.log
@@ -79,3 +80,7 @@ start_cc.bat
 # 本地生成的超大底图与图册输出
 static/assets/generated_base/satellite_cropped.png
 static/atlas/
+
+# 录屏与汇报视频指南
+obs_recording_guide.md
+

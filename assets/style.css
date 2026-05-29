@@ -8,6 +8,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* --- Global Base --- */
+html {
+    scroll-behavior: smooth !important;
+}
+
 html, body, .stApp {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
 }
@@ -73,7 +77,6 @@ h2 {
     justify-content: space-between;
     align-items: stretch; /* Stretch to fill height */
     background: #ffffff !important;
-    backdrop-filter: blur(12px);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 28px;
     padding: 45px 25px 45px 45px;
@@ -82,9 +85,14 @@ h2 {
     position: relative;
     overflow: hidden;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02) !important;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
 }
 
 .page-banner-content {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -97,6 +105,7 @@ h2 {
 .page-banner-map-preview {
     aspect-ratio: 1705 / 1369;
     height: 560px;
+    flex-shrink: 0;
     border-radius: 28px;
     overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
@@ -104,9 +113,11 @@ h2 {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06) !important;
     transform: perspective(1800px) rotateY(-25deg) rotateX(5deg);
     transform-origin: right center;
-    transition: all 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+    transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), border-color 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
     margin-left: 40px;
     margin-right: -5px;
+    will-change: transform;
+    backface-visibility: hidden;
 }
 
 .page-banner-map-preview:hover {
@@ -141,7 +152,6 @@ h2 {
 /* --- Field Survey HUD (Premium Command Center - Pipeline Focus) --- */
 .hud-container {
     background: #ffffff !important;
-    backdrop-filter: blur(12px);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 20px;
     padding: 0;
@@ -151,6 +161,9 @@ h2 {
     overflow: hidden;
     position: relative;
     animation: hudEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
 }
 
 @keyframes hudEnter {
@@ -343,7 +356,6 @@ a[data-testid="stPageLink-NavLink"] span {
 /* --- Glass Hero Section --- */
 .glass-hero {
     background: #ffffff !important;
-    backdrop-filter: blur(16px);
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     border-radius: 20px;
     padding: 50px 40px;
@@ -352,6 +364,9 @@ a[data-testid="stPageLink-NavLink"] span {
     position: relative;
     overflow: hidden;
     animation: fadeIn 0.8s ease-out;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
 }
 
 .glass-hero::before {
@@ -417,6 +432,31 @@ a[data-testid="stPageLink-NavLink"] span {
     }
 }
 
+.module-horizontal-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: stretch;
+    margin-bottom: 24px;
+}
+
+.module-column {
+    display: flex;
+    flex-direction: column;
+}
+
+@media (max-width: 1200px) {
+    .module-horizontal-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .module-horizontal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .module-container {
     height: 100%;
 }
@@ -433,12 +473,15 @@ a[data-testid="stPageLink-NavLink"] span {
     height: 100%;
     min-height: 90px;
     box-sizing: border-box;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
     text-decoration: none !important;
     cursor: pointer;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02) !important;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translate3d(0, 0, 0);
 }
 
 .module-card:hover {

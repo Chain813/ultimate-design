@@ -111,6 +111,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
 
     # 1. 准备序列化数据
     b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
+    shadow_data_json = f"'{get_static_url('building_shadows.geojson')}'" if (show_buildings and show_lighting) else "null"
     bound_data_json = json.dumps(load_map_data("data/gis/Boundary_Scope.geojson")) if show_boundary else "null"
     plots_data_json = json.dumps(load_map_data("data/gis/Key_Plots_District.json")) if show_plots else "null"
     poi_data_json = _load_poi_json() if show_poi else "null"
@@ -123,6 +124,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
     try:
         html_template = _load_map_html_template()
         html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
+        html_template = html_template.replace("/*__SHADOW_DATA__*/null/*__END_SHADOW__*/", shadow_data_json)
         html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)
         html_template = html_template.replace("/*__PLOTS_DATA__*/null/*__END_PLOTS__*/", plots_data_json)
         html_template = html_template.replace("/*__POI_DATA__*/null/*__END_POI__*/", poi_data_json)

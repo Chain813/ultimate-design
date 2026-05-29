@@ -1,6 +1,10 @@
 import os
 import sys
 from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
+
+# Adjust path to import config if run standalone
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src.config.paths import STATIC_DIR
 
 # Output Directory

@@ -36,6 +36,7 @@
         const landuse_data = /*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/;
         const rail_data = /*__RAIL_DATA__*/null/*__END_RAIL__*/;
         const road_data = /*__ROAD_DATA__*/null/*__END_ROAD__*/;
+        const shadow_data = /*__SHADOW_DATA__*/null/*__END_SHADOW__*/;
         // 🚀 接收 3D/2D 模式配置
         const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
 
@@ -84,7 +85,7 @@
 
         const BUILDING_LAYER_CONFIG = {
             id: 'building-layer',
-            opacity: IS_XRAY ? 0.2 : 0.85,
+            opacity: IS_XRAY ? 0.2 : 0.95,
             stroked: true,
             filled: !IS_XRAY,
             extruded: is_3d,
@@ -129,6 +130,7 @@
             },
             lineWidthMinPixels: IS_XRAY ? 1.5 : 1,
             pickable: true,
+            shadowEnabled: true,
             transitions: {
                 getElevation: { duration: 2500, easing: t => t*t*(3 - 2*t) }, // Smooth 2.5s morphing
                 getFillColor: { duration: 1500 },
@@ -181,7 +183,8 @@
                 getFillColor: [255, 59, 48, 20],
                 getLineColor: [255, 59, 48, 200],
                 getLineWidth: 3,
-                pickable: false
+                pickable: false,
+                shadowEnabled: false
             }));
         }
 
@@ -223,6 +226,7 @@
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
                 pickable: true,
+                shadowEnabled: false,
                 // 🛠️ 增强：自动路径纠错 (Streamlit Cloud 404 Fallback)
                 fetch: (url) => fetch(url).then(res => {
                     if (res.status === 404 && url.includes('/app/')) {
@@ -266,6 +270,7 @@
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
                 pickable: true,
+                shadowEnabled: false,
                 fetch: (url) => fetch(url).then(res => {
                     if (res.status === 404 && url.includes('/app/')) {
                         return fetch(url.replace('/app/', '/'));
@@ -306,6 +311,40 @@
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
                 pickable: true,
+                shadowEnabled: false,
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        return fetch(url.replace('/app/', '/'));
+                    }
+                    return res;
+                }).then(res => res.json())
+            }));
+        }
+
+        // 🌑 矢量阴影图层 (预烘焙，高视角拉远依然极其清晰)
+        if (shadow_data) {
+            let sData = shadow_data;
+            if (typeof shadow_data === 'string') {
+                try {
+                    const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                    if (shadow_data.startsWith('/') && !shadow_data.startsWith('//')) {
+                        sData = parentOrigin + shadow_data;
+                    }
+                } catch(e) {}
+            }
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'building-shadows-layer',
+                data: sData,
+                stroked: false,
+                filled: true,
+                extruded: false,
+                getFillColor: [15, 17, 26, 110], // 优雅的蓝灰色矢量阴影
+                pickable: false,
+                shadowEnabled: false,
+                parameters: {
+                    depthTest: true,
+                    depthWrite: false
+                },
                 fetch: (url) => fetch(url).then(res => {
                     if (res.status === 404 && url.includes('/app/')) {
                         return fetch(url.replace('/app/', '/'));
@@ -330,7 +369,8 @@
                 parameters: {
                     depthTest: true
                 },
-                pickable: true
+                pickable: true,
+                shadowEnabled: false
             }));
         }
 
@@ -344,7 +384,8 @@
                 getRadius: 6,
                 radiusMinPixels: 4,
                 radiusMaxPixels: 20,
-                pickable: true
+                pickable: true,
+                shadowEnabled: false
             }));
         }
 
@@ -359,6 +400,7 @@
                 radiusMinPixels: 6,
                 radiusMaxPixels: 50,
                 pickable: true,
+                shadowEnabled: false,
                 transitions: {
                     getRadius: 800,
                     getFillColor: 800
@@ -459,25 +501,111 @@
             timestamp: Date.UTC(2026, 3, 20, (sun_time - 8 + 24) % 24, 0, 0),  // 转换为 UTC 以匹配本地时间投射效果
             color: [255, 245, 230],
             intensity: 2.2,
-            _shadow: is_3d  // 仅 3D 模式下启用实时阴影
+            _shadow: false  // 关闭动态阴影以完全避免锯齿，改用矢量预烘焙阴影
         });
-        const lightingEffect = new deck.LightingEffect({ ambientLight, directionalLight });
+                const lightingEffect = new deck.LightingEffect({ ambientLight, directionalLight });
         
+        // 🎥 自动旋转视角脚本 (用于视频录制)
+        let isRotating = false;
+        let rotationSpeed = 0.05; // 每次渲染帧增加 of 度数（可自调，0.05 度/帧非常平滑）
+        let rotateRequestId = null;
+
+        let currentViewState = {
+            latitude: 43.90095,
+            longitude: 125.34064,
+            zoom: 14.4,
+            pitch: is_3d ? 73 : 0,
+            bearing: is_3d ? 45 : 0
+        };
+
+        function rotateMap() {
+            if (isRotating) {
+                currentViewState = {
+                    ...currentViewState,
+                    bearing: (currentViewState.bearing + rotationSpeed) % 360,
+                    // 强制锁定研究范围的几何中心点
+                    latitude: 43.90095,
+                    longitude: 125.34064
+                };
+                deckInstance.setProps({viewState: currentViewState});
+                rotateRequestId = requestAnimationFrame(rotateMap);
+            }
+        }
+
+        function toggleRotation() {
+            const btn = document.getElementById('btn-rotate');
+            isRotating = !isRotating;
+            if (isRotating) {
+                btn.innerHTML = '⏸️ 停止旋转 (Pause)';
+                btn.style.background = '#0071e3';
+                btn.style.color = '#ffffff';
+                btn.style.borderColor = '#0071e3';
+                
+                // 1.5s 平滑飞入指定起始视角，再开始自动旋转
+                currentViewState = {
+                    ...currentViewState,
+                    latitude: 43.90095,
+                    longitude: 125.34064,
+                    zoom: 14.4,
+                    pitch: is_3d ? 73 : 0,
+                    bearing: is_3d ? 45 : 0,
+                    transitionDuration: 1500,
+                    transitionInterpolator: new deck.FlyToInterpolator()
+                };
+                deckInstance.setProps({viewState: currentViewState});
+                
+                setTimeout(() => {
+                    if (isRotating) {
+                        currentViewState = {
+                            ...currentViewState,
+                            transitionDuration: 0,
+                            transitionInterpolator: null
+                        };
+                        rotateMap();
+                    }
+                }, 1500);
+            } else {
+                if (rotateRequestId) {
+                    cancelAnimationFrame(rotateRequestId);
+                }
+                btn.innerHTML = '🎥 自动旋转 (Auto-Rotate)';
+                btn.style.background = 'rgba(255, 255, 255, 0.85)';
+                btn.style.color = '#1d1d1f';
+                btn.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+            }
+        }
+
         const deckInstance = new deck.DeckGL({
             container: 'map-container',
             mapStyle: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-            effects: (is_3d && show_lighting) ? [lightingEffect] : [],
-            initialViewState: {
-                latitude: 43.903,
-                longitude: 125.337,
-                zoom: 15,
-                pitch: is_3d ? 45 : 0,
-                bearing: is_3d ? -15 : 0
+            glOptions: {
+                antialias: true,
+                preserveDrawingBuffer: true,
+                powerPreference: 'high-performance'
             },
+            useDevicePixels: true,
+            effects: (is_3d && show_lighting) ? [lightingEffect] : [],
+            viewState: currentViewState,
             controller: {
                 dragRotate: is_3d,
                 dragPan: true,
-                scrollZoom: true
+                scrollZoom: {
+                    speed: 0.003, // 默认 0.01。降低单次滚动的缩放步长，大幅提升缩放精度和细腻度
+                    smooth: true   // 开启惯性平滑缩放
+                }
+            },
+            onViewStateChange: ({viewState, interactionState}) => {
+                currentViewState = viewState;
+                // 仅在鼠标滚轮缩放时注入平滑过渡动画，避免影响手势拖拽平移的实时反馈
+                if (interactionState && interactionState.isZooming && !interactionState.isDragging) {
+                    currentViewState.transitionDuration = 200; // 200ms 的平滑惯性过渡
+                    currentViewState.transitionInterpolator = new deck.LinearInterpolator({compare: ['zoom']});
+                } else {
+                    currentViewState.transitionDuration = 0;
+                    currentViewState.transitionInterpolator = null;
+                }
+                deckInstance.setProps({viewState: currentViewState});
+                return currentViewState;
             },
             layers: renderedLayers,
             getTooltip: ({object, layer}) => {
@@ -557,6 +685,23 @@
              console.log(`[System] Building layer will be loaded asynchronously from: ${b_data}`);
         }
     </script>
+
+    <!-- 🎬 视频录制视角旋转控制 (放置于左上角，避免与右侧图例面板冲突) -->
+    <div style="position: absolute; top: 15px; left: 15px; z-index: 100;">
+        <button id="btn-rotate" onclick="toggleRotation()" style="height: 36px; border-radius: 18px; border: 1px solid rgba(0, 0, 0, 0.08); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); color: #1d1d1f; font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 18px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+            🎥 自动旋转 (Auto-Rotate)
+        </button>
+        <style>
+            #btn-rotate:hover {
+                background: #ffffff !important;
+                transform: translateY(-1px);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+            }
+            #btn-rotate:active {
+                transform: translateY(0) !important;
+            }
+        </style>
+    </div>
 
     <!-- 🖱️ 鼠标交互引导 HUD -->
     <div style="position: absolute; top: 15px; right: 15px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(0, 0, 0, 0.08); border-radius: 12px; padding: 12px 18px; color: #1d1d1f; font-family: 'Inter', sans-serif; font-size: 13px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); z-index: 100;">

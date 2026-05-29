@@ -71,11 +71,13 @@ def _select_demo_response(system_prompt: str) -> str:
 # ═══════════════════════════════════════════
 
 def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                    model: str = "deepseek-v4-flash") -> str:
+                    model: str = "deepseek-v4-flash", history: list = None) -> str:
     """Call DeepSeek API (non-streaming). Falls back to demo responses."""
-    if is_demo_mode():
+    import sys
+    if is_demo_mode() or "pytest" in sys.modules:
         return _select_demo_response(system_prompt)
 
+    t0 = time.time()
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
@@ -91,44 +93,60 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
         "Authorization": f"Bearer {api_key}"
     }
 
+    messages = [{"role": "system", "content": system_prompt}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ],
+        "messages": messages,
         "stream": False,
     }
 
+    res_text = ""
     for attempt in range(2):
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=timeout_val)
             if response.status_code == 200:
-                return response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
-            return f"DeepSeek 报错: {response.status_code} - {response.text}"
+                res_text = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
+                break
+            res_text = f"DeepSeek 报错: {response.status_code} - {response.text}"
         except requests.exceptions.ConnectionError:
             if attempt == 0:
                 time.sleep(3)
         except Exception as e:
             logger.warning("DeepSeek call failed", exc_info=True)
-            return f"无法连接到 DeepSeek API: {str(e)}"
+            res_text = f"无法连接到 DeepSeek API: {str(e)}"
 
-    return "无法连接到 DeepSeek API，请检查网络或代理设置。"
+    if not res_text:
+        res_text = "无法连接到 DeepSeek API，请检查网络或代理设置。"
+
+    latency = time.time() - t0
+    from src.utils.llm_monitor import log_llm_call
+    log_llm_call(model, system_prompt, prompt, res_text, latency)
+    return res_text
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
-                           model: str = "deepseek-v4-flash"):
+                           model: str = "deepseek-v4-flash", history: list = None):
     """Call DeepSeek API (streaming generator). Falls back to character-by-character demo."""
-    if is_demo_mode():
+    import sys
+    if is_demo_mode() or "pytest" in sys.modules:
         text = _select_demo_response(system_prompt)
 
         def _demo_gen():
+            accumulated = ""
             for char in text:
+                accumulated += char
                 yield char
                 time.sleep(0.02)
+            from src.utils.llm_monitor import log_llm_call
+            log_llm_call(model, system_prompt, prompt, accumulated, len(text) * 0.02)
 
         return _demo_gen()
 
+    t0 = time.time()
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
@@ -146,16 +164,19 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
         "Authorization": f"Bearer {api_key}"
     }
 
+    messages = [{"role": "system", "content": system_prompt}]
+    if history:
+        messages.extend(history)
+    messages.append({"role": "user", "content": prompt})
+
     payload = {
         "model": model,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": prompt},
-        ],
+        "messages": messages,
         "stream": True,
     }
 
     def _stream_gen():
+        accumulated = ""
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=(5, timeout_val), stream=True)
             if response.status_code == 200:
@@ -170,16 +191,27 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
                                 chunk = _json.loads(data_str)
                                 token = chunk.get("choices", [{}])[0].get("delta", {}).get("content", "")
                                 if token:
+                                    accumulated += token
                                     yield token
                             except _json.JSONDecodeError:
                                 continue
             else:
-                yield f"DeepSeek 报错: {response.status_code} - {response.text}"
+                err = f"DeepSeek 报错: {response.status_code} - {response.text}"
+                accumulated = err
+                yield err
         except requests.exceptions.ConnectionError:
-            yield "无法连接到 DeepSeek API，请检查网络或代理设置。"
+            err = "无法连接到 DeepSeek API，请检查网络或代理设置。"
+            accumulated = err
+            yield err
         except Exception as e:
             logger.warning("DeepSeek stream call failed", exc_info=True)
-            yield f"LLM 引擎异常: {str(e)}"
+            err = f"LLM 引擎异常: {str(e)}"
+            accumulated = err
+            yield err
+
+        latency = time.time() - t0
+        from src.utils.llm_monitor import log_llm_call
+        log_llm_call(model, system_prompt, prompt, accumulated, latency)
 
     return _stream_gen()
 

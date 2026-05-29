@@ -20,6 +20,7 @@ from src.engines.spatial_data_injector import (
     get_landuse_summary,
     get_key_plots_summary,
     get_building_summary,
+    generate_spatial_insights,
 )
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.workflow.stage_data_bus import (
@@ -133,16 +134,37 @@ st.markdown("---")
 # 空间数据面板 —— 始终显示
 # ═══════════════════════════════════════════
 with st.expander("📊 空间数据概览（驱动本阶段所有分析）", expanded=False):
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        st.markdown("#### 🏘️ 土地利用")
-        st.text(get_landuse_summary())
-    with c2:
-        st.markdown("#### 🏗️ 建筑形态")
-        st.text(get_building_summary())
-    with c3:
-        st.markdown("#### 🏗️ 重点更新单元")
-        st.text(get_key_plots_summary())
+    t1, t2 = st.tabs(["📊 数据清单", "🧠 AI 深度空间洞察"])
+    with t1:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.markdown("#### 🏘️ 土地利用")
+            st.text(get_landuse_summary())
+        with c2:
+            st.markdown("#### 🏗️ 建筑形态")
+            st.text(get_building_summary())
+        with c3:
+            st.markdown("#### 🏗️ 重点更新单元")
+            st.text(get_key_plots_summary())
+    with t2:
+        if "spatial_insights" not in st.session_state:
+            st.session_state["spatial_insights"] = ""
+            
+        if st.session_state["spatial_insights"] == "":
+            c_ins1, c_ins2 = st.columns([3, 1])
+            with c_ins1:
+                st.caption("✨ AI 正在整合当前的研究范围土地利用、建筑总量、重点地块等 GIS 信息进行跨维度关联诊断。")
+            with c_ins2:
+                if st.button("🧠 生成深度空间洞察", key="btn_gen_spatial_insights", use_container_width=True):
+                    with st.spinner("AI 正在运行多维空间特征关联分析..."):
+                        insights = generate_spatial_insights()
+                        st.session_state["spatial_insights"] = insights
+                        st.rerun()
+        else:
+            st.markdown(st.session_state["spatial_insights"])
+            if st.button("🔄 重新分析", key="btn_re_spatial_insights"):
+                st.session_state["spatial_insights"] = ""
+                st.rerun()
 
 
 # ═══════════════════════════════════════════

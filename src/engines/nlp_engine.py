@@ -30,11 +30,52 @@ def _load_sentiment_lexicon() -> tuple[frozenset, frozenset]:
     return pos_words, neg_words
 
 
+def _llm_classify_batch(batch: list[str]) -> list[dict]:
+    from src.engines.llm_engine import call_llm_engine
+    from src.utils.llm_json_parser import parse_llm_json
+    
+    formatted_texts = "\n".join(f"[{i}] {t}" for i, t in enumerate(batch))
+    prompt = f"""
+    分析以下城市更新相关的社交媒体评论情感。
+    评论列表：
+    {formatted_texts}
+    
+    请严格对每条评论进行情感分类 (positive/neutral/negative) 并给出一个 -1.0 到 1.0 的情感评分（正分代表积极正面，负分代表消极负面，接近 0 代表中立）。
+    请仅返回 JSON 数组格式结果，不要包含任何 markdown 块或多余文字：
+    [
+        {{"id": 0, "sentiment": "positive", "score": 0.8}},
+        ...
+    ]
+    """
+    resp = call_llm_engine(prompt=prompt, system_prompt="你是一位专业的城市规划舆情分析师。", model="deepseek-v4-flash")
+    parsed = parse_llm_json(resp, fallback=None)
+    if parsed and isinstance(parsed, list) and len(parsed) == len(batch):
+        return parsed
+    raise ValueError("LLM parsing failed or length mismatch")
+
+
 def classify_sentiment(texts: list[str]) -> tuple[list[str], list[float]]:
-    """Lightweight dictionary-based sentiment classification.
+    """Tries LLM-based sentiment analysis, falls back to lightweight dictionary-based classification.
 
     Returns (labels, scores) where label ∈ {positive, neutral, negative}.
     """
+    try:
+        labels: list[str] = []
+        scores: list[float] = []
+        
+        batch_size = 20
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i:i+batch_size]
+            results = _llm_classify_batch(batch)
+            for res in results:
+                labels.append(res.get("sentiment", "neutral"))
+                scores.append(float(res.get("score", 0.0)))
+                
+        if len(labels) == len(texts):
+            return labels, scores
+    except Exception as e:
+        logger.warning(f"LLM sentiment analysis failed, falling back to lexicon: {e}")
+
     pos_set, neg_set = _load_sentiment_lexicon()
     labels: list[str] = []
     scores: list[float] = []

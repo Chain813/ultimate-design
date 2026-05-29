@@ -284,3 +284,27 @@ def get_plot_context(plot_name: str) -> str:
     except Exception:
         pass
     return f"地块 {plot_name} 的详细数据暂不可用。"
+
+
+def generate_spatial_insights() -> str:
+    """基于当前所有空间数据汇总，调用 LLM 生成深度空间数据洞察报告。"""
+    from src.engines.llm_engine import call_llm_engine
+    
+    spatial_ctx = get_full_spatial_context()
+    prompt = f"""
+    你是一位资深城市空间数据分析专家。以下是吉林省长春市宽城区伪满皇宫周边街区（约150公顷）的各项现状空间统计数据：
+    
+    {spatial_ctx}
+    
+    请结合上述具体数值，输出一份【空间现状深度洞察报告】：
+    1. 🔍 空间供需矛盾：例如，高层高密度居住地块与极低的绿地占比之间的空间矛盾，指出具体地块和矛盾程度。
+    2. 🚦 环境品质预警：指出绿视率 GVI 偏低的重灾地段或 POI 活力极低、情感指数消极的老旧地带，引用具体数据。
+    3. 💡 更新潜力与机会点：结合 POI、建筑高度、更新潜力 MPI 指数，找出最值得优先进行 TOD 综合开发或微更新的重点街区，并说明定量依据。
+    
+    必须强引用上述数据包里的实测数值（面积、百分比、个数、均值等），不要做空泛总结。
+    """
+    return call_llm_engine(
+        prompt=prompt,
+        system_prompt="你是一位精通空间量化分析和城市更新决策的规划师，善于发现数据之间的深层矛盾。",
+        model="deepseek-v4-pro"
+    )

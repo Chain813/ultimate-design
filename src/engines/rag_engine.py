@@ -41,6 +41,37 @@ def get_cached_db_embeddings():
     if not rag_db:
         return {}, rag_db
 
+    # 1. 尝试从本地持久化缓存读取
+    import hashlib
+    import pickle
+    from src.config.loader import load_global_config
+    from src.config.runtime import resolve_path
+
+    config = load_global_config()
+    rag_path_key = config.get("data", {}).get("rag_knowledge_path", "data/rag_knowledge.json")
+    rag_path = resolve_path(rag_path_key)
+
+    rag_hash = ""
+    if rag_path.exists():
+        try:
+            with open(rag_path, "rb") as f:
+                rag_hash = hashlib.md5(f.read()).hexdigest()
+        except Exception as e:
+            logger.warning("Failed to compute md5 of RAG knowledge file: %s", e)
+
+    cache_path = resolve_path("data/rag_embeddings_cache.pkl")
+
+    if cache_path.exists() and rag_hash:
+        try:
+            with open(cache_path, "rb") as f:
+                cache_data = pickle.load(f)
+            if cache_data.get("hash") == rag_hash:
+                logger.info("Loaded RAG embeddings from persistent cache: %s", cache_path)
+                return cache_data["embeddings"], rag_db
+        except Exception as e:
+            logger.warning("Failed to load RAG embeddings cache, will re-compute: %s", e)
+
+    # 2. 缓存未命中时进行重计算
     tokenizer, model = load_bge_micro_model()
     if not tokenizer or not model:
         return {}, rag_db
@@ -55,6 +86,20 @@ def get_cached_db_embeddings():
             emb = outputs[0][:, 0]
         emb = torch.nn.functional.normalize(emb, p=2, dim=1).numpy()[0]
         db_embeddings[cid] = emb
+
+    # 3. 将计算结果持久化写入本地缓存文件
+    if rag_hash:
+        try:
+            cache_data = {
+                "hash": rag_hash,
+                "embeddings": db_embeddings
+            }
+            with open(cache_path, "wb") as f:
+                pickle.dump(cache_data, f)
+            logger.info("Saved RAG embeddings to persistent cache: %s", cache_path)
+        except Exception as e:
+            logger.warning("Failed to save RAG embeddings cache: %s", e)
+
     return db_embeddings, rag_db
 
 

@@ -1,6 +1,12 @@
+# -*- coding: utf-8 -*-
 import os
 import sys
+import shutil
 from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
+
+# Adjust path to import config if run standalone
+sys.path.append(str(Path(__file__).resolve().parents[1]))
 from src.config.paths import STATIC_DIR
 
 # Output Directory
@@ -16,11 +22,39 @@ if not os.path.exists(FONT_PATH):
 if not os.path.exists(FONT_BOLD_PATH):
     FONT_BOLD_PATH = FONT_PATH
 
-# Canvas Dimensions
+# Canvas Dimensions (5K Resolution)
 canvas_w = 5120
 canvas_h = 3000
 
-# -------------------------------------------------------------
+def wrap_text_to_lines(text, font, max_width):
+    lines = []
+    try:
+        left, top, right, bottom = font.getbbox(text)
+        w = right - left
+    except AttributeError:
+        w = font.getsize(text)[0]
+    if w <= max_width:
+        return [text]
+        
+    current_line = ""
+    for char in text:
+        test_line = current_line + char
+        try:
+            left, top, right, bottom = font.getbbox(test_line)
+            w_test = right - left
+        except AttributeError:
+            w_test = font.getsize(test_line)[0]
+            
+        if w_test <= max_width:
+            current_line = test_line
+        else:
+            if current_line:
+                lines.append(current_line)
+            current_line = char
+    if current_line:
+        lines.append(current_line)
+    return lines
+
 # Drawing Helpers
 # -------------------------------------------------------------
 def draw_glow_arrow(draw, start, end, color, width=2):
@@ -93,8 +127,14 @@ def draw_curved_connection_label(draw, start, end, label, color, font, drawn_box
     max_w = 0
     total_h = 0
     for l in lines:
-        max_w = max(max_w, font.getbbox(l)[2] - font.getbbox(l)[0])
-        total_h += font.getbbox(l)[3] - font.getbbox(l)[1] + 4
+        try:
+            l_box = font.getbbox(l)
+            w_l = l_box[2] - l_box[0]
+            h_l = l_box[3] - l_box[1]
+        except AttributeError:
+            w_l, h_l = font.getsize(l)
+        max_w = max(max_w, w_l)
+        total_h += h_l + 4
     bw, bh = max_w + 14, total_h + 8
 
     found_pos = False
@@ -163,9 +203,13 @@ def draw_curved_connection_label(draw, start, end, label, color, font, drawn_box
     
     ty = by0 + 4
     for l in lines:
-        w_l = font.getbbox(l)[2] - font.getbbox(l)[0]
+        try:
+            w_l = font.getbbox(l)[2] - font.getbbox(l)[0]
+            h_l = font.getbbox(l)[3] - font.getbbox(l)[1]
+        except AttributeError:
+            w_l, h_l = font.getsize(l)
         draw.text((best_x - w_l // 2, ty), l, fill=text_fill, font=font)
-        ty += font.getbbox(l)[3] - font.getbbox(l)[1] + 4
+        ty += h_l + 4
 
 def draw_card(draw, x, y, w, h, title, bullets, scheme, font_title, font_body):
     # Outer box
@@ -179,9 +223,12 @@ def draw_card(draw, x, y, w, h, title, bullets, scheme, font_title, font_body):
     
     # Bullets Text
     by = y + 52
+    max_text_w = w - 24
     for bullet in bullets:
-        draw.text((x + 12, by), bullet, fill=(71, 85, 105), font=font_body)
-        by += 26
+        wrapped_lines = wrap_text_to_lines(bullet, font_body, max_text_w)
+        for line in wrapped_lines:
+            draw.text((x + 12, by), line, fill=(71, 85, 105), font=font_body)
+            by += 24
 
 # -------------------------------------------------------------
 # MAIN DRAWING ROUTINE
@@ -195,9 +242,9 @@ def draw_unified_landscape():
         title_font = ImageFont.truetype(FONT_BOLD_PATH, 72)
         subtitle_font = ImageFont.truetype(FONT_PATH, 32)
         group_font = ImageFont.truetype(FONT_BOLD_PATH, 24)
-        node_title_font = ImageFont.truetype(FONT_BOLD_PATH, 20)
-        node_desc_font = ImageFont.truetype(FONT_PATH, 18)
-        label_font = ImageFont.truetype(FONT_PATH, 18)
+        node_title_font = ImageFont.truetype(FONT_BOLD_PATH, 18)
+        node_desc_font = ImageFont.truetype(FONT_PATH, 16)
+        label_font = ImageFont.truetype(FONT_PATH, 16)
     except:
         title_font = subtitle_font = group_font = node_title_font = node_desc_font = label_font = ImageFont.load_default()
 
@@ -211,7 +258,7 @@ def draw_unified_landscape():
     # Top Header Panel (Light Mode Theme)
     draw.rectangle([0, 0, canvas_w, 160], fill=(241, 245, 249, 255))
     draw.line([(0, 160), (canvas_w, 160)], fill=(203, 213, 225, 255), width=2) # Light border
-    draw.text((80, 40), "城市更新推演平台 —— 全生命周期「数据 - 算法 - 阶段结果 - 图册章节」知识图谱总图", fill=(15, 23, 42, 255), font=title_font)
+    draw.text((80, 40), "城市更新微更新决策支持平台 —— 核心技术与全生命周期数据算法知识图谱", fill=(15, 23, 42, 255), font=title_font)
     draw.text((4200, 60), "5K MULTI-LEVEL COGNITIVE MAP", fill=(100, 116, 139, 255), font=subtitle_font)
 
     # Color Schemes (Beautiful High-Contrast Light Mode)
@@ -231,9 +278,9 @@ def draw_unified_landscape():
 
     x_s1 = 620
     x_r1 = 1000
-    w_s = 320
+    w_s = 350
     h_s = 100
-    w_r = 420
+    w_r = 480
     h_r = 140
 
     x_s2 = 1550
@@ -246,7 +293,7 @@ def draw_unified_landscape():
     x_r4 = 3790
 
     x_atlas = 4480
-    w_atlas = 480
+    w_atlas = 530
     h_atlas = 210
 
     # 1. RAW DATA (19 items)
@@ -263,7 +310,7 @@ def draw_unified_landscape():
         {"id": "R9", "file": "GVI_Results_Analysis.csv", "title": "GVI_Results_Analysis.csv", "desc": "街景指标表 (绿视率/SVF)"},
         {"id": "R10", "file": "Changchun_Precise_Points.xlsx", "title": "Changchun_Precise_Points.xlsx", "desc": "458个采样点精确三维坐标"},
         {"id": "R11", "file": "Traffic_Flow.csv", "title": "Traffic_Flow.csv", "desc": "路网拥堵/流量分布表"},
-        {"id": "R12", "file": "Building_Years.csv", "title": "Building_Years.csv", "desc": "建筑建成年代 (更新急迫度)"},
+        {"id": "R12", "file": "Building_Years.csv", "title": "Building_Years.csv", "desc": "建筑建成年代 (更新迫切度)"},
         {"id": "R13", "file": "House_Prices.csv", "title": "House_Prices.csv", "desc": "地块房价/地价数据"},
         {"id": "R14", "file": "Sunshine_*.csv", "title": "Sunshine_*.csv", "desc": "冬至/夏至日照时长诊断表"},
         {"id": "R15", "file": "data/streetview/*.jpg", "title": "data/streetview/*.jpg", "desc": "采样点实景相片 (AIGC底盘)"},
@@ -294,14 +341,12 @@ def draw_unified_landscape():
 
     r_col1 = [
         {"id": "S00_res", "stage": "S00", "title": "标准化物理数据资产", "bullets": ["• gis/csv/streetview标准化", "• data_categories自检清单", "• 缺失数据Mock垫底机制"], "y": 200},
-        {"id": "S01_res", "stage": "S01", "title": "任务约束指标 (extracted_constraints)", "bullets": ["• 任务书刚性控制红线提取", "• 规划深度要求 (总体/深化)", "• 指标表预定义参数"], "y": 740},
-        {"id": "S02_res", "stage": "S02", "title": "政策合规向量库 (rag_vector_db)", "bullets": ["• 更新条例分词索引库", "• 建筑退界/控制规范法条", "• 语义相似度召回语料库"], "y": 1280},
+        {"id": "S01_res", "stage": "S01", "title": "任务约束指标 (extracted_constraints)", "bullets": ["• 任务书刚性控制红线提取", "• LLM语义解读指标表预定义", "• 大模型动态指标约束规则库"], "y": 740},
+        {"id": "S02_res", "stage": "S02", "title": "政策合规向量库 (rag_vector_db)", "bullets": ["• 248处更新法规语义索引库", "• 建筑退界/红线退让/高度限制", "• Zoning RAG 高维向量检索比对"], "y": 1280},
         {"id": "S03_res", "stage": "S03", "title": "视觉品质指标 (GVI_SVF_index)", "bullets": ["• 绿视率分值 / 天空可视率", "• 街区围合度 / 视觉混乱度", "• 分类语义分割特征表"], "y": 1820},
-        
-        # S04 has 3 output cards to avoid combining
-        {"id": "S04_res1", "stage": "S04", "title": "三维全息孪生底座 (3D_digital_twin)", "bullets": ["• Deck.GL 三维底盘", "• 现状空间建筑形态图"], "y": 2240},
-        {"id": "S04_res2", "stage": "S04", "title": "用地现状统计表 (landuse_summary)", "bullets": ["• 现状用地面积明细", "• 规划合规初步统计"], "y": 2370},
-        {"id": "S04_res3", "stage": "S04", "title": "天际线高度特征 (skyline_profile)", "bullets": ["• 最高高度/均高/高层占比", "• 天际线凹凸度分析"], "y": 2500}
+        {"id": "S04_res1", "stage": "S04", "title": "三维孪生底座 (twin_3d_model)", "bullets": ["• Pydeck 三维建筑模型白模", "• 冬至日照时长时空可视化", "• 道路拓扑连通度及机动分析"], "y": 2240},
+        {"id": "S04_res2", "stage": "S04", "title": "现状地块现状图 (landuse_diagnostics)", "bullets": ["• 现状建筑层数及结构材质", "• 现状用地面积国标分类表", "• 建筑建成年代空间热力图"], "y": 2370},
+        {"id": "S04_res3", "stage": "S04", "title": "天际线高度特征 (skyline_profile)", "bullets": ["• 最高高度/均高/高层占比", "• 天际线凹凸度分析分析图"], "y": 2500}
     ]
     for r in r_col1:
         r["x"] = x_r1
@@ -311,9 +356,9 @@ def draw_unified_landscape():
 
     # 3. COLUMN 2 Stages & Results
     s_col2 = [
-        {"id": "S05", "title": "S05. 问题诊断", "desc": "地块更新急迫潜力分析", "y": 480},
+        {"id": "S05", "title": "S05. 问题诊断", "desc": "地块更新迫切潜力分析", "y": 480},
         {"id": "S06", "title": "S06. 目标定位", "desc": "发展目标及理念策划", "y": 1300},
-        {"id": "S07", "title": "S07. 设计策略", "desc": "多主体利益协商博弈", "y": 2120}
+        {"id": "S07", "title": "S07. 设计策略", "desc": "多主体协商与合规研判", "y": 2120}
     ]
     for s in s_col2:
         s["x"] = x_s2
@@ -322,14 +367,14 @@ def draw_unified_landscape():
         s["y"] += 120
 
     r_col2 = [
-        {"id": "S05_res1", "stage": "S05", "title": "地块潜力排行 (mpi_ranking)", "bullets": ["• AHP-MPI 潜力等级排行", "• 更新急迫度地块排序"], "y": 360},
+        {"id": "S05_res1", "stage": "S05", "title": "地块潜力排行 (mpi_ranking)", "bullets": ["• AHP-MPI 潜力等级排行", "• 更新迫切度地块排序"], "y": 360},
         {"id": "S05_res2", "stage": "S05", "title": "潜力雷达图 (radar_data)", "bullets": ["• POI密度/GVI品质/面积因子", "• 多指标维度地块分析图表"], "y": 480},
         {"id": "S05_res3", "stage": "S05", "title": "现状诊断报告 (diagnosis_report)", "bullets": ["• 区域三大问题短板报告", "• 微博舆情正负向情感热词"], "y": 600},
         
         {"id": "S06_res", "stage": "S06", "title": "规划愿景与定位 (design_concept)", "bullets": ["• 总体更新目标定位建议", "• 核心空间策划理念词条", "• AIGC设计引导词框架"], "y": 1300},
         
         {"id": "S07_res1", "stage": "S07", "title": "改造策略矩阵 (strategy_matrix)", "bullets": ["• 三方谈判协同改造选项", "• 保留/微更新/拆建分区表"], "y": 2040},
-        {"id": "S07_res2", "stage": "S07", "title": "政策合规预审条文", "bullets": ["• 强约束禁止条文预警", "• 支持性合规策略引证建议"], "y": 2170}
+        {"id": "S07_res2", "stage": "S07", "title": "合规审计与协商 (Compliance & Debate)", "bullets": ["• 居民/开发商/政府三智能体协商", "• LLM 自动满意度效用评分 grading", "• 控规指标一键合规红牌告警"], "y": 2170}
     ]
     for r in r_col2:
         r["x"] = x_r2
@@ -339,7 +384,7 @@ def draw_unified_landscape():
 
     # 4. COLUMN 3 Stages & Results
     s_col3 = [
-        {"id": "S08", "title": "S08. 总体城市设计", "desc": "平面布局及用地调控", "y": 250},
+        {"id": "S08", "title": "S08. 总体城市设计", "desc": "平面布局及用地调配", "y": 250},
         {"id": "S09", "title": "S09. 专项系统设计", "desc": "子系统深化设计规划", "y": 780},
         {"id": "S10", "title": "S10. 重点地段深化", "desc": "AIGC渲染效果图深化", "y": 1310},
         {"id": "S11", "title": "S11. 实施路径", "desc": "时序分期留改拆安排", "y": 1840},
@@ -363,7 +408,7 @@ def draw_unified_landscape():
         {"id": "S10_res2", "stage": "S10", "title": "更新前后对比图 (before_after_rendering)", "bullets": ["• 现状透视底图街景提取", "• SD ControlNet AIGC高精渲染"], "y": 1350},
         
         {"id": "S11_res", "stage": "S11", "title": "时空实施分期图 (phasing_plan)", "bullets": ["• 时序分期实施划定 (近/中/远)", "• 各阶段“留改拆”改造实施进度"], "y": 1840},
-        {"id": "S12_res", "stage": "S12", "title": "控制导则文本 (design_guideline_docx)", "bullets": ["• 刚性控制退界/退高条文编译", "• 红头正式导则 Word 文档导出"], "y": 2370}
+        {"id": "S12_res", "stage": "S12", "title": "控制导则文本 (design_guideline_docx)", "bullets": ["• LLM 自动控制条文编译导出", "• 容积率/绿地率刚性限额说明", "• 红头规划图则标准 Word 输出"], "y": 2370}
     ]
     for r in r_col3:
         r["x"] = x_r3
@@ -384,9 +429,9 @@ def draw_unified_landscape():
         s["y"] += 120
 
     r_col4 = [
-        {"id": "S13_res", "stage": "S13", "title": "A3规划图册版面集 (atlas_layouts)", "bullets": ["• PIL合成指北针/图签标题", "• 双联排版 A3 规划图册版面", "• PDF 成果打包汇编归档"], "y": 600},
+        {"id": "S13_res", "stage": "S13", "title": "A3规划图册版面集 (atlas_layouts)", "bullets": ["• PIL图层拼装/图例图签自动绘制", "• 大模型指标读取与动态设计说明生成", "• 多进程图册批量编译及PDF归档"], "y": 600},
         {"id": "S14_res", "stage": "S14", "title": "视频分镜与多媒体 (script_scenes)", "bullets": ["• 智能解说词文本生成 (LLM)", "• 数据可视化图表视频嵌入", "• 最终多媒体视频汇报成果"], "y": 1400},
-        {"id": "S15_res", "stage": "S15", "title": "共享提示词助手 (prompt_helper)", "bullets": ["• 共享 SDXL 空间控制词生成", "• 多尺度规划图纸提示词模板库"], "y": 2150}
+        {"id": "S15_res", "stage": "S15", "title": "智能辅助设计 (AI Planning Copilot)", "bullets": ["• 全局 Sidebar 智能规划助手", "• 阶段跳转 Agent 指引决策路径", "• AIGC 控制提示词动态管理库"], "y": 2150}
     ]
     for r in r_col4:
         r["x"] = x_r4
@@ -399,10 +444,9 @@ def draw_unified_landscape():
         {
             "id": "C1", "title": "Chapter 01 项目认知篇", "y": 200,
             "bullets": [
-                "【必备】: 封面、目录、背景图、区位图、",
-                "          范围图、上位规划解读图",
-                "【可选】: 历史沿革图、周边关系分析图、",
-                "          案例借鉴图"
+                "【必备】: 封面、目录、背景图、区位图、范围图、",
+                "          上位规划解读图",
+                "【可选】: 历史沿革图、周边关系分析图、案例借鉴图"
             ]
         },
         {
@@ -411,8 +455,7 @@ def draw_unified_landscape():
                 "【必备】: 用地现状分析图、交通现状图、",
                 "          POI活力分析图、问题诊断总图",
                 "【可选】: 数字孪生框架图、建筑现状高度图、",
-                "          风貌现状图、句法可达性图、",
-                "          情感舆情热力图"
+                "          风貌现状图、句法可达性图、情感舆情热力图"
             ]
         },
         {
@@ -475,7 +518,6 @@ def draw_unified_landscape():
     # -------------------------------------------------------------
     # 3-PASS RENDERING PIPELINE FOR CLEAN LAYOUT
     # -------------------------------------------------------------
-    # List to store connections for multi-pass rendering
     connections = []
     def add_conn(start, end, label, color):
         connections.append((start, end, label, color))
@@ -486,170 +528,79 @@ def draw_unified_landscape():
     c_cross = (168, 85, 247, 120)      # Translucent violet for intermediate cross-inputs
     c_deliver = (251, 191, 36, 180)    # Amber with 70% opacity for final chapters
 
-    # Helper function to get point of a raw file card (right edge)
+    # Helper functions for edges
     def r_edge(rn):
         return (rn["x"] + rn["w"], rn["y"] + rn["h"] // 2)
-
-    # Helper function to get point of a stage card (left/right edge)
     def s_l_edge(sn):
         return (sn["x"], sn["y"])
     def s_r_edge(sn):
         return (sn["x"] + sn["w"], sn["y"])
-
-    # Helper function for result card edges
     def res_l_edge(rn):
         return (rn["x"], rn["y"])
     def res_r_edge(rn):
         return (rn["x"] + rn["w"], rn["y"])
-
-    # Helper function for chapter card edges
     def ch_l_edge(ch):
         return (ch["x"], ch["y"])
 
-    # --- Register all connections ---
-    # R16 (mission_text) -> S01 (任务解读)
-    add_conn(r_edge(all_raws["R16"]), s_l_edge(all_stages["S01"]), 
-             "MarkItDown 解析\n& LLM 约束提取", c_raw_stage)
+    # 1. Raw Data -> Stages
+    add_conn(r_edge(all_raws["R0"]), s_l_edge(all_stages["S00"]), "范围导入", c_raw_stage)
+    add_conn(r_edge(all_raws["R1"]), s_l_edge(all_stages["S00"]), "现状轮廓导入", c_raw_stage)
+    add_conn(r_edge(all_raws["R3"]), s_l_edge(all_stages["S00"]), "路网几何导入", c_raw_stage)
+    add_conn(r_edge(all_raws["R16"]), s_l_edge(all_stages["S01"]), "任务书NLP分析\n分词与关键词过滤", c_raw_stage)
+    add_conn(r_edge(all_raws["R17"]), s_l_edge(all_stages["S02"]), "法规文献段落提取\nChroma向量索引库", c_raw_stage)
+    add_conn(r_edge(all_raws["R15"]), s_l_edge(all_stages["S03"]), "DeepLabV3\n街景图像语义分割", c_raw_stage)
+    add_conn(r_edge(all_raws["R1"]), s_l_edge(all_stages["S04"]), "Deck.GL 三维渲染\n与形态均高分析", c_raw_stage)
+    add_conn(r_edge(all_raws["R5"]), s_l_edge(all_stages["S04"]), "空间叠加\n与现状面积统计", c_raw_stage)
+    add_conn(r_edge(all_raws["R6"]), s_l_edge(all_stages["S05"]), "AHP-MPI 因子\n(POI业态密度匹配)", c_raw_stage)
+    add_conn(r_edge(all_raws["R9"]), s_l_edge(all_stages["S05"]), "AHP-MPI 因子\n(街景品质指标提取)", c_raw_stage)
+    add_conn(r_edge(all_raws["R2"]), s_l_edge(all_stages["S05"]), "AHP-MPI 因子\n(重点地块空间匹配)", c_raw_stage)
 
-    # R17 (rag_knowledge) -> S02 (资料收集)
-    add_conn(r_edge(all_raws["R17"]), s_l_edge(all_stages["S02"]), 
-             "BGE-Micro Embed\n政策文献构建RAG", c_raw_stage)
+    # 2. Stage to Stage / Cross connections
+    add_conn(res_r_edge(all_results["S01_res"]), s_l_edge(all_stages["S06"]), "LLM语义策划\n定位目标生成", c_cross)
+    add_conn(res_r_edge(all_results["S05_res3"]), s_l_edge(all_stages["S06"]), "问题短板\n输入对标", c_cross)
+    add_conn(res_r_edge(all_results["S06_res"]), s_l_edge(all_stages["S07"]), "定位愿景注入", c_cross)
+    add_conn(res_r_edge(all_results["S02_res"]), s_l_edge(all_stages["S07"]), "RAG 政策检索比对\n& 合规性审查分析", c_cross)
+    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S08"]), "留改拆分区控制", c_cross)
+    add_conn(res_r_edge(all_results["S04_res1"]), s_l_edge(all_stages["S08"]), "现状建筑高度限制", c_cross)
+    add_conn(res_r_edge(all_results["S04_res2"]), s_l_edge(all_stages["S08"]), "用地现状面积输入", c_cross)
+    add_conn(res_r_edge(all_results["S08_res1"]), s_l_edge(all_stages["S09"]), "沙盘边界同步", c_cross)
+    add_conn(res_r_edge(all_results["S04_res1"]), s_l_edge(all_stages["S09"]), "交通路网/TOD分析", c_cross)
+    add_conn(res_r_edge(all_results["S08_res2"]), s_l_edge(all_stages["S10"]), "ControlNet 线稿控制层", c_cross)
+    add_conn(res_r_edge(all_results["S03_res"]), s_l_edge(all_stages["S10"]), "现状实景相片底盘", c_cross)
+    add_conn(res_r_edge(all_results["S05_res1"]), s_l_edge(all_stages["S10"]), "重点更新项目落位", c_cross)
+    add_conn(res_r_edge(all_results["S10_res2"]), s_l_edge(all_stages["S11"]), "更新项目落位", c_cross)
+    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S11"]), "开发强度/投资测算\n留改拆时序划分", c_cross)
+    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S12"]), "刚性改造机制约束", c_cross)
+    add_conn(res_r_edge(all_results["S10_res1"]), s_l_edge(all_stages["S12"]), "LLM控制条文编译\n写入容积率限制", c_cross)
 
-    # R15 (data/streetview/) -> S03 (现场调研)
-    add_conn(r_edge(all_raws["R15"]), s_l_edge(all_stages["S03"]), 
-             "DeepLabV3\n街景图像语义分割", c_raw_stage)
+    # Drawings to S13
+    add_conn(res_r_edge(all_results["S08_res2"]), s_l_edge(all_stages["S13"]), "概念总规图纸", c_cross)
+    add_conn(res_r_edge(all_results["S09_res1"]), s_l_edge(all_stages["S13"]), "交通规划图纸", c_cross)
+    add_conn(res_r_edge(all_results["S09_res2"]), s_l_edge(all_stages["S13"]), "绿道开敞图纸", c_cross)
+    add_conn(res_r_edge(all_results["S10_res2"]), s_l_edge(all_stages["S13"]), "Before/After对比图", c_cross)
+    add_conn(res_r_edge(all_results["S11_res"]), s_l_edge(all_stages["S13"]), "时序分期图纸", c_cross)
+    add_conn(res_r_edge(all_results["S13_res"]), s_l_edge(all_stages["S14"]), "A3图册版面合集\n用于汇报巡游片段", c_cross)
+    add_conn(res_r_edge(all_results["S05_res1"]), s_l_edge(all_stages["S14"]), "诊断数据注入脚本\n自动生成朗读配音", c_cross)
 
-    # R1 (Building_Footprints) -> S04 (现状分析)
-    add_conn(r_edge(all_raws["R1"]), s_l_edge(all_stages["S04"]), 
-             "Deck.GL 三维渲染\n与形态均高分析", c_raw_stage)
-
-    # R5 (landuse_clipped) -> S04 (现状分析)
-    add_conn(r_edge(all_raws["R5"]), s_l_edge(all_stages["S04"]), 
-             "空间叠加\n与现状面积统计", c_raw_stage)
-
-    # POI (R6) + Points (R10) + GVI (R9) + Plots (R2) -> S05 (问题诊断)
-    add_conn(r_edge(all_raws["R6"]), s_l_edge(all_stages["S05"]), 
-             "AHP-MPI 因子\n(POI业态密度匹配)", c_raw_stage)
-    add_conn(r_edge(all_raws["R9"]), s_l_edge(all_stages["S05"]), 
-             "AHP-MPI 因子\n(街景品质指标提取)", c_raw_stage)
-    add_conn(r_edge(all_raws["R2"]), s_l_edge(all_stages["S05"]), 
-             "AHP-MPI 因子\n(重点地块空间匹配)", c_raw_stage)
-
-    # S01_res (任务指标) + S05_res3 (诊断报告) -> S06 (目标定位)
-    add_conn(res_r_edge(all_results["S01_res"]), s_l_edge(all_stages["S06"]), 
-             "LLM语义策划\n定位目标生成", c_cross)
-    add_conn(res_r_edge(all_results["S05_res3"]), s_l_edge(all_stages["S06"]), 
-             "问题短板\n输入对标", c_cross)
-
-    # S06_res (愿景理念) + S02_res (合规知识库) -> S07 (设计策略)
-    add_conn(res_r_edge(all_results["S06_res"]), s_l_edge(all_stages["S07"]), 
-             "定位愿景注入", c_cross)
-    add_conn(res_r_edge(all_results["S02_res"]), s_l_edge(all_stages["S07"]), 
-             "RAG 政策检索比对\n& 合规性审查分析", c_cross)
-
-    # S07_res1 (策略矩阵) + R1 (建筑轮廓) + R5 (用地分类) -> S08 (总体城市设计)
-    # S07_res1 (策略矩阵) + S04_res1 (三维孪生底座) + S04_res2 (用地现状) -> S08 (总体城市设计)
-    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S08"]), 
-             "留改拆分区控制", c_cross)
-    add_conn(res_r_edge(all_results["S04_res1"]), s_l_edge(all_stages["S08"]), 
-             "现状建筑高度限制", c_cross)
-    add_conn(res_r_edge(all_results["S04_res2"]), s_l_edge(all_stages["S08"]), 
-             "用地现状面积输入", c_cross)
-
-    # S08_res1 (指标沙盘) + S04_res1 (三维孪生底座/路网) -> S09 (专项设计)
-    add_conn(res_r_edge(all_results["S08_res1"]), s_l_edge(all_stages["S09"]), 
-             "沙盘边界同步", c_cross)
-    add_conn(res_r_edge(all_results["S04_res1"]), s_l_edge(all_stages["S09"]), 
-             "交通路网/TOD分析", c_cross)
-
-    # S08_res2 (规划总平线稿) + S03_res (调研图像) + S05_res1 (潜力排序) -> S10 (重点深化)
-    add_conn(res_r_edge(all_results["S08_res2"]), s_l_edge(all_stages["S10"]), 
-             "ControlNet 线稿控制层", c_cross)
-    add_conn(res_r_edge(all_results["S03_res"]), s_l_edge(all_stages["S10"]), 
-             "现状实景相片底盘", c_cross)
-    add_conn(res_r_edge(all_results["S05_res1"]), s_l_edge(all_stages["S10"]), 
-             "重点更新项目落位", c_cross)
-
-    # S10_res2 (对比效果图) + S07_res1 (策略矩阵) -> S11 (实施路径)
-    add_conn(res_r_edge(all_results["S10_res2"]), s_l_edge(all_stages["S11"]), 
-             "更新项目落位", c_cross)
-    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S11"]), 
-             "开发强度/投资测算\n留改拆时序划分", c_cross)
-
-    # S07_res1 (策略矩阵) + S10_res1 (地块画像) -> S12 (设计导则)
-    add_conn(res_r_edge(all_results["S07_res1"]), s_l_edge(all_stages["S12"]), 
-             "刚性改造机制约束", c_cross)
-    add_conn(res_r_edge(all_results["S10_res1"]), s_l_edge(all_stages["S12"]), 
-             "LLM控制条文编译\n写入容积率限制", c_cross)
-
-    # All generated drawings to S13 (成果表达)
-    add_conn(res_r_edge(all_results["S08_res2"]), s_l_edge(all_stages["S13"]), 
-             "概念总规图纸", c_cross)
-    add_conn(res_r_edge(all_results["S09_res1"]), s_l_edge(all_stages["S13"]), 
-             "交通规划图纸", c_cross)
-    add_conn(res_r_edge(all_results["S09_res2"]), s_l_edge(all_stages["S13"]), 
-             "绿道开敞图纸", c_cross)
-    add_conn(res_r_edge(all_results["S10_res2"]), s_l_edge(all_stages["S13"]), 
-             "Before/After对比图", c_cross)
-    add_conn(res_r_edge(all_results["S11_res"]), s_l_edge(all_stages["S13"]), 
-             "时序分期图纸", c_cross)
-    # S13_res (图册版面) + S05_res1 (MPI诊断) + S10_res2 (效果图) -> S14 (视频生成)
-    add_conn(res_r_edge(all_results["S13_res"]), s_l_edge(all_stages["S14"]), 
-             "A3图册版面合集\n用于汇报幻灯片段", c_cross)
-    add_conn(res_r_edge(all_results["S05_res1"]), s_l_edge(all_stages["S14"]), 
-             "诊断数据注入脚本\n自动生成朗读配音", c_cross)
-
-    # S01_res -> Chapter 01
-    add_conn(res_r_edge(all_results["S01_res"]), ch_l_edge(all_chapters["C1"]), 
-             "任务背景", c_deliver)
-    
-    # S03_res & S04_res1,2,3 -> Chapter 02
-    add_conn(res_r_edge(all_results["S03_res"]), ch_l_edge(all_chapters["C2"]), 
-             "街区品质", c_deliver)
-    add_conn(res_r_edge(all_results["S04_res1"]), ch_l_edge(all_chapters["C2"]), 
-             "现状图纸", c_deliver)
-    add_conn(res_r_edge(all_results["S04_res2"]), ch_l_edge(all_chapters["C2"]), 
-             "用地现状", c_deliver)
-    
-    # S05_res1,2,3 -> Chapter 03
-    add_conn(res_r_edge(all_results["S05_res1"]), ch_l_edge(all_chapters["C3"]), 
-             "潜力等级", c_deliver)
-    add_conn(res_r_edge(all_results["S05_res3"]), ch_l_edge(all_chapters["C3"]), 
-             "诊断综合", c_deliver)
-
-    # S06_res & S07_res1,2 -> Chapter 04
-    add_conn(res_r_edge(all_results["S06_res"]), ch_l_edge(all_chapters["C4"]), 
-             "总体理念", c_deliver)
-    add_conn(res_r_edge(all_results["S07_res1"]), ch_l_edge(all_chapters["C4"]), 
-             "改造模式", c_deliver)
-
-    # S08_res1,2 -> Chapter 05
-    add_conn(res_r_edge(all_results["S08_res1"]), ch_l_edge(all_chapters["C5"]), 
-             "用地沙盘", c_deliver)
-    add_conn(res_r_edge(all_results["S08_res2"]), ch_l_edge(all_chapters["C5"]), 
-             "概念总规", c_deliver)
-
-    # S09_res1,2,3 -> Chapter 05 (Additional lines to Chapter 5)
-    add_conn(res_r_edge(all_results["S09_res1"]), ch_l_edge(all_chapters["C5"]), 
-             "交通系统", c_deliver)
-    add_conn(res_r_edge(all_results["S09_res2"]), ch_l_edge(all_chapters["C5"]), 
-             "开敞空间", c_deliver)
-    add_conn(res_r_edge(all_results["S09_res3"]), ch_l_edge(all_chapters["C5"]), 
-             "风貌控制", c_deliver)
-
-    # S10_res1,2 -> Chapter 06
-    add_conn(res_r_edge(all_results["S10_res1"]), ch_l_edge(all_chapters["C6"]), 
-             "地块功能", c_deliver)
-    add_conn(res_r_edge(all_results["S10_res2"]), ch_l_edge(all_chapters["C6"]), 
-             "AIGC人视", c_deliver)
-
-    # S11_res & S12_res & S14_res -> Chapter 07
-    add_conn(res_r_edge(all_results["S11_res"]), ch_l_edge(all_chapters["C7"]), 
-             "开发时序", c_deliver)
-    add_conn(res_r_edge(all_results["S12_res"]), ch_l_edge(all_chapters["C7"]), 
-             "设计导则", c_deliver)
-    add_conn(res_r_edge(all_results["S14_res"]), ch_l_edge(all_chapters["C7"]), 
-             "技术推演", c_deliver)
+    # Results to Chapters
+    add_conn(res_r_edge(all_results["S01_res"]), ch_l_edge(all_chapters["C1"]), "任务背景", c_deliver)
+    add_conn(res_r_edge(all_results["S03_res"]), ch_l_edge(all_chapters["C2"]), "街区品质", c_deliver)
+    add_conn(res_r_edge(all_results["S04_res1"]), ch_l_edge(all_chapters["C2"]), "现状图纸", c_deliver)
+    add_conn(res_r_edge(all_results["S04_res2"]), ch_l_edge(all_chapters["C2"]), "用地现状", c_deliver)
+    add_conn(res_r_edge(all_results["S05_res1"]), ch_l_edge(all_chapters["C3"]), "潜力等级", c_deliver)
+    add_conn(res_r_edge(all_results["S05_res3"]), ch_l_edge(all_chapters["C3"]), "诊断综合", c_deliver)
+    add_conn(res_r_edge(all_results["S06_res"]), ch_l_edge(all_chapters["C4"]), "总体理念", c_deliver)
+    add_conn(res_r_edge(all_results["S07_res1"]), ch_l_edge(all_chapters["C4"]), "改造模式", c_deliver)
+    add_conn(res_r_edge(all_results["S08_res1"]), ch_l_edge(all_chapters["C5"]), "用地沙盘", c_deliver)
+    add_conn(res_r_edge(all_results["S08_res2"]), ch_l_edge(all_chapters["C5"]), "概念总规", c_deliver)
+    add_conn(res_r_edge(all_results["S09_res1"]), ch_l_edge(all_chapters["C5"]), "交通系统", c_deliver)
+    add_conn(res_r_edge(all_results["S09_res2"]), ch_l_edge(all_chapters["C5"]), "开敞空间", c_deliver)
+    add_conn(res_r_edge(all_results["S09_res3"]), ch_l_edge(all_chapters["C5"]), "风貌控制", c_deliver)
+    add_conn(res_r_edge(all_results["S10_res1"]), ch_l_edge(all_chapters["C6"]), "地块功能", c_deliver)
+    add_conn(res_r_edge(all_results["S10_res2"]), ch_l_edge(all_chapters["C6"]), "AIGC人视", c_deliver)
+    add_conn(res_r_edge(all_results["S11_res"]), ch_l_edge(all_chapters["C7"]), "开发时序", c_deliver)
+    add_conn(res_r_edge(all_results["S12_res"]), ch_l_edge(all_chapters["C7"]), "设计导则", c_deliver)
+    add_conn(res_r_edge(all_results["S14_res"]), ch_l_edge(all_chapters["C7"]), "技术推演", c_deliver)
 
     # =============================================================
     # PASS 1: DRAW CONNECTION LINES & GLOWS (No labels or cards yet)
@@ -702,9 +653,12 @@ def draw_unified_landscape():
         draw.line([ch["x"], ch["y"] - ch["h"]//2 + 50, ch["x"] + ch["w"], ch["y"] - ch["h"]//2 + 50], fill=SCHEMES["deliverable"]["stroke"], width=1)
         draw.text((ch["x"] + 16, ch["y"] - ch["h"]//2 + 10), ch["title"], fill=SCHEMES["deliverable"]["text"], font=group_font)
         by = ch["y"] - ch["h"]//2 + 62
+        max_text_w = ch["w"] - 32
         for bullet in ch["bullets"]:
-            draw.text((ch["x"] + 16, by), bullet, fill=(71, 85, 105), font=node_desc_font)
-            by += 28
+            wrapped_lines = wrap_text_to_lines(bullet, node_desc_font, max_text_w)
+            for line in wrapped_lines:
+                draw.text((ch["x"] + 16, by), line, fill=(71, 85, 105), font=node_desc_font)
+                by += 26
         drawn_boxes.append((ch["x"] - 5, ch["y"] - ch["h"]//2 - 5, ch["x"] + ch["w"] + 5, ch["y"] + ch["h"]//2 + 5))
 
     # =============================================================
@@ -716,11 +670,9 @@ def draw_unified_landscape():
     # -------------------------------------------------------------
     # Drawing Legends and Info stamp
     # -------------------------------------------------------------
-    # Draw a bottom panel for legend (Taller for larger subtitle font)
     draw.rectangle([0, canvas_h - 120, canvas_w, canvas_h], fill=(241, 245, 249, 255))
     draw.line([(0, canvas_h - 120), (canvas_w, canvas_h - 120)], fill=(203, 213, 225, 255), width=2)
 
-    # Color Key / Legend for Nodes and connection flow types (matching connection text colors)
     legend_items = [
         ("原始数据层", SCHEMES["raw"]["stroke"]),
         ("规划阶段 (S00-S15)", SCHEMES["stage"]["stroke"]),
@@ -735,14 +687,18 @@ def draw_unified_landscape():
     lx = 60
     ly = canvas_h - 75
     for title, color in legend_items:
-        # Draw a small box
         draw.rounded_rectangle([lx, ly, lx + 30, ly + 30], radius=4, fill=(255, 255, 255, 255), outline=color, width=2)
         draw.text((lx + 45, ly - 2), title, fill=(15, 23, 42), font=subtitle_font)
         lx += 620
 
     # Save to disk
-    img.save(os.path.join(OUTPUT_DIR, "unified_landscape_mindmap.png"), "PNG")
-    print("Unified 5K landscape flowchart generated successfully!")
+    dest_path = os.path.join(OUTPUT_DIR, "unified_landscape_mindmap.png")
+    img.save(dest_path, "PNG")
+    
+    # Also save as the knowledge graph to replace the dark theme version
+    dest_path_kg = os.path.join(OUTPUT_DIR, "technology_parameters_knowledge_graph.png")
+    img.save(dest_path_kg, "PNG")
+    print(f"Unified 5K landscape flowchart generated successfully at:\n  {dest_path}\n  {dest_path_kg}")
 
 if __name__ == "__main__":
     draw_unified_landscape()

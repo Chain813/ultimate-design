@@ -236,6 +236,43 @@ if selected_sub == "⚖️ 多主体协同推演":
                     "💰 文旅运营商（赵总）": 50.0,
                     "📐 规划师（李工）": 50.0
                 }
+                # 尝试通过 LLM 语义评分
+                try:
+                    from src.engines.llm_engine import call_llm_engine
+                    from src.utils.llm_json_parser import parse_llm_json
+                    
+                    prompt = f"""
+                    分析以下三个主体关于城市更新协商的对话文本，从语义上评估三方角色对当前方案的满意度得分（0-100分）。
+                    
+                    各方利益关注点：
+                    - 👥 居民代表：绿化、配套、生活便利、社区医疗、菜场养老等民生品质。
+                    - 💰 文旅运营商：投资回报、文旅商业品牌、容积率可行性、经济收益及活化运营。
+                    - 📐 规划师：历史文化名城保护、限高合规、视廊控制、指标红线合规。
+                    
+                    协商对话文本：
+                    {memory_text}
+                    
+                    请严格评估三方当前的态度是否在朝良性合作发展，计算出合理的分数。初始分为 50 分。每条满足或推进该角色利益的合理方案加分，损害利益的方案扣分。
+                    请仅返回 JSON 格式结果，不要包含任何 markdown 块或多余文字：
+                    {{
+                        "👥 居民代表（老王）": 分数(数字),
+                        "💰 文旅运营商（赵总）": 分数(数字),
+                        "📐 规划师（李工）": 分数(数字)
+                    }}
+                    """
+                    resp = call_llm_engine(prompt=prompt, system_prompt="你是一位客观的城市规划博弈审计员。", model="deepseek-v4-flash")
+                    parsed = parse_llm_json(resp, fallback=None)
+                    if parsed and isinstance(parsed, dict):
+                        valid = True
+                        for k in scores.keys():
+                            if k not in parsed or not isinstance(parsed[k], (int, float)):
+                                valid = False
+                        if valid:
+                            return {k: min(100.0, max(0.0, float(parsed[k]))) for k in scores.keys()}
+                except Exception:
+                    pass
+
+                # 降级退回到关键词匹配
                 community_keywords = ["绿", "公园", "配套", "社区", "医院", "菜市", "养老", "口袋", "老年", "居民", "人行道", "活动", "活动中心", "休憩"]
                 developer_keywords = ["容积率", "收益", "文旅", "商业", "民宿", "运营", "产业", "投资", "回报", "品牌", "特色餐饮", "盈利", "客流", "商铺"]
                 planner_keywords = ["历史保护", "紫线", "限高", "合规", "风貌", "条例", "保护区", "天际线", "视廊", "数据", "红线", "导则", "退让", "绿地率"]

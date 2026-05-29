@@ -973,6 +973,9 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     asset_context = summarize_template_assets_for_prompt(manifest)
     template_requirements = _extract_template_requirements(tmpl.prompt_tmpl)
 
+    from src.engines.design_description_engine import generate_dynamic_design_description
+    dyn_strategy, dyn_conclusion = generate_dynamic_design_description(tmpl.name, tmpl.stage)
+
     request = ImagePromptRequest(
         chapter=tmpl.chapter,
         drawing_name=tmpl.name,
@@ -983,12 +986,9 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
         main_expression=tmpl.description,
         must_include=template_requirements,
         legend_content=_default_legend_content(tmpl.name),
-        key_plots="研究范围红线、五个重点地块、主要道路、伪满皇宫周边核心节点、图例区和固定图框。",
-        design_strategy=(
-            "只生成规划分析覆盖层、符号、箭头、半透明色块和必要标注；底图、红线、重点地块和图框由固定资产锁定。"
-            "最终合成顺序固定为：固定底图 -> AI 覆盖层 -> 研究范围红线 -> 重点地块边界 -> 固定图框。"
-        ),
-        analysis_conclusion="引用前序阶段数据与上传专题图；信息不完整处使用占位符，不得虚构评价等级、面积或统计数值。",
+        key_plots="研究范围红线、五个重点地块、主要道路、伪满皇宫周边核心节点、图例区 and 固定图框。",
+        design_strategy=dyn_strategy,
+        analysis_conclusion=dyn_conclusion,
         avoid_content="不得重绘底图、不得移动边界、不得改写重点地块、不得改变图框、不得虚构道路和用地分类。",
         layout_structure="固定图框模板 + 主图底图锁定区 + 右侧图例区 + 底部信息框 + 数据来源注记",
         mark_as_schematic="示意" in template_requirements or profile.precision != "一级精度",

@@ -173,6 +173,21 @@ def render_stage_summary(
     if enable_llm:
         _render_llm_summary_button(stage_code, title, dynamic_findings, methodology)
 
+    # ── 自动将本阶段总结和方法写入本地文档 ──
+    try:
+        from src.workflow.stage_data_bus import save_stage_summary_to_file
+        ai_summary = st.session_state.get(f"llm_summary_{stage_code}", "")
+        save_stage_summary_to_file(
+            stage_code=stage_code,
+            title=title,
+            methodology=methodology,
+            findings=dynamic_findings,
+            implication=implication,
+            ai_summary=ai_summary
+        )
+    except Exception:
+        pass
+
 
 def _enrich_findings_from_bus(stage_code: str, static_findings: list[dict]) -> list[dict]:
     """从 stage_data_bus 读取数据，动态替换或增强 findings 中的占位数据。"""
@@ -463,91 +478,77 @@ def _render_llm_summary_button(
 
     session_key = f"llm_summary_{stage_code}"
 
-    # --- 模型下拉选择 ---
-    local_models = _scan_local_models()
-    api_models = ["deepseek-v4-flash", "deepseek-v4-pro"]
-    all_models = local_models + [m for m in api_models if m not in local_models]
-    if not all_models:
-        all_models = ["deepseek-v4-flash"]
+    # 强制只使用 deepseek-v4-pro
+    model_tag = "deepseek-v4-pro"
 
-    col1, col2 = st.columns([3, 1])
-    with col2:
-        model_tag = st.selectbox(
-            "模型",
-            options=all_models,
-            index=0,
-            key=f"summary_model_{stage_code}",
-            label_visibility="collapsed",
-        )
-    with col1:
-        if st.button(
-            f"🧠 AI 生成 Stage {stage_code} 答辩小结",
-            key=f"summary_btn_{stage_code}",
-            **stretch_width(st.button),
-        ):
-            # --- 进度条 ---
-            progress = st.progress(0, text="正在收集阶段数据...")
+    if st.button(
+        f"🧠 AI 生成 Stage {stage_code} 答辩小结",
+        key=f"summary_btn_{stage_code}",
+        **stretch_width(st.button),
+    ):
+        # --- 进度条 ---
+        progress = st.progress(0, text="正在收集阶段 data...")
 
-            # 收集当前阶段数据上下文
-            data_lines = [f"阶段：{stage_code} {stage_name}", f"方法论：{methodology}"]
-            for idx, f in enumerate(findings):
-                data_lines.append(f"发现{idx+1}：{f.get('point', '')} (依据: {f.get('evidence', '')})")
+        # 收集当前阶段数据上下文
+        data_lines = [f"阶段：{stage_code} {stage_name}", f"方法论：{methodology}"]
+        for idx, f in enumerate(findings):
+            data_lines.append(f"发现{idx+1}：{f.get('point', '')} (依据: {f.get('evidence', '')})")
 
-            progress.progress(0.15, text="正在读取跨阶段数据总线...")
+        progress.progress(0.15, text="正在读取跨阶段数据总线...")
 
-            # 从数据总线补充 —— 当前阶段
-            try:
-                bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
-                for k, v in bus_data.items():
-                    if isinstance(v, str) and len(v) < 500:
-                        data_lines.append(f"[本阶段总线] {k}: {v}")
+        # 从数据总线补充 —— 当前阶段
+        try:
+            bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
+            for k, v in bus_data.items():
+                if isinstance(v, str) and len(v) < 500:
+                    data_lines.append(f"[本阶段总线] {k}: {v}")
+                elif isinstance(v, (int, float)):
+                    data_lines.append(f"[本阶段总线] {k}: {v}")
+        except Exception:
+            pass
+
+        progress.progress(0.30, text="正在汇总前期阶段成果...")
+
+        # 从数据总线补充 —— 所有已完成的前期阶段
+        try:
+            all_bus = st.session_state.get("stage_bus", {})
+            for other_code, other_data in all_bus.items():
+                if other_code == stage_code or not isinstance(other_data, dict):
+                    continue
+                for k, v in other_data.items():
+                    if isinstance(v, str) and len(v) < 300:
+                        data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
                     elif isinstance(v, (int, float)):
-                        data_lines.append(f"[本阶段总线] {k}: {v}")
-            except Exception:
-                pass
+                        data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
+        except Exception:
+            pass
 
-            progress.progress(0.30, text="正在汇总前期阶段成果...")
+        # 读取已有 AI 小结作为上下文
+        for prev_code in sorted(st.session_state.keys()):
+            if prev_code.startswith("llm_summary_") and prev_code != session_key:
+                prev_text = st.session_state[prev_code]
+                if isinstance(prev_text, str) and len(prev_text) > 30:
+                    prev_stage = prev_code.replace("llm_summary_", "")
+                    data_lines.append(f"[Stage {prev_stage} 已有小结] {prev_text[:200]}")
 
-            # 从数据总线补充 —— 所有已完成的前期阶段
-            try:
-                all_bus = st.session_state.get("stage_bus", {})
-                for other_code, other_data in all_bus.items():
-                    if other_code == stage_code or not isinstance(other_data, dict):
-                        continue
-                    for k, v in other_data.items():
-                        if isinstance(v, str) and len(v) < 300:
-                            data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
-                        elif isinstance(v, (int, float)):
-                            data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
-            except Exception:
-                pass
+        progress.progress(0.45, text="正在构建推理提示词...")
 
-            # 读取已有 AI 小结作为上下文
-            for prev_code in sorted(st.session_state.keys()):
-                if prev_code.startswith("llm_summary_") and prev_code != session_key:
-                    prev_text = st.session_state[prev_code]
-                    if isinstance(prev_text, str) and len(prev_text) > 30:
-                        prev_stage = prev_code.replace("llm_summary_", "")
-                        data_lines.append(f"[Stage {prev_stage} 已有小结] {prev_text[:200]}")
+        data_context = "\n".join(data_lines)
 
-            progress.progress(0.45, text="正在构建推理提示词...")
+        progress.progress(0.50, text=f"正在调用 {model_tag} 生成答辩小结...")
 
-            data_context = "\n".join(data_lines)
+        result = generate_stage_summary_text(
+            stage_code, stage_name, data_context, model=model_tag
+        )
 
-            progress.progress(0.50, text=f"正在调用 {model_tag} 生成答辩小结...")
+        progress.progress(0.95, text="正在整理输出...")
 
-            result = generate_stage_summary_text(
-                stage_code, stage_name, data_context, model=model_tag
-            )
+        if result:
+            st.session_state[session_key] = result
 
-            progress.progress(0.95, text="正在整理输出...")
-
-            if result:
-                st.session_state[session_key] = result
-
-            progress.progress(1.0, text="答辩小结生成完成！")
-            time.sleep(0.5)
-            progress.empty()
+        progress.progress(1.0, text="答辩小结生成完成！")
+        time.sleep(0.5)
+        progress.empty()
 
     if st.session_state.get(session_key):
         st.markdown(

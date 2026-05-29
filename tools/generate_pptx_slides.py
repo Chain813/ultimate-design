@@ -11,7 +11,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 # Separate template and output paths to prevent modifying template directly
 ppt_template_path = r"C:\Users\23902\Desktop\城环杯\附件4 成果演示幻灯（模板）.pptx"
 ppt_output_path = r"C:\Users\23902\Desktop\城环杯\附件4 成果演示幻灯.pptx"
-temp_img_dir = r"C:\Users\23902\.gemini\antigravity\brain\4548a8df-fff1-40c0-a394-3f74511d5d61\scratch\images"
+temp_img_dir = r"C:\Users\23902\Desktop\城环杯\temp_images"
 atlas_dir = r"e:\AI-based-project\urban-platform\static\atlas"
 brain_prev_dir = r"C:\Users\23902\.gemini\antigravity\brain\a7a0a585-8fe2-47a0-8b18-0be8b3147e91"
 
@@ -158,16 +158,53 @@ def add_kpi_card_new(slide, left, top, width, height, value_text, label_text, is
     p_lbl.alignment = PP_ALIGN.LEFT
 
 def add_framed_picture(slide, img_path, left, top, width, height):
-    # White background frame shape
-    frame = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, left, top, width, height)
+    from PIL import Image
+    with Image.open(img_path) as img:
+        img_w, img_h = img.size
+    
+    img_aspect = img_w / img_h
+    box_aspect = width / height
+    
+    if img_aspect > box_aspect:
+        # Image is wider than container -> constrain by width
+        scaled_width = width
+        scaled_height = width / img_aspect
+    else:
+        # Image is taller than container -> constrain by height
+        scaled_height = height
+        scaled_width = height * img_aspect
+        
+    offset_x = (width - scaled_width) / 2
+    offset_y = (height - scaled_height) / 2
+    
+    frame_left = left + offset_x
+    frame_top = top + offset_y
+    
+    # White background frame shape fitting the scaled image
+    frame = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, frame_left, frame_top, int(scaled_width), int(scaled_height))
     frame.fill.solid()
     frame.fill.fore_color.rgb = RGBColor(255, 255, 255)
     frame.line.color.rgb = RGBColor(210, 215, 225)
     frame.line.width = Pt(1)
     
     # Insert picture inside frame with a slight inset margin
-    inset = Inches(0.05)
-    slide.shapes.add_picture(img_path, left + inset, top + inset, width - inset*2, height - inset*2)
+    inset = Inches(0.04)
+    if scaled_width - inset*2 > 0 and scaled_height - inset*2 > 0:
+        slide.shapes.add_picture(
+            img_path, 
+            frame_left + inset, 
+            frame_top + inset, 
+            width=int(scaled_width - inset*2), 
+            height=int(scaled_height - inset*2)
+        )
+    else:
+        slide.shapes.add_picture(
+            img_path, 
+            frame_left, 
+            frame_top, 
+            width=int(scaled_width), 
+            height=int(scaled_height)
+        )
 
 # Update Slide 1 (Cover)
 print("Updating Slide 1 Cover...")
@@ -583,11 +620,14 @@ format_title_and_add_bar(s13, "参考文献与 GitHub 开源技术底座")
 # 2 Wide vertical cards
 c1_s13 = create_tabbed_card(s13, Inches(0.8), Inches(1.4), col_w_wide, col_h_wide, bar_color=C_PRIMARY)
 add_card_text_runs(c1_s13, "学术参考文献 (Academic References)", [
-    ("[1] OSMnx (Boeing, 2017)：", "用于研究区 74 段核心规划路网的拓扑网络连通性构建及全局空间整合度与穿行度量化计算。"),
-    ("[2] SegFormer (Xie et al., 2021)：", "基于 Transformers 架构对 1,788 张百度实景图像开展语义分割，精确测算 GVI 绿视率指标。"),
-    ("[3] ControlNet (Zhang et al., 2023)：", "提出图像空间几何红线强对齐约束绘图算法，作为 Stable Diffusion 规划制图的物理导向控制底座。"),
-    ("[4] DeepSeek-V4 (2024)：", "提供高水准推理内核，驱动居民、开发商、政府规划局多智能体开展高水准的利益谈判与共识收敛。"),
-    ("[5] 城市体检工作导则 (住建部, 2021)：", "为空间潜力 S、社会需求 D、环境品质 E 构建的 3D 一体化潜力指数提供国家政策规范框架。")
+    ("[1] 丁梦月. ", "基于计算机视觉技术的城市街道步行空间人群行为原型研究[D].南京:东南大学,2021."),
+    ("[2] 尧馨雅. ", "基于可解释深度学习的街道风貌基因图谱识别研究[D].杭州:浙江大学,2022."),
+    ("[3] 赵卉. ", "历史肌理延续的数字化城市设计方法研究——以江苏同里古镇为例[D].南京:东南大学,2021."),
+    ("[4] 卢文正. ", "社会空间理论视角的社区更新[D].哈尔滨:哈尔滨工业大学,2020."),
+    ("[5] 张峰. ", "智慧城市空间信息资源规划的模型和实现方法研究[D].武汉:武汉大学,2005."),
+    ("[6] 张国政. ", "数字孪生技术提升城市韧性路径研究[D].上海:华东政法大学,2023."),
+    ("[7] 梁汉雄. ", "基于街景图片与深度学习的旧工业园区改造与可步行性要素研究[D].广州:华南理工大学,2022."),
+    ("[8] 方可. ", "探索北京旧城居住区有机更新的适宜途径[D].北京:清华大学,2000.")
 ])
 
 c2_s13 = create_tabbed_card(s13, Inches(6.8), Inches(1.4), col_w_wide, col_h_wide, bar_color=C_ACCENT)

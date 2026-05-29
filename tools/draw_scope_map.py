@@ -829,6 +829,140 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
     # 8. Save cropped homepage banner image from primary map area (if default Location Map)
     if drawing_type == "现状区位图" and title == "现状区位图":
         homepage_banner_img = template.crop((183, 289, 1888, 1658))
+        
+        # Draw location map, scale bar, and wind rose onto the cropped banner image
+        try:
+            banner_rgba = homepage_banner_img.convert("RGBA")
+            banner_draw = ImageDraw.Draw(banner_rgba)
+            W_b, H_b = banner_rgba.size
+            
+            # Fonts (reusing font paths from script)
+            font_title_b = ImageFont.truetype(font_bold_path, 16)
+            font_label_b = ImageFont.truetype(font_path, 12)
+            font_label_bold_b = ImageFont.truetype(font_bold_path, 12)
+            font_scale_b = ImageFont.truetype(font_path, 13)
+            font_scale_bold_b = ImageFont.truetype(font_bold_path, 14)
+            
+            # 8a. Top-Right Corner: Wind Rose Card (200x210)
+            wr_card_w, wr_card_h = 200, 210
+            wr_x = W_b - wr_card_w - 30
+            wr_y = 30
+            
+            banner_draw.rounded_rectangle([wr_x+2, wr_y+2, wr_x+wr_card_w+2, wr_y+wr_card_h+2], radius=10, fill=(0, 0, 0, 30))
+            banner_draw.rounded_rectangle([wr_x, wr_y, wr_x+wr_card_w, wr_y+wr_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
+            
+            title_text = "长春市风玫瑰图"
+            tb = banner_draw.textbbox((0, 0), title_text, font=font_title_b)
+            tw = tb[2] - tb[0]
+            banner_draw.text((wr_x + (wr_card_w - tw)//2, wr_y + 12), title_text, fill=(30, 41, 59, 255), font=font_title_b)
+            
+            windrose_path = ASSETS_DIR / "长春市风玫瑰.png"
+            if windrose_path.exists():
+                windrose = Image.open(windrose_path).convert("RGBA")
+                wr_size = 150
+                windrose_resized = windrose.resize((wr_size, wr_size), Image.Resampling.LANCZOS)
+                wx = wr_x + (wr_card_w - wr_size)//2
+                wy = wr_y + 45
+                banner_rgba.paste(windrose_resized, (wx, wy), windrose_resized)
+            
+            # 8b. Bottom-Right Corner: Scale Bar Card (280x95)
+            scale_card_w, scale_card_h = 280, 95
+            sc_x = W_b - scale_card_w - 30
+            sc_y = H_b - scale_card_h - 30
+            
+            banner_draw.rounded_rectangle([sc_x+2, sc_y+2, sc_x+scale_card_w+2, sc_y+scale_card_h+2], radius=10, fill=(0, 0, 0, 30))
+            banner_draw.rounded_rectangle([sc_x, sc_y, sc_x+scale_card_w, sc_y+scale_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
+            
+            m_per_px = view_w / 1705
+            scale_bar_px = int(round(500 / m_per_px))
+            scale_text = f"比例尺  1:{scale_rounded}"
+            banner_draw.text((sc_x + 20, sc_y + 15), scale_text, fill=(30, 41, 59, 255), font=font_scale_bold_b)
+            
+            line_y = sc_y + 50
+            line_x_start = sc_x + 20
+            line_x_end = line_x_start + scale_bar_px
+            seg_mid = line_x_start + scale_bar_px // 2
+            
+            banner_draw.rectangle([line_x_start, line_y, seg_mid, line_y + 6], fill=(30, 41, 59, 255))
+            banner_draw.rectangle([seg_mid, line_y, line_x_end, line_y + 6], fill=(255, 255, 255, 255), outline=(30, 41, 59, 255), width=1)
+            
+            banner_draw.line([(line_x_start, line_y), (line_x_start, line_y - 4)], fill=(30, 41, 59, 255), width=2)
+            banner_draw.line([(seg_mid, line_y), (seg_mid, line_y - 4)], fill=(30, 41, 59, 255), width=2)
+            banner_draw.line([(line_x_end, line_y), (line_x_end, line_y - 4)], fill=(30, 41, 59, 255), width=2)
+            
+            banner_draw.text((line_x_start - 4, line_y - 18), "0", fill=(71, 85, 105, 255), font=font_scale_b)
+            banner_draw.text((seg_mid - 12, line_y - 18), "250", fill=(71, 85, 105, 255), font=font_scale_b)
+            banner_draw.text((line_x_end - 15, line_y - 18), "500m", fill=(71, 85, 105, 255), font=font_scale_b)
+            
+            # 8c. Bottom-Left Corner: Location Map Card (320x350)
+            loc_card_w, loc_card_h = 320, 350
+            lc_x = 30
+            lc_y = H_b - loc_card_h - 30
+            
+            banner_draw.rounded_rectangle([lc_x+2, lc_y+2, lc_x+loc_card_w+2, lc_y+loc_card_h+2], radius=10, fill=(0, 0, 0, 30))
+            banner_draw.rounded_rectangle([lc_x, lc_y, lc_x+loc_card_w, lc_y+loc_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
+            
+            loc_title = "项目在长春市区位示意"
+            tb = banner_draw.textbbox((0, 0), loc_title, font=font_title_b)
+            tw = tb[2] - tb[0]
+            banner_draw.text((lc_x + (loc_card_w - tw)//2, lc_y + 12), loc_title, fill=(30, 41, 59, 255), font=font_title_b)
+            
+            map_x1, map_y1 = lc_x + 15, lc_y + 40
+            map_w, map_h = 290, 295
+            map_x2, map_y2 = map_x1 + map_w, map_y1 + map_h
+            
+            banner_draw.rectangle([map_x1, map_y1, map_x2, map_y2], fill=(248, 249, 250, 255), outline=(220, 224, 230, 255), width=1)
+            
+            def map_pt(lx, ly):
+                px = map_x1 + lx * (map_w / 100.0)
+                py = map_y1 + ly * (map_h / 100.0)
+                return int(px), int(py)
+                
+            luyuan_poly = [map_pt(5, 45), map_pt(35, 45), map_pt(35, 60), map_pt(25, 80), map_pt(5, 80)]
+            chaoyang_poly = [map_pt(35, 60), map_pt(50, 60), map_pt(50, 95), map_pt(20, 95), map_pt(25, 80)]
+            nanguan_poly = [map_pt(50, 45), map_pt(60, 45), map_pt(60, 95), map_pt(50, 95)]
+            erdao_poly = [map_pt(60, 5), map_pt(95, 5), map_pt(95, 95), map_pt(60, 95)]
+            kuancheng_poly = [map_pt(35, 45), map_pt(35, 25), map_pt(50, 5), map_pt(60, 5), map_pt(60, 45), map_pt(50, 45)]
+            
+            banner_draw.polygon(luyuan_poly, fill=(241, 243, 245, 255), outline=(200, 204, 210, 255), width=1)
+            banner_draw.polygon(chaoyang_poly, fill=(241, 243, 245, 255), outline=(200, 204, 210, 255), width=1)
+            banner_draw.polygon(nanguan_poly, fill=(241, 243, 245, 255), outline=(200, 204, 210, 255), width=1)
+            banner_draw.polygon(erdao_poly, fill=(241, 243, 245, 255), outline=(200, 204, 210, 255), width=1)
+            
+            banner_draw.polygon(kuancheng_poly, fill=(232, 244, 253, 255), outline=(160, 200, 235, 255), width=1)
+            
+            river_pts = [map_pt(60, 5), map_pt(58, 25), map_pt(61, 45), map_pt(59, 70), map_pt(60, 95)]
+            banner_draw.line(river_pts, fill=(135, 206, 250, 255), width=3, joint="round")
+            
+            def draw_text_with_outline_b(text, pt, font, fill_color, outline_color=(255, 255, 255, 255)):
+                tx, ty = pt
+                banner_draw.text((tx-1, ty), text, fill=outline_color, font=font)
+                banner_draw.text((tx+1, ty), text, fill=outline_color, font=font)
+                banner_draw.text((tx, ty-1), text, fill=outline_color, font=font)
+                banner_draw.text((tx, ty+1), text, fill=outline_color, font=font)
+                banner_draw.text((tx, ty), text, fill=fill_color, font=font)
+                
+            draw_text_with_outline_b("绿园区", map_pt(12, 60), font_label_b, (100, 116, 139, 255))
+            draw_text_with_outline_b("朝阳区", map_pt(30, 75), font_label_b, (100, 116, 139, 255))
+            draw_text_with_outline_b("南关区", map_pt(52, 70), font_label_b, (100, 116, 139, 255))
+            draw_text_with_outline_b("二道区", map_pt(72, 48), font_label_b, (100, 116, 139, 255))
+            draw_text_with_outline_b("宽城区 (项目所在区)", map_pt(38, 22), font_label_bold_b, (30, 41, 59, 255))
+            
+            proj_lx, proj_ly = 57, 43
+            proj_x, proj_y = map_pt(proj_lx, proj_ly)
+            banner_draw.ellipse([proj_x - 8, proj_y - 8, proj_x + 8, proj_y + 8], fill=(239, 68, 68, 80))
+            banner_draw.ellipse([proj_x - 5, proj_y - 5, proj_x + 5, proj_y + 5], fill=(255, 255, 255, 255))
+            banner_draw.ellipse([proj_x - 3, proj_y - 3, proj_x + 3, proj_y + 3], fill=(239, 68, 68, 255))
+            
+            proj_label = " 伪满皇宫项目场地"
+            draw_text_with_outline_b(proj_label, (proj_x + 8, proj_y - 8), font_label_bold_b, (239, 68, 68, 255))
+            
+            homepage_banner_img = banner_rgba.convert("RGB")
+        except Exception as e:
+            print(f"Error drawing annotations on banner image: {e}")
+            import traceback
+            traceback.print_exc()
+
         cropped_banner_path = STATIC_DIR / "research_scope_2d_cropped.png"
         homepage_banner_img.save(cropped_banner_path)
         print(f"Homepage banner cropped image saved to {cropped_banner_path}")

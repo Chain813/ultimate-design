@@ -3,7 +3,7 @@
 基于 Stage 08 的空间结构推演，对四大专项系统进行深度设计：
 1. 交通网络与 TOD
 2. 公共空间与 15 分钟社区生活圈
-3. 建筑形态与天际线控制
+3. 建筑形态、风貌与立面控制
 4. 风貌景观与历史保护
 
 每个专项系统均由 LLM 基于量化空间数据深度策划，产出自动存入数据总线。
@@ -90,7 +90,7 @@ graphic_svg = """
   <text x="280" y="81" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">公共空间与 15min 生活圈</text>
 
   <rect x="200" y="105" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="280" y="126" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">建筑形态与天际控制</text>
+  <text x="280" y="126" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">建筑形态、风貌与立面</text>
 
   <rect x="200" y="150" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
   <text x="280" y="171" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">风貌景观与历史保护</text>
@@ -108,7 +108,7 @@ graphic_svg = """
 
 render_page_banner(
     title="专项系统设计",
-    description="基于 Stage 08 总体空间结构，对交通网络、公共空间、建筑形态和风貌景观"
+    description="基于 Stage 08 总体空间结构，对交通网络、公共空间、建筑形态与风貌立面"
                 "四大专项系统进行 LLM 深度策划，每个专项均注入量化空间数据。",
     eyebrow="Stage 09",
     tags=["交通与TOD", "15分钟生活圈", "天际线控制", "风貌保护", "四专项并行"],
@@ -130,7 +130,7 @@ with st.sidebar:
         help="专项系统需要深度分析，建议使用 Pro 模型",
     )
 
-SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态与天际线", "🎨 风貌景观与文保", "🖼️ 图纸提示词生成"]
+SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态、风貌与立面", "🎨 风貌景观与文保", "🖼️ 图纸提示词生成"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -310,14 +310,14 @@ elif selected_sub == "🌳 公共空间与15分钟圈":
 
 
 # ═══════════════════════════════════════════
-# 模块三：建筑形态与天际线
+# 模块三：建筑形态、风貌与立面
 # ═══════════════════════════════════════════
 
-elif selected_sub == "🏛️ 建筑形态与天际线":
+elif selected_sub == "🏛️ 建筑形态、风貌与立面":
     render_section_intro(
-        "建筑形态控制与天际线保护",
-        "基于建筑高度数据推演天际线视廊，生成分区高度控制模型。",
-        eyebrow="Building Form & Skyline",
+        "建筑形态、风貌与立面控制",
+        "基于建筑高度、天际线视廊、整体建筑风貌及立面元素设计，生成形态、风貌与立面控制模型。",
+        eyebrow="Building Form, Style & Facade",
     )
 
     render_summary_cards([
@@ -327,11 +327,11 @@ elif selected_sub == "🏛️ 建筑形态与天际线":
         {"value": f"{sky.get('high_rise_ratio', 0)}%", "title": "高层占比", "desc": ">24m"},
     ])
 
-    if st.button("🏛️ 生成建筑形态控制方案", type="primary", key="s9_building", **stretch_width(st.button)):
+    if st.button("🏛️ 生成建筑形态、风貌与立面控制方案", type="primary", key="s9_building", **stretch_width(st.button)):
         spatial_ctx = get_full_spatial_context()
-        prompt = f"""你是一位资深城市设计师，精通建筑形态控制与天际线保护。
+        prompt = f"""你是一位资深城市设计师，精通建筑形态控制、历史风貌塑造与建筑立面设计。
 
-基于以下空间数据，为研究范围制定建筑形态控制方案。
+基于以下空间数据，为研究范围制定建筑形态、风貌与立面控制方案。
 
 【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
 【建筑形态现状】：
@@ -343,49 +343,46 @@ elif selected_sub == "🏛️ 建筑形态与天际线":
 
 【高度红线约束】：核心保护区限高 ≤9m，一般控制区限高 ≤18m。
 
-请生成【建筑形态控制方案】（不限字数，务必详实）：
+请生成【建筑形态、风貌与立面控制方案】（不限字数，务必详实）：
 
-一、高度分区控制
-  - 核心保护区（≤9m）：范围界定、适用建筑类型
-  - 协调过渡区（≤18m）：范围界定、退台与过渡手法
+一、高度与天际线控制
+  - 核心保护区（≤9m）：范围界定、高度红线与退界手法
+  - 协调过渡区（≤18m）：范围界定、退台与视廊过渡手法
   - 一般发展区（≤36m）：范围界定、高层布局原则
-  以表格形式列出各分区的高度上限、适用区域和设计要求
+  - 天际线视廊保护：从伪满皇宫等历史节点向外透视的视线视廊要求，天际线韵律设计
+  以表格形式列出各分区的高度上限、适用区域和设计要求。
 
-二、天际线视廊保护
-  - 核心视廊（从伪满皇宫向外的主要视线轴线）
-  - 视廊内建筑高度递减策略
-  - 天际线节奏设计（高低错落的韵律）
+二、建筑密度与街面控制
+  - 各分区建筑密度上限、建筑间距与日照标准
+  - 街墙贴线率要求（商业街区 vs 居住街区）
+  - 底层架空、沿街退界与界面通透性平衡
 
-三、建筑密度控制
-  - 各分区建筑密度上限
-  - 建筑间距与日照要求
-  - 围合式街区与通透式布局的适用场景
+三、建筑风貌特征导引
+  - 历史建筑风貌传承（古典比例、坡屋顶设计、檐口收头）
+  - 现代建筑风貌协调（简约线条、现代材质、平屋顶组合）
+  - 新旧风貌共生过渡手法（建筑质感与色彩的协调、空间虚实呼应）
 
-四、街墙界面控制
-  - 贴线率要求（商业街区 vs 居住街区）
-  - 底层架空与退台设计
-  - 界面连续性与通透性平衡
-
-五、建筑风貌引导
-  - 屋顶形式（坡屋顶/平屋顶的适用区域）
-  - 立面材质与色彩（结合历史风貌）
-  - 细部构件引导（檐口、入口、阳台等）
+四、建筑立面管控要点
+  - 立面三段式控制：基座、中段、顶部的比例划分与细节做法
+  - 墙面虚实比（开窗率/窗墙比控制）：商业街面与住宅立面的开窗率底线
+  - 立面材质：清水红砖、青砖青瓦、陶板、现代铝板、玻璃幕墙的组合与拼贴规则
+  - 立面细部：檐口线脚、雨篷与入口设计、阳台形式、空调外机隐蔽设计、外排水管美化管线等管控要求
 
 每一条建议都必须引用现状建筑数据，并明确空间落位。"""
 
         stream = call_llm_engine_stream(
             prompt=prompt,
-            system_prompt="资深城市设计师，精通建筑形态控制与天际线保护。方案必须有量化依据。",
+            system_prompt="资深城市设计师，精通建筑形态控制、风貌塑造与立面设计。方案必须有量化依据与具体管控要求。",
             model=model_tag,
         )
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("09", SK.BUILDING_FORM, result)
-            st.success(f"✅ 建筑形态控制方案生成完成（{len(result)} 字）")
+            st.success(f"✅ 建筑形态、风貌与立面控制方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.BUILDING_FORM, "")
     if saved:
-        with st.expander("📋 已生成的建筑形态控制方案", expanded=False):
+        with st.expander("📋 已生成的建筑形态、风貌与立面控制方案", expanded=False):
             st.markdown(saved)
 
 
@@ -471,9 +468,9 @@ render_stage_summary(
     findings=[
         {"point": f"交通系统覆盖道路分级、慢行网络化、TOD 最后一公里接驳评估", "evidence": "路网拓扑 + POI 空间分析"},
         {"point": f"公共空间系统完成绿视率盲区诊断与 15 分钟生活圈设施缺口测算", "evidence": "GVI 数据 + POI 设施分类"},
-        {"point": f"建筑形态按三级分区控制高度（核心≤9m/过渡≤18m/一般≤36m），含天际线视廊保护", "evidence": "建筑底图高度统计"},
+        {"point": f"建筑形态、风貌与立面控制覆盖高度分区、天际线视廊保护、风貌调性与立面三段式细节", "evidence": "建筑高度与风貌类型统计"},
         {"point": "风貌景观建立色彩-材料-历史界面三位一体的设计体系", "evidence": "保护建筑数据 + 用地分类"},
     ],
     methodology="基于 DeepSeek V4 Pro 的四专项并行深度策划，全量注入空间数据",
-    implication="为重点地段深化（Stage 10）提供了交通/空间/形态/风貌四大维度的设计约束和导引",
+    implication="为重点地段深化（Stage 10）提供了交通/空间/形态/风貌/立面等多维度的设计约束和导引",
 )

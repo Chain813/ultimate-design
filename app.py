@@ -110,7 +110,7 @@ render_page_banner(
         {"value": top_stats["poi_count"], "label": "POI 资产", "meta": "挂载到空间活力诊断的数据点"},
         {"value": top_stats["gvi_count"], "label": "街景样本", "meta": "支撑环境品质与风貌分析"},
     ],
-    image_url=f"{get_static_url('research_scope_2d_cropped.png')}?v=21"
+    image_url=f"{get_static_url('research_scope_2d_cropped.png')}?v=22"
 )
 
 render_summary_cards(
@@ -367,36 +367,79 @@ render_summary_cards([
 ])
 
 # ==========================================
-# 🏗️ 模块入口卡片 (四板块分组 · 小型卡片)
+# 🏗️ 模块入口卡片 (四板块分组 · 小型卡片 · 水平单行排版)
 # ==========================================
 render_section_intro("核心模块入口", "按数据准备、前期、中期、后期四大板块进入工作流。", eyebrow="Modules")
 
+st.markdown('<div class="module-horizontal-grid">', unsafe_allow_html=True)
 for section in MODULE_SECTIONS:
-    # 板块标题
-    st.markdown(f'''
-    <div class="module-section-title">
-        <span class="section-badge {section['badge_class']}">{section['label']}</span>
-        <span>{section['label']}板块</span>
-    </div>
-    ''', unsafe_allow_html=True)
-
-    # 该板块下的模块卡片
-    st.markdown('<div class="module-grid-home">', unsafe_allow_html=True)
     for mod in section["modules"]:
         page_route = get_page_route(mod["path"])
         image_name = mod["image"].split("/")[-1]
         st.markdown(f'''
-        <div class="module-container">
-            <a href="/{page_route}" target="_self" class="module-card">
-                <img class="card-thumb" src="{get_static_url(image_name)}" alt="{mod['title']}" />
-                <div class="card-body">
-                    <h4>{mod['title']}</h4>
-                    <p>{mod['desc']}</p>
-                </div>
-                <span class="card-arrow">›</span>
-            </a>
+        <div class="module-column">
+            <div class="module-section-title" style="margin-bottom: 10px; margin-top: 0;">
+                <span class="section-badge {section['badge_class']}">{section['label']}</span>
+                <span>{section['label']}板块</span>
+            </div>
+            <div class="module-container">
+                <a href="/{page_route}" target="_self" class="module-card">
+                    <img class="card-thumb" src="{get_static_url(image_name)}" alt="{mod['title']}" />
+                    <div class="card-body">
+                        <h4>{mod['title']}</h4>
+                        <p>{mod['desc']}</p>
+                    </div>
+                    <span class="card-arrow">›</span>
+                </a>
+            </div>
         </div>
         ''', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
 
+st.markdown("<br>", unsafe_allow_html=True)
+
+# ==========================================
+# 📊 AI 参与度与性能监控
+# ==========================================
+def render_ai_monitoring_dashboard():
+    """在主页底部渲染 AI 参与度监控面板。"""
+    from src.utils.llm_monitor import get_llm_metrics
+    
+    st.markdown("---")
+    render_section_intro(
+        "AI 深度参与监测看板", 
+        "实时监控全平台大语言模型 API 的调用频次、响应时长、Token 吞吐量和性能表现。", 
+        eyebrow="AI Performance Dashboard"
+    )
+    
+    metrics = get_llm_metrics()
+    if not metrics:
+        st.info("💡 目前尚无 LLM API 调用记录，AI 助手正处于待命状态。在各阶段使用 AI 分析或侧边栏 Copilot 后，此处将显示实时监控数据。")
+        return
+        
+    total_calls = len(metrics)
+    total_tokens = sum(m.get("total_tokens", 0) for m in metrics)
+    avg_latency = sum(m.get("latency_sec", 0.0) for m in metrics) / total_calls if total_calls > 0 else 0.0
+    
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric("📊 API 总调用次数", f"{total_calls} 次")
+    with c2:
+        st.metric("🧠 累计消耗 Tokens", f"{total_tokens:,} tokens")
+    with c3:
+        st.metric("⚡ 平均响应时长", f"{avg_latency:.2f} 秒")
+    
+    st.markdown("#### 🕒 实时调用流水 (最新 5 条)")
+    df = pd.DataFrame(metrics[::-1][:5])
+    df_display = df.rename(columns={
+        "timestamp": "时间戳",
+        "model": "调用模型",
+        "latency_sec": "耗时(秒)",
+        "prompt_tokens": "输入Tokens",
+        "completion_tokens": "输出Tokens",
+        "total_tokens": "总Tokens"
+    })
+    st.dataframe(df_display, use_container_width=True)
+
+render_ai_monitoring_dashboard()
 st.markdown("<br>", unsafe_allow_html=True)

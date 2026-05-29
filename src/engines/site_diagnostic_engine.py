@@ -158,11 +158,56 @@ def generate_policy_matrix(proposal: str) -> list:
     top_clauses = []
     for score, content, source in best_chunks:
         top_clauses.append({
-            "clause": content[:200],
+            "clause": content[:300],  # 保留较长文本供 LLM 理解
             "source": source,
             "relevance_score": score,
         })
 
+    # 尝试使用 LLM 进行合规研判
+    try:
+        from src.engines.llm_engine import call_llm_engine
+        from src.utils.llm_json_parser import parse_llm_json
+
+        clauses_input = []
+        for i, c in enumerate(top_clauses):
+            clauses_input.append(f"[{i}] 条款内容: {c['clause']}")
+        clauses_text = "\n".join(clauses_input)
+
+        prompt = f"""
+        你是一位专业的城市规划法规审计师。请评估以下“规划设计方案”对“法规条例”的合规性。
+        
+        规划设计方案：
+        {proposal}
+        
+        法规条例列表：
+        {clauses_text}
+        
+        请对每个法规条文进行合规研判，判断方案是否合规，并给出具体理由和改进建议。
+        请严格仅返回 JSON 数组格式，不要包含任何 markdown 块或多余文字：
+        [
+            {{
+                "id": 0,
+                "status": "合规 / 存在风险 / 违规 / 不适用",
+                "note": "对合规情况的详细解读，如果是违规或风险，提出针对性建议"
+            }},
+            ...
+        ]
+        """
+        resp = call_llm_engine(prompt=prompt, system_prompt="你是一位客观的城市规划法规审计师。", model="deepseek-v4-flash")
+        parsed = parse_llm_json(resp, fallback=None)
+        if parsed and isinstance(parsed, list) and len(parsed) == len(top_clauses):
+            for item in parsed:
+                idx = item.get("id")
+                if idx is not None and 0 <= idx < len(top_clauses):
+                    status = item.get("status", "📋 参考")
+                    note = item.get("note", "")
+                    # 如果有具体说明，组合输出
+                    top_clauses[idx]["compliance_note"] = f"{status} — {note}"
+            return top_clauses
+    except Exception:
+        pass
+
+    # 降级退回到关键词匹配
     for clause in top_clauses:
         text = clause["clause"]
         if any(kw in text for kw in ("禁止", "不得", "严格控制")):

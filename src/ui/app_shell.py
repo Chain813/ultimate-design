@@ -185,7 +185,7 @@ def render_top_nav():
         border: 1px solid rgba(0, 0, 0, 0.06) !important;
         padding: 10px 24px !important;
         border-radius: 50px !important; /* 纯圆形胶囊 */
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+        transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease !important;
         cursor: pointer !important;
         margin: 0 !important;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
@@ -217,7 +217,7 @@ def render_top_nav():
     div[data-testid="stRadio"] label:hover:not(:has(input:checked)) {
         background: rgba(0, 0, 0, 0.06) !important;
         border: 1px solid rgba(0, 0, 0, 0.12) !important;
-        transform: translateY(-1px);
+        transform: none !important;
     }
 
     /* 弥补顶部高度 */
@@ -248,6 +248,480 @@ def render_top_nav():
     st.markdown(nav_html, unsafe_allow_html=True)
 
     st.markdown("---")
+    render_scrolling_control()
+    render_copilot_sidebar()
+
+
+def render_scrolling_control():
+    """在页面底部注入高科技录屏自动滑动控制 HUD (带快捷键 & 可隐藏)"""
+    import base64
+    
+    js_code = """
+    (function() {
+        if (!window.__autoScrollerLoaded) {
+            window.__autoScrollerLoaded = true;
+            
+            // 1. 动态注入 CSS
+            if (!document.getElementById('auto-scroller-style')) {
+                const style = document.createElement('style');
+                style.id = 'auto-scroller-style';
+                style.innerHTML = `
+                #auto-scroller-hud {
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    z-index: 999999;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                }
+                #auto-scroller-hud.closed .hud-panel {
+                    display: none;
+                }
+                #auto-scroller-hud.closed .hud-trigger {
+                    display: flex;
+                }
+                #auto-scroller-hud:not(.closed) .hud-panel {
+                    display: block;
+                }
+                #auto-scroller-hud:not(.closed) .hud-trigger {
+                    display: none;
+                }
+                .hud-trigger {
+                    width: 44px;
+                    height: 44px;
+                    border-radius: 50%;
+                    background: rgba(30, 41, 59, 0.85);
+                    backdrop-filter: blur(10px);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                }
+                .hud-trigger:hover {
+                    transform: scale(1.1);
+                    background: rgba(15, 23, 42, 0.95);
+                    border-color: #38bdf8;
+                    box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+                }
+                .hud-icon {
+                    font-size: 18px;
+                }
+                .hud-panel {
+                    width: 250px;
+                    background: rgba(15, 23, 42, 0.92);
+                    backdrop-filter: blur(20px);
+                    border: 1px solid rgba(255, 255, 255, 0.12);
+                    border-radius: 14px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+                    overflow: hidden;
+                    color: #f1f5f9;
+                }
+                .hud-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 10px 14px;
+                    background: rgba(30, 41, 59, 0.5);
+                    border-bottom: 1px solid rgba(255,255,255,0.06);
+                }
+                .hud-header h4 {
+                    margin: 0;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #f8fafc;
+                }
+                .hud-close-btn {
+                    background: transparent;
+                    border: none;
+                    color: #94a3b8;
+                    font-size: 16px;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                    line-height: 1;
+                }
+                .hud-close-btn:hover {
+                    color: #f1f5f9;
+                }
+                .hud-body {
+                    padding: 12px 14px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                .hud-row {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    font-size: 12px;
+                }
+                .hud-label {
+                    color: #94a3b8;
+                }
+                .hud-value {
+                    font-weight: 500;
+                }
+                .hud-value.paused {
+                    color: #f59e0b;
+                }
+                .hud-value.running {
+                    color: #10b981;
+                }
+                .hud-controls {
+                    display: flex;
+                    gap: 6px;
+                    width: 100%;
+                }
+                .hud-btn {
+                    flex: 1;
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    border: 1px solid rgba(255,255,255,0.08);
+                    background: rgba(30, 41, 59, 0.8);
+                    color: #f1f5f9;
+                    font-size: 11px;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    outline: none;
+                }
+                .hud-btn:hover {
+                    background: rgba(51, 65, 85, 0.9);
+                    border-color: rgba(255,255,255,0.15);
+                }
+                .hud-btn.primary {
+                    background: #0071e3;
+                    border-color: #0071e3;
+                    color: white;
+                }
+                .hud-btn.primary:hover {
+                    background: #147ce5;
+                    box-shadow: 0 0 8px rgba(0, 113, 227, 0.3);
+                }
+                .hud-quick-actions {
+                    display: flex;
+                    gap: 6px;
+                }
+                .hud-btn-sm {
+                    flex: 1;
+                    padding: 4px 8px;
+                    border-radius: 5px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                    background: rgba(30, 41, 59, 0.5);
+                    color: #cbd5e1;
+                    font-size: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                }
+                .hud-btn-sm:hover {
+                    background: rgba(51, 65, 85, 0.7);
+                    color: #f8fafc;
+                }
+                #hud-speed-slider {
+                    width: 100%;
+                    height: 3px;
+                    border-radius: 2px;
+                    background: #334155;
+                    outline: none;
+                    -webkit-appearance: none;
+                }
+                #hud-speed-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    width: 12px;
+                    height: 12px;
+                    border-radius: 50%;
+                    background: #38bdf8;
+                    cursor: pointer;
+                    box-shadow: 0 0 4px rgba(56, 189, 248, 0.5);
+                    transition: transform 0.1s;
+                }
+                #hud-speed-slider::-webkit-slider-thumb:hover {
+                    transform: scale(1.2);
+                }
+                .hud-shortcuts {
+                    border-top: 1px solid rgba(255,255,255,0.06);
+                    padding-top: 8px;
+                    margin-top: 2px;
+                }
+                .hud-shortcuts h5 {
+                    margin: 0 0 4px 0;
+                    font-size: 10px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
+                }
+                .hud-shortcuts ul {
+                    margin: 0;
+                    padding-left: 0;
+                    list-style: none;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 3px;
+                }
+                .hud-shortcuts li {
+                    font-size: 10px;
+                    color: #94a3b8;
+                    display: flex;
+                    justify-content: space-between;
+                }
+                .hud-shortcuts code {
+                    background: rgba(255,255,255,0.06);
+                    padding: 1px 3px;
+                    border-radius: 2px;
+                    color: #38bdf8;
+                    font-family: monospace;
+                }
+                `;
+                document.head.appendChild(style);
+            }
+
+            // 2. 键盘快捷键监听 (仅绑定一次)
+            if (!window.__autoScrollerEventsRegistered) {
+                window.__autoScrollerEventsRegistered = true;
+                
+                document.addEventListener('keydown', function(e) {
+                    const tag = e.target.tagName.toLowerCase();
+                    if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) {
+                        return;
+                    }
+
+                    if (e.code === 'Space') {
+                        e.preventDefault();
+                        window.toggleScroll();
+                    } else if (e.code === 'ArrowUp') {
+                        e.preventDefault();
+                        window.changeDirection(-1);
+                    } else if (e.code === 'ArrowDown') {
+                        e.preventDefault();
+                        window.changeDirection(1);
+                    } else if (e.code === 'ArrowLeft') {
+                        e.preventDefault();
+                        const slider = document.getElementById('hud-speed-slider');
+                        if (slider) {
+                            const val = Math.max(0.2, parseFloat(slider.value) - 0.2);
+                            window.updateSpeed(val);
+                        }
+                    } else if (e.code === 'ArrowRight') {
+                        e.preventDefault();
+                        const slider = document.getElementById('hud-speed-slider');
+                        if (slider) {
+                            const val = Math.min(10, parseFloat(slider.value) + 0.2);
+                            window.updateSpeed(val);
+                        }
+                    } else if (e.code === 'KeyH') {
+                        e.preventDefault();
+                        const hud = document.getElementById('auto-scroller-hud');
+                        if (hud) {
+                            const curr = hud.style.display;
+                            hud.style.display = (curr === 'none') ? 'block' : 'none';
+                        }
+                    }
+                });
+            }
+        }
+
+        // 3. 动态渲染 HUD 容器 (若不存在)
+        if (!document.getElementById('auto-scroller-hud')) {
+            const container = document.createElement('div');
+            container.id = 'auto-scroller-hud';
+            container.className = 'closed';
+            container.innerHTML = `
+              <div id="scroller-trigger" class="hud-trigger" onclick="toggleScrollerHud()">
+                <span class="hud-icon">🎥</span>
+              </div>
+              <div class="hud-panel">
+                <div class="hud-header">
+                  <h4>🎥 录屏自动滚动</h4>
+                  <button class="hud-close-btn" onclick="toggleScrollerHud()">×</button>
+                </div>
+                <div class="hud-body">
+                  <div class="hud-row">
+                    <span class="hud-label">状态:</span>
+                    <strong id="hud-status" class="hud-value paused">⏸️ 已暂停</strong>
+                  </div>
+                  <div class="hud-row hud-controls">
+                    <button id="btn-scroll-toggle" onclick="toggleScroll()" class="hud-btn primary">▶️ 开始</button>
+                    <button onclick="changeDirection()" id="btn-direction" class="hud-btn">🔽 向下滚动</button>
+                  </div>
+                  <div class="hud-row">
+                    <span class="hud-label">速度:</span>
+                    <span id="hud-speed-label" class="hud-value">1.5 px/帧</span>
+                  </div>
+                  <div class="hud-row">
+                    <input type="range" id="hud-speed-slider" min="0.2" max="10" step="0.2" value="1.5" oninput="updateSpeed(this.value)">
+                  </div>
+                  <div class="hud-row hud-quick-actions">
+                    <button onclick="scrollToTop()" class="hud-btn-sm">🔝 回顶部</button>
+                    <button onclick="scrollToBottom()" class="hud-btn-sm">🔚 到尾部</button>
+                  </div>
+                  <div class="hud-shortcuts">
+                    <h5>快捷键:</h5>
+                    <ul>
+                      <li><code>[Space]</code> 播放/暂停</li>
+                      <li><code>[↑] / [↓]</code> 切换滚动方向</li>
+                      <li><code>[←] / [→]</code> 减速/加速</li>
+                      <li><code>[H]</code> 彻底隐藏控制面板</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            `;
+            document.body.appendChild(container);
+        }
+
+        // 4. 事件控制函数定义 (全局暴露)
+        let scrollSpeed = 1.5;
+        let scrolling = false;
+        let direction = 1;
+        let exactScrollY = window.pageYOffset || document.documentElement.scrollTop;
+
+        window.toggleScrollerHud = function() {
+            const hud = document.getElementById('auto-scroller-hud');
+            if (hud) hud.classList.toggle('closed');
+        };
+
+        window.updateSpeed = function(val) {
+            scrollSpeed = parseFloat(val);
+            const lbl = document.getElementById('hud-speed-label');
+            if (lbl) lbl.innerText = scrollSpeed.toFixed(1) + ' px/帧';
+            const slider = document.getElementById('hud-speed-slider');
+            if (slider) slider.value = val;
+        };
+
+        window.toggleScroll = function() {
+            scrolling = !scrolling;
+            const btn = document.getElementById('btn-scroll-toggle');
+            const status = document.getElementById('hud-status');
+            
+            if (scrolling) {
+                if (btn) btn.innerText = '⏸️ 暂停';
+                if (status) {
+                    status.innerText = '▶️ 滚动中';
+                    status.className = 'hud-value running';
+                }
+                exactScrollY = window.pageYOffset || document.documentElement.scrollTop;
+                requestAnimationFrame(scrollLoop);
+            } else {
+                if (btn) btn.innerText = '▶️ 开始';
+                if (status) {
+                    status.innerText = '⏸️ 已暂停';
+                    status.className = 'hud-value paused';
+                }
+            }
+        };
+
+        window.changeDirection = function(newDir) {
+            if (newDir !== undefined) {
+                direction = newDir;
+            } else {
+                direction = direction === 1 ? -1 : 1;
+            }
+            const btn = document.getElementById('btn-direction');
+            if (btn) {
+                btn.innerText = direction === 1 ? '🔽 向下滚动' : '🔼 向上滚动';
+            }
+        };
+
+        window.scrollToTop = function() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            exactScrollY = 0;
+        };
+
+        window.scrollToBottom = function() {
+            window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+            exactScrollY = document.documentElement.scrollHeight;
+        };
+
+        function scrollLoop() {
+            if (!scrolling) return;
+            exactScrollY += scrollSpeed * direction;
+            window.scrollTo(0, exactScrollY);
+            
+            const currentY = window.pageYOffset || document.documentElement.scrollTop;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            
+            if (direction === 1 && currentY >= maxScroll - 1) {
+                window.toggleScroll();
+            } else if (direction === -1 && currentY <= 0) {
+                window.toggleScroll();
+            } else {
+                requestAnimationFrame(scrollLoop);
+            }
+        }
+    })();
+    """
+    
+    b64_js = base64.b64encode(js_code.encode("utf-8")).decode("utf-8")
+    st.markdown(
+        f'<img src="x" onerror="eval(atob(\'{b64_js}\'))" style="display:none;" />',
+        unsafe_allow_html=True
+    )
+
+
+def render_copilot_sidebar():
+    """在所有页面的 Streamlit 侧边栏常驻 AI 规划助手，保持对话历史。"""
+    from src.engines.copilot_engine import init_copilot_state, get_copilot_response
+    
+    init_copilot_state()
+    
+    with st.sidebar:
+        st.markdown("### 💬 UltimateDESIGN AI 规划助手")
+        st.caption("基于法规 RAG 与阶段总线的全生命周期 AI 助理。")
+        
+        # 1. 对话气泡样式
+        st.markdown("""
+        <style>
+        .copilot-user {
+            background-color: rgba(0, 113, 227, 0.08);
+            border-left: 3px solid #0071e3;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 6px 0;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+        .copilot-ai {
+            background-color: rgba(0, 0, 0, 0.02);
+            border-left: 3px solid #86868b;
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin: 6px 0;
+            font-size: 13px;
+            color: #1d1d1f;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # 2. 清空对话按钮
+        if st.session_state["copilot_history"]:
+            if st.button("🗑️ 清空对话记录", key="copilot_clear_btn", use_container_width=True):
+                st.session_state["copilot_history"] = []
+                st.rerun()
+                
+        st.markdown("---")
+
+        # 3. 渲染历史记录
+        chat_container = st.container()
+        with chat_container:
+            for msg in st.session_state["copilot_history"]:
+                role = msg["role"]
+                content = msg["content"]
+                if role == "user":
+                    st.markdown(f'<div class="copilot-user"><b>👤 规划师:</b> {escape(content)}</div>', unsafe_allow_html=True)
+                else:
+                    # AI 答复可能包含 markdown 格式，因此不进行 html 逃逸，直接用 markdown 渲染
+                    st.markdown(f'<div class="copilot-ai"><b>🤖 Copilot:</b><br>{content}</div>', unsafe_allow_html=True)
+        
+        # 4. 输入框表单
+        with st.form(key="copilot_chat_form", clear_on_submit=True):
+            user_msg = st.text_input("输入您的问题...", placeholder="例如：伪满皇宫周边限高要求是多少？", key="copilot_input_widget")
+            submit = st.form_submit_button("🚀 发送", use_container_width=True)
+            if submit and user_msg.strip():
+                with st.spinner("AI 思考中..."):
+                    get_copilot_response(user_msg.strip())
+                st.rerun()
 
 # 🔗 导出别名以实现向后兼容 (修复新页面 ImportError)
 show_nav_bar = render_top_nav

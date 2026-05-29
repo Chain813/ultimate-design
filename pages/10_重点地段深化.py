@@ -237,9 +237,9 @@ elif selected_sub == "📊 控制性详细指标推演":
 {plot_ctx}
 
 【上游空间结构（Stage 08）】：{spatial_structure[:1500] if spatial_structure else '暂无'}
-【上游建筑形态控制（Stage 09）】：{building_form[:1500] if building_form else '核心保护区≤9m，一般控制区≤18m'}
+【上游建筑形态、风貌与立面控制（Stage 09）】：{building_form[:1500] if building_form else '核心保护区限高≤9m，一般控制区限高≤18m，容积率≤1.4'}
 
-【高度红线约束】：核心保护区限高≤9m，一般控制区限高≤18m，容积率≤1.4。
+【高度红线约束】：核心保护区限高≤9m，一般控制区限高≤18m，容积率≤1.4。此外需严格控制立面虚实比与建筑风貌协调性。
 
 请生成【控制性详细指标报告】：
 
@@ -390,7 +390,7 @@ elif selected_sub == "🏗️ 空间深化设计方案":
             "Stage 08 空间结构": "✅" if spatial_structure else "❌",
             "Stage 09 交通系统": "✅" if traffic else "❌",
             "Stage 09 公共空间": "✅" if public_space else "❌",
-            "Stage 09 建筑形态": "✅" if building_form else "❌",
+            "Stage 09 建筑形态、风貌与立面": "✅" if building_form else "❌",
             "Stage 09 风貌景观": "✅" if landscape else "❌",
             f"Stage 10 {selected_plot} 控规指标": "✅" if plot_metrics else "❌",
             f"Stage 10 {selected_plot} 人群画像": "✅" if plot_personas else "❌",
@@ -409,7 +409,7 @@ elif selected_sub == "🏗️ 空间深化设计方案":
 【空间结构】：{spatial_structure[:800] if spatial_structure else '暂无'}
 【交通策略】：{traffic[:500] if traffic else '暂无'}
 【公共空间】：{public_space[:500] if public_space else '暂无'}
-【建筑形态】：{building_form[:500] if building_form else '暂无'}
+【建筑形态、风貌与立面】：{building_form[:500] if building_form else '暂无'}
 【风貌景观】：{landscape[:500] if landscape else '暂无'}"""
 
         prompt = f"""你是一位城市设计深化方案主创设计师，精通从策划到落地的全流程。
