@@ -1,12 +1,12 @@
 # ultimateDESIGN 项目检查报告
 
-**生成时间**：2026-05-25（第六次更新）
+**生成时间**：2026-05-29（第七次更新）
 
 ---
 
 ## 1. 检查范围
 
-本检查覆盖：项目结构、15 个页面完整性、`src/` 核心模块（18 个引擎 + 8 个 UI 组件 + 9 个工具函数）、`scripts/` 自动化脚本（14 个）、`tools/` DevOps 工具链（14 个）、`tests/`（24 个测试模块 / 167 项用例）、CI 配置、GIS 数据管线、AIGC 制图管线、依赖环境、安全审计。
+本检查覆盖：项目结构、17 个页面完整性、`src/` 核心模块（18 个引擎 + 8 个 UI 组件 + 9 个工具函数）、`scripts/` 自动化脚本（14 个）、`tools/` DevOps 工具链（14 个）、`tests/`（24 个测试模块 / 168 项用例）、CI 配置、GIS 数据管线、AIGC 制图管线、依赖环境、安全审计。
 
 ## 2. 项目概况
 
@@ -29,8 +29,8 @@
 
 | 检查项 | 命令 | 结果 |
 |---|---|---|
-| **单元测试** | `python -m pytest` | **通过**，167 passed，2 warnings（Jieba 包警告） |
-| **环境诊断** | `python tools/check_env.py` | **通过**，15 页面全部存在，解析无误 |
+| **单元测试** | `python -m pytest` | **通过**，168 passed，2 warnings（Jieba 包警告） |
+| **环境诊断** | `python tools/check_env.py` | **通过**，17 页面全部存在，解析无误 |
 | **启动冒烟测试** | `python tools/startup_smoke.py` | **通过**，测试页面及启动健康度正常 |
 | **密钥扫描** | `python tools/secret_scan.py` | **通过**（检出 .env 的本地 key 为预期行为） |
 | **数据质量** | `python tools/data_quality_check.py` | **通过**，评级 A，缺失的 Git 忽略大文件自动降级为警告，不抛出非 0 退出码，确保 CI 通畅 |
@@ -60,15 +60,17 @@
 ### ⚙️ DevOps 工具链与 CI 稳定性加固
 - **依赖包复杂版本修饰符兼容**：在 `tools/check_env.py` 中引入 `re.split` 依赖分析引擎，优雅兼容 `requirements.txt` 中包含 `>=`、`<=` 等修饰符的库。
 - **CI 报告写盘幂等保护**：在 `tools/data_quality_check.py` 中增加对输出路径 `docs/STAGE2_DATA_QUALITY_REPORT.md` 父目录的幂等创建，防止物理崩溃。
+- **答辩小结模型锁定与自动报告增量追加**：完成 UI 答辩模型锁定为 `deepseek-v4-pro`（修复 400 报错），实现阶段报告自动增量追加、按 Stage 排序并写入 `output/stage_generation_report.md`。
+- **防穿帮录屏控制器与全局冗余文件清理**：在页面右下角增加帧率级平滑像素滚动 HUD 面板，并彻底排查清理了 `static/`、`tools/`、`scripts/` 下的 16 个冗余开发备份与测试图纸，再次释放磁盘空间 8.2MB。
 
 ## 5. 正向结论
 
-- **测试全绿**：167 项单元测试全部通过。
+- **测试全绿**：168 项单元测试全部通过。
 - **依赖统一**：`requirements.txt` 与实际运行版本一致。
 - **凭据隔离**：本地 `.env` 正常排除，保证凭证不上传 GitHub。
 - **GIS 管线闭环**：矢量→裁切→光栅化→ControlNet 全链路验证通过。
 - **视觉品质卓越**：全景图及子图无任何重合遮挡、黑框、像素截断毛刺，比例完美。
-- **CI 稳定性过关**：修复了因 `Building_Footprints.geojson` 大文件被 Git 忽略导致 CI 阶段报错的 Bug，确保 GitHub Actions 无障碍跑通。
+- **CI 稳定性过关**：修复了因 `Building_Footprints.geojson` 大文件被 Git 忽略导致 CI 阶段报错 of Bug，确保 GitHub Actions 无障碍跑通。
 
 ## 6. 遗留事项
 
@@ -81,4 +83,4 @@
 ---
 
 报告人：Antigravity  
-日期：2026-05-25
+日期：2026-05-29

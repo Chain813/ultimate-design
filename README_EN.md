@@ -10,7 +10,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-167%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-168%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -34,7 +34,9 @@ UltimateDESIGN is a **full-stack Streamlit decision support platform** built for
 | **Dual Quality Loop** | Gemma visual + DeepSeek content assessment; auto-correction for C/D-rated outputs |
 | **Versioned Atlas Export** | `VersionStore` full history + `BatchExporter` one-click 70+ drawing atlas |
 | **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
-| **167 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **Auto-Scrolling Controller** | Resident screen-recording HUD widget at the bottom right corner supporting frame-level smooth pixel-scrolling and shortcuts |
+| **Auto Stage Summary Archiving**| Automatically extracts stage findings/methodologies and incrementally saves them in `output/stage_generation_report.md` sorted by stage order |
+| **168 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
 
 ---
 
@@ -66,7 +68,7 @@ Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
 ### 🩺 3. Health Check
 
 ```powershell
-python -m pytest                    # 167 unit tests
+python -m pytest                    # 168 unit tests
 python tools/check_env.py           # 15-page integrity check
 python tools/secret_scan.py         # Credential leak scan
 ```
@@ -163,7 +165,7 @@ ultimateDESIGN/
 ├── scripts/                            # Automation (data fetch / GIS render)
 ├── tools/                              # DevOps (env check / secret scan / QA)
 │   ├── drawings/                      #   A3 layout rendering modules (dr_004.py ~ dr_slow_traffic.py)
-├── tests/                              # 24 modules / 167 test cases
+├── tests/                              # 24 modules / 168 test cases
 ├── data/                               # Spatial & tabular assets (decoupled)
 └── .github/workflows/ci.yml           # CI pipeline
 ```

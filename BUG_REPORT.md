@@ -17,6 +17,7 @@
 - ✅ 已修复 BUG-011：由于 `data/gis/Building_Footprints.geojson` 被 `.gitignore` 排除，导致 CI 环境下 `data_quality_check` 及 pytest 单元测试失败。已通过在检查工具中实现 Git 忽略文件降级为 WARNING 的白名单机制完美解决。
 - ✅ 新增：DevOps 工具链测试全覆盖（check_env / secret_scan / startup_smoke / data_quality_check），CI 已集成环境诊断与数据质量检查。
 - ✅ 新增：Git 历史泄漏审计完成，百度 AK 存在于 3 个历史提交中，需用 git filter-repo 清除。
+- ✅ 已修复 BUG-012：DeepSeek API 400 报错已修复，答辩小结锁定使用 deepseek-v4-pro，防止与本地 Ollama 模型混淆。
 
 ## BUG-001：密钥扫描漏扫 `.env`，本地存在真实格式凭据
 
@@ -72,4 +73,15 @@
   1. 在 `tools/data_quality_check.py` 中引入 `GIT_IGNORED_FILES = {"Building_Footprints.geojson"}` 白名单列表。
   2. 优化 `check_csv_or_excel` 和 `check_geojson` 函数，若缺失的文件属于被 Git 忽略的大文件，则自动将状态降级为可忽略的 `WARNING`，而不再判定为关键的 `MISSING`。
   3. 调整 `main()` 函数中的 `has_critical` 提取规则，使警告级别的状态不再抛出非 0 退出码，确保 CI 检查顺利通过，同时对开发者保留清晰的警告信息。
+
+## BUG-012：DeepSeek API 400 报错与本地 Ollama 模型混淆
+
+- 严重级别：高 → **已修复**
+- 根因诊断：
+  - 在答辩小结生成功能中，UI 扫描组件将本地运行的 Ollama 模型名（如 `gemma3:4b`）传入了 DeepSeek 官方 API 接口。
+  - 官方接口收到非预期的模型名参数，抛出 400 报错 `"The supported API model names are deepseek-v4-pro or deepseek-v4-flash, but you passed gemma3:4b."`。
+- 修复内容：
+  - 修改了 `src/ui/module_summary.py`，移除针对本地 Ollama 服务的扫描下拉框，将答辩总结大模型直接锁定为官方支持的 `deepseek-v4-pro`。
+  - 修改了 `src/engines/llm_engine.py` 中的判定逻辑，当 `model_tag = "deepseek-v4-pro"` 时强制走云端 DeepSeek 接口，并在后台完全规避与本地 Ollama 模型的冲突。
+
 
