@@ -27,12 +27,104 @@ st.set_page_config(page_title="11 实施路径", layout="wide", initial_sidebar_
 render_top_nav()
 render_engine_status_alert()
 
+graphic_svg = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.35));">
+  <defs>
+    <!-- Gradients -->
+    <linearGradient id="g_macro" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(99, 102, 241, 0.25)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.85)"/>
+    </linearGradient>
+    <linearGradient id="g_micro" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.25)"/>
+      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.85)"/>
+    </linearGradient>
+    <linearGradient id="g_arrow" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+    <!-- Filters for glows -->
+    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Connective Arrows/Pipes (Bottom to Top - Serves/Supports) -->
+  <path d="M 280 130 C 280 105, 300 105, 300 80" fill="none" stroke="url(#g_arrow)" stroke-width="2" stroke-dasharray="5,3"/>
+  <path d="M 340 130 L 340 80" fill="none" stroke="url(#g_arrow)" stroke-width="2.5" stroke-dasharray="5,3"/>
+  <path d="M 400 130 C 400 105, 380 105, 380 80" fill="none" stroke="url(#g_arrow)" stroke-width="2" stroke-dasharray="5,3"/>
+
+  <!-- Upward Arrow heads -->
+  <polygon points="300,76 296,82 304,82" fill="#818cf8"/>
+  <polygon points="340,75 336,81 344,81" fill="#818cf8"/>
+  <polygon points="380,76 376,82 384,82" fill="#818cf8"/>
+
+  <!-- Service Flow Indicator Label -->
+  <rect x="300" y="93" width="80" height="18" rx="4" fill="rgba(15, 23, 42, 0.95)" stroke="#6366f1" stroke-width="1"/>
+  <text x="340" y="105" fill="#38bdf8" font-size="9" font-family="sans-serif" text-anchor="middle" font-weight="bold">下层服务上层</text>
+
+  <!-- ================= TIER 1: MACRO SPINE ================= -->
+  <!-- Main Box -->
+  <rect x="230" y="40" width="220" height="40" rx="8" fill="url(#g_macro)" stroke="#818cf8" stroke-width="2" filter="url(#f_indigo)"/>
+  <text x="340" y="58" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">第一层：全域宏观骨架</text>
+  <text x="340" y="71" fill="#cbd5e1" font-size="8" font-family="sans-serif" text-anchor="middle">基础设施 / 政策投放 / 文旅线路</text>
+
+  <!-- T1 Connectors -->
+  <line x1="230" y1="60" x2="160" y2="60" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="450" y1="60" x2="520" y2="60" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="340" y1="40" x2="340" y2="30" stroke="#818cf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+  <!-- Sub Box Left: Infrastructure -->
+  <rect x="50" y="45" width="110" height="30" rx="6" fill="rgba(30, 41, 59, 0.8)" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="105" y="64" fill="#cbd5e1" font-size="10" font-family="sans-serif" text-anchor="middle">🛣️ 基础设施升级</text>
+
+  <!-- Sub Box Right: Policy -->
+  <rect x="520" y="45" width="110" height="30" rx="6" fill="rgba(30, 41, 59, 0.8)" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="575" y="64" fill="#cbd5e1" font-size="10" font-family="sans-serif" text-anchor="middle">📜 全域政策投放</text>
+
+  <!-- Sub Box Top: Tourism Line -->
+  <rect x="285" y="8" width="110" height="22" rx="4" fill="rgba(30, 41, 59, 0.8)" stroke="#6366f1" stroke-width="1.5"/>
+  <text x="340" y="22" fill="#cbd5e1" font-size="9" font-family="sans-serif" text-anchor="middle">🎒 文旅线路贯通</text>
+
+
+  <!-- ================= TIER 2: MICRO CATALYST ================= -->
+  <!-- Main Box -->
+  <rect x="230" y="130" width="220" height="40" rx="8" fill="url(#g_micro)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
+  <text x="340" y="148" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">第二层：重点地块微观触媒</text>
+  <text x="340" y="161" fill="#cbd5e1" font-size="8" font-family="sans-serif" text-anchor="middle">改造节点 / 资金筹措 / 业态进驻</text>
+
+  <!-- T2 Connectors -->
+  <line x1="230" y1="150" x2="160" y2="150" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="450" y1="150" x2="520" y2="150" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+  <line x1="340" y1="170" x2="340" y2="180" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+  <!-- Sub Box Left: Renewal Nodes -->
+  <rect x="50" y="135" width="110" height="30" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="105" y="154" fill="#cbd5e1" font-size="10" font-family="sans-serif" text-anchor="middle">🏗️ 改造节点细化</text>
+
+  <!-- Sub Box Right: Funding -->
+  <rect x="520" y="135" width="110" height="30" rx="6" fill="rgba(15, 23, 42, 0.8)" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="575" y="154" fill="#cbd5e1" font-size="10" font-family="sans-serif" text-anchor="middle">💰 资金筹措闭环</text>
+
+  <!-- Sub Box Bottom: Tenants -->
+  <rect x="285" y="180" width="110" height="20" rx="4" fill="rgba(15, 23, 42, 0.8)" stroke="#0ea5e9" stroke-width="1.5"/>
+  <text x="340" y="193" fill="#cbd5e1" font-size="9" font-family="sans-serif" text-anchor="middle">🏢 业态商招进驻</text>
+
+</svg>
+"""
+
 render_page_banner(
     title="实施路径",
     description="双层实施体系：第一层为全域宏观骨架（基础设施、政策、文旅线路），"
                 "第二层为重点地块微观触媒（改造节点、资金筹措、业态进驻），下层服务上层。",
     eyebrow="Stage 11",
     tags=["双层体系", "全域路径", "地块触媒", "分期实施"],
+    graphic_html=graphic_svg,
 )
 render_evidence_chain_bar("11", ["10", "11", "12"])
 
