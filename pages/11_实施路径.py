@@ -118,7 +118,7 @@ if selected_sub == "🌐 第一层：全域实施路径":
             st.success(f"全域实施路径生成完成（{len(result)} 字）")
 
     saved = load_stage_output("11", "region_phasing", "")
-    if saved:
+    if saved and not st.session_state.get("s11_region"):
         with st.expander("📋 已生成的全域实施路径", expanded=False):
             st.markdown(saved)
 
@@ -157,8 +157,9 @@ elif selected_sub == "📍 第二层：重点地块实施路径":
     c4.metric("POI", d["poi_count"])
 
     region_plan = load_stage_output("11", "region_phasing", "")
+    btn_key = f"s11_plot_{selected_plot.replace(' ', '_')}"
 
-    if st.button(f"📍 生成 {selected_plot} 实施路径", type="primary", **stretch_width(st.button)):
+    if st.button(f"📍 生成 {selected_plot} 实施路径", type="primary", key=btn_key, **stretch_width(st.button)):
         prompt = f"""你是一位城市更新实施策划专家。
 
 请为重点地块【{selected_plot}】制定详细的实施路径。
@@ -205,6 +206,11 @@ elif selected_sub == "📍 第二层：重点地块实施路径":
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("11", f"plot_phasing_{selected_plot}", result)
             st.success(f"{selected_plot} 实施路径生成完成（{len(result)} 字）")
+
+    saved_plot = load_stage_output("11", f"plot_phasing_{selected_plot}", "")
+    if saved_plot and not st.session_state.get(btn_key):
+        with st.expander("📋 已生成的重点地块实施路径", expanded=False):
+            st.markdown(saved_plot)
 
 
 # ═══════════════════════════════════════════

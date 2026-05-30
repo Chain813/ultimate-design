@@ -179,11 +179,48 @@ if selected_sub == "⚖️ 多主体协同推演":
                 for item in matrix:
                     st.markdown(f"**{item['source']}** {item['compliance_note']}")
 
-    if st.button("🚀 开启三方协同推演", type="primary", **stretch_width(st.button)):
+    # 加载已有的历史对话
+    saved_dialogues = load_stage_output("07", "negotiation_dialogues", [])
+
+    run_negotiation = False
+    if not saved_dialogues:
+        if st.button("🚀 开启三方协同推演", type="primary", **stretch_width(st.button)):
+            run_negotiation = True
+    elif st.session_state.get("p7_running_negotiation", False):
+        run_negotiation = True
+    else:
+        st.info("💡 已加载历史推演记录。如果您想重新生成，请点击下方的“重新开启推演”按钮。")
+        current_round = ""
+        for item in saved_dialogues:
+            if item["round_label"] != current_round:
+                current_round = item["round_label"]
+                st.subheader(f"🔄 {current_round}")
+            _render_dialogue_static(item["name"], item.get("thinking", ""), item["formal"], item["round_label"])
+            
+        if st.button("🔄 重新开启三方协同推演", type="secondary", **stretch_width(st.button)):
+            save_stage_output("07", "negotiation_dialogues", [])
+            st.session_state["p7_running_negotiation"] = True
+            st.rerun()
+
+    if run_negotiation:
         if not proposal:
             st.warning("请输入策划议题。")
+            st.session_state["p7_running_negotiation"] = False
         else:
             spatial_ctx = get_full_spatial_context()
+
+            # 注入客户端 MutationObserver 自动向下滑动脚本（仅在推演运行期间有效）
+            st.markdown("""
+            <script>
+                const observer = new MutationObserver(() => {
+                    const scrollTarget = window.parent.document.querySelector('.stMain') || window.parent.document.querySelector('.main') || window.parent;
+                    if (scrollTarget) {
+                        scrollTarget.scrollTop = scrollTarget.scrollHeight;
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            </script>
+            """, unsafe_allow_html=True)
 
             # 各方角色共享的空间背景
             shared_context = (
@@ -341,11 +378,163 @@ if selected_sub == "⚖️ 多主体协同推演":
                 "请基于前两轮的讨论，提出具体的折中妥协条件（例如用配建公共设施换取指标让步），给出你的最终支持度。",
             ]
 
+            def parse_streaming_text(raw_text: str):
+                thinking_part = ""
+                formal_part = ""
+                if "【正式回复】" in raw_text:
+                    parts = raw_text.split("【正式回复】", 1)
+                    thinking_part = parts[0].replace("【思考过程】", "").strip()
+                    formal_part = parts[1].strip()
+                elif "【思考过程】" in raw_text:
+                    thinking_part = raw_text.replace("【思考过程】", "").strip()
+                else:
+                    thinking_part = raw_text.strip()
+                return thinking_part, formal_part
+
+            def md_to_html(text: str) -> str:
+                if not text:
+                    return ""
+                # Convert ***text*** or ___text___ to <strong><em>text</em></strong>
+                text = re.sub(r'\*\*\*(.*?)\*\*\*', r'<strong><em>\1</em></strong>', text)
+                text = re.sub(r'___(.*?)___', r'<strong><em>\1</em></strong>', text)
+                # Convert **text** or __text__ to <strong>text</strong>
+                text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+                text = re.sub(r'__(.*?)__', r'<strong>\1</strong>', text)
+                # Convert *text* or _text_ to <em>text</em>
+                text = re.sub(r'\*(.*?)\*', r'<em>\1</em>', text)
+                text = re.sub(r'_(.*?)_', r'<em>\1</em>', text)
+                # Convert `code` to <code>
+                text = re.sub(r'`(.*?)`', r'<code style="background:rgba(0,0,0,0.05);padding:2px 4px;border-radius:3px;font-family:monospace;">\1</code>', text)
+                return text
+
+            def _render_dialogue_streaming(ph, name: str, thinking: str, formal: str, round_label: str):
+                # 兼容性：模糊匹配名称，加载正确的配色和头像
+                norm_name = name
+                for k in _color_map.keys():
+                    if k in name or name in k or re.sub(r'[^\w\u4e00-\u9fa5]', '', k) == re.sub(r'[^\w\u4e00-\u9fa5]', '', name):
+                        norm_name = k
+                        break
+
+                border_c, bg_c, text_c = _color_map.get(norm_name, ("#94a3b8", "#f8fafc", "#334155"))
+                avatar_b64 = _load_avatar_b64(_avatar_map.get(norm_name, Path("")))
+                avatar_html = (
+                    f'<img src="data:image/png;base64,{avatar_b64}" '
+                    f'style="width:52px;height:52px;border-radius:50%;object-fit:cover;'
+                    f'border:2px solid {border_c};flex-shrink:0;" />'
+                ) if avatar_b64 else f'<div style="width:52px;height:52px;border-radius:50%;background:{border_c};flex-shrink:0;"></div>'
+
+                thinking_html = ""
+                if thinking:
+                    thinking_formatted = md_to_html(thinking).replace("\n", "<br>")
+                    thinking_html = (
+                        f'<div style="font-size:11px;color:#64748b;background-color:rgba(0,0,0,0.02);'
+                        f'border-left:3px solid #cbd5e1;padding:6px 10px;margin-bottom:8px;border-radius:4px;font-style:italic;">'
+                        f'<span style="font-weight:bold;font-style:normal;color:#475569;display:block;'
+                        f'margin-bottom:2px;font-size:10px;letter-spacing:0.05em;">💭 思考过程 (Thinking Process)</span>'
+                        f'{thinking_formatted}'
+                        f'</div>'
+                    )
+
+                formal_formatted = md_to_html(formal).replace("\n", "<br>") if formal else "<i>正在思考中...</i>"
+
+                scroll_script = (
+                    f'<script>'
+                    f'var scrollTarget = window.parent.document.querySelector(".stMain") || window.parent.document.querySelector(".main") || window.parent;'
+                    f'if (scrollTarget) {{'
+                    f'scrollTarget.scrollTop = scrollTarget.scrollHeight;'
+                    f'}}'
+                    f'</script>'
+                )
+
+                html_content = (
+                    f'<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;">'
+                    f'{avatar_html}'
+                    f'<div style="flex:1;background:{bg_c};border-left:4px solid {border_c};'
+                    f'border-radius:8px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+                    f'<div style="font-weight:700;color:{text_c};font-size:1.05em;margin-bottom:4px;">'
+                    f'{norm_name} <span style="font-size:0.8em;color:#94a3b8;font-weight:400;">· {round_label}</span>'
+                    f'</div>'
+                    f'{thinking_html}'
+                    f'<div style="color:#1e293b;font-size:0.95em;line-height:1.65;">{formal_formatted}</div>'
+                    f'</div>'
+                    f'</div>'
+                    f'{scroll_script}'
+                )
+                ph.markdown(html_content, unsafe_allow_html=True)
+
+            def _render_dialogue_static(name: str, thinking: str, formal: str, round_label: str):
+                # 兼容性：模糊匹配名称，加载正确的配色和头像
+                norm_name = name
+                for k in _color_map.keys():
+                    if k in name or name in k or re.sub(r'[^\w\u4e00-\u9fa5]', '', k) == re.sub(r'[^\w\u4e00-\u9fa5]', '', name):
+                        norm_name = k
+                        break
+
+                border_c, bg_c, text_c = _color_map.get(norm_name, ("#94a3b8", "#f8fafc", "#334155"))
+                avatar_b64 = _load_avatar_b64(_avatar_map.get(norm_name, Path("")))
+                avatar_html = (
+                    f'<img src="data:image/png;base64,{avatar_b64}" '
+                    f'style="width:52px;height:52px;border-radius:50%;object-fit:cover;'
+                    f'border:2px solid {border_c};flex-shrink:0;" />'
+                ) if avatar_b64 else f'<div style="width:52px;height:52px;border-radius:50%;background:{border_c};flex-shrink:0;"></div>'
+
+                # 清理历史可能残留的 HTML 嵌套代码与冗余的前缀
+                if thinking:
+                    if "<div" in thinking:
+                        thinking = re.sub(r'<[^>]+>', ' ', thinking).replace("💭 思考过程 (Thinking Process)", "").strip()
+                    # 去除前缀
+                    thinking = re.sub(r'[\*#]*思考过程[\*#]*\s*[:：]?', '', thinking)
+                    thinking = re.sub(r'【思考过程】', '', thinking)
+                    thinking = re.sub(r'\s+', ' ', thinking).strip()
+
+                if formal:
+                    if "<div" in formal:
+                        formal = re.sub(r'<[^>]+>', ' ', formal).strip()
+                    # 去除前缀
+                    formal = re.sub(r'[\*#]*正式回复[\*#]*\s*[:：]?', '', formal)
+                    formal = re.sub(r'【正式回复】', '', formal)
+                    formal = re.sub(r'\s+', ' ', formal).strip()
+
+                thinking_html = ""
+                if thinking:
+                    thinking_formatted = md_to_html(thinking).replace("\n", "<br>")
+                    thinking_html = (
+                        f'<div style="font-size:11px;color:#64748b;background-color:rgba(0,0,0,0.02);'
+                        f'border-left:3px solid #cbd5e1;padding:6px 10px;margin-bottom:8px;border-radius:4px;font-style:italic;">'
+                        f'<span style="font-weight:bold;font-style:normal;color:#475569;display:block;'
+                        f'margin-bottom:2px;font-size:10px;letter-spacing:0.05em;">💭 思考过程 (Thinking Process)</span>'
+                        f'{thinking_formatted}'
+                        f'</div>'
+                    )
+
+                formal_formatted = md_to_html(formal).replace("\n", "<br>") if formal else ""
+
+                html_content = (
+                    f'<div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:18px;">'
+                    f'{avatar_html}'
+                    f'<div style="flex:1;background:{bg_c};border-left:4px solid {border_c};'
+                    f'border-radius:8px;padding:14px 18px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">'
+                    f'<div style="font-weight:700;color:{text_c};font-size:1.05em;margin-bottom:4px;">'
+                    f'{norm_name} <span style="font-size:0.8em;color:#94a3b8;font-weight:400;">· {round_label}</span>'
+                    f'</div>'
+                    f'{thinking_html}'
+                    f'<div style="color:#1e293b;font-size:0.95em;line-height:1.65;">{formal_formatted}</div>'
+                    f'</div>'
+                    f'</div>'
+                )
+                st.markdown(html_content, unsafe_allow_html=True)
+
             voting_scores = {}
             memory = ""
+            detailed_log = []
+            new_dialogues_list = []
+            
+            detailed_log.append(f"# 城市更新三方多轮博弈协商推演记录\n\n**策划议题**：{proposal}\n\n---\n")
+
             for round_idx in range(NUM_ROUNDS):
                 st.subheader(f"🔄 {ROUND_LABELS[round_idx]}")
                 round_memory = ""
+                detailed_log.append(f"## {ROUND_LABELS[round_idx]}\n")
                 for name, cfg in roles.items():
                     dp = f"【当前轮次】{ROUND_LABELS[round_idx]}\n{ROUND_INSTRUCTIONS[round_idx]}\n\n策划议题：\n{proposal}"
                     if memory:
@@ -355,14 +544,35 @@ if selected_sub == "⚖️ 多主体协同推演":
                     stream = call_llm_engine_stream(
                         prompt=dp, system_prompt=cfg["system"], model=model_tag,
                     )
-                    resp = st.write_stream(stream)
+                    status_ph = st.empty()
+                    status_ph.write(f"💬 **{name}** 发言中...")
+                    stream_ph = st.empty()
+                    with stream_ph:
+                        resp = st.write_stream(stream)
+                    status_ph.empty()
+                    stream_ph.empty()
+                    
                     if isinstance(resp, str):
-                        clean = (
-                            resp.split("【正式回复】")[-1].split("<SCORE:")[0].strip()
-                            if "【正式回复】" in resp else resp
-                        )
-                        _render_dialogue(name, clean, ROUND_LABELS[round_idx])
-                        round_memory += f"[{name}]: {clean}\n---\n"
+                        thinking, formal = parse_streaming_text(resp)
+                    else:
+                        thinking, formal = "", ""
+                    formal_clean = re.sub(r"<SCORE:\s*\d+\s*>", "", formal)
+                    
+                    _render_dialogue_static(name, thinking, formal_clean, ROUND_LABELS[round_idx])
+                    
+                    new_dialogues_list.append({
+                        "round_label": ROUND_LABELS[round_idx],
+                        "name": name,
+                        "thinking": thinking,
+                        "formal": formal_clean
+                    })
+
+                    detailed_log.append(f"### {name}\n")
+                    if thinking:
+                        detailed_log.append(f"**💭 思考过程**：\n> {thinking}\n\n")
+                    detailed_log.append(f"**💬 正式回复**：\n{formal_clean}\n\n")
+                    
+                    round_memory += f"[{name}]: {formal_clean}\n---\n"
                     time.sleep(0.3)
                 memory += f"\n=== {ROUND_LABELS[round_idx]} ===\n{round_memory}"
 
@@ -370,6 +580,11 @@ if selected_sub == "⚖️ 多主体协同推演":
             voting_scores = calculate_dynamic_satisfaction(memory)
             st.session_state["p4_voting_scores"] = voting_scores
             save_stage_output("07", SK.VOTING_SCORES, voting_scores)
+
+            full_log_content = "\n".join(detailed_log)
+            st.session_state["p7_negotiation_log"] = full_log_content
+            save_stage_output("07", SK.NEGOTIATION_RESULT, full_log_content)
+            save_stage_output("07", "negotiation_dialogues", new_dialogues_list)
 
             # 生成策略矩阵
             sp = (
@@ -392,6 +607,25 @@ if selected_sub == "⚖️ 多主体协同推演":
             if isinstance(summary, str):
                 st.session_state["stage4_output"] = summary
                 save_stage_output("07", SK.STRATEGY_MATRIX, summary)
+            st.session_state["p7_running_negotiation"] = False
+
+    # 总是展示导出本次思考过程的下载按钮
+    saved_negotiation_log = st.session_state.get(
+        "p7_negotiation_log",
+        load_stage_output("07", SK.NEGOTIATION_RESULT, ""),
+    )
+    if saved_negotiation_log:
+        st.markdown("### 📥 协商结果导出")
+        st.download_button(
+            label="💾 导出本次三方协商博弈与完整思考过程",
+            data=saved_negotiation_log,
+            file_name="urban_regeneration_negotiation_log.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+    else:
+        # 为避免首次加载页面显示空按钮而没有协商，只有在有数据时显示
+        pass
 
 elif selected_sub == "📊 共识雷达":
     render_section_intro("动态共识雷达", "查看三方协同推演后的共识度分布。", eyebrow="Consensus Radar")
@@ -406,6 +640,10 @@ elif selected_sub == "📊 共识雷达":
             fill="toself",
             fillcolor="rgba(99,102,241,0.15)",
             line=dict(color="#818cf8", width=2),
+            mode="lines+markers+text",
+            text=[f"<b>{v}分</b>" for v in voting.values()] + [""],
+            textposition="top center",
+            textfont=dict(size=13, color="#4f46e5")
         ))
         apply_plotly_polar_theme(fig, title="三方协同共识度", height=380, radial_range=[0, 100])
         st.plotly_chart(fig, **stretch_width(st.plotly_chart))

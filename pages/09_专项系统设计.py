@@ -231,7 +231,7 @@ if selected_sub == "🚗 交通网络与TOD":
             st.success(f"✅ 交通系统设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.TRAFFIC_SYSTEM, "")
-    if saved:
+    if saved and not st.session_state.get("s9_traffic"):
         with st.expander("📋 已生成的交通系统设计方案", expanded=False):
             st.markdown(saved)
 
@@ -304,7 +304,7 @@ elif selected_sub == "🌳 公共空间与15分钟圈":
             st.success(f"✅ 公共空间系统设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.PUBLIC_SPACE, "")
-    if saved:
+    if saved and not st.session_state.get("s9_public"):
         with st.expander("📋 已生成的公共空间系统设计方案", expanded=False):
             st.markdown(saved)
 
@@ -381,7 +381,7 @@ elif selected_sub == "🏛️ 建筑形态、风貌与立面":
             st.success(f"✅ 建筑形态、风貌与立面控制方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.BUILDING_FORM, "")
-    if saved:
+    if saved and not st.session_state.get("s9_building"):
         with st.expander("📋 已生成的建筑形态、风貌与立面控制方案", expanded=False):
             st.markdown(saved)
 
@@ -448,7 +448,7 @@ elif selected_sub == "🎨 风貌景观与文保":
             st.success(f"✅ 风貌景观设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.LANDSCAPE_STYLE, "")
-    if saved:
+    if saved and not st.session_state.get("s9_landscape"):
         with st.expander("📋 已生成的风貌景观设计方案", expanded=False):
             st.markdown(saved)
 

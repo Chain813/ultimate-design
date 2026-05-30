@@ -170,12 +170,13 @@ if selected_sub == "📚 案例对标分析":
             system_prompt="城市更新比较研究专家。分析紧密结合伪满皇宫周边街区实际空间数据。",
             model=model_tag,
         )
+        st.markdown("#### 📋 案例对标报告")
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 50:
             st.session_state["stage2_output"] = result
             save_stage_output("06", SK.CASE_BENCHMARK, result)
 
-    if st.session_state.get("stage2_output"):
+    if st.session_state.get("stage2_output") and not st.session_state.get("s2_btn"):
         st.markdown("#### 📋 案例对标报告")
         st.markdown(st.session_state["stage2_output"])
 
@@ -233,12 +234,13 @@ elif selected_sub == "🎯 全域设计目标策划":
             ),
             model=model_tag,
         )
+        st.markdown("#### 📋 全域设计目标策划报告")
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 50:
             st.session_state["stage3_output"] = result
             save_stage_output("06", SK.DESIGN_CONCEPT, result)
 
-    if st.session_state.get("stage3_output"):
+    if st.session_state.get("stage3_output") and not st.session_state.get("s3_btn"):
         st.markdown("#### 📋 全域设计目标策划报告")
         st.markdown(st.session_state["stage3_output"])
 

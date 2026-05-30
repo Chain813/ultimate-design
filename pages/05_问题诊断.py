@@ -237,6 +237,7 @@ elif selected_sub == "🔬 AI 前期诊断报告":
 3. 最后给出问题优先级排序"""
             sys_prompt = "你是扎根长春铁北片区的资深城市规划诊断师。输出必须引用具体数据和政策条文编号。"
             stream = call_llm_engine_stream(prompt=prompt, system_prompt=sys_prompt, model=model_tag)
+            st.markdown("#### 📋 前期诊断报告")
             result = st.write_stream(stream)
             if isinstance(result, str) and len(result) > 50:
                 st.session_state["stage1_output"] = result
@@ -245,7 +246,7 @@ elif selected_sub == "🔬 AI 前期诊断报告":
     else:
         st.warning("暂无地块诊断数据。")
 
-    if st.session_state.get("stage1_output"):
+    if st.session_state.get("stage1_output") and not st.session_state.get("s1_btn"):
         st.markdown("#### 📋 前期诊断报告")
         st.markdown(st.session_state["stage1_output"])
 

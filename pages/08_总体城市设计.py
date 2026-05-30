@@ -30,6 +30,46 @@ from src.workflow.stage_keys import SK
 from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
+@st.cache_resource
+def load_raw_landuse_gdf():
+    import geopandas as gpd
+    import numpy as np
+    from shapely.geometry import Point
+    from src.config import resolve_path, GIS_FILES
+    
+    path = resolve_path(str(GIS_FILES["landuse"]))
+    if not path.exists():
+        return None
+    gdf = gpd.read_file(str(path))
+    gdf_proj = gdf.to_crs(epsg=3857)
+    gdf_proj["area_sqm"] = gdf_proj.geometry.area
+    
+    # Calculate centroids
+    centroids = gdf_proj.geometry.centroid
+    cx_s = centroids.x
+    cy_s = centroids.y
+    
+    # Predefine centers in EPSG:3857
+    def get_xy(lon, lat):
+        p = gpd.GeoSeries([Point(lon, lat)], crs="EPSG:4326").to_crs(epsg=3857)
+        return p.iloc[0].x, p.iloc[0].y
+        
+    centers = {
+        "居住用地": get_xy(125.3350, 43.9030),      # 社区中西侧居住组团
+        "商业服务业": get_xy(125.3475, 43.9017),    # 商业街区/光复路
+        "商业办公": get_xy(125.3250, 43.9080),      # 长春站站前枢纽
+        "公园与绿地": get_xy(125.3590, 43.9010),    # 伊通河沿岸生态带
+        "公共设施": get_xy(125.3422, 43.9036)       # 伪满皇宫核心区
+    }
+    
+    # Precompute distance decay for each category
+    for cat, (cx, cy) in centers.items():
+        dists = np.sqrt((cx_s - cx)**2 + (cy_s - cy)**2)
+        max_d = dists.max() if dists.max() > 0 else 1.0
+        gdf_proj[f"decay_{cat}"] = 1.0 - (dists / max_d)
+        
+    return gdf_proj
+
 st.set_page_config(page_title="08 总体城市设计", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
 render_engine_status_alert()
@@ -250,7 +290,7 @@ if selected_sub == "🗺️ 空间结构推演":
             st.success(f"✅ 空间结构推演报告生成完成（{len(result)} 字），已存入数据总线。")
 
     saved_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
-    if saved_structure:
+    if saved_structure and not st.session_state.get("s8_structure"):
         with st.expander("📋 已生成的空间结构推演报告", expanded=False):
             st.markdown(saved_structure)
 
@@ -278,19 +318,170 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
     st.markdown("#### 🎛️ 目标用地结构调整")
     st.caption("拖动滑块模拟不同的用地功能占比方案，系统将评估其影响。")
 
-    col_s1, col_s2 = st.columns(2)
-    with col_s1:
-        res_pct = st.slider("🏠 居住用地占比 (%)", 20, 70, 50, key="sb_res")
-        com_pct = st.slider("🏪 商业服务业用地占比 (%)", 5, 40, 20, key="sb_com")
-        off_pct = st.slider("🏢 商务办公用地占比 (%)", 3, 25, 10, key="sb_off")
-    with col_s2:
-        green_pct = st.slider("🌳 公园绿地占比 (%)", 5, 30, 12, key="sb_green")
-        public_pct = st.slider("🏛️ 公共设施用地占比 (%)", 3, 20, 8, key="sb_pub")
-        total = res_pct + com_pct + off_pct + green_pct + public_pct
-        remain = max(0, 100 - total)
-        st.metric("📊 剩余（道路/市政等）", f"{remain}%")
-        if total > 100:
-            st.error(f"⚠️ 功能用地占比之和 ({total}%) 超过 100%，请调整。")
+    col_sandbox_left, col_sandbox_right = st.columns([1.1, 0.9])
+
+    with col_sandbox_left:
+        col_s1, col_s2 = st.columns(2)
+        with col_s1:
+            res_pct = st.slider("🏠 居住用地占比 (%)", 20, 70, 50, key="sb_res")
+            com_pct = st.slider("🏪 商业服务业用地占比 (%)", 5, 40, 20, key="sb_com")
+            off_pct = st.slider("🏢 商务办公用地占比 (%)", 3, 25, 10, key="sb_off")
+        with col_s2:
+            green_pct = st.slider("🌳 公园绿地占比 (%)", 5, 30, 12, key="sb_green")
+            public_pct = st.slider("🏛️ 公共设施用地占比 (%)", 3, 20, 8, key="sb_pub")
+            total = res_pct + com_pct + off_pct + green_pct + public_pct
+            remain = max(0, 100 - total)
+            st.metric("📊 剩余（道路/市政等）", f"{remain}%")
+            if total > 100:
+                st.error(f"⚠️ 功能用地占比之和 ({total}%) 超过 100%，请调整。")
+
+        # 用地结构实时可视化对比图表
+        try:
+            import plotly.graph_objects as go
+            categories = ["居住用地 🏠", "商业用地 🏪", "商务办公 🏢", "公园绿地 🌳", "公共设施 🏛️", "道路/市政 📊"]
+            baseline_pcts = [53.0, 15.5, 8.5, 5.5, 6.0, 11.5]
+            scenario_pcts = [res_pct, com_pct, off_pct, green_pct, public_pct, remain]
+
+            fig = go.Figure()
+            fig.add_trace(go.Bar(
+                y=categories,
+                x=baseline_pcts,
+                name="现状基线 (Baseline)",
+                orientation='h',
+                marker=dict(color='rgba(148, 163, 184, 0.4)', line=dict(color='rgb(148, 163, 184)', width=1))
+            ))
+            fig.add_trace(go.Bar(
+                y=categories,
+                x=scenario_pcts,
+                name="沙盘方案 (Scenario)",
+                orientation='h',
+                marker=dict(color='rgba(56, 189, 248, 0.8)', line=dict(color='rgb(56, 189, 248)', width=1))
+            ))
+
+            fig.update_layout(
+                title=dict(text="📊 用地占比实时对比：现状基线 vs 沙盘方案", font=dict(color="#e2e8f0", size=14)),
+                bmode='group',
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                xaxis=dict(
+                    title="占比 (%)", 
+                    titlefont=dict(color="#94a3b8"),
+                    tickfont=dict(color="#94a3b8"),
+                    gridcolor='rgba(148, 163, 184, 0.1)',
+                    range=[0, 100]
+                ),
+                yaxis=dict(
+                    tickfont=dict(color="#e2e8f0"),
+                    autorange="reversed"
+                ),
+                legend=dict(
+                    font=dict(color="#94a3b8"),
+                    orientation="h",
+                    yanchor="bottom",
+                    y=1.02,
+                    xanchor="right",
+                    x=1
+                ),
+                height=320,
+                margin=dict(l=20, r=20, t=40, b=20)
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as e:
+            st.error(f"图表加载失败：{e}")
+
+    with col_sandbox_right:
+        # 用地结构实时空间落位图
+        try:
+            gdf_proj = load_raw_landuse_gdf()
+            if gdf_proj is not None and not gdf_proj.empty:
+                # 1. 计算目标面积
+                total_area = gdf_proj["area_sqm"].sum()
+                target_pcts = {
+                    "居住用地": res_pct,
+                    "商业服务业": com_pct,
+                    "商业办公": off_pct,
+                    "公园与绿地": green_pct,
+                    "公共设施": public_pct
+                }
+                target_areas = {k: total_area * (v / 100.0) for k, v in target_pcts.items()}
+                
+                # 2. 计算各宗地关于各功能类别的得分 (考虑现状与空间中心邻近度)
+                scores = {}
+                for cat in target_pcts.keys():
+                    decay = gdf_proj[f"decay_{cat}"]
+                    if cat == "公共设施":
+                        is_orig = gdf_proj["Type"].isin(['医疗卫生', '教育科研', '体育文化', '行政办公'])
+                    else:
+                        is_orig = gdf_proj["Type"] == cat
+                    scores[cat] = is_orig.astype(float) * 2.0 + decay * 1.0
+                    
+                # 3. 贪婪算法空间分配
+                import pandas as pd
+                allocated = pd.Series(False, index=gdf_proj.index)
+                allocated_types = gdf_proj["Type"].copy()
+                
+                # 按开发优先级排序分配
+                priority = ["商业服务业", "商业办公", "公园与绿地", "公共设施", "居住用地"]
+                for cat in priority:
+                    target_a = target_areas[cat]
+                    cat_scores = scores[cat].copy()
+                    cat_scores[allocated] = -999.0
+                    sorted_idx = cat_scores.sort_values(ascending=False).index
+                    
+                    current_a = 0.0
+                    for idx in sorted_idx:
+                        if allocated[idx]:
+                            continue
+                        p_area = gdf_proj.loc[idx, "area_sqm"]
+                        allocated_types.loc[idx] = cat
+                        allocated[idx] = True
+                        current_a += p_area
+                        if current_a >= target_a:
+                            break
+                            
+                # 4. Matplotlib 绘制空间落位图
+                import matplotlib.pyplot as plt
+                from matplotlib.patches import Patch
+                
+                fig, ax = plt.subplots(figsize=(6, 5.5), facecolor='none')
+                fig.patch.set_alpha(0.0)
+                ax.patch.set_alpha(0.0)
+                
+                color_map = {
+                    "居住用地": "#FDE047",
+                    "商业服务业": "#EF4444",
+                    "商业办公": "#C084FC",
+                    "公园与绿地": "#22C55E",
+                    "公共设施": "#F87171",
+                    "医疗卫生": "#F87171",
+                    "教育科研": "#F87171",
+                    "体育文化": "#F87171",
+                    "行政办公": "#F87171",
+                    "交通场站": "#94A3B8",
+                    "工业用地": "#64748B"
+                }
+                
+                colors = allocated_types.map(color_map).fillna("#CBD5E1")
+                gdf_proj.plot(ax=ax, color=colors, edgecolor="#475569", linewidth=0.15)
+                ax.set_axis_off()
+                
+                # 添加图例
+                legend_elements = [
+                    Patch(facecolor='#FDE047', edgecolor='#475569', label='居住用地 (R)'),
+                    Patch(facecolor='#EF4444', edgecolor='#475569', label='商业服务 (B)'),
+                    Patch(facecolor='#C084FC', edgecolor='#475569', label='商业办公 (B)'),
+                    Patch(facecolor='#22C55E', edgecolor='#475569', label='公园绿地 (G)'),
+                    Patch(facecolor='#F87171', edgecolor='#475569', label='公共设施 (A)')
+                ]
+                ax.legend(handles=legend_elements, loc='lower left', fontsize=8, facecolor='none', edgecolor='none', labelcolor='#94a3b8')
+                
+                plt.tight_layout()
+                st.pyplot(fig)
+            else:
+                st.warning("⚠️ 无法加载用地数据进行空间分配模拟。")
+        except Exception as e:
+            st.error(f"空间落位图渲染失败：{e}")
+
 
     if total <= 100 and st.button("🔍 评估此方案的影响", type="primary", key="s8_sandbox", **stretch_width(st.button)):
         spatial_ctx = get_full_spatial_context()
@@ -339,7 +530,16 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
         )
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 100:
-            save_stage_output("08", SK.LANDUSE_SANDBOX, {"scenario": scenario, "evaluation": result})
+            save_stage_output("08", SK.LANDUSE_SANDBOX, {
+                "scenario": scenario,
+                "evaluation": result,
+                "res_pct": res_pct,
+                "com_pct": com_pct,
+                "off_pct": off_pct,
+                "green_pct": green_pct,
+                "public_pct": public_pct,
+                "remain": remain
+            })
             st.success("✅ 沙盘评估完成，已存入数据总线。")
 
 

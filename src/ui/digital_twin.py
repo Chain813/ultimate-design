@@ -106,7 +106,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
     with layer_cols[7]:
         show_road = st.checkbox("🛣️ 道路网", value=False, key=f"map_road_{key_suffix}")
 
-    show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key=f"map_lighting_{key_suffix}")
+    show_lighting = st.checkbox("☀️ 开启仿真光照", value=is_3d_mode, key=f"map_lighting_{is_3d_mode}_{key_suffix}")
     sun_time = st.slider("🕐 日照推演 (00:00 - 23:00)", 0, 23, 10, key=f"map_sun_time_{key_suffix}")
 
     # 1. 准备序列化数据

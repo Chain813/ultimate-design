@@ -67,6 +67,7 @@ elif selected_sub == "🖼️ 图册自动组装":
             "研究范围图": "DR-005",
             "卫星图": "DR-013",
             "土地利用现状图": "DR-014",
+            "用地规划图": "DR-015",
             "建筑高度现状图": "DR-017",
             "建筑风貌现状图": "DR-018",
             "历史建筑与工业遗产分布图": "DR-019",
@@ -93,6 +94,7 @@ elif selected_sub == "🖼️ 图册自动组装":
             "研究范围图": "研究范围图",
             "卫星图": "数据来源与遥感现状图",
             "土地利用现状图": "用地现状分析图",
+            "用地规划图": "用地结构规划图",
             "建筑高度现状图": "建筑高度现状图",
             "建筑风貌现状图": "建筑风貌识别图",
             "历史建筑与工业遗产分布图": "历史建筑与工业遗产分布图",
@@ -143,7 +145,12 @@ elif selected_sub == "🖼️ 图册自动组装":
             "土地利用现状图": [
                 "1. 用地构成：项目区内以居住用地（R）和商业服务业设施用地（B）为主，主要分布在亚泰大街及长通路两侧。工业与仓储用地占比较低且多属需更新工业遗存。",
                 "2. 混合利用：规划提倡在轨道站点及重点更新地段发展商住混合、文创混合等多功能混合用地（M），以提升地块经济与社会活力。",
-                "3. 用地优化：通过盘活现状低效建设用地，增加公共服务设施用地（A） and 绿地与广场用地（G），改善居民 15 分钟生活圈的公共服务供给与空间品质。"
+                "3. 用地优化：通过盘活现状低效建设用地，增加公共服务设施用地（A） and 绿地与广场用地（G），改善居民 15 分钟生活圈 of 设施供给品质。"
+            ],
+            "用地规划图": [
+                "1. 结构优化：基于多主体博弈决策沙盘比例调整，降低了低效居住用地占比，向核心区及轨道交通周边注入商业服务业与创客办公。",
+                "2. 绿地修补：针对现状绿化严重不足（仅2.9%）问题，刚性增加公园与绿地（G）空间，打通生态走廊，缝合东侧伊通河景观环线。",
+                "3. 活力重塑：结合商业/办公混合用地布局，激活光复路历史风貌廊道与站城联动轴线，实现功能织补与全天候活力的平衡。"
             ],
             "建筑高度现状图": [
                 "1. 高度特征：区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。",
@@ -338,9 +345,9 @@ elif selected_sub == "🖼️ 图册自动组装":
                 st.image(str(demo_path), use_container_width=True)
 
 elif selected_sub == "📤 文档导出":
-    render_section_intro("全案文档导出", "导出前期分析诊断与总体设计导则文本。", eyebrow="Document Export")
+    render_section_intro("全案文档导出", "导出前期分析诊断、总体设计导则以及全阶段生成汇总报告文本。", eyebrow="Document Export")
     
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         guideline = load_stage_output("12", SK.DESIGN_GUIDELINE, "")
         if guideline:
@@ -354,6 +361,23 @@ elif selected_sub == "📤 文档导出":
             st.download_button("📥 下载前期诊断报告 (Markdown)", diagnosis, file_name="诊断报告.md", **stretch_width(st.download_button))
         else:
             st.info("暂无诊断数据，请在 Stage 05 生成。")
+
+    with col3:
+        report_file_path = ROOT / "output" / "stage_generation_report.md"
+        if report_file_path.exists():
+            try:
+                with open(report_file_path, "r", encoding="utf-8") as f:
+                    report_content = f.read()
+                st.download_button(
+                    "📥 下载全阶段生成汇总报告 (Markdown)",
+                    report_content,
+                    file_name="全阶段生成汇总报告.md",
+                    **stretch_width(st.download_button)
+                )
+            except Exception as e:
+                st.error(f"读取全阶段汇总报告失败：{e}")
+        else:
+            st.info("暂无汇总报告，请先运行其他阶段的生成模块以生成本底数据。")
 
 st.markdown("---")
 render_stage_summary(

@@ -39,7 +39,7 @@ def render_stage_summary(
     methodology: str = "",
     implication: str = "",
     auto_chart: bool = True,
-    enable_llm: bool = True,
+    enable_llm: bool = False,
 ):
     """渲染阶段研究小结面板。
 
@@ -169,9 +169,9 @@ def render_stage_summary(
         if auto_fig:
             st.plotly_chart(auto_fig, **stretch_width(st.plotly_chart))
 
-    # ── AI 小结生成按钮 ──
+    # ── AI 小结生成按钮 (已关闭) ──
     if enable_llm:
-        _render_llm_summary_button(stage_code, title, dynamic_findings, methodology)
+        pass
 
     # ── 自动将本阶段总结和方法写入本地文档 ──
     try:
@@ -345,13 +345,17 @@ def _build_auto_chart(stage_code: str):
     if stage_code == "07":
         voting = load_stage_output("07", "voting_scores", None)
         if not voting or not isinstance(voting, dict) or len(voting) < 3:
-            voting = {"功能复合": 85, "高度控制": 72, "绿化补植": 90, "慢行优先": 78, "文旅激活": 82}
+            voting = {"👥 居民代表（老王）": 50.0, "💰 文旅运营商（赵总）": 50.0, "📐 规划师（李工）": 50.0}
         fig = go.Figure(go.Scatterpolar(
             r=list(voting.values()) + [list(voting.values())[0]],
             theta=list(voting.keys()) + [list(voting.keys())[0]],
             fill="toself",
             fillcolor="rgba(99,102,241,0.15)",
             line=dict(color="#818cf8", width=2),
+            mode="lines+markers+text",
+            text=[f"<b>{v}分</b>" for v in voting.values()] + [""],
+            textposition="top center",
+            textfont=dict(size=12, color="#4f46e5")
         ))
         from src.ui.chart_theme import apply_plotly_polar_theme
         apply_plotly_polar_theme(fig, title="多主体共识度雷达（自动生成）", height=320, radial_range=[0, 100])

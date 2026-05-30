@@ -265,8 +265,14 @@
                 data: railUrl,
                 stroked: true,
                 filled: false,
-                getLineColor: d => RAIL_COLORS[d.properties.level] || RAIL_COLORS[4],
-                getLineWidth: d => RAIL_WIDTH[d.properties.level] || 1,
+                getLineColor: d => {
+                    const level = (d && d.properties && d.properties.level) || 4;
+                    return RAIL_COLORS[level] || RAIL_COLORS[4];
+                },
+                getLineWidth: d => {
+                    const level = (d && d.properties && d.properties.level) || 4;
+                    return RAIL_WIDTH[level] || 1;
+                },
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
                 pickable: true,
@@ -306,8 +312,14 @@
                 data: roadUrl,
                 stroked: true,
                 filled: false,
-                getLineColor: d => ROAD_COLORS[d.properties.level] || ROAD_COLORS[4],
-                getLineWidth: d => ROAD_WIDTH[d.properties.level] || 1,
+                getLineColor: d => {
+                    const level = (d && d.properties && d.properties.level) || 4;
+                    return ROAD_COLORS[level] || ROAD_COLORS[4];
+                },
+                getLineWidth: d => {
+                    const level = (d && d.properties && d.properties.level) || 4;
+                    return ROAD_WIDTH[level] || 1;
+                },
                 lineWidthMinPixels: 1,
                 parameters: { depthTest: true },
                 pickable: true,
@@ -742,6 +754,12 @@
                 <span style="font-size: 11.5px; color: #1d1d1f; white-space: nowrap;">${text}</span>
             </div>`;
         };
+        const addLineItem = (cssBg, thickness, text) => {
+            lHtml += `<div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 14px; height: 0; border-top: ${thickness}px solid ${cssBg}; flex-shrink: 0;"></div>
+                <span style="font-size: 11.5px; color: #1d1d1f; white-space: nowrap;">${text}</span>
+            </div>`;
+        };
         const addGradientItem = (gradient, text, minText="低", maxText="高") => {
             lHtml += `<div style="margin-top: 4px; margin-bottom: 6px; display: flex; flex-direction: column; gap: 6px;">
                 <span style="font-size: 11.5px; color: #1d1d1f;">${text}</span>
@@ -766,6 +784,22 @@
             }
         }
         
+        if (rail_data) {
+            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #0071e3; font-size: 11px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 4px;">铁路轨道与城市轨交</div>`;
+            addLineItem("rgba(120, 120, 120, 0.86)", 4, "国家铁路");
+            addLineItem("rgba(0, 120, 255, 0.86)", 3, "地铁线路");
+            addLineItem("rgba(0, 200, 120, 0.86)", 2, "轻轨线路");
+            addLineItem("rgba(180, 180, 180, 0.7)", 1.5, "其他轨道");
+        }
+
+        if (road_data) {
+            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #0071e3; font-size: 11px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 4px;">城市道路网分类</div>`;
+            addLineItem("rgba(255, 200, 60, 0.78)", 5, "一级道路");
+            addLineItem("rgba(255, 140, 50, 0.71)", 3, "二级道路");
+            addLineItem("rgba(200, 200, 200, 0.59)", 2, "三级道路");
+            addLineItem("rgba(160, 160, 160, 0.47)", 1.5, "其他道路");
+        }
+
         if (IS_XRAY) {
             addItem("rgba(56, 189, 248, 1)", "地下给排水干管 (Water/Sewer)");
             addItem("rgba(250, 204, 21, 1)", "地下电力通讯线网 (Power/Comm)");

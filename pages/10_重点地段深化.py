@@ -275,7 +275,7 @@ MPI 得分 ({d['mpi_score']})、现状 GVI ({d['gvi_mean']}%) 等数据进行推
             st.success(f"✅ {selected_plot} 控规指标推演完成（{len(result)} 字）")
 
     saved = load_stage_output("10", f"{SK.PLOT_METRICS}_{selected_plot}", "")
-    if saved:
+    if saved and not st.session_state.get("s10_metrics"):
         with st.expander("📋 已生成的控规指标", expanded=False):
             st.markdown(saved)
 
@@ -359,7 +359,7 @@ elif selected_sub == "👥 目标人群与行为画像":
             st.success(f"✅ {selected_plot} 人群画像生成完成（{len(result)} 字）")
 
     saved = load_stage_output("10", f"{SK.PLOT_PERSONAS}_{selected_plot}", "")
-    if saved:
+    if saved and not st.session_state.get("s10_persona"):
         with st.expander("📋 已生成的人群画像", expanded=False):
             st.markdown(saved)
 
@@ -474,7 +474,7 @@ elif selected_sub == "🏗️ 空间深化设计方案":
             st.success(f"✅ {selected_plot} 深化设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("10", f"{SK.PLOT_DESIGN}_{selected_plot}", "")
-    if saved:
+    if saved and not st.session_state.get("s10_design"):
         with st.expander("📋 已生成的深化设计方案", expanded=False):
             st.markdown(saved)
 
