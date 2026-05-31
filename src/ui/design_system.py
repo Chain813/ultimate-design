@@ -122,46 +122,46 @@ def render_data_pipeline(as_html=False):
                 </defs>
 
                 <!-- 路径导向 -->
-                <path d="M50,200 C200,100 500,300 950,200" fill="none" stroke="rgba(0, 113, 227, 0.06)" stroke-width="10" stroke-linecap="round" />
+                <path d="M50,200 C200,100 500,300 950,200" fill="none" stroke="rgba(0, 113, 227, 0.05)" stroke-width="6" stroke-linecap="round" />
 
                 <!-- 节点 1: 数据采集 -->
                 <g transform="translate(10, 140)">
-                    <rect width="230" height="150" rx="12" fill="url(#grad-node-1)" stroke="#d2d2d7" stroke-width="1.5" />
-                    <rect width="230" height="40" rx="12" fill="#f5f5f7" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-size="20" font-weight="900">01 数据采集</text>
-                    <text x="30" y="75" fill="#48484a" font-size="15" font-weight="bold">● GeoJSON 空间矢量</text>
-                    <text x="30" y="105" fill="#48484a" font-size="15" font-weight="bold">● CSV 属性数据表</text>
-                    <text x="30" y="135" fill="#48484a" font-size="15" font-weight="bold">● 街景图像资源</text>
+                    <rect width="230" height="150" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#e5e5ea" stroke-width="1" />
+                    <rect width="230" height="40" rx="16" ry="16" fill="#f5f5f7" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">01 数据采集</text>
+                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● GeoJSON 空间矢量</text>
+                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● CSV 属性数据表</text>
+                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 街景图像资源</text>
                 </g>
 
                 <!-- 节点 2: 处理引擎 -->
                 <g transform="translate(260, 20)">
-                    <rect width="240" height="170" rx="12" fill="url(#grad-node-1)" stroke="#0071e3" stroke-width="1.5" />
-                    <rect width="240" height="40" rx="12" fill="#0071e3" />
-                    <text x="120" y="27" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="900">02 AI 处理引擎</text>
-                    <text x="30" y="75" fill="#48484a" font-size="14">■ 空间拓扑关联分析</text>
-                    <text x="30" y="105" fill="#48484a" font-size="14">■ 视觉语义深度识别</text>
-                    <text x="30" y="135" fill="#48484a" font-size="14">■ 大模型逻辑链推演</text>
+                    <rect width="240" height="170" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#0071e3" stroke-width="1.2" />
+                    <rect width="240" height="40" rx="16" ry="16" fill="#0071e3" />
+                    <text x="120" y="27" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">02 AI 处理引擎</text>
+                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 空间拓扑关联分析</text>
+                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 视觉语义深度识别</text>
+                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 大模型逻辑链推演</text>
                 </g>
 
                 <!-- 节点 3: 数字化评价 -->
                 <g transform="translate(520, 140)">
-                    <rect width="230" height="150" rx="12" fill="url(#grad-node-1)" stroke="#d2d2d7" stroke-width="1.5" />
-                    <rect width="230" height="40" rx="12" fill="#f5f5f7" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-size="20" font-weight="900">03 数字化评价</text>
-                    <text x="30" y="75" fill="#48484a" font-size="15" font-weight="bold">● 更新潜力多维评分</text>
-                    <text x="30" y="105" fill="#48484a" font-size="15" font-weight="bold">● 风貌协调性诊断</text>
-                    <text x="30" y="135" fill="#48484a" font-size="15" font-weight="bold">● 效益平衡预测曲线</text>
+                    <rect width="230" height="150" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#e5e5ea" stroke-width="1" />
+                    <rect width="230" height="40" rx="16" ry="16" fill="#f5f5f7" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">03 数字化评价</text>
+                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 更新潜力多维评分</text>
+                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 风貌协调性诊断</text>
+                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 效益平衡预测曲线</text>
                 </g>
 
                 <!-- 节点 4: 更新决策 -->
                 <g transform="translate(760, 40)">
-                    <rect width="230" height="170" rx="12" fill="url(#grad-node-1)" stroke="#34c759" stroke-width="1.5" />
-                    <rect width="230" height="40" rx="12" fill="#34c759" />
-                    <text x="115" y="27" text-anchor="middle" fill="#ffffff" font-size="20" font-weight="900">04 决策输出</text>
-                    <text x="30" y="75" fill="#34c759" font-size="16" font-weight="900">✔ 更新序位图谱</text>
-                    <text x="30" y="110" fill="#34c759" font-size="16" font-weight="900">✔ 生成式方案集</text>
-                    <text x="30" y="145" fill="#34c759" font-size="16" font-weight="900">✔ 行动计划共识</text>
+                    <rect width="230" height="170" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#34c759" stroke-width="1.2" />
+                    <rect width="230" height="40" rx="16" ry="16" fill="#34c759" />
+                    <text x="115" y="27" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">04 决策输出</text>
+                    <text x="30" y="75" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 更新序位图谱</text>
+                    <text x="30" y="110" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 生成式方案集</text>
+                    <text x="30" y="145" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 行动计划共识</text>
                 </g>
 
                 <!-- 连接箭头 -->
@@ -196,58 +196,58 @@ def render_mission_decoding_hud(as_html=False):
                 <line x1="400" y1="200" x2="260" y2="120" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
 
                 <!-- 六边形雷达覆盖面 -->
-                <polygon points="400,60 520,130 510,290 400,340 280,270 270,140" fill="rgba(0, 113, 227, 0.1)" stroke="#0071e3" stroke-width="2" />
+                <polygon points="400,60 520,130 510,290 400,340 280,270 270,140" fill="rgba(0, 113, 227, 0.08)" stroke="#0071e3" stroke-width="1.5" />
 
                 <!-- 中心核心 -->
-                <circle cx="400" cy="200" r="45" fill="#ffffff" stroke="#0071e3" stroke-width="2" />
-                <text x="400" y="198" text-anchor="middle" fill="#1d1d1f" font-size="12" font-weight="900">MISSION</text>
-                <text x="400" y="213" text-anchor="middle" fill="#0071e3" font-size="10" font-weight="bold">DECODE</text>
+                <circle cx="400" cy="200" r="45" fill="#ffffff" stroke="#0071e3" stroke-width="1.5" />
+                <text x="400" y="198" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800">MISSION</text>
+                <text x="400" y="213" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold">DECODE</text>
 
                 <!-- 维度标签卡片 -->
                 <!-- 1. 空间尺度 (Top) -->
                 <g transform="translate(310, 10)">
-                    <rect width="180" height="45" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="90" y="28" text-anchor="middle" fill="#1d1d1f" font-size="12" font-weight="bold">空间尺度: 150ha</text>
+                    <rect width="180" height="45" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="90" y="28" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">空间尺度: 150ha</text>
                 </g>
 
                 <!-- 2. 核心驱动 (Right Top) -->
                 <g transform="translate(580, 60)">
-                    <rect width="190" height="75" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">核心驱动: 价值重构</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-size="9">AI 赋能 / 文脉延续 / 空间激活</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-size="8">多源数据驱动的范式重构</text>
+                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">核心驱动: 价值重构</text>
+                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">AI 赋能 / 文脉延续 / 空间激活</text>
+                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">多源 data 驱动的范式重构</text>
                 </g>
 
                 <!-- 3. AI 介入度 (Right Bottom) -->
                 <g transform="translate(580, 240)">
-                    <rect width="190" height="75" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">AI 介入度: 全流程赋能</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-size="9">Gemini/Claude/DeepSeek/GPT/SD</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-size="8">多模态语义解析集群</text>
+                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">AI 介入度: 全流程赋能</text>
+                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">Gemini/Claude/DeepSeek/GPT/SD</text>
+                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">多模态语义解析集群</text>
                 </g>
 
                 <!-- 4. 文脉共振 (Bottom) -->
                 <g transform="translate(305, 315)">
-                    <rect width="190" height="75" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">文脉共振: 语义提取</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-size="9">历史基因修复 / 建筑语义识别</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-size="8">历史风貌数字资产映射</text>
+                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">文脉共振: 语义提取</text>
+                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">历史基因修复 / 建筑语义识别</text>
+                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">历史风貌数字资产映射</text>
                 </g>
 
                 <!-- 5. 交付形态 (Left Bottom) -->
                 <g transform="translate(30, 240)">
-                    <rect width="190" height="75" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">交付形态: 数字孪生</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-size="9">孪生底座 / 规划图册 / 交互全景</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-size="8">A3 (≥60P) + A1 (≥3P)</text>
+                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">交付形态: 数字孪生</text>
+                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">孪生底座 / 规划图册 / 交互全景</text>
+                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="8">A3 (≥60P) + A1 (≥3P)</text>
                 </g>
 
                 <!-- 6. 核心任务 (Left Top) -->
                 <g transform="translate(30, 60)">
-                    <rect width="190" height="75" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">核心任务: 城市更新</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-size="9">历史遗产保护 / 智慧平台构建</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-size="8">多维价值协同目标解锁</text>
+                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">核心任务: 城市更新</text>
+                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">历史遗产保护 / 智慧平台构建</text>
+                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="8">多维价值协同目标解锁</text>
                 </g>
 
                 <!-- 动态光点 -->
@@ -286,83 +286,83 @@ def render_rag_pipeline_hud(as_html=False):
 
                 <!-- 1. Ingestion -->
                 <g transform="translate(30, 100)">
-                    <rect width="130" height="100" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="130" height="100" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <!-- Icon: Upload -->
-                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="2" fill="none">
+                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="1.5" fill="none">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                     </g>
-                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">多模态采集</text>
-                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-size="9">Ingestion</text>
+                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">多模态采集</text>
+                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">Ingestion</text>
                 </g>
-                <line x1="160" y1="150" x2="185" y2="150" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow-rag)" />
+                <line x1="160" y1="150" x2="185" y2="150" stroke="#0071e3" stroke-width="1.2" marker-end="url(#arrow-rag)" />
 
                 <!-- 2. MarkItDown ETL -->
                 <g transform="translate(185, 100)">
-                    <rect width="130" height="100" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="130" height="100" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <!-- Icon: Magic -->
-                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="2" fill="none">
+                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="1.5" fill="none">
                         <path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.21 1.21 0 0 0 1.72 0L21.64 5.36a1.21 1.21 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/>
                     </g>
-                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">语义提取</text>
-                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-size="9">MarkItDown ETL</text>
+                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">语义提取</text>
+                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">MarkItDown ETL</text>
                 </g>
-                <line x1="315" y1="150" x2="340" y2="150" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow-rag)" />
+                <line x1="315" y1="150" x2="340" y2="150" stroke="#0071e3" stroke-width="1.2" marker-end="url(#arrow-rag)" />
 
                 <!-- 3. Chunking -->
                 <g transform="translate(340, 100)">
-                    <rect width="130" height="100" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="130" height="100" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <!-- Icon: Layers -->
-                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="2" fill="none">
+                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="1.5" fill="none">
                         <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
                     </g>
-                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">上下文分块</text>
-                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-size="9">Recursive Split</text>
+                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">上下文分块</text>
+                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">Recursive Split</text>
                 </g>
-                <line x1="470" y1="150" x2="495" y2="150" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow-rag)" />
+                <line x1="470" y1="150" x2="495" y2="150" stroke="#0071e3" stroke-width="1.2" marker-end="url(#arrow-rag)" />
 
                 <!-- 4. Embedding -->
                 <g transform="translate(495, 100)">
-                    <rect width="130" height="100" rx="12" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="130" height="100" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <!-- Icon: Share2 (Network) -->
-                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="2" fill="none">
+                    <g transform="translate(53, 15) scale(0.6)" stroke="#0071e3" stroke-width="1.5" fill="none">
                         <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                     </g>
-                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-size="11" font-weight="bold">向量嵌入</text>
-                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-size="9">Embedding Model</text>
+                    <text x="65" y="65" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">向量嵌入</text>
+                    <text x="65" y="82" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">Embedding Model</text>
                 </g>
-                <line x1="625" y1="150" x2="650" y2="150" stroke="#0071e3" stroke-width="1.5" marker-end="url(#arrow-rag)" />
+                <line x1="625" y1="150" x2="650" y2="150" stroke="#0071e3" stroke-width="1.2" marker-end="url(#arrow-rag)" />
 
                 <!-- 5. Vector Store -->
                 <g transform="translate(650, 100)">
-                    <rect width="135" height="100" rx="12" fill="#ffffff" stroke="#0071e3" stroke-width="2" />
+                    <rect width="135" height="100" rx="14" ry="14" fill="#ffffff" stroke="#0071e3" stroke-width="1.5" />
                     <!-- Icon: Database -->
-                    <g transform="translate(55, 15) scale(0.6)" stroke="#0071e3" stroke-width="2" fill="none">
+                    <g transform="translate(55, 15) scale(0.6)" stroke="#0071e3" stroke-width="1.5" fill="none">
                         <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>
                     </g>
-                    <text x="67" y="65" text-anchor="middle" fill="#1d1d1f" font-size="12" font-weight="bold">语义索引库</text>
-                    <text x="67" y="82" text-anchor="middle" fill="#0071e3" font-size="9" font-weight="bold">Chroma / Faiss Index</text>
+                    <text x="67" y="65" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">语义索引库</text>
+                    <text x="67" y="82" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="9" font-weight="bold">Chroma / Faiss Index</text>
                 </g>
 
                 <!-- 底部资产矩阵 -->
                 <g transform="translate(30, 260)">
                     <rect width="755" height="100" rx="16" fill="rgba(0, 113, 227, 0.02)" stroke="rgba(0, 113, 227, 0.08)" stroke-width="1" />
-                    <text x="20" y="30" fill="#0071e3" font-size="11" font-weight="bold">语义原料矩阵 / Knowledge Assets Matrix</text>
+                    <text x="20" y="30" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">语义原料矩阵 / Knowledge Assets Matrix</text>
                     
                     <g transform="translate(20, 50)">
-                        <rect width="170" height="35" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1" />
-                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-size="10">PDF 规划文本</text>
+                        <rect width="170" height="35" rx="10" ry="10" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="10">PDF 规划文本</text>
                     </g>
                     <g transform="translate(205, 50)">
-                        <rect width="170" height="35" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1" />
-                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-size="10">DOCX 任务书</text>
+                        <rect width="170" height="35" rx="10" ry="10" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="10">DOCX 任务书</text>
                     </g>
                     <g transform="translate(390, 50)">
-                        <rect width="170" height="35" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1" />
-                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-size="10">PPT 设计提案</text>
+                        <rect width="170" height="35" rx="10" ry="10" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                        <text x="85" y="22" text-anchor="middle" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="10">PPT 设计提案</text>
                     </g>
                     <g transform="translate(575, 50)">
-                        <rect width="160" height="35" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1" />
-                        <text x="80" y="22" text-anchor="middle" fill="#48484a" font-size="10">TXT 调研记录</text>
+                        <rect width="160" height="35" rx="10" ry="10" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
+                        <text x="80" y="22" text-anchor="middle" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="10">TXT 调研记录</text>
                     </g>
                 </g>
             </svg>
@@ -391,88 +391,88 @@ def render_analysis_pipeline_hud(as_html=False):
                 </defs>
 
                 <!-- Columns Backgrounds -->
-                <rect x="10" y="10" width="250" height="280" rx="16" fill="rgba(0, 113, 227, 0.01)" stroke="rgba(0, 113, 227, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
-                <rect x="350" y="10" width="250" height="280" rx="16" fill="rgba(175, 82, 222, 0.01)" stroke="rgba(175, 82, 222, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
-                <rect x="690" y="10" width="250" height="280" rx="16" fill="rgba(52, 199, 89, 0.01)" stroke="rgba(52, 199, 89, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
+                <rect x="10" y="10" width="250" height="280" rx="16" fill="rgba(0, 113, 227, 0.01)" stroke="rgba(0, 113, 227, 0.04)" stroke-width="1" />
+                <rect x="350" y="10" width="250" height="280" rx="16" fill="rgba(175, 82, 222, 0.01)" stroke="rgba(175, 82, 222, 0.04)" stroke-width="1" />
+                <rect x="690" y="10" width="250" height="280" rx="16" fill="rgba(52, 199, 89, 0.01)" stroke="rgba(52, 199, 89, 0.04)" stroke-width="1" />
 
                 <!-- Column Titles -->
-                <text x="135" y="35" text-anchor="middle" fill="#0071e3" font-size="12" font-weight="900" letter-spacing="1">01 多源数据接入 (DATA)</text>
-                <text x="475" y="35" text-anchor="middle" fill="#af52de" font-size="12" font-weight="900" letter-spacing="1">02 空间引擎 (PROCESSING)</text>
-                <text x="815" y="35" text-anchor="middle" fill="#34c759" font-size="12" font-weight="900" letter-spacing="1">03 诊断结论 (CONCLUSIONS)</text>
+                <text x="135" y="35" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">01 多源数据接入 (DATA)</text>
+                <text x="475" y="35" text-anchor="middle" fill="#af52de" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">02 空间引擎 (PROCESSING)</text>
+                <text x="815" y="35" text-anchor="middle" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">03 诊断结论 (CONCLUSIONS)</text>
 
                 <!-- Connection Lines (Data -> Process) -->
-                <path d="M235,90 C 290,90 300,90 345,90" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M235,90 C 290,90 300,160 345,160" fill="none" stroke="rgba(0, 113, 227, 0.1)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M235,160 C 290,160 300,160 345,160" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M235,160 C 290,160 300,230 345,230" fill="none" stroke="rgba(0, 113, 227, 0.1)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M235,230 C 290,230 300,230 345,230" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
+                <path d="M235,90 C 290,90 300,90 345,90" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M235,90 C 290,90 300,160 345,160" fill="none" stroke="rgba(0, 113, 227, 0.08)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M235,160 C 290,160 300,160 345,160" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M235,160 C 290,160 300,230 345,230" fill="none" stroke="rgba(0, 113, 227, 0.08)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M235,230 C 290,230 300,230 345,230" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
 
                 <!-- Connection Lines (Process -> Conclusion) -->
-                <path d="M575,90 C 630,90 640,90 685,90" fill="none" stroke="rgba(175, 82, 222, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M575,160 C 630,160 640,90 685,90" fill="none" stroke="rgba(175, 82, 222, 0.1)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M575,160 C 630,160 640,160 685,160" fill="none" stroke="rgba(175, 82, 222, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M575,160 C 630,160 640,230 685,230" fill="none" stroke="rgba(175, 82, 222, 0.1)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M575,230 C 630,230 640,230 685,230" fill="none" stroke="rgba(175, 82, 222, 0.25)" stroke-width="1.5" marker-end="url(#arrow-line)" />
-                <path d="M575,230 C 630,230 640,160 685,160" fill="none" stroke="rgba(175, 82, 222, 0.1)" stroke-width="1.5" marker-end="url(#arrow-line)" />
+                <path d="M575,90 C 630,90 640,90 685,90" fill="none" stroke="rgba(175, 82, 222, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M575,160 C 630,160 640,90 685,90" fill="none" stroke="rgba(175, 82, 222, 0.08)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M575,160 C 630,160 640,160 685,160" fill="none" stroke="rgba(175, 82, 222, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M575,160 C 630,160 640,230 685,230" fill="none" stroke="rgba(175, 82, 222, 0.08)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M575,230 C 630,230 640,230 685,230" fill="none" stroke="rgba(175, 82, 222, 0.15)" stroke-width="1.2" marker-end="url(#arrow-line)" />
+                <path d="M575,230 C 630,230 640,160 685,160" fill="none" stroke="rgba(175, 82, 222, 0.08)" stroke-width="1.2" marker-end="url(#arrow-line)" />
 
                 <!-- DATA SOURCE NODES -->
                 <g transform="translate(35, 65)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">📍</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">POI 与交通设施</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">Baidu Map API / OSM</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">POI 与交通设施</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Baidu Map API / OSM</text>
                 </g>
                 <g transform="translate(35, 135)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">🏢</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">建筑轮廓与边界</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">GIS Vector / GeoJSON</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">建筑轮廓与边界</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">GIS Vector / GeoJSON</text>
                 </g>
                 <g transform="translate(35, 205)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">📸</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">实景图像与采样</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">Field Survey (Stage 03)</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">实景图像与采样</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Field Survey (Stage 03)</text>
                 </g>
 
                 <!-- PROCESSING ENGINE NODES -->
                 <g transform="translate(375, 65)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">📊</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">密度聚类分析</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">KDE Heatmap / DBSCAN</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">密度聚类分析</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">KDE Heatmap / DBSCAN</text>
                 </g>
                 <g transform="translate(375, 135)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">🧬</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">空间拓扑挂接</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">Spatial Join & Overlap</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">空间拓扑挂接</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Spatial Join & Overlap</text>
                 </g>
                 <g transform="translate(375, 205)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="32" font-size="20">⚖️</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">形态与综合评价</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">AHP / Skyline Morphing</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">形态与综合评价</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">AHP / Skyline Morphing</text>
                 </g>
 
                 <!-- CONCLUSIONS NODES -->
                 <g transform="translate(715, 65)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#34c759" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#34c759" stroke-width="1" />
                     <text x="15" y="32" font-size="20">🔥</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">功能活力状态</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">业态分布 / 交通热点群</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">功能活力状态</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">业态分布 / 交通热点群</text>
                 </g>
                 <g transform="translate(715, 135)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#34c759" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#34c759" stroke-width="1" />
                     <text x="15" y="32" font-size="20">🌳</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">空间风貌品质</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">CV 绿视率 / 场所感指标</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">空间风貌品质</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">CV 绿视率 / 场所感指标</text>
                 </g>
                 <g transform="translate(715, 205)">
-                    <rect width="200" height="50" rx="8" fill="#ffffff" stroke="#34c759" stroke-width="1.5" />
+                    <rect width="200" height="50" rx="12" ry="12" fill="#ffffff" stroke="#34c759" stroke-width="1" />
                     <text x="15" y="32" font-size="20">📐</text>
-                    <text x="45" y="25" fill="#1d1d1f" font-size="12" font-weight="bold">形态规控指引</text>
-                    <text x="45" y="42" fill="#86868b" font-size="10">天际线特征 / 容积潜力</text>
+                    <text x="45" y="25" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">形态规控指引</text>
+                    <text x="45" y="42" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">天际线特征 / 容积潜力</text>
                 </g>
             </svg>
         </div>
@@ -519,72 +519,72 @@ def render_diagnosis_pipeline_hud(as_html=False):
                 </defs>
 
                 <!-- Columns Backgrounds -->
-                <rect x="10" y="10" width="250" height="220" rx="16" fill="rgba(0, 113, 227, 0.01)" stroke="rgba(0, 113, 227, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
-                <rect x="350" y="10" width="250" height="220" rx="16" fill="rgba(255, 59, 48, 0.01)" stroke="rgba(255, 59, 48, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
-                <rect x="690" y="10" width="250" height="220" rx="16" fill="rgba(175, 82, 222, 0.01)" stroke="rgba(175, 82, 222, 0.08)" stroke-width="1" stroke-dasharray="4,4" />
+                <rect x="10" y="10" width="250" height="220" rx="16" fill="rgba(0, 113, 227, 0.01)" stroke="rgba(0, 113, 227, 0.04)" stroke-width="1" />
+                <rect x="350" y="10" width="250" height="220" rx="16" fill="rgba(255, 59, 48, 0.01)" stroke="rgba(255, 59, 48, 0.04)" stroke-width="1" />
+                <rect x="690" y="10" width="250" height="220" rx="16" fill="rgba(175, 82, 222, 0.01)" stroke="rgba(175, 82, 222, 0.04)" stroke-width="1" />
 
                 <!-- Column Titles -->
-                <text x="135" y="35" text-anchor="middle" fill="#0071e3" font-size="12" font-weight="900" letter-spacing="1">01 核心量化指标 (METRICS)</text>
-                <text x="475" y="35" text-anchor="middle" fill="#ff3b30" font-size="12" font-weight="900" letter-spacing="1">02 AHP-MPI 建模 (MODELING)</text>
-                <text x="815" y="35" text-anchor="middle" fill="#af52de" font-size="12" font-weight="900" letter-spacing="1">03 智能诊断报告 (DIAGNOSIS)</text>
+                <text x="135" y="35" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">01 核心量化指标 (METRICS)</text>
+                <text x="475" y="35" text-anchor="middle" fill="#ff3b30" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">02 AHP-MPI 建模 (MODELING)</text>
+                <text x="815" y="35" text-anchor="middle" fill="#af52de" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800" letter-spacing="1">03 智能诊断报告 (DIAGNOSIS)</text>
 
                 <!-- Connection Lines (Data -> Process) -->
-                <path d="M235,80 C 290,80 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
-                <path d="M235,140 C 290,140 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
-                <path d="M235,200 C 290,200 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
+                <path d="M235,80 C 290,80 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
+                <path d="M235,140 C 290,140 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
+                <path d="M235,200 C 290,200 300,120 345,120" fill="none" stroke="rgba(0, 113, 227, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
 
                 <!-- Connection Lines (Process -> Conclusion) -->
-                <path d="M575,120 C 630,120 640,80 685,80" fill="none" stroke="rgba(255, 59, 48, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
-                <path d="M575,120 C 630,120 640,140 685,140" fill="none" stroke="rgba(255, 59, 48, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
-                <path d="M575,120 C 630,120 640,200 685,200" fill="none" stroke="rgba(255, 59, 48, 0.25)" stroke-width="1.5" marker-end="url(#arrow-diag)" />
+                <path d="M575,120 C 630,120 640,80 685,80" fill="none" stroke="rgba(255, 59, 48, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
+                <path d="M575,120 C 630,120 640,140 685,140" fill="none" stroke="rgba(255, 59, 48, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
+                <path d="M575,120 C 630,120 640,200 685,200" fill="none" stroke="rgba(255, 59, 48, 0.15)" stroke-width="1.2" marker-end="url(#arrow-diag)" />
 
                 <!-- METRICS NODES -->
                 <g transform="translate(35, 55)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="28" font-size="18">🏢</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">空间潜力 (S)</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">源自: 地块面积/形态容积率</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">空间潜力 (S)</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">源自: 地块面积/形态容积率</text>
                 </g>
                 <g transform="translate(35, 115)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="28" font-size="18">👥</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">社会需求 (D)</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">源自: POI 密度/调研诉求</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">社会需求 (D)</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">源自: POI 密度/调研诉求</text>
                 </g>
                 <g transform="translate(35, 175)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#d2d2d7" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
                     <text x="15" y="28" font-size="18">🌿</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">环境现状 (E)</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">源自: 街景 GVI/SVF 评估</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">环境现状 (E)</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">源自: 街景 GVI/SVF 评估</text>
                 </g>
 
                 <!-- PROCESSING ENGINE NODES -->
                 <g transform="translate(375, 80)">
-                    <rect width="200" height="80" rx="12" fill="#ffffff" stroke="#ff3b30" stroke-width="1.5" />
+                    <rect width="200" height="80" rx="14" ry="14" fill="#ffffff" stroke="#ff3b30" stroke-width="1" />
                     <text x="15" y="35" font-size="24">🧮</text>
-                    <text x="55" y="30" fill="#1d1d1f" font-size="14" font-weight="bold">AHP-MPI 指数计算</text>
-                    <text x="55" y="50" fill="#86868b" font-size="10">专家权重矩阵加权融合</text>
-                    <text x="55" y="65" fill="#86868b" font-size="10">Min-Max 归一化处理</text>
+                    <text x="55" y="30" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">AHP-MPI 指数计算</text>
+                    <text x="55" y="50" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">专家权重矩阵加权融合</text>
+                    <text x="55" y="65" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="10">Min-Max 归一化处理</text>
                 </g>
 
                 <!-- CONCLUSIONS NODES -->
                 <g transform="translate(715, 55)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#af52de" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#af52de" stroke-width="1" />
                     <text x="15" y="28" font-size="18">🏆</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">优先更新时序图谱</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">明确地块改造先后次序</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">优先更新时序图谱</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">明确地块改造先后次序</text>
                 </g>
                 <g transform="translate(715, 115)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#af52de" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#af52de" stroke-width="1" />
                     <text x="15" y="28" font-size="18">🎯</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">多维诊断雷达分析</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">精准定位单地块短板</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">多维诊断雷达分析</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">精准定位单地块短板</text>
                 </g>
                 <g transform="translate(715, 175)">
-                    <rect width="200" height="45" rx="8" fill="#ffffff" stroke="#af52de" stroke-width="1.5" />
+                    <rect width="200" height="45" rx="12" ry="12" fill="#ffffff" stroke="#af52de" stroke-width="1" />
                     <text x="15" y="28" font-size="18">🤖</text>
-                    <text x="45" y="22" fill="#1d1d1f" font-size="11" font-weight="bold">LLM 智能诊断报告</text>
-                    <text x="45" y="38" fill="#86868b" font-size="9">DeepSeek 自动生成解读</text>
+                    <text x="45" y="22" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">LLM 智能诊断报告</text>
+                    <text x="45" y="38" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">DeepSeek 自动生成解读</text>
                 </g>
             </svg>
         </div>

@@ -36,20 +36,45 @@
         const landuse_data = /*__LANDUSE_DATA__*/null/*__END_LANDUSE__*/;
         const rail_data = /*__RAIL_DATA__*/null/*__END_RAIL__*/;
         const road_data = /*__ROAD_DATA__*/null/*__END_ROAD__*/;
+        const syntax_data = /*__SYNTAX_DATA__*/null/*__END_SYNTAX__*/;
         const shadow_data = /*__SHADOW_DATA__*/null/*__END_SHADOW__*/;
         // 🚀 接收 3D/2D 模式配置
         const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
+        const show_building_style = /*__SHOW_BUILDING_STYLE__*/false/*__END_SHOW_BUILDING_STYLE__*/;
+        const syntax_metric = /*__SYNTAX_METRIC__*/'integration_norm'/*__END_SYNTAX_METRIC__*/;
 
         // 🔬 高级分析图层数据链路 (Page 2 全息诊断专属)
         const hex_payload = /*__HEX_PAYLOAD__*/null/*__END_HEX_PAY__*/;
         const col_payload = /*__COL_PAYLOAD__*/null/*__END_COL_PAY__*/;
         const heat_payload = /*__HEAT_PAYLOAD__*/null/*__END_HEAT_PAY__*/;
 
+        const has_quality_layer = (
+            (col_payload && col_payload.data && col_payload.data.length > 0) ||
+            (heat_payload && heat_payload.data && heat_payload.data.length > 0)
+        );
+
         // 🚀 接收光照开关与时间配置
         const show_lighting = /*__SHOW_LIGHTING__*/true/*__END_LIGHTING__*/;
         const sun_time = /*__SUN_TIME__*/10/*__END_SUN_TIME__*/;
 
         const renderedLayers = [];
+
+        // 🌈 空间句法渐变色插值 (Spectral colormap: 0=Blue, 0.25=Cyan, 0.5=Green, 0.75=Yellow, 1=Red)
+        function getSpectralColor(val) {
+            if (val <= 0.25) {
+                const t = val / 0.25;
+                return [Math.round(59 * (1 - t) + 34 * t), Math.round(130 * (1 - t) + 211 * t), Math.round(246 * (1 - t) + 238 * t), 230];
+            } else if (val <= 0.5) {
+                const t = (val - 0.25) / 0.25;
+                return [Math.round(34 * (1 - t) + 74 * t), Math.round(211 * (1 - t) + 222 * t), Math.round(238 * (1 - t) + 128 * t), 230];
+            } else if (val <= 0.75) {
+                const t = (val - 0.5) / 0.25;
+                return [Math.round(74 * (1 - t) + 250 * t), Math.round(222 * (1 - t) + 204 * t), Math.round(128 * (1 - t) + 21 * t), 230];
+            } else {
+                const t = (val - 0.75) / 0.25;
+                return [Math.round(250 * (1 - t) + 239 * t), Math.round(204 * (1 - t) + 68 * t), Math.round(21 * (1 - t) + 68 * t), 230];
+            }
+        }
 
         // ==========================================
         // 🏙️ 建筑层配置 (支持内联 JSON 和 URL 异步流加载双模式)
@@ -71,7 +96,7 @@
             props._baseHeight = baseHeight;
 
             // 仅对研究范围内的建筑（in_scope）分配拆改留动作，范围外作为上下文白膜保留
-            // 鲁棒性增强：支持布尔、数字、字符串格式的 in_scope 标绘
+            // 鲁棒性增强：支持布尔、数字、字符串格式 of in_scope 标绘
             const inScope = props.in_scope === true || props.in_scope === 1 || props.in_scope === 'true' || props.in_scope === '1';
             
             if (!props.action && inScope) {
@@ -85,7 +110,7 @@
 
         const BUILDING_LAYER_CONFIG = {
             id: 'building-layer',
-            opacity: IS_XRAY ? 0.2 : 0.95,
+            opacity: IS_XRAY ? 0.2 : (has_quality_layer ? 0.28 : 0.95),
             stroked: true,
             filled: !IS_XRAY,
             extruded: is_3d,
@@ -103,29 +128,35 @@
                 const props = d.properties || {};
                 ensureBuildingState(props);
                 const s = props.prop_style;
-                if (IS_DEMO) {
-                    if (props.action === 'demolish') return [244, 63, 94, IS_XRAY ? 40 : 230]; // 拆: Rose
-                    if (props.action === 'renovate') return [250, 204, 21, IS_XRAY ? 40 : 230]; // 改: Yellow
-                    if (props.action === 'retain' || s === 'historical') return [168, 85, 247, IS_XRAY ? 40 : 230]; // 留: Purple
-                    if (props.action === 'retain_park' || s === 'park') return [0, 190, 0, IS_XRAY ? 40 : 230]; // 保护绿地: Green
+                if (show_building_style) {
+                    if (IS_DEMO) {
+                        if (props.action === 'demolish') return [244, 63, 94, IS_XRAY ? 40 : 230]; // 拆: Rose
+                        if (props.action === 'renovate') return [250, 204, 21, IS_XRAY ? 40 : 230]; // 改: Yellow
+                        if (props.action === 'retain' || s === 'historical') return [168, 85, 247, IS_XRAY ? 40 : 230]; // 留: Purple
+                        if (props.action === 'retain_park' || s === 'park') return [0, 190, 0, IS_XRAY ? 40 : 230]; // 保护绿地: Green
+                    }
+                    if (s === 'historical') return [255, 149, 0, 230];
+                    if (s === 'park') return [0, 190, 0, 230];
                 }
-                if (s === 'historical') return [255, 149, 0, 230];
-                if (s === 'park') return [0, 190, 0, 230];
                 return [255, 255, 255, IS_XRAY ? 40 : 230];
             },
             getLineColor: d => {
                 const props = d.properties || {};
                 ensureBuildingState(props);
                 if (IS_XRAY) {
-                    if (IS_DEMO && props.action === 'demolish') return [244, 63, 94, 255];
-                    if (IS_DEMO && props.action === 'renovate') return [250, 204, 21, 255];
-                    if (IS_DEMO && (props.action === 'retain' || props.prop_style === 'historical')) return [168, 85, 247, 255];
-                    if (IS_DEMO && (props.action === 'retain_park' || props.prop_style === 'park')) return [0, 190, 0, 255];
+                    if (show_building_style && IS_DEMO) {
+                        if (props.action === 'demolish') return [244, 63, 94, 255];
+                        if (props.action === 'renovate') return [250, 204, 21, 255];
+                        if (props.action === 'retain' || props.prop_style === 'historical') return [168, 85, 247, 255];
+                        if (props.action === 'retain_park' || props.prop_style === 'park') return [0, 190, 0, 255];
+                    }
                     return [51, 65, 85, 200]; // Dark grey outline for normal buildings in X-Ray
                 }
                 const s = props.prop_style;
-                if (s === 'historical') return [217, 119, 6, 240];
-                if (s === 'park') return [200, 255, 200, 200];
+                if (show_building_style) {
+                    if (s === 'historical') return [217, 119, 6, 240];
+                    if (s === 'park') return [200, 255, 200, 200];
+                }
                 return [200, 200, 204, 180];
             },
             lineWidthMinPixels: IS_XRAY ? 1.5 : 1,
@@ -180,9 +211,10 @@
                 data: bound_data,
                 stroked: true,
                 filled: true,
-                getFillColor: [255, 59, 48, 20],
-                getLineColor: [255, 59, 48, 200],
-                getLineWidth: 3,
+                getFillColor: [220, 38, 38, 20],
+                getLineColor: [220, 38, 38, 255],
+                getLineWidth: 5,
+                lineWidthMinPixels: 2,
                 pickable: false,
                 shadowEnabled: false
             }));
@@ -333,6 +365,41 @@
             }));
         }
 
+        // 🔗 图层 2.8：空间句法路网拓扑
+        if (syntax_data) {
+            let syntaxUrl = syntax_data;
+            if (typeof syntax_data === 'string' && syntax_data.startsWith('/') && !syntax_data.startsWith('//')) {
+                try {
+                    const parentOrigin = new URL(document.referrer || window.location.href).origin;
+                    syntaxUrl = parentOrigin + syntax_data;
+                } catch(e) {}
+            }
+            renderedLayers.push(new deck.GeoJsonLayer({
+                id: 'syntax-layer',
+                data: syntaxUrl,
+                stroked: true,
+                filled: false,
+                getLineColor: d => {
+                    const val = d.properties[syntax_metric] || 0;
+                    return getSpectralColor(val);
+                },
+                getLineWidth: d => {
+                    const val = d.properties[syntax_metric] || 0;
+                    return 1.8 + val * 3.5;
+                },
+                lineWidthMinPixels: 1.8,
+                parameters: { depthTest: true },
+                pickable: true,
+                shadowEnabled: false,
+                fetch: (url) => fetch(url).then(res => {
+                    if (res.status === 404 && url.includes('/app/')) {
+                        return fetch(url.replace('/app/', '/'));
+                    }
+                    return res;
+                }).then(res => res.json())
+            }));
+        }
+
         // 🌑 矢量阴影图层 (预烘焙，高视角拉远依然极其清晰)
         if (shadow_data) {
             let sData = shadow_data;
@@ -374,10 +441,9 @@
                 stroked: true,
                 filled: true,
                 extruded: false,
-                getFillColor: [220, 38, 38, 100],
-                getLineColor: [220, 38, 38, 255],
-                getLineWidth: 5,
-                lineWidthMinPixels: 2,
+                getFillColor: [255, 59, 48, 20],
+                getLineColor: [255, 59, 48, 200],
+                getLineWidth: 3,
                 parameters: {
                     depthTest: true
                 },
@@ -678,6 +744,17 @@
                     const rtype = ROAD_NAMES[object.properties.level] || '未知';
                     return { html: `<b>🛣️ ${rtype}: ${rname}</b>` };
                 }
+                if (layer.id === 'syntax-layer') {
+                    const rname = object.properties.name || '未命名路段';
+                    const valRaw = syntax_metric === 'choice_norm' ? object.properties.choice : object.properties.integration;
+                    const valNorm = syntax_metric === 'choice_norm' ? object.properties.choice_norm : object.properties.integration_norm;
+                    const metricLabel = syntax_metric === 'choice_norm' ? '全局穿行度 (Choice)' : '全局整合度 (Integration)';
+                    return {
+                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🔗 空间句法分析</div>
+                               <b>路段: ${rname}</b><br>
+                               <span style="font-size: 11.5px;">${metricLabel}: <b>${parseFloat(valRaw).toFixed(4)}</b> (归一化: ${parseFloat(valNorm).toFixed(4)})</span>`
+                    };
+                }
                 if (layer.id === 'col-layer') {
                     return { html: `<b>📊 指标采集点 (ID: ${object.ID || 'N/A'})</b><br>数值水平: ${object[col_payload?.metric] ? parseFloat(object[col_payload.metric]).toFixed(3) : '未知'}` };
                 }
@@ -770,8 +847,8 @@
             </div>`;
         };
 
-        if (bound_data) addItem("rgba(255, 59, 48, 0.2)", "空间研究红线边界");
-        if (plots_data) addItem("rgba(220, 38, 38, 0.5)", "重点微更新锚点地块");
+        if (bound_data) addItem("rgba(220, 38, 38, 0.5)", "空间研究红线边界");
+        if (plots_data) addItem("rgba(255, 59, 48, 0.2)", "重点微更新锚点地块");
         
         if (b_data) {
             if (IS_DEMO) {
@@ -798,6 +875,14 @@
             addLineItem("rgba(255, 140, 50, 0.71)", 3, "二级道路");
             addLineItem("rgba(200, 200, 200, 0.59)", 2, "三级道路");
             addLineItem("rgba(160, 160, 160, 0.47)", 1.5, "其他道路");
+        }
+
+        if (syntax_data) {
+            const metricName = syntax_metric === 'choice_norm' ? '全局穿行度' : '全局整合度';
+            lHtml += `<div style="margin-top: 8px; margin-bottom: 2px; font-weight: 700; color: #0071e3; font-size: 11px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); padding-bottom: 4px;">空间句法${metricName}</div>`;
+            addLineItem("rgba(239, 68, 68, 0.9)", 4, "高值 (核心骨干)");
+            addLineItem("rgba(74, 222, 128, 0.9)", 3, "中值 (过渡支路)");
+            addLineItem("rgba(59, 130, 246, 0.9)", 2, "低值 (末端微循环)");
         }
 
         if (IS_XRAY) {

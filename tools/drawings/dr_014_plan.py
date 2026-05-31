@@ -25,11 +25,11 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         except Exception:
             sandbox = {}
 
-        res_pct = sandbox.get("res_pct", 50.0)
-        com_pct = sandbox.get("com_pct", 20.0)
-        off_pct = sandbox.get("off_pct", 10.0)
-        green_pct = sandbox.get("green_pct", 12.0)
-        public_pct = sandbox.get("public_pct", 8.0)
+        res_pct = sandbox.get("res_pct", 48.0)
+        com_pct = sandbox.get("com_pct", 16.0)
+        off_pct = sandbox.get("off_pct", 8.0)
+        green_pct = sandbox.get("green_pct", 10.0)
+        public_pct = sandbox.get("public_pct", 6.0)
 
         # 2. Run Greedy Spatial Allocation
         gdf_proj = landuse.copy()
@@ -37,7 +37,6 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         centroids = gdf_proj.geometry.centroid
         cx_s = centroids.x
         cy_s = centroids.y
-        total_area = gdf_proj["area_sqm"].sum()
 
         # Centers in EPSG:3857
         centers = {
@@ -54,7 +53,17 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             max_d = dists.max() if dists.max() > 0 else 1.0
             gdf_proj[f"decay_{cat}"] = 1.0 - (dists / max_d)
 
-        # Target areas
+        # Target areas (restrict to study area)
+        if boundary is not None and not boundary.empty:
+            boundary_proj = boundary.to_crs(epsg=3857)
+            boundary_geom = boundary_proj.geometry.unary_union
+            gdf_proj["in_study_area"] = gdf_proj.geometry.centroid.within(boundary_geom)
+        else:
+            gdf_proj["in_study_area"] = True
+
+        gdf_in = gdf_proj[gdf_proj["in_study_area"]]
+        total_area_in = gdf_in["area_sqm"].sum() if not gdf_in.empty else 0.0
+
         target_pcts = {
             "居住用地": res_pct,
             "商业服务业": com_pct,
@@ -62,7 +71,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             "公园与绿地": green_pct,
             "公共设施": public_pct
         }
-        target_areas = {k: total_area * (v / 100.0) for k, v in target_pcts.items()}
+        target_areas = {k: total_area_in * (v / 100.0) for k, v in target_pcts.items()}
 
         # Scores
         scores = {}
@@ -75,7 +84,8 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             scores[cat] = is_orig.astype(float) * 2.0 + decay * 1.0
 
         # Allocation
-        allocated = pd.Series(False, index=gdf_proj.index)
+        allocated = pd.Series(True, index=gdf_proj.index)
+        allocated[gdf_proj["in_study_area"]] = False
         allocated_types = gdf_proj["Type"].copy()
 
         priority = ["商业服务业", "商业办公", "公园与绿地", "公共设施", "居住用地"]
@@ -96,6 +106,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
                 if current_a >= target_a:
                     break
 
+        # Set all remaining unallocated features inside the study area to "交通场站"
+        unallocated_in = (~allocated) & gdf_proj["in_study_area"]
+        allocated_types[unallocated_in] = "交通场站"
+
         # 3. Plot allocated landuse
         color_map = {
             "居住用地": "#FDE047",       # Yellow
@@ -112,8 +126,17 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         }
 
         gdf_proj["allocated_color"] = allocated_types.map(color_map).fillna("#CBD5E1")
-        for color_hex, sub_df in gdf_proj.groupby('allocated_color'):
-            sub_df.plot(ax=ax, facecolor=color_hex, edgecolor="#CBD5E1", linewidth=0.25, zorder=1)
+        
+        # Plot study area and context separately for consistent visual contrast
+        gdf_out = gdf_proj[~gdf_proj["in_study_area"]]
+        if not gdf_out.empty:
+            for color_hex, sub_df in gdf_out.groupby('allocated_color'):
+                sub_df.plot(ax=ax, facecolor=color_hex, edgecolor="#E2E8F0", linewidth=0.15, alpha=0.35, zorder=1)
+
+        if not gdf_in.empty:
+            gdf_in_proj = gdf_proj[gdf_proj["in_study_area"]]
+            for color_hex, sub_df in gdf_in_proj.groupby('allocated_color'):
+                sub_df.plot(ax=ax, facecolor=color_hex, edgecolor="#CBD5E1", linewidth=0.25, alpha=1.0, zorder=1)
 
     if buildings is not None and not buildings.empty:
         buildings.plot(ax=ax, facecolor="none", edgecolor="#475569", linewidth=0.15, alpha=0.3, zorder=2)

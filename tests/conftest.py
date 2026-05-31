@@ -11,12 +11,20 @@ if str(root) not in sys.path:
 
 # ── Streamlit mock (must exist before any src module is imported) ──
 _st_mock = MagicMock()
-def _cache_resource(func=None):
-    return func if func is not None else _cache_resource
+def _cache_resource(*args, **kwargs):
+    def decorator(func):
+        return func
+    if len(args) == 1 and callable(args[0]):
+        return args[0]
+    return decorator
 
 
-def _cache_data(func=None, *, ttl=None):
-    return func if func is not None else _cache_data
+def _cache_data(*args, **kwargs):
+    def decorator(func):
+        return func
+    if len(args) == 1 and callable(args[0]):
+        return args[0]
+    return decorator
 
 
 _st_mock.cache_resource = _cache_resource

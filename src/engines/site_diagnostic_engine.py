@@ -13,8 +13,6 @@ import streamlit as st
 
 from src.config import SHP_FILES, DATA_FILES
 from src.config.runtime import resolve_path
-from src.engines.spatial_engine import get_merged_poi_data
-from src.engines.rag_engine import retrieve_rag_context
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -63,6 +61,7 @@ def get_plot_diagnostics() -> list:
         geo = json.load(f)
 
     try:
+        from src.engines.spatial_engine import get_merged_poi_data
         df_poi = get_merged_poi_data()
     except Exception:
         df_poi = pd.DataFrame()
@@ -149,11 +148,13 @@ def _spatial_means_in_bbox_vec(coords_tuple, col_arrays, bbox):
 # Policy compliance matrix
 # ═══════════════════════════════════════════
 
+@st.cache_data(ttl=1800, show_spinner=False)
 def generate_policy_matrix(proposal: str) -> list:
     """Retrieve relevant policy clauses and annotate compliance.
 
     Returns list[dict] with: clause, source, relevance_score, compliance_note.
     """
+    from src.engines.rag_engine import retrieve_rag_context
     best_chunks = retrieve_rag_context(proposal, top_k=8)
     top_clauses = []
     for score, content, source in best_chunks:

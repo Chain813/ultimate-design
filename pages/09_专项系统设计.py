@@ -39,70 +39,53 @@ stats = get_hud_statistics()
 sky = get_skyline_features()
 
 graphic_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));">
   <defs>
     <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
-    </linearGradient>
-    <linearGradient id="g_ai" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.15)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f5f5f7"/>
     </linearGradient>
     <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(16, 185, 129, 0.2)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="rgba(52, 199, 89, 0.03)"/>
+      <stop offset="100%" stop-color="rgba(52, 199, 89, 0.08)"/>
     </linearGradient>
-    
-    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="f_emerald" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
   </defs>
 
-  <path d="M 160 100 C 180 100, 180 32, 200 32" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 160 100 C 180 100, 180 77, 200 77" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 160 100 C 180 100, 180 122, 200 122" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 160 100 C 180 100, 180 167, 200 167" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 100 C 180 100, 180 32, 200 32" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 100 C 180 100, 180 77, 200 77" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 100 C 180 100, 180 122, 200 122" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 100 C 180 100, 180 167, 200 167" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
 
-  <path d="M 360 32 C 380 32, 380 100, 410 100" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 360 77 C 380 77, 380 100, 410 100" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 360 122 C 380 122, 380 100, 410 100" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 360 167 C 380 167, 380 100, 410 100" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <polygon points="405,96 410,100 405,104" fill="#10b981"/>
+  <path d="M 360 32 C 380 32, 380 100, 410 100" fill="none" stroke="#34c759" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 360 77 C 380 77, 380 100, 410 100" fill="none" stroke="#34c759" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 360 122 C 380 122, 380 100, 410 100" fill="none" stroke="#34c759" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 360 167 C 380 167, 380 100, 410 100" fill="none" stroke="#34c759" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <polygon points="405,96 410,100 405,104" fill="#34c759"/>
 
-  <rect x="10" y="70" width="150" height="60" rx="8" fill="url(#g_base)" stroke="#6366f1" stroke-width="2" filter="url(#f_indigo)"/>
-  <text x="85" y="97" fill="#6366f1" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">总体空间结构</text>
-  <text x="85" y="116" fill="#cbd5e1" font-size="10" font-family="sans-serif" text-anchor="middle">Stage 08 策划基础</text>
+  <rect x="10" y="70" width="150" height="60" rx="8" fill="url(#g_base)" stroke="#5e5ce6" stroke-width="2"/>
+  <text x="85" y="97" fill="#5e5ce6" font-size="13" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">总体空间结构</text>
+  <text x="85" y="116" fill="#86868b" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Stage 08 策划基础</text>
 
-  <rect x="200" y="15" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="280" y="36" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">交通与 TOD 系统</text>
+  <rect x="200" y="15" width="160" height="34" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="280" y="36" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">交通与 TOD 系统</text>
 
-  <rect x="200" y="60" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="280" y="81" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">公共空间与 15min 生活圈</text>
+  <rect x="200" y="60" width="160" height="34" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="280" y="81" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">公共空间与 15min 生活圈</text>
 
-  <rect x="200" y="105" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="280" y="126" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">建筑形态、风貌与立面</text>
+  <rect x="200" y="105" width="160" height="34" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="280" y="126" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">建筑形态、风貌与立面</text>
 
-  <rect x="200" y="150" width="160" height="34" rx="6" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="280" y="171" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">风貌景观与历史保护</text>
+  <rect x="200" y="150" width="160" height="34" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="280" y="171" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">风貌景观与历史保护</text>
 
-  <rect x="410" y="45" width="160" height="110" rx="10" fill="url(#g_out)" stroke="#10b981" stroke-width="2" filter="url(#f_emerald)"/>
-  <text x="490" y="73" fill="#10b981" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">专项控制图层</text>
-  <text x="490" y="100" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 多维度 GIS 成果整合</text>
-  <text x="490" y="120" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 量化指标精确控制</text>
-  <text x="490" y="140" fill="#e2e8f0" font-size="10" font-family="sans-serif" text-anchor="middle">✓ 一键导出蓝图图集</text>
+  <rect x="410" y="45" width="160" height="110" rx="10" fill="url(#g_out)" stroke="#34c759" stroke-width="2"/>
+  <text x="490" y="73" fill="#34c759" font-size="14" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">专项控制图层</text>
+  <text x="490" y="100" fill="#1d1d1f" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">✓ 多维度 GIS 成果整合</text>
+  <text x="490" y="120" fill="#1d1d1f" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">✓ 量化指标精确控制</text>
+  <text x="490" y="140" fill="#1d1d1f" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">✓ 一键导出蓝图图集</text>
 
-  <circle cx="160" cy="100" r="4" fill="#6366f1"/>
-  <circle cx="410" cy="100" r="4" fill="#10b981"/>
+  <circle cx="160" cy="100" r="4" fill="#5e5ce6"/>
+  <circle cx="410" cy="100" r="4" fill="#34c759"/>
 </svg>
 """
 

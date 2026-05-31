@@ -23,36 +23,32 @@ render_engine_status_alert()
 
 # 2. Render Page Banner
 graphic_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));">
   <defs>
     <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
-    </linearGradient>
-    <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(59, 130, 246, 0.15)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f5f5f7"/>
     </linearGradient>
   </defs>
   <!-- Main boxes representing skills -->
-  <rect x="50" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#3b82f6" stroke-width="1.5"/>
-  <text x="130" y="80" fill="#e2e8f0" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">制图技能 (Drawing)</text>
-  <text x="130" y="110" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">Matplotlib & Pillow</text>
-  <text x="130" y="130" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">A3 标准图纸排版</text>
+  <rect x="50" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="130" y="78" fill="#0071e3" font-size="14" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">制图技能 (Drawing)</text>
+  <text x="130" y="108" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Matplotlib & Pillow</text>
+  <text x="130" y="128" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">A3 标准图纸排版</text>
 
-  <rect x="260" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#10b981" stroke-width="1.5"/>
-  <text x="340" y="80" fill="#e2e8f0" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">智能体博弈 (Agent)</text>
-  <text x="340" y="110" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">Multi-Agent Forum</text>
-  <text x="340" y="130" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">满意度效用评估</text>
+  <rect x="260" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#34c759" stroke-width="1.2"/>
+  <text x="340" y="78" fill="#34c759" font-size="14" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">智能体博弈 (Agent)</text>
+  <text x="340" y="108" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Multi-Agent Forum</text>
+  <text x="340" y="128" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">满意度效用评估</text>
 
-  <rect x="470" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#f59e0b" stroke-width="1.5"/>
-  <text x="550" y="80" fill="#e2e8f0" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">合规校验 (Zoning)</text>
-  <text x="550" y="110" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">Zoning Policy Check</text>
-  <text x="550" y="130" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">规划指标与建议</text>
+  <rect x="470" y="40" width="160" height="120" rx="10" fill="url(#g_base)" stroke="#ff9500" stroke-width="1.2"/>
+  <text x="550" y="78" fill="#ff9500" font-size="14" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">合规校验 (Zoning)</text>
+  <text x="550" y="108" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Zoning Policy Check</text>
+  <text x="550" y="128" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">规划指标与建议</text>
 
   <!-- Connective lines -->
-  <line x1="210" y1="100" x2="260" y2="100" stroke="#4b5563" stroke-width="2" stroke-dasharray="4,3"/>
-  <line x1="420" y1="100" x2="470" y2="100" stroke="#4b5563" stroke-width="2" stroke-dasharray="4,3"/>
+  <line x1="210" y1="100" x2="260" y2="100" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <line x1="420" y1="100" x2="470" y2="100" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
 </svg>
 """
 

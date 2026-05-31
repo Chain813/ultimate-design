@@ -170,3 +170,41 @@ flowchart LR
     C7 --> C7_1["AIGC技术推演过程图 / 实施分期图"]
     C7 --> C7_2["运营管理建议图 / 更新成效评估图"]
 ```
+
+## 4. 「矢量-光栅-ControlNet」空间约束制图工作流图
+
+```mermaid
+flowchart LR
+    classDef default fill:#1e293b,stroke:#64a0dc,stroke-width:1px,color:#e2e8f0;
+    classDef root fill:#0f172a,stroke:#38bdf8,stroke-width:2px,color:#38bdf8,font-weight:bold;
+    classDef group fill:#1e293b,stroke:#818cf8,stroke-width:1.5px,color:#818cf8;
+
+    root(["「矢量-光栅-ControlNet」空间约束制图"]):::root
+    
+    C1["01 刚性投影转换"]:::group
+    C2["02 ControlNet 控制管线"]:::group
+    C3["03 动态设计说明生成"]:::group
+    C4["04 Pillow排版与多进程"]:::group
+    
+    root --> C1
+    root --> C2
+    root --> C3
+    root --> C4
+    
+    C1 --> C1_1["克服普通 AIGC 位置偏移与结构散乱缺点"]
+    C1 --> C1_2["将 GIS 用地/道路红线等矢量几何高分辨率渲染"]
+    C1 --> C1_3["生成带国标规范色值的光栅掩膜，保留精确物理轮廓"]
+    
+    C2 --> C2_1["将光栅掩膜作为 Stable Diffusion 控制输入"]
+    C2 --> C2_2["配合 Canny (边缘) 或 Segmentation (分割) 控制层"]
+    C2 --> C2_3["在建筑基底、道路中线和用地类型实现像素级位置对齐"]
+    
+    C3 --> C3_1["在出图封装排版阶段，自动调用 DeepSeek-V4-Pro"]
+    C3 --> C3_2["读取底层实测物理空间指标，自动生成设计说明文本"]
+    C3 --> C3_3["消除传统修改滞后性，实现『图面-指标-说明』绝对互锁"]
+    
+    C4 --> C4_1["使用 Pillow 画布拼合效果图、图框、图例与说明"]
+    C4 --> C4_2["使用 Python 多进程 (Multiprocessing) 编译引擎"]
+    C4 --> C4_3["快速并行编译 26 张 A3 规划图纸，大幅缩短出图时间"]
+```
+

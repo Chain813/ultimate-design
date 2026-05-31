@@ -15,7 +15,6 @@ from dotenv import load_dotenv
 from src.config.loader import load_global_config
 
 load_dotenv()
-from src.engines.rag_engine import retrieve_rag_context
 from src.utils.runtime_flags import is_demo_mode
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -140,7 +139,7 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
             for char in text:
                 accumulated += char
                 yield char
-                time.sleep(0.02)
+                time.sleep(0.003)
             from src.utils.llm_monitor import log_llm_call
             log_llm_call(model, system_prompt, prompt, accumulated, len(text) * 0.02)
 
@@ -218,7 +217,16 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
 
 def _augment_with_rag(prompt: str, system_prompt: str) -> str:
     """Append top RAG chunks to system prompt."""
-    best_chunks = retrieve_rag_context(prompt, top_k=3)
+    from src.engines.rag_engine import retrieve_rag_context
+    # Extract proposal if present to keep the RAG search query clean and cacheable
+    search_query = prompt
+    if "策划议题：" in prompt:
+        parts = prompt.split("策划议题：", 1)
+        search_query = parts[1].split("\n", 1)[0].strip()
+        if not search_query:
+            search_query = parts[1][:200].strip()
+
+    best_chunks = retrieve_rag_context(search_query, top_k=3)
     if best_chunks:
         top_context = "\n\n".join(f"[{c[2]}]: {c[1]}" for c in best_chunks)
         system_prompt += f"\n\n【本地长春市法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"

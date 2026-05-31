@@ -117,6 +117,7 @@ def compute_query_embedding(prompt: str):
     return emb
 
 
+@st.cache_data(ttl=600)
 def retrieve_rag_context(query: str, top_k: int = 3) -> list:
     """Retrieve top-k most relevant regulation chunks for a query.
 

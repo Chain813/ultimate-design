@@ -326,38 +326,40 @@ with col_depth3:
 
 # 预览
 with st.expander("预览约束图与深度图", expanded=False):
-    # 确定统一坐标范围
-    preview_lng, preview_lat = None, None
-    boundary_path = ROOT / "data/gis/Boundary_Scope.geojson"
-    if boundary_path.exists():
-        with open(boundary_path, "r", encoding="utf-8") as f:
-            bdata = json.load(f)
-        blng, blat = [], []
-        for feat in bdata.get("features", []):
-            _collect_coords(feat["geometry"], blng, blat)
-        if blng:
-            preview_lng = (min(blng), max(blng))
-            preview_lat = (min(blat), max(blat))
+    show_previews = st.checkbox("🔍 显示实时渲染的控制特征图与深度图（会增加计算开销）", value=False, key="aigc_show_previews")
+    if show_previews:
+        # 确定统一坐标范围
+        preview_lng, preview_lat = None, None
+        boundary_path = ROOT / "data/gis/Boundary_Scope.geojson"
+        if boundary_path.exists():
+            with open(boundary_path, "r", encoding="utf-8") as f:
+                bdata = json.load(f)
+            blng, blat = [], []
+            for feat in bdata.get("features", []):
+                _collect_coords(feat["geometry"], blng, blat)
+            if blng:
+                preview_lng = (min(blng), max(blng))
+                preview_lat = (min(blat), max(blat))
 
-    preview_cols = st.columns(min(3, len(cn_enabled_keys) + (1 if enable_depth else 0)))
-    cn_images = {}
-    for i, key in enumerate(cn_enabled_keys[:3]):
-        info = available_constraints[key]
-        with preview_cols[i % len(preview_cols)]:
-            img = render_geojson_to_image(str(info["path"]), width=512, height=384,
-                                          lng_range=preview_lng, lat_range=preview_lat)
-            cn_images[key] = img
-            st.image(img, caption=info["label"], width=256)
+        preview_cols = st.columns(min(3, len(cn_enabled_keys) + (1 if enable_depth else 0)))
+        cn_images = {}
+        for i, key in enumerate(cn_enabled_keys[:3]):
+            info = available_constraints[key]
+            with preview_cols[i % len(preview_cols)]:
+                img = render_geojson_to_image(str(info["path"]), width=512, height=384,
+                                              lng_range=preview_lng, lat_range=preview_lat)
+                cn_images[key] = img
+                st.image(img, caption=info["label"], width=256)
 
-    if enable_depth:
-        road_path = str(ROOT / "static/road_clipped.geojson")
-        bldg_path = str(ROOT / "static/buildings.geojson")
-        d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
-        with preview_cols[(len(cn_enabled_keys)) % len(preview_cols)]:
-            depth_img = render_depth_map(road_path, bldg_path, width=512, height=384,
-                                         lng_range=preview_lng, lat_range=preview_lat, mode=d_mode)
-            st.image(depth_img, caption=f"深度图 ({'空间尺度' if d_mode == 'plan' else '远近关系'})", width=256)
-            st.caption("亮=近/高，暗=远/低")
+        if enable_depth:
+            road_path = str(ROOT / "static/road_clipped.geojson")
+            bldg_path = str(ROOT / "static/buildings.geojson")
+            d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
+            with preview_cols[(len(cn_enabled_keys)) % len(preview_cols)]:
+                depth_img = render_depth_map(road_path, bldg_path, width=512, height=384,
+                                             lng_range=preview_lng, lat_range=preview_lat, mode=d_mode)
+                st.image(depth_img, caption=f"深度图 ({'空间尺度' if d_mode == 'plan' else '远近关系'})", width=256)
+                st.caption("亮=近/高，暗=远/低")
 
 st.markdown("---")
 

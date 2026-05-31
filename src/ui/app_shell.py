@@ -244,6 +244,23 @@ def render_top_nav():
 
         nav_html += '</div></div></div></div>'
 
+    # ➕ 附加智能设计工具下拉菜单
+    nav_html += '''
+    <div class="nav-item">
+        智能工具 ⚙️
+        <div class="dropdown-content">
+            <div class="submenu-container">
+                <div class="submenu-column">
+                    <div class="submenu-title">AI 与表达智能工具</div>
+                    <a href="/视频生成" target="_self" class="dropdown-item">🎥 14 视频生成</a>
+                    <a href="/AIGC设计推演" target="_self" class="dropdown-item">🎨 15 AIGC设计推演</a>
+                    <a href="/制图与设计智能体Skill手册" target="_self" class="dropdown-item">📘 16 智能体Skill手册</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    '''
+
     nav_html += '</div></div>'
     st.markdown(nav_html, unsafe_allow_html=True)
 

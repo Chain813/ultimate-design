@@ -44,6 +44,16 @@ def load_raw_landuse_gdf():
     gdf_proj = gdf.to_crs(epsg=3857)
     gdf_proj["area_sqm"] = gdf_proj.geometry.area
     
+    # Identify features within the research scope (boundary)
+    boundary_path = resolve_path(str(GIS_FILES["boundary"]))
+    if boundary_path.exists():
+        boundary_gdf = gpd.read_file(str(boundary_path))
+        boundary_proj = boundary_gdf.to_crs(epsg=3857)
+        boundary_geom = boundary_proj.geometry.unary_union
+        gdf_proj["in_study_area"] = gdf_proj.geometry.centroid.within(boundary_geom)
+    else:
+        gdf_proj["in_study_area"] = True
+    
     # Calculate centroids
     centroids = gdf_proj.geometry.centroid
     cx_s = centroids.x
@@ -78,67 +88,50 @@ stats = get_hud_statistics()
 sky = get_skyline_features()
 
 graphic_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));">
   <defs>
     <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
-    </linearGradient>
-    <linearGradient id="g_ai" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.1)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f5f5f7"/>
     </linearGradient>
     <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(99, 102, 241, 0.2)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="rgba(175, 82, 222, 0.03)"/>
+      <stop offset="100%" stop-color="rgba(175, 82, 222, 0.08)"/>
     </linearGradient>
-    
-    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="f_emerald" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
   </defs>
 
-  <path d="M 160 55 C 180 55, 180 45, 200 45" fill="none" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 160 55 C 180 55, 180 155, 200 155" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="3,3"/>
-  <path d="M 160 145 C 180 145, 180 45, 200 45" fill="none" stroke="#475569" stroke-width="1" stroke-dasharray="3,3"/>
-  <path d="M 160 145 C 180 145, 180 155, 200 155" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 55 C 180 55, 180 45, 200 45" fill="none" stroke="#34c759" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 55 C 180 55, 180 155, 200 155" fill="none" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="3,3"/>
+  <path d="M 160 145 C 180 145, 180 45, 200 45" fill="none" stroke="#d1d1d6" stroke-width="1" stroke-dasharray="3,3"/>
+  <path d="M 160 145 C 180 145, 180 155, 200 155" fill="none" stroke="#0071e3" stroke-width="1.5" stroke-dasharray="4,3"/>
 
-  <path d="M 360 45 C 385 45, 385 100, 410 100" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
-  <path d="M 360 155 C 385 155, 385 100, 410 100" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
-  <polygon points="405,96 410,100 405,104" fill="#6366f1"/>
+  <path d="M 360 45 C 385 45, 385 100, 410 100" fill="none" stroke="#af52de" stroke-width="2" stroke-dasharray="5,4"/>
+  <path d="M 360 155 C 385 155, 385 100, 410 100" fill="none" stroke="#af52de" stroke-width="2" stroke-dasharray="5,4"/>
+  <polygon points="405,96 410,100 405,104" fill="#af52de"/>
 
-  <rect x="10" y="35" width="150" height="40" rx="6" fill="url(#g_base)" stroke="#10b981" stroke-width="1.5" filter="url(#f_emerald)"/>
-  <text x="85" y="52" fill="#10b981" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">前期策略框架</text>
-  <text x="85" y="66" fill="#a7f3d0" font-size="9" font-family="sans-serif" text-anchor="middle">Stage 07 共识协议</text>
+  <rect x="10" y="35" width="150" height="40" rx="8" fill="url(#g_base)" stroke="#34c759" stroke-width="1.2"/>
+  <text x="85" y="52" fill="#34c759" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">前期策略框架</text>
+  <text x="85" y="66" fill="#86868b" font-size="9" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">Stage 07 共识协议</text>
 
-  <rect x="10" y="125" width="150" height="40" rx="6" fill="url(#g_base)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="85" y="142" fill="#38bdf8" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">全域空间数据</text>
-  <text x="85" y="156" fill="#bae6fd" font-size="9" font-family="sans-serif" text-anchor="middle">土地利用与建筑总量</text>
+  <rect x="10" y="125" width="150" height="40" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.2"/>
+  <text x="85" y="142" fill="#0071e3" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">全域空间数据</text>
+  <text x="85" y="156" fill="#86868b" font-size="9" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">土地利用与建筑总量</text>
 
-  <rect x="200" y="25" width="160" height="40" rx="8" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
-  <text x="280" y="42" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">LLM 空间结构推演</text>
-  <text x="280" y="56" fill="#38bdf8" font-size="10" font-family="sans-serif" text-anchor="middle" font-weight="bold">DeepSeek 深度策划</text>
+  <rect x="200" y="25" width="160" height="40" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.5"/>
+  <text x="280" y="42" fill="#1d1d1f" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">LLM 空间结构推演</text>
+  <text x="280" y="56" fill="#0071e3" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">DeepSeek 深度策划</text>
 
-  <rect x="200" y="135" width="160" height="40" rx="8" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
-  <text x="280" y="152" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">用地优化沙盘模拟</text>
-  <text x="280" y="166" fill="#38bdf8" font-size="10" font-family="sans-serif" text-anchor="middle" font-weight="bold">功能占比与冲击计算</text>
+  <rect x="200" y="135" width="160" height="40" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.5"/>
+  <text x="280" y="152" fill="#1d1d1f" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">用地优化沙盘模拟</text>
+  <text x="280" y="166" fill="#0071e3" font-size="10" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">功能占比与冲击计算</text>
 
-  <rect x="410" y="70" width="160" height="60" rx="10" fill="url(#g_out)" stroke="#6366f1" stroke-width="2" filter="url(#f_indigo)"/>
-  <text x="490" y="97" fill="#6366f1" font-size="14" font-family="sans-serif" text-anchor="middle" font-weight="bold">概念总平面 AIGC 生形</text>
-  <text x="490" y="117" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle">辅助形体生成与落位</text>
+  <rect x="410" y="70" width="160" height="60" rx="10" fill="url(#g_out)" stroke="#af52de" stroke-width="2"/>
+  <text x="490" y="97" fill="#af52de" font-size="14" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">概念总平面 AIGC 生形</text>
+  <text x="490" y="117" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle">辅助形体生成与落位</text>
 
-  <circle cx="160" cy="55" r="3" fill="#10b981"/>
-  <circle cx="160" cy="145" r="3" fill="#38bdf8"/>
-  <circle cx="410" cy="100" r="3" fill="#6366f1"/>
+  <circle cx="160" cy="55" r="3" fill="#34c759"/>
+  <circle cx="160" cy="145" r="3" fill="#0071e3"/>
+  <circle cx="410" cy="100" r="3" fill="#af52de"/>
 </svg>
 """
 
@@ -323,12 +316,12 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
     with col_sandbox_left:
         col_s1, col_s2 = st.columns(2)
         with col_s1:
-            res_pct = st.slider("🏠 居住用地占比 (%)", 20, 70, 50, key="sb_res")
-            com_pct = st.slider("🏪 商业服务业用地占比 (%)", 5, 40, 20, key="sb_com")
-            off_pct = st.slider("🏢 商务办公用地占比 (%)", 3, 25, 10, key="sb_off")
+            res_pct = st.slider("🏠 居住用地占比 (%)", 20, 70, 48, key="sb_res")
+            com_pct = st.slider("🏪 商业服务业用地占比 (%)", 5, 40, 16, key="sb_com")
+            off_pct = st.slider("🏢 商务办公用地占比 (%)", 3, 25, 8, key="sb_off")
         with col_s2:
-            green_pct = st.slider("🌳 公园绿地占比 (%)", 5, 30, 12, key="sb_green")
-            public_pct = st.slider("🏛️ 公共设施用地占比 (%)", 3, 20, 8, key="sb_pub")
+            green_pct = st.slider("🌳 公园绿地占比 (%)", 5, 30, 10, key="sb_green")
+            public_pct = st.slider("🏛️ 公共设施用地占比 (%)", 3, 20, 6, key="sb_pub")
             total = res_pct + com_pct + off_pct + green_pct + public_pct
             remain = max(0, 100 - total)
             st.metric("📊 剩余（道路/市政等）", f"{remain}%")
@@ -359,23 +352,22 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
             ))
 
             fig.update_layout(
-                title=dict(text="📊 用地占比实时对比：现状基线 vs 沙盘方案", font=dict(color="#e2e8f0", size=14)),
-                bmode='group',
+                title=dict(text="📊 用地占比实时对比：现状基线 vs 沙盘方案", font=dict(color="#1e293b", size=14)),
+                barmode='group',
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
                 xaxis=dict(
-                    title="占比 (%)", 
-                    titlefont=dict(color="#94a3b8"),
-                    tickfont=dict(color="#94a3b8"),
+                    title=dict(text="占比 (%)", font=dict(color="#475569")),
+                    tickfont=dict(color="#475569"),
                     gridcolor='rgba(148, 163, 184, 0.1)',
                     range=[0, 100]
                 ),
                 yaxis=dict(
-                    tickfont=dict(color="#e2e8f0"),
+                    tickfont=dict(color="#1e293b"),
                     autorange="reversed"
                 ),
                 legend=dict(
-                    font=dict(color="#94a3b8"),
+                    font=dict(color="#475569"),
                     orientation="h",
                     yanchor="bottom",
                     y=1.02,
@@ -394,8 +386,9 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
         try:
             gdf_proj = load_raw_landuse_gdf()
             if gdf_proj is not None and not gdf_proj.empty:
-                # 1. 计算目标面积
-                total_area = gdf_proj["area_sqm"].sum()
+                # 1. 计算研究范围内的目标面积
+                gdf_in = gdf_proj[gdf_proj["in_study_area"]]
+                total_area_in = gdf_in["area_sqm"].sum()
                 target_pcts = {
                     "居住用地": res_pct,
                     "商业服务业": com_pct,
@@ -403,7 +396,7 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
                     "公园与绿地": green_pct,
                     "公共设施": public_pct
                 }
-                target_areas = {k: total_area * (v / 100.0) for k, v in target_pcts.items()}
+                target_areas = {k: total_area_in * (v / 100.0) for k, v in target_pcts.items()}
                 
                 # 2. 计算各宗地关于各功能类别的得分 (考虑现状与空间中心邻近度)
                 scores = {}
@@ -415,9 +408,10 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
                         is_orig = gdf_proj["Type"] == cat
                     scores[cat] = is_orig.astype(float) * 2.0 + decay * 1.0
                     
-                # 3. 贪婪算法空间分配
+                # 3. 贪婪算法空间分配 (仅限研究范围内)
                 import pandas as pd
-                allocated = pd.Series(False, index=gdf_proj.index)
+                allocated = pd.Series(True, index=gdf_proj.index)
+                allocated[gdf_proj["in_study_area"]] = False
                 allocated_types = gdf_proj["Type"].copy()
                 
                 # 按开发优先级排序分配
@@ -439,9 +433,18 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
                         if current_a >= target_a:
                             break
                             
+                # 研究范围内剩余未分配的地块作为道路/市政 (交通场站)
+                unallocated_in = (~allocated) & gdf_proj["in_study_area"]
+                allocated_types[unallocated_in] = "交通场站"
+                
                 # 4. Matplotlib 绘制空间落位图
                 import matplotlib.pyplot as plt
                 from matplotlib.patches import Patch
+                import matplotlib.font_manager as fm
+                
+                # 设置全局中文字体，防止 matplotlib 显示豆腐块
+                plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'SimSun', 'sans-serif']
+                plt.rcParams['axes.unicode_minus'] = False
                 
                 fig, ax = plt.subplots(figsize=(6, 5.5), facecolor='none')
                 fig.patch.set_alpha(0.0)
@@ -461,19 +464,31 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
                     "工业用地": "#64748B"
                 }
                 
-                colors = allocated_types.map(color_map).fillna("#CBD5E1")
-                gdf_proj.plot(ax=ax, color=colors, edgecolor="#475569", linewidth=0.15)
+                # 绘制研究范围外的地块 (半透明淡化处理)
+                gdf_out = gdf_proj[~gdf_proj["in_study_area"]]
+                if not gdf_out.empty:
+                    colors_out = gdf_out["Type"].map(color_map).fillna("#CBD5E1")
+                    gdf_out.plot(ax=ax, color=colors_out, edgecolor="#CBD5E1", linewidth=0.1, alpha=0.35)
+                
+                # 绘制研究范围内的地块 (全不透明高亮显示)
+                if not gdf_in.empty:
+                    allocated_types_in = allocated_types[gdf_proj["in_study_area"]]
+                    colors_in = allocated_types_in.map(color_map).fillna("#CBD5E1")
+                    gdf_in.plot(ax=ax, color=colors_in, edgecolor="#1E293B", linewidth=0.25, alpha=1.0)
+                
                 ax.set_axis_off()
                 
-                # 添加图例
+                # 添加图例，并设置支持中文的字体属性与深色文字
+                font_prop = fm.FontProperties(family=['Microsoft YaHei', 'SimHei', 'sans-serif'], size=8)
                 legend_elements = [
                     Patch(facecolor='#FDE047', edgecolor='#475569', label='居住用地 (R)'),
                     Patch(facecolor='#EF4444', edgecolor='#475569', label='商业服务 (B)'),
                     Patch(facecolor='#C084FC', edgecolor='#475569', label='商业办公 (B)'),
                     Patch(facecolor='#22C55E', edgecolor='#475569', label='公园绿地 (G)'),
-                    Patch(facecolor='#F87171', edgecolor='#475569', label='公共设施 (A)')
+                    Patch(facecolor='#F87171', edgecolor='#475569', label='公共设施 (A)'),
+                    Patch(facecolor='#94A3B8', edgecolor='#475569', label='道路/市政 (S)'),
                 ]
-                ax.legend(handles=legend_elements, loc='lower left', fontsize=8, facecolor='none', edgecolor='none', labelcolor='#94a3b8')
+                ax.legend(handles=legend_elements, loc='lower left', prop=font_prop, facecolor='none', edgecolor='none', labelcolor='#1e293b')
                 
                 plt.tight_layout()
                 st.pyplot(fig)

@@ -30,61 +30,52 @@ render_top_nav()
 render_engine_status_alert()
 
 graphic_svg = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));">
   <defs>
     <linearGradient id="g_base" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.6)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)"/>
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f5f5f7"/>
     </linearGradient>
     <linearGradient id="g_ai" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(56, 189, 248, 0.1)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="rgba(0, 113, 227, 0.03)"/>
+      <stop offset="100%" stop-color="rgba(0, 113, 227, 0.08)"/>
     </linearGradient>
     <linearGradient id="g_out" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="rgba(99, 102, 241, 0.15)"/>
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.9)"/>
+      <stop offset="0%" stop-color="rgba(94, 92, 230, 0.03)"/>
+      <stop offset="100%" stop-color="rgba(94, 92, 230, 0.08)"/>
     </linearGradient>
-    
-    <filter id="f_cyan" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
-    <filter id="f_indigo" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5" result="blur"/>
-      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
-    </filter>
   </defs>
 
-  <path d="M 160 50 C 220 50, 240 100, 300 100" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
-  <path d="M 160 100 L 300 100" fill="none" stroke="#38bdf8" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_cyan)"/>
-  <path d="M 160 150 C 220 150, 240 100, 300 100" fill="none" stroke="#475569" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 50 C 220 50, 240 100, 300 100" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
+  <path d="M 160 100 L 300 100" fill="none" stroke="#0071e3" stroke-width="2" stroke-dasharray="5,4"/>
+  <path d="M 160 150 C 220 150, 240 100, 300 100" fill="none" stroke="#d1d1d6" stroke-width="1.5" stroke-dasharray="4,3"/>
   
-  <path d="M 440 100 L 500 100" fill="none" stroke="#6366f1" stroke-width="2" stroke-dasharray="5,4" filter="url(#f_indigo)"/>
-  <path d="M 500 100 C 530 100, 520 60, 550 60" fill="none" stroke="#475569" stroke-width="1.5"/>
-  <path d="M 500 100 C 530 100, 520 140, 550 140" fill="none" stroke="#475569" stroke-width="1.5"/>
+  <path d="M 440 100 L 500 100" fill="none" stroke="#5e5ce6" stroke-width="2" stroke-dasharray="5,4"/>
+  <path d="M 500 100 C 530 100, 520 60, 550 60" fill="none" stroke="#d1d1d6" stroke-width="1.5"/>
+  <path d="M 500 100 C 530 100, 520 140, 550 140" fill="none" stroke="#d1d1d6" stroke-width="1.5"/>
 
-  <rect x="10" y="35" width="150" height="30" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
-  <text x="85" y="55" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">土地利用与建筑密度</text>
+  <rect x="10" y="35" width="150" height="30" rx="8" fill="url(#g_base)" stroke="#e5e5ea" stroke-width="1.2"/>
+  <text x="85" y="54" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" text-anchor="middle">土地利用与建筑密度</text>
 
-  <rect x="10" y="80" width="150" height="40" rx="8" fill="url(#g_base)" stroke="#38bdf8" stroke-width="1.5" filter="url(#f_cyan)"/>
-  <text x="85" y="105" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">全域多源空间数据</text>
+  <rect x="10" y="80" width="150" height="40" rx="8" fill="url(#g_base)" stroke="#0071e3" stroke-width="1.5"/>
+  <text x="85" y="105" fill="#1d1d1f" font-size="13" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">全域多源空间数据</text>
 
-  <rect x="10" y="135" width="150" height="30" rx="6" fill="url(#g_base)" stroke="#334155" stroke-width="1"/>
-  <text x="85" y="155" fill="#94a3b8" font-size="11" font-family="sans-serif" text-anchor="middle">POI/GVI 活力与品质</text>
+  <rect x="10" y="135" width="150" height="30" rx="8" fill="url(#g_base)" stroke="#e5e5ea" stroke-width="1.2"/>
+  <text x="85" y="154" fill="#86868b" font-size="11" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" text-anchor="middle">POI/GVI 活力与品质</text>
 
-  <rect x="300" y="65" width="140" height="70" rx="12" fill="url(#g_ai)" stroke="#38bdf8" stroke-width="2" filter="url(#f_cyan)"/>
-  <text x="370" y="95" fill="#38bdf8" font-size="16" font-family="sans-serif" text-anchor="middle" font-weight="900">AI 推理中枢</text>
-  <text x="370" y="118" fill="#bae6fd" font-size="11" font-family="sans-serif" text-anchor="middle">DeepSeek 大模型</text>
+  <rect x="300" y="65" width="140" height="70" rx="12" fill="url(#g_ai)" stroke="#0071e3" stroke-width="2"/>
+  <text x="370" y="96" fill="#0071e3" font-size="15" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="900">AI 推理中枢</text>
+  <text x="370" y="117" fill="#1d1d1f" font-size="11" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="600">DeepSeek 大模型</text>
 
-  <rect x="550" y="40" width="120" height="40" rx="6" fill="url(#g_out)" stroke="#6366f1" stroke-width="1.5"/>
-  <text x="610" y="65" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">全域宏观设计目标</text>
+  <rect x="550" y="40" width="120" height="40" rx="8" fill="url(#g_base)" stroke="#5e5ce6" stroke-width="1.5"/>
+  <text x="610" y="64" fill="#1d1d1f" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">全域宏观设计目标</text>
   
-  <rect x="550" y="120" width="120" height="40" rx="6" fill="url(#g_out)" stroke="#6366f1" stroke-width="1.5"/>
-  <text x="610" y="145" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="bold">区域经济策划体系</text>
+  <rect x="550" y="120" width="120" height="40" rx="8" fill="url(#g_base)" stroke="#5e5ce6" stroke-width="1.5"/>
+  <text x="610" y="144" fill="#1d1d1f" font-size="12" font-family="system-ui, -apple-system, sans-serif" text-anchor="middle" font-weight="bold">区域经济策划体系</text>
 
-  <circle cx="160" cy="100" r="4" fill="#38bdf8"/>
-  <circle cx="300" cy="100" r="4" fill="#38bdf8"/>
-  <circle cx="440" cy="100" r="4" fill="#6366f1"/>
+  <circle cx="160" cy="100" r="4" fill="#0071e3"/>
+  <circle cx="300" cy="100" r="4" fill="#0071e3"/>
+  <circle cx="440" cy="100" r="4" fill="#5e5ce6"/>
 </svg>
 """
 

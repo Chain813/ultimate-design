@@ -954,6 +954,140 @@ def generate_a3_layout_preview():
     print("A3 layout template preview generated (cropped)!")
 
 # -------------------------------------------------------------
+# DIAGRAM 7: Spatial Constraint Drawing Mind Map (空间约束制图思维导图)
+# -------------------------------------------------------------
+def generate_spatial_constraint_drawing_mindmap():
+    print("Generating spatial constraint drawing mindmap...")
+    img = Image.new("RGB", (1920, 1080), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+
+    try:
+        title_font = ImageFont.truetype(FONT_BOLD_PATH, 42)
+        subtitle_font = ImageFont.truetype(FONT_PATH, 22)
+        chapter_title_font = ImageFont.truetype(FONT_BOLD_PATH, 24)
+        subgroup_title_font = ImageFont.truetype(FONT_BOLD_PATH, 18)
+        bullet_font = ImageFont.truetype(FONT_PATH, 18)
+        section_title_font = ImageFont.truetype(FONT_BOLD_PATH, 28)
+    except:
+        title_font = subtitle_font = chapter_title_font = subgroup_title_font = bullet_font = section_title_font = ImageFont.load_default()
+
+    # Header
+    draw.rectangle([0, 0, 1920, 80], fill=(241, 245, 249))
+    draw.line([(0, 80), (1920, 80)], fill=(203, 213, 225), width=2)
+    draw.text((40, 18), "「矢量-光栅-ControlNet」空间约束制图工作流", fill=(15, 23, 42), font=title_font)
+    draw.text((1300, 32), "空间刚性控制、设计说明互锁与多进程出图", fill=(100, 116, 139), font=subtitle_font)
+
+    # Helper function for vertical branch lines
+    def draw_vertical_branch_line(draw_obj, start_pt, end_pt, color, line_w=2):
+        mid_y = (start_pt[1] + end_pt[1]) // 2
+        draw_obj.line([start_pt, (start_pt[0], mid_y), (end_pt[0], mid_y), end_pt], fill=color, width=line_w)
+
+    ROOT_SCHEME = {"fill": (239, 246, 255), "stroke": (59, 130, 246), "text": (30, 58, 138)}
+
+    COLUMNS = [
+        {
+            "num": "01",
+            "title": "01 刚性投影转换",
+            "fill": (239, 246, 255), "stroke": (59, 130, 246), "text": (30, 58, 138),
+            "bullets": [
+                "克服普通 AIGC 位置偏移与结构散乱缺点",
+                "将 GIS 中用地/道路红线等矢量几何渲染",
+                "生成带国标规范色值的高分辨率光栅掩膜",
+                "保留精确物理轮廓，提供强地理控制力"
+            ]
+        },
+        {
+            "num": "02",
+            "title": "02 ControlNet 控制管线",
+            "fill": (250, 245, 255), "stroke": (168, 85, 247), "text": (88, 28, 135),
+            "bullets": [
+                "将光栅掩膜作为 Stable Diffusion 控制输入",
+                "配合 Canny 边缘或 Segmentation 控制层",
+                "强行约束生成式 AI 规划效果图的生成",
+                "在建筑基底/道路中线/用地实现像素级位置对齐"
+            ]
+        },
+        {
+            "num": "03",
+            "title": "03 动态设计说明生成",
+            "fill": (254, 243, 199), "stroke": (245, 158, 11), "text": (120, 53, 4),
+            "bullets": [
+                "出图封装排版阶段自动触发 Data-to-Text",
+                "调用 DeepSeek-V4-Pro 读取底层物理指标",
+                "智能自动生成高度量化、切现状的设计说明",
+                "消除人工修改滞后，实现『图面-指标-说明』绝对互锁"
+            ]
+        },
+        {
+            "num": "04",
+            "title": "04 Pillow排版与多进程",
+            "fill": (240, 253, 244), "stroke": (34, 197, 94), "text": (20, 83, 45),
+            "bullets": [
+                "使用 Pillow 图像画布整合效果图与图签框",
+                "标准化拼合矢量图框、图名、图例与说明",
+                "引入 Python 多进程 (Multiprocessing) 编译",
+                "快速并行编译 26 张 A3 规划图纸，大幅省时"
+            ]
+        }
+    ]
+
+    # Root Node (Vertically centered)
+    root_x = 710
+    root_y = 170
+    root_w, root_h = 500, 100
+    draw.rounded_rectangle([root_x, root_y - root_h // 2, root_x + root_w, root_y + root_h // 2], radius=10, fill=ROOT_SCHEME["fill"], outline=ROOT_SCHEME["stroke"], width=3)
+    draw_centered_text(draw, "空间约束制图工作流", (root_x + root_w // 2, root_y - 20), ROOT_SCHEME["text"], section_title_font)
+    draw_centered_text(draw, "(矢量 - 光栅 - ControlNet 闭合)", (root_x + root_w // 2, root_y + 22), (100, 116, 139), subtitle_font)
+
+    # Columns position
+    y_chapters = 340
+    col_width_pitch = 450
+    col_start_x = 75
+
+    for i, col in enumerate(COLUMNS):
+        col_base_x = col_start_x + i * col_width_pitch
+        
+        ch_x = col_base_x
+        ch_y = y_chapters
+        ch_w = 420
+        ch_h = 90
+        
+        # Connect Root -> Chapter Card top-center
+        draw_vertical_branch_line(draw, (root_x + root_w // 2, root_y + root_h // 2), (ch_x + ch_w // 2, ch_y), color=(148, 163, 184), line_w=2)
+
+        # Draw Group Card
+        draw.rounded_rectangle([ch_x, ch_y, ch_x + ch_w, ch_y + ch_h], radius=8, fill=(255, 255, 255), outline=col["stroke"], width=2)
+        draw.rectangle([ch_x, ch_y, ch_x + ch_w, ch_y + 32], fill=col["fill"])
+        draw.line([ch_x, ch_y + 32, ch_x + ch_w, ch_y + 32], fill=col["stroke"], width=1)
+        draw_centered_text(draw, col["title"], (ch_x + ch_w // 2, ch_y + 60), col["text"], chapter_title_font)
+        draw_centered_text(draw, f"Step {col['num']}", (ch_x + ch_w // 2, ch_y + 16), col["text"], subgroup_title_font)
+
+        # Bullets Card
+        curr_y = 480
+        g_w = 420
+        g_h = 440
+        
+        draw.rounded_rectangle([ch_x, curr_y, ch_x + g_w, curr_y + g_h], radius=6, fill=(255, 255, 255), outline=col["stroke"], width=1)
+        
+        # Draw Bullets (Centered vertically and horizontally)
+        line_h = 55
+        total_text_h = len(col["bullets"]) * line_h - 20
+        by = curr_y + (g_h - total_text_h) // 2
+        
+        for bullet in col["bullets"]:
+            tx_bbox = draw.textbbox((0, 0), bullet, font=bullet_font)
+            tw = tx_bbox[2] - tx_bbox[0]
+            tx = ch_x + (ch_w - tw) // 2
+            draw.text((tx, by), bullet, fill=(71, 85, 105), font=bullet_font)
+            by += line_h
+            
+        # Draw connection line
+        draw.line([(ch_x + ch_w // 2, ch_y + ch_h), (ch_x + ch_w // 2, curr_y)], fill=col["stroke"], width=2)
+
+    img.save(os.path.join(OUTPUT_DIR, "spatial_constraint_drawing_mindmap.png"), "PNG")
+    print("Spatial constraint drawing mindmap generated successfully!")
+
+# -------------------------------------------------------------
 # Run All Generators
 # -------------------------------------------------------------
 if __name__ == "__main__":
@@ -963,6 +1097,7 @@ if __name__ == "__main__":
     generate_atlas_chapters_mindmap()
     generate_data_chapters_mindmap()
     generate_a3_layout_preview()
+    generate_spatial_constraint_drawing_mindmap()
     try:
         from tools.generate_urban_rural_planning import generate_urban_rural_planning_mindmap
         generate_urban_rural_planning_mindmap()

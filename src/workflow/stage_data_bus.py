@@ -6,18 +6,54 @@
 
 from __future__ import annotations
 
+import json
+import logging
+from pathlib import Path
 import streamlit as st
+from src.config.runtime import resolve_path
+
+logger = logging.getLogger("ultimateDESIGN")
+
+
+def _get_cache_path() -> Path:
+    cache_path = resolve_path("output/stage_bus_cache.json")
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    return cache_path
+
+
+def _save_cache_to_disk(bus_dict: dict):
+    try:
+        cache_path = _get_cache_path()
+        with open(cache_path, "w", encoding="utf-8") as f:
+            json.dump(bus_dict, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to write stage data bus cache: {e}")
+
+
+def _load_cache_from_disk() -> dict:
+    try:
+        cache_path = _get_cache_path()
+        if cache_path.exists():
+            with open(cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+    except Exception as e:
+        logger.warning(f"Failed to load stage data bus cache from disk: {e}")
+    return {}
 
 
 def _bus() -> dict:
     if "stage_bus" not in st.session_state:
-        st.session_state["stage_bus"] = {}
+        st.session_state["stage_bus"] = _load_cache_from_disk()
     return st.session_state["stage_bus"]
 
 
 def save_stage_output(stage_code: str, key: str, data):
     """将本阶段的产出存入总线，供下游阶段读取。"""
-    _bus()[f"{stage_code}_{key}"] = data
+    bus_dict = _bus()
+    bus_dict[f"{stage_code}_{key}"] = data
+    _save_cache_to_disk(bus_dict)
 
 
 def load_stage_output(stage_code: str, key: str, default=None):
