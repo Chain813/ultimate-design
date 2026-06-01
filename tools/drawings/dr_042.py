@@ -14,7 +14,7 @@ import matplotlib.patheffects as path_effects
 import geopandas as gpd
 from PIL import Image
 
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=None):
     px_palace, py_palace = get_xy(125.3422, 43.9036)
     px_station, py_station = get_xy(125.3250, 43.9080)
     px_river, py_river = get_xy(125.3590, 43.9010)
@@ -52,6 +52,19 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         for idx, row in key_plots.iterrows():
             geom = row.geometry
             ax.text(geom.centroid.x, geom.centroid.y - 80, f"活力节点 {idx+1}", color='#B91C1C', ha='center', va='top', fontsize=11, fontweight='bold', zorder=9, fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=11))
+
+    # 5. LLM-guided annotations and highlights
+    if params:
+        for ann in params.get("annotations", []):
+            try:
+                ax_x, ax_y = get_xy(ann["x"], ann["y"])
+                txt = ax.text(ax_x, ax_y, ann["text"], color=ann.get("color", "#333333"),
+                             ha='center', va='bottom', fontsize=ann.get("fontsize", 9),
+                             fontweight='bold', zorder=11,
+                             fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=ann.get("fontsize", 9)))
+                txt.set_path_effects([path_effects.withStroke(linewidth=2, foreground='#FFFFFF')])
+            except Exception:
+                pass
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),

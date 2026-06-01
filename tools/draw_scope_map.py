@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 # tools/draw_scope_map.py
+import json
 import sys
 import os
 from pathlib import Path
@@ -69,6 +70,62 @@ def get_drawing_module(drawing_type):
             print(f"Error importing drawings.{mod_name}: {e2}")
             return None
 
+def generate_drawing_params(drawing_type: str) -> dict:
+    """根据设计纲要和图纸类型，用 LLM 生成绘图参数。
+
+    Returns a dict with keys like highlight_zones, annotations, emphasis_plots, narrative.
+    Returns empty dict on failure.
+    """
+    try:
+        from src.workflow.design_context import build_design_context, get_context_for_drawing
+        from src.engines.llm_engine import call_llm_engine
+
+        ctx = build_design_context()
+        if not ctx.design_brief and "07" not in ctx.completed_stages:
+            return {}
+
+        brief = ctx.design_brief or ctx.get_summary(1500)
+        drawing_ctx = get_context_for_drawing(drawing_type, ctx)
+
+        prompt = f"""基于设计纲要，为图纸「{drawing_type}」生成绘图辅助参数。
+
+设计纲要：
+{brief[:1500]}
+
+请输出 JSON（不要包含 markdown 块标记）：
+{{
+    "highlight_zones": [{{"name": "地块名", "color": "#hex", "alpha": 0.3}}],
+    "annotations": [{{"x": 经度, "y": 纬度, "text": "标注内容", "fontsize": 9}}],
+    "emphasis_plots": ["地块名"],
+    "narrative": "一句话描述本图的核心设计意图"
+}}
+
+注意：
+- x 为经度(125.3x), y 为纬度(43.9x)
+- highlight_zones 中的 name 必须是实际存在的地块名
+- annotations 的坐标必须在研究范围内(经度125.32-125.36, 纬度43.89-43.92)
+- 如果没有需要特别强调的内容，返回空数组"""
+
+        resp = call_llm_engine(
+            prompt=prompt,
+            system_prompt="你是城市设计制图参数专家。只输出 JSON，不要解释。",
+            model="deepseek-v4-flash",
+        )
+
+        # Parse JSON from response
+        resp = resp.strip()
+        if resp.startswith("```"):
+            resp = resp.split("```")[1]
+            if resp.startswith("json"):
+                resp = resp[4:]
+        result = json.loads(resp)
+        if isinstance(result, dict):
+            return result
+    except Exception:
+        pass
+    return {}
+
+
 def draw_spatial_map(output_path, drawing_type="现状区位图"):
     print(f"Loading spatial data layers for {drawing_type}...")
     
@@ -134,13 +191,16 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
         p = gpd.GeoSeries([Point(lon, lat)], crs="EPSG:4326").to_crs(epsg=3857)
         return p.iloc[0].x, p.iloc[0].y
 
-    # 3. Plot layers using module or default
+    # 3. Generate LLM-guided drawing params
+    params = generate_drawing_params(drawing_type)
+
+    # 4. Plot layers using module or default
     if module and hasattr(module, "draw_map"):
-        module.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
+        module.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
     else:
         default_mod = get_drawing_module("现状区位图")
         if default_mod and hasattr(default_mod, "draw_map"):
-            default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
+            default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
 
     # Boundary red line (Apple Red)
     boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)

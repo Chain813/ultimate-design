@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 from pathlib import Path
@@ -13,6 +14,9 @@ import streamlit as st
 from src.config.runtime import resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")
+
+# Debounce: track last-written hash to avoid redundant disk writes
+_last_written_hash: str = ""
 
 
 def _get_cache_path() -> Path:
@@ -22,10 +26,16 @@ def _get_cache_path() -> Path:
 
 
 def _save_cache_to_disk(bus_dict: dict):
+    global _last_written_hash
     try:
+        # Debounce: skip write if content hasn't changed
+        content_hash = hashlib.md5(json.dumps(bus_dict, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        if content_hash == _last_written_hash:
+            return
         cache_path = _get_cache_path()
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(bus_dict, f, ensure_ascii=False, indent=2)
+        _last_written_hash = content_hash
     except Exception as e:
         logger.error(f"Failed to write stage data bus cache: {e}")
 

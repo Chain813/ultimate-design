@@ -23,7 +23,7 @@ logger = logging.getLogger("ultimateDESIGN")
 # POI dual-source fusion
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
     df1 = _safe_read_csv("data/csv/Changchun_POI_Real.csv", usecols=usecols)
@@ -108,7 +108,7 @@ def _calc_boundary_ha(geojson_path: str):
 # Skyline morphology
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_skyline_features() -> dict:
     """Extract max height, avg height, high-rise ratio, building count."""
     features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
@@ -213,7 +213,7 @@ def _project_for_geometry_ops(buildings, boundary):
 # Spatial GVI point data
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_spatial_data() -> pd.DataFrame:
     """Merge base spatial points with GVI analysis results."""
     base_path = resolve_path(str(DATA_FILES["points"]))
@@ -252,7 +252,7 @@ def get_spatial_data() -> pd.DataFrame:
 # Road, Rail and Landuse loading
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_road_network() -> "pd.DataFrame":
     """Load the clipped road network data."""
     try:
@@ -264,7 +264,7 @@ def get_road_network() -> "pd.DataFrame":
         logger.warning("Failed to load road network", exc_info=True)
     return pd.DataFrame()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_rail_network() -> "pd.DataFrame":
     """Load the clipped rail network data."""
     try:
@@ -276,7 +276,7 @@ def get_rail_network() -> "pd.DataFrame":
         logger.warning("Failed to load rail network", exc_info=True)
     return pd.DataFrame()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_landuse_data() -> "pd.DataFrame":
     """Load the clipped landuse data with standardized colors."""
     try:

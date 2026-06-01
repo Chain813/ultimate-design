@@ -4,9 +4,11 @@
 
 engines:
   llm:
+    api_url: "https://api.deepseek.com/chat/completions"
     ollama_url: "http://127.0.0.1:11434/api/chat"
     default_model: "deepseek-v4-flash"
     timeout: 120
+  hf_mirror: "https://hf-mirror.com"  # 可选，留空则使用 HuggingFace 官方源
   
   aigc:
     sd_webui_url: "http://127.0.0.1:7860"

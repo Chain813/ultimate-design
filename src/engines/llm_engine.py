@@ -80,8 +80,9 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
-    url = "https://api.deepseek.com/chat/completions"
-    timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
+    llm_cfg = config.get("engines", {}).get("llm", {})
+    url = llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions")
+    timeout_val = llm_cfg.get("timeout", 120)
     api_key = os.getenv("DEEPSEEK_API_KEY")
 
     if not api_key:
@@ -149,8 +150,9 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
-    url = "https://api.deepseek.com/chat/completions"
-    timeout_val = config.get("engines", {}).get("llm", {}).get("timeout", 120)
+    llm_cfg = config.get("engines", {}).get("llm", {})
+    url = llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions")
+    timeout_val = llm_cfg.get("timeout", 120)
     api_key = os.getenv("DEEPSEEK_API_KEY")
 
     if not api_key:

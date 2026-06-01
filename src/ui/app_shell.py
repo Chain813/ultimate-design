@@ -26,6 +26,12 @@ def load_global_css():
 
 def render_top_nav():
     """下一代全景悬停导航栏 (Multi-level Hover Dropdown)"""
+    # 静默预热其他页面的缓存数据（每个 session 只触发一次）
+    try:
+        from src.utils.preloader import start_preloading
+        start_preloading()
+    except Exception:
+        pass
     load_global_css()
 
     nav_data = [
@@ -271,8 +277,6 @@ def render_top_nav():
 
 def render_scrolling_control():
     """在页面底部注入高科技录屏自动滑动控制 HUD (带快捷键 & 可隐藏)"""
-    import base64
-    
     js_code = """
     (function() {
         if (!window.__autoScrollerLoaded) {
@@ -670,11 +674,7 @@ def render_scrolling_control():
     })();
     """
     
-    b64_js = base64.b64encode(js_code.encode("utf-8")).decode("utf-8")
-    st.markdown(
-        f'<img src="x" onerror="eval(atob(\'{b64_js}\'))" style="display:none;" />',
-        unsafe_allow_html=True
-    )
+    st.markdown(f"<script>{js_code}</script>", unsafe_allow_html=True)
 
 
 def render_copilot_sidebar():
@@ -755,8 +755,8 @@ def render_engine_status_alert():
 '<div style="display:flex; align-items:center; gap:18px;">'
 '<span style="font-size:26px;">🎨</span>'
 '<div>'
-'<strong style="color:#d70015; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">视觉渲染引擎 (Stable Diffusion) 未启动</strong>'
-'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请启动 SD WebUI 并确保开启 <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#d70015; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">--api</code> 模式 (监听端口 7860)</p>'
+'<strong style="color:#ff3b30; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">视觉渲染引擎 (Stable Diffusion) 未启动</strong>'
+'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请启动 SD WebUI 并确保开启 <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#ff3b30; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">--api</code> 模式 (监听端口 7860)</p>'
 '</div>'
 '</div>'
             )
@@ -765,8 +765,8 @@ def render_engine_status_alert():
 '<div style="display:flex; align-items:center; gap:18px;">'
 '<span style="font-size:26px;">🧠</span>'
 '<div>'
-'<strong style="color:#d70015; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">决策博弈引擎 (Ollama/Gemma) 未就绪</strong>'
-'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#d70015; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">ollama run deepseek-v4-pro</code> (监听端口 11434)</p>'
+'<strong style="color:#ff3b30; font-size:15px; display:block; font-weight:700; letter-spacing:0.02em;">决策博弈引擎 (Ollama/Gemma) 未就绪</strong>'
+'<p style="color:#48484a; font-size:13px; margin:4px 0 0 0; line-height:1.4;">请在终端运行: <code style="background:rgba(0,0,0,0.04); padding:2px 6px; border-radius:6px; color:#ff3b30; font-family:monospace; border:1px solid rgba(255,59,48,0.15);">ollama run deepseek-v4-pro</code> (监听端口 11434)</p>'
 '</div>'
 '</div>'
             )

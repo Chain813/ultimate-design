@@ -6,12 +6,9 @@ import py_compile
 
 TARGETS = [
     "app.py",
-    "pages/00_数据准备.py",
-    "pages/01_任务解读.py",
-    "pages/02_资料收集.py",
-    "pages/03_现场调研.py",
-    "pages/04_现状分析.py",
-    "pages/05_问题诊断.py",
+    "pages/00_数据准备与任务解读.py",
+    "pages/02_资料收集与现场调研.py",
+    "pages/04_现状分析与问题诊断.py",
     "pages/06_目标定位.py",
     "pages/07_设计策略.py",
     "pages/08_总体城市设计.py",

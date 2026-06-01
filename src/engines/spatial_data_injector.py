@@ -28,7 +28,7 @@ logger = logging.getLogger("ultimateDESIGN")
 # 土地利用统计
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_landuse_summary() -> str:
     """读取 landuse_clipped.geojson，统计各类用地面积占比，返回可注入 LLM 的文本。"""
     path = resolve_path(str(GIS_FILES["landuse"]))
@@ -89,7 +89,7 @@ def get_landuse_summary() -> str:
 # POI 空间摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_poi_summary() -> str:
     """汇总 POI 类型分布，返回可注入文本。"""
     try:
@@ -119,7 +119,7 @@ def get_poi_summary() -> str:
 # GVI / 街景品质摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_gvi_summary() -> str:
     """汇总 GVI 绿视率分析结果，返回可注入文本。"""
     try:
@@ -161,7 +161,7 @@ def get_gvi_summary() -> str:
 # 重点地块摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_key_plots_summary() -> str:
     """读取 Key_Plots_District.json，返回地块名称和面积列表。"""
     path = resolve_path(str(GIS_FILES["plots"]))
@@ -189,7 +189,7 @@ def get_key_plots_summary() -> str:
 # 建筑形态摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_building_summary() -> str:
     """汇总建筑形态统计。"""
     try:
@@ -212,7 +212,7 @@ def get_building_summary() -> str:
 # 交通流量摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def get_traffic_summary() -> str:
     """汇总交通流量数据。"""
     try:

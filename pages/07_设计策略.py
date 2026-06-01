@@ -12,7 +12,6 @@ import re
 from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
-import plotly.graph_objects as go
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
@@ -28,7 +27,6 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow.stage_keys import SK
-from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="07 设计策略", layout="wide", initial_sidebar_state="collapsed")
@@ -124,7 +122,7 @@ with st.sidebar:
     temp = st.slider("决策倾向 (Temperature)", 0.0, 1.0, 0.7, key="p7_temp")
     enable_policy = st.checkbox("📜 启用政策合规校验", value=True, key="p7_policy")
 
-SUB_OPTIONS = ["⚖️ 多主体协同推演", "📊 共识雷达", "🖼️ 图纸提示词生成"]
+SUB_OPTIONS = ["⚖️ 多主体协同推演", "📊 共识雷达"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -730,6 +728,7 @@ elif selected_sub == "📊 共识雷达":
         "p4_voting_scores", load_stage_output("07", SK.VOTING_SCORES, {}),
     )
     if voting:
+        import plotly.graph_objects as go
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(
             r=list(voting.values()) + [list(voting.values())[0]],
@@ -753,9 +752,6 @@ elif selected_sub == "📊 共识雷达":
             st.success("✅ 三方达成高度共识！所有主体的利益满意度均达到 60% 以上，协同性高。")
     else:
         st.warning("暂无共识数据，请先完成多主体协同推演。")
-
-elif selected_sub == "🖼️ 图纸提示词生成":
-    render_drawing_prompt_ui("07", key_prefix="p7", stage_title="设计策略")
 
 
 st.markdown("---")

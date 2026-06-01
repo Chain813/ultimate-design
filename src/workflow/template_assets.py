@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -129,6 +130,7 @@ def load_template_asset_manifest(manifest_path: Optional[Path] = None) -> Dict:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except Exception:
+        logging.debug("模板资产清单解析失败: %s", path, exc_info=True)
         return {"version": 1, "assets": {}}
     if not isinstance(data, dict):
         return {"version": 1, "assets": {}}

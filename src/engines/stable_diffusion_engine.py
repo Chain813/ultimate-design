@@ -380,7 +380,7 @@ class SDPipeline:
             if resp.status_code == 200:
                 return resp.json()
         except Exception:
-            pass
+            logging.debug("SD progress poll failed", exc_info=True)
         return {"progress": 0, "eta_relative": 0, "textinfo": ""}
 
 

@@ -21,7 +21,7 @@ logger = logging.getLogger("ultimateDESIGN")
 # Cached heavy data loaders
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def _load_spatial_merge() -> pd.DataFrame:
     """Cache the expensive Excel + CSV merge used for GVI/SVF metrics."""
     try:
@@ -36,7 +36,7 @@ def _load_spatial_merge() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def _load_nlp_data() -> pd.DataFrame:
     """Cache NLP sentiment CSV."""
     try:

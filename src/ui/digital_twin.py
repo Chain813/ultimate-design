@@ -7,7 +7,7 @@ from pathlib import Path
 from src.config import get_static_url
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features, get_merged_poi_data
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def load_map_data(file_path):
     """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
     path = Path(file_path)
@@ -16,15 +16,16 @@ def load_map_data(file_path):
     with open(path, 'r', encoding='utf-8') as f:
         return json.load(f)
 
-def _load_map_html_template():
-    """缓存 HTML 模板读取，避免每次交互都重新读磁盘。"""
+@st.cache_data(ttl=86400)
+def _load_map_html_template(_mtime: float = 0.0):
+    """缓存 HTML 模板读取，避免每次交互都重新读磁盘。_mtime 作为缓存键。"""
     template_path = Path("assets/map3d_standalone.html")
     if not template_path.exists():
         return "<h3>Map template not found</h3>"
     with open(template_path, "r", encoding="utf-8") as f:
         return f.read()
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def _load_traffic_json():
     """缓存交通数据的 JSON 序列化结果。"""
     try:
@@ -37,7 +38,7 @@ def _load_traffic_json():
         pass
     return "null"
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600, max_entries=20)
 def _load_poi_json():
     """缓存 POI 数据的 JSON 序列化结果。"""
     try:
@@ -239,7 +240,9 @@ def render_digital_twin_map(height=650, key_suffix=""):
 
     # 2. 填充模板
     try:
-        html_template = _load_map_html_template()
+        template_path = Path("assets/map3d_standalone.html")
+        _mtime = template_path.stat().st_mtime if template_path.exists() else 0.0
+        html_template = _load_map_html_template(_mtime)
         html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
         html_template = html_template.replace("/*__SHADOW_DATA__*/null/*__END_SHADOW__*/", shadow_data_json)
         html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)

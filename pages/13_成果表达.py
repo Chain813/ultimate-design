@@ -249,12 +249,15 @@ elif selected_sub == "🖼️ 图册自动组装":
             ]
         }
         
-        # AI generation button
+        # AI generation button (DesignContext)
         if st.button("🧠 AI 智能编写说明与指标 (基于大模型)", **stretch_width(st.button)):
-            with st.spinner("AI 正在结合规划定位编写说明文字..."):
+            with st.spinner("AI 正在结合设计纲要编写说明文字..."):
                 from src.engines.llm_engine import call_llm_engine
-                sys_p = "你是一个顶级城市规划师。请为城市设计图纸编写三条精简专业的设计说明（每条50字以内）。"
-                prompt_p = f"请结合本项目“长春伪满皇宫周边街区微更新”及图纸类型“{drawing_type}”（图纸标题：“{drawing_title}”），编写三条专业的规划说明与指标，以1. 2. 3.的格式输出。"
+                from src.workflow.design_context import build_design_context
+                ctx = build_design_context()
+                brief = ctx.design_brief or ctx.get_summary(1500)
+                sys_p = "你是一个顶级城市规划师。请为城市设计图纸编写三条精简专业的设计说明（每条50字以内），必须引用具体数据和策略依据。"
+                prompt_p = "请结合以下设计纲要，为图纸「" + drawing_type + "」（标题：「" + drawing_title + "」）编写三条专业的规划说明与指标，以1. 2. 3.的格式输出。\n\n设计纲要：\n" + brief[:1500]
                 res = call_llm_engine(prompt_p, sys_p)
                 # Parse the result into lines
                 lines = [line.strip() for line in res.split('\n') if line.strip() and (line.strip().startswith(('1', '2', '3', '一', '二', '三')) or len(line.strip()) > 10)]

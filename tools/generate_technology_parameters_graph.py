@@ -148,7 +148,7 @@ def generate_agent_negotiation_flowchart():
         title_font = ImageFont.truetype(FONT_BOLD_PATH, int(28 * scale))
         node_title_font = ImageFont.truetype(FONT_BOLD_PATH, int(16 * scale))
         node_desc_font = ImageFont.truetype(FONT_PATH, int(12 * scale))
-    except:
+    except Exception:
         title_font = node_title_font = node_desc_font = ImageFont.load_default()
 
     # Title Banner
@@ -230,7 +230,7 @@ def generate_rag_compliance_flowchart():
         title_font = ImageFont.truetype(FONT_BOLD_PATH, int(28 * scale))
         node_title_font = ImageFont.truetype(FONT_BOLD_PATH, int(16 * scale))
         node_desc_font = ImageFont.truetype(FONT_PATH, int(12 * scale))
-    except:
+    except Exception:
         title_font = node_title_font = node_desc_font = ImageFont.load_default()
 
     # Title Banner
@@ -312,7 +312,7 @@ def generate_sd_controlnet_flowchart():
         title_font = ImageFont.truetype(FONT_BOLD_PATH, int(28 * scale))
         node_title_font = ImageFont.truetype(FONT_BOLD_PATH, int(16 * scale))
         node_desc_font = ImageFont.truetype(FONT_PATH, int(12 * scale))
-    except:
+    except Exception:
         title_font = node_title_font = node_desc_font = ImageFont.load_default()
 
     # Title Banner

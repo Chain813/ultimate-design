@@ -245,7 +245,7 @@ def draw_unified_landscape():
         node_title_font = ImageFont.truetype(FONT_BOLD_PATH, 18)
         node_desc_font = ImageFont.truetype(FONT_PATH, 16)
         label_font = ImageFont.truetype(FONT_PATH, 16)
-    except:
+    except Exception:
         title_font = subtitle_font = group_font = node_title_font = node_desc_font = label_font = ImageFont.load_default()
 
     # Draw Subtle grid background for high-tech HUD feel (Light Slate Grey grid)

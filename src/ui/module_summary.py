@@ -103,8 +103,8 @@ def render_stage_summary(
         </section>
         <style>
         .stage-summary-panel {{
-            background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(52,211,153,0.04));
-            border: 1px solid rgba(99,102,241,0.2);
+            background: linear-gradient(135deg, rgba(0,113,227,0.04), rgba(52,199,89,0.03));
+            border: 1px solid rgba(0,0,0,0.08);
             border-radius: 16px;
             padding: 24px 28px;
             margin: 32px 0 16px 0;
@@ -113,11 +113,11 @@ def render_stage_summary(
             display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
         }}
         .stage-summary-head h3 {{
-            margin: 0; font-size: 18px; font-weight: 800; color: #e2e8f0;
+            margin: 0; font-size: 18px; font-weight: 800; color: #1d1d1f;
         }}
         .stage-summary-code {{
-            background: rgba(129,140,248,0.2);
-            color: #a5b4fc;
+            background: rgba(0,113,227,0.1);
+            color: #0071e3;
             padding: 4px 12px;
             border-radius: 8px;
             font-size: 13px;
@@ -125,8 +125,8 @@ def render_stage_summary(
             letter-spacing: 0.05em;
         }}
         .stage-summary-method {{
-            color: #94a3b8; font-size: 13px; margin-bottom: 14px;
-            padding-left: 4px; border-left: 3px solid rgba(129,140,248,0.3);
+            color: #86868b; font-size: 13px; margin-bottom: 14px;
+            padding-left: 4px; border-left: 3px solid rgba(0,113,227,0.2);
             padding: 2px 0 2px 12px;
         }}
         .stage-summary-findings {{
@@ -137,22 +137,22 @@ def render_stage_summary(
         }}
         .finding-badge {{
             min-width: 28px; height: 28px;
-            background: rgba(129,140,248,0.15);
-            color: #a5b4fc;
+            background: rgba(0,113,227,0.1);
+            color: #0071e3;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 13px; font-weight: 800;
         }}
         .finding-point {{
-            color: #e2e8f0; font-size: 14px; font-weight: 600; line-height: 1.5;
+            color: #1d1d1f; font-size: 14px; font-weight: 600; line-height: 1.5;
         }}
         .finding-evidence {{
-            color: #94a3b8; font-size: 12px; margin-top: 2px; line-height: 1.5;
+            color: #86868b; font-size: 12px; margin-top: 2px; line-height: 1.5;
         }}
         .stage-summary-implication {{
-            color: #34d399; font-size: 13px; font-weight: 600;
+            color: #34c759; font-size: 13px; font-weight: 600;
             margin-top: 16px; padding-top: 12px;
-            border-top: 1px solid rgba(52,211,153,0.15);
+            border-top: 1px solid rgba(52,199,89,0.15);
         }}
         </style>
         """,

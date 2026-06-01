@@ -1,64 +1,17 @@
 
-"""Domain engine modules for planning analysis and generation."""
+"""Domain engine modules for planning analysis and generation.
 
-from src.engines.engine_registry import (
-    BatchExporter,
-    DrawingPipeline,
-    ExportReport,
-    PipelineResult,
-    QualityAssessor,
-    SDPipeline,
-    SDResult,
-    VersionStore,
-    build_expansion_prompt,
-    build_guideline_prompt,
-    build_outline_prompt,
-    call_llm_engine,
-    call_llm_engine_stream,
-    compute_query_embedding,
-    generate_policy_matrix,
-    get_cached_db_embeddings,
-    get_hud_statistics,
-    get_merged_poi_data,
-    get_nlp_data,
-    get_plot_diagnostics,
-    get_skyline_features,
-    get_spatial_data,
-    is_demo_mode,
-    load_bge_micro_model,
-    load_global_config,
-    load_rag_knowledge,
-    retrieve_rag_context,
-    run_realtime_sd,
-)
+Uses lazy imports via engine_registry to avoid loading heavy dependencies
+(pandas, numpy, PIL, jieba, requests, torch) at module import time.
+"""
 
-__all__ = [
-    "BatchExporter",
-    "DrawingPipeline",
-    "ExportReport",
-    "PipelineResult",
-    "QualityAssessor",
-    "SDPipeline",
-    "SDResult",
-    "VersionStore",
-    "build_expansion_prompt",
-    "build_guideline_prompt",
-    "build_outline_prompt",
-    "call_llm_engine",
-    "call_llm_engine_stream",
-    "compute_query_embedding",
-    "generate_policy_matrix",
-    "get_cached_db_embeddings",
-    "get_hud_statistics",
-    "get_merged_poi_data",
-    "get_nlp_data",
-    "get_plot_diagnostics",
-    "get_skyline_features",
-    "get_spatial_data",
-    "is_demo_mode",
-    "load_bge_micro_model",
-    "load_global_config",
-    "load_rag_knowledge",
-    "retrieve_rag_context",
-    "run_realtime_sd",
-]
+from src.engines.engine_registry import __all__ as _registry_all
+
+__all__ = list(_registry_all)
+
+
+def __getattr__(name):
+    if name in _registry_all:
+        from src.engines import engine_registry
+        return getattr(engine_registry, name)
+    raise AttributeError(f"module 'src.engines' has no attribute {name!r}")

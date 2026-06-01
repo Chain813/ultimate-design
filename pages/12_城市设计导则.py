@@ -5,6 +5,8 @@
 最终汇总为一份极度详实的《城市设计导则》长卷。
 """
 
+import logging
+
 import streamlit as st
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
@@ -269,7 +271,7 @@ if selected_sub == "📜 分板块导则生成":
                             use_container_width=True,
                         )
                 except Exception:
-                    pass
+                    logging.debug("Word 文档导出失败", exc_info=True)
 
 
 # ═══════════════════════════════════════════
@@ -283,7 +285,7 @@ elif selected_sub == "📊 管控指标汇总":
     import plotly.express as px
     from src.config import SHP_FILES
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=3600, max_entries=20)
     def _load_and_calculate_gis_metrics():
         import geopandas as gpd
         boundary_path = SHP_FILES["boundary"]
@@ -343,6 +345,7 @@ elif selected_sub == "📊 管控指标汇总":
                 "landuse": landuse_summary.to_dict("records")
             }
         except Exception:
+            logging.debug("GIS 指标计算失败", exc_info=True)
             return None
 
     # 获取计算指标 (加载缓存)

@@ -20,7 +20,6 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow.stage_keys import SK
-from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="11 实施路径", layout="wide", initial_sidebar_state="collapsed")
@@ -132,7 +131,6 @@ SUB_OPTIONS = [
     "🌐 第一层：全域实施路径",
     "📍 第二层：重点地块实施路径",
     "🏗️ 更新方式分类",
-    "🖼️ 图纸提示词生成",
 ]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
@@ -320,9 +318,6 @@ elif selected_sub == "🏗️ 更新方式分类":
     import pandas as pd
     df = pd.DataFrame(categories)
     st.dataframe(df, hide_index=True, **stretch_width(st.dataframe))
-
-elif selected_sub == "🖼️ 图纸提示词生成":
-    render_drawing_prompt_ui("11", key_prefix="p11", stage_title="实施路径")
 
 
 st.markdown("---")

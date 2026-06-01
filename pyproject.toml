@@ -1,6 +1,11 @@
 [tool.ruff]
 line-length = 120
-target-version = "py38"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E9", "F63", "F7", "F82"]
+
+[tool.ruff.lint.per-file-ignores]
+# Lazy import pattern: __all__ names resolved via __getattr__ at runtime
+"src/engines/engine_registry.py" = ["F822"]
+"src/engines/__init__.py" = ["F822"]

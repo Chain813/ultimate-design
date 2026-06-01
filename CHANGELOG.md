@@ -4,6 +4,48 @@
 
 ---
 
+## [v5.0.0] - 2026-06-01
+### 🏗️ 项目结构重组 · 性能优化 · AI 文本整合 · AIGC 策略驱动
+
+**页面结构重组 (17 → 14 页)：**
+* 合并 3 组页面：`00+01 数据准备与任务解读`、`02+03 资料收集与现场调研`、`04+05 现状分析与问题诊断`。
+* 移除所有 8 个页面的「图纸提示词生成」子标签页（01/04/05/07/08/09/10/11），删除 `src/ui/drawing_prompt_ui.py`。
+* 更新导航系统、工作流定义、工具脚本和测试用例以适配新结构。
+
+**性能优化：**
+* **后台缓存预加载**：新增 `src/utils/preloader.py`，在用户浏览当前页面时通过 daemon 线程静默预热其他页面的缓存数据（37MB GeoJSON、RAG 模型等）。
+* **引擎懒加载**：重构 `src/engines/engine_registry.py` 和 `__init__.py` 使用 `__getattr__` 模式，导入 `src.engines` 不再级联加载 pandas/numpy/PIL/jieba。
+* **延迟导入**：plotly（5 个页面）和 markitdown（1 个页面）从模块顶层移入函数内。
+* **缓存优化**：21 个 `@st.cache_data` 添加 `max_entries=20`；HTML 模板缓存添加 mtime 键；引擎状态检测添加 10 秒模块级缓存。
+* **Stage Bus 去重**：`save_stage_output()` 使用 MD5 哈希检测数据变化，内容未变时跳过磁盘写入。
+* **Session State 上限**：`llm_metrics` 限制 100 条，`copilot_history` 限制 50 条。
+
+**AI 文本内容整合系统：**
+* **DesignContext 管理器**：新增 `src/workflow/design_context.py`，从 stage_bus 统一提取 19 个 AI 文本输出字段，提供结构化访问接口。
+* **设计纲要合成**：`synthesize_design_brief()` 在 Stage 07 完成后自动触发，将诊断→目标→策略→空间结构合成为 800-1200 字的《设计纲要》。
+* **注入 4 个消费端**：AIGC 提示词（`design_description_engine.py`）、图集描述（`pages/13`）、导则生成（已有显式注入）、图纸绘制参数（`draw_scope_map.py` + 3 个 demo 模块）。
+
+**AIGC 页面专项优化：**
+* **策略驱动渲染风格**：6 种设计策略风格（历史保护/微更新/功能置换/TOD/生态/文创），自动从 DesignContext 检测，影响提示词、色彩、材质、光影和 ControlNet 参数。
+* **硬件适配**：3 种硬件模式（低配 512px / 标准 1024px / 高清 1536px），一键调整分辨率、步数、CFG。
+* **ControlNet 增强**：线稿多层渲染+抗锯齿+对比度增强；6 种预处理器可选（canny/lineart_realistic/lineart_anime/scribble/depth/seg）。
+* **SD 模型选择**：自动获取 SD WebUI 可用模型列表，支持侧边栏一键切换。
+* **设计纲要集成**：自动从 DesignContext 生成场景描述，AI 润色注入完整设计上下文。
+* **结果管理**：渲染结果存入 stage_bus，添加渲染历史（最近 10 张）。
+
+**UI 优化：**
+* **CSS 设计令牌系统**：`assets/style.css` 新增 `:root` CSS 自定义属性（色彩/间距/圆角/阴影/字体/动画）。
+* **色彩统一**：修复 `module_summary.py`（Tailwind→Apple 色系）、`pages/00`（暗底→亮底）、`app_shell.py`（`#d70015`→`#ff3b30`）。
+
+**安全修复：**
+* 替换 `eval(atob(...))` XSS 模式为直接 `<script>` 标签注入。
+* DeepSeek API URL 从硬编码改为从 config.yaml 读取。
+* HF_ENDPOINT 从硬编码改为可配置。
+* Ruff target-version 从 py38 更新为 py312。
+* 修复 5 处裸 `except:` 子句，12 处静默异常添加日志。
+
+---
+
 ## [v4.6.0] - 2026-05-31
 ### 📊 恢复图层、修复沙盘边界道路占比与顶栏智能工具菜单
 * **用地优化沙盘范围约束与道路占比修正 (Stage 08)**：

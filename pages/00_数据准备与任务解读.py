@@ -1,19 +1,26 @@
-"""阶段 00：数据准备 —— 已有数据上传与获取教程。"""
+"""阶段 00-01：数据准备与任务解读 —— 数据上传、获取教程、项目概况、任务书展示。"""
 
 import json
+import logging
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
-from src.config import DATA_DIR
+from src.config import DATA_DIR, DOCS_DIR, META_DIR
 from src.data import DATA_CATEGORIES, check_data_exists, get_data_readiness, get_data_size
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_data_pipeline
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_data_pipeline, render_mission_decoding_hud
 from src.ui.app_shell import render_top_nav
+from src.ui.module_summary import render_stage_summary
+from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
+from src.utils.text_io import read_text_with_fallback
 
-st.set_page_config(page_title="00 数据准备", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="00 数据准备与任务解读", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
+
+TASK_BOOK_PATH = DOCS_DIR / "毕业设计任务书.pdf"
+PROPOSAL_PATH = DOCS_DIR / "毕业设计开题报告.pdf"
 
 
 # ============================================================
@@ -61,7 +68,7 @@ def render_csv_preview(target: Path):
         st.markdown("**数据预览 (前 5 行)**:")
         st.dataframe(df, use_container_width=True)
     except Exception:
-        pass
+        logging.debug("CSV 预览失败: %s", target, exc_info=True)
 
 
 def render_json_preview(target: Path):
@@ -74,7 +81,7 @@ def render_json_preview(target: Path):
         elif isinstance(data, dict):
             st.markdown(f"**键数量**: {len(data)}")
     except Exception:
-        pass
+        logging.debug("JSON 预览失败: %s", target, exc_info=True)
 
 
 def render_tutorial_popover(cat: dict):
@@ -108,7 +115,6 @@ def run_quality_check():
                     df = pd.read_csv(target)
                     record_count = len(df)
 
-                    # 检查必要字段
                     field_map = {
                         "poi": ["Name", "Lat", "Lng"],
                         "traffic": ["Name", "Type", "Lat", "Lng"],
@@ -119,12 +125,10 @@ def run_quality_check():
                         if missing:
                             issues.append(f"缺少字段: {', '.join(missing)}")
 
-                    # 检查空值
                     null_cols = df.columns[df.isnull().any()].tolist()
                     if null_cols:
                         issues.append(f"含空值字段: {', '.join(null_cols)}")
 
-                    # 检查坐标范围
                     if "Lat" in df.columns and "Lng" in df.columns:
                         lat_range = (43.5, 44.5)
                         lng_range = (125.0, 126.0)
@@ -173,29 +177,24 @@ def run_quality_check():
 
 
 # ============================================================
-# 页面渲染
-# ============================================================
-
 # 页面顶部
+# ============================================================
 readiness = get_data_readiness()
 
-pipeline_html = render_data_pipeline(as_html=True)
-
 render_page_banner(
-    title="数据准备",
-    description="上传项目所需的各类原始数据，确保后续分析流程数据完备。",
-    eyebrow="Stage 00",
-    tags=["数据上传", "数据获取", "格式规范", "质量校验"],
+    title="数据准备与任务解读",
+    description="上传项目原始数据、查阅获取教程、锁定研究范围与任务要求。",
+    eyebrow="Stage 00-01",
+    tags=["数据上传", "数据获取", "任务书解析", "质量校验"],
     metrics=[
         {"value": f"{readiness['total']} 类", "label": "数据类别", "meta": "空间、POI、街景、文本、房价等"},
-        {"value": "25+", "label": "数据文件", "meta": "支撑 13 阶段工作流"},
-        {"value": "6 种", "label": "数据格式", "meta": "CSV / GeoJSON / XLSX / JPG / TIF"},
+        {"value": "150 公顷", "label": "研究范围", "meta": "任务书明确的核心片区"},
+        {"value": "5 个", "label": "深化地段", "meta": "任务书要求重点设计单元"},
     ],
-    graphic_html=pipeline_html
+    graphic_html=render_data_pipeline(as_html=True)
 )
 render_evidence_chain_bar("00", ["00", "01", "02", "03", "04", "05"])
 
-# 数据完备度
 render_summary_cards([
     {"value": f"{readiness['loaded']}/{readiness['total']}", "title": "已上传数据集", "desc": "数据类别完备度"},
     {"value": f"{readiness['required_loaded']}/{readiness['required_count']}", "title": "必备数据就绪", "desc": "核心数据完整性"},
@@ -204,8 +203,10 @@ render_summary_cards([
 
 st.markdown("---")
 
-# 功能模块选择
-SUB_OPTIONS = ["📦 数据上传中心", "📚 数据获取教程", "📊 数据质量检查"]
+# ============================================================
+# 子标签选择
+# ============================================================
+SUB_OPTIONS = ["📦 数据上传中心", "📚 数据获取教程", "📋 项目概况与任务要求", "📊 数据质量检查"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -271,7 +272,6 @@ elif selected_sub == "📚 数据获取教程":
         eyebrow="Tutorial Guide",
     )
 
-    # 教程目录
     st.markdown("### 📋 教程目录")
     cols = st.columns(3)
     for idx, cat in enumerate(DATA_CATEGORIES):
@@ -280,7 +280,6 @@ elif selected_sub == "📚 数据获取教程":
 
     st.markdown("---")
 
-    # 详细教程
     for cat in DATA_CATEGORIES:
         st.markdown(f'<a id="{cat["id"]}"></a>', unsafe_allow_html=True)
         with st.container(border=True):
@@ -319,7 +318,94 @@ elif selected_sub == "📚 数据获取教程":
 
 
 # ============================================================
-# 模块三：数据质量检查
+# 模块三：项目概况与任务要求 (原 Stage 01)
+# ============================================================
+elif selected_sub == "📋 项目概况与任务要求":
+    render_section_intro("项目基本信息与任务要求", "锁定研究边界、设计深度和核心任务，核对任务书与开题报告。", eyebrow="Project Brief")
+
+    # 项目概况
+    info_data = {
+        "项目名称": "AI赋能下的伪满皇宫周边街区更新规划设计",
+        "设计类型": "城市更新 · 历史街区 · 数字孪生",
+        "研究范围": "约150公顷，由长春大街、长白路、东九条、亚泰快速路围合",
+        "设计深度": "总体城市设计 + 5个重点地块深化设计",
+        "成果形式": "A3图册（≥60页）+ A1展板（≥3张）+ 规划文本 + PPT",
+        "核心矛盾": "历史保护与活力不足、工业低效、社区老化、交通割裂",
+        "技术特色": "GIS + CV + POI + NLP/LLM + AIGC + 数字孪生",
+    }
+    for k, v in info_data.items():
+        st.markdown(f"**{k}**：{v}")
+
+    save_stage_output("01", "project_info", info_data)
+
+    st.markdown("---")
+
+    # 任务书与开题报告
+    col1, col2 = st.columns(2)
+    with col1:
+        with st.container(border=True):
+            st.markdown("#### 📕 毕业设计任务书")
+            st.caption("官方下发的设计要求与边界限定文件。")
+            if TASK_BOOK_PATH.exists():
+                st.download_button(
+                    "📥 下载任务书 PDF",
+                    TASK_BOOK_PATH.read_bytes(),
+                    file_name=TASK_BOOK_PATH.name,
+                    mime="application/pdf",
+                    type="primary",
+                    **stretch_width(st.download_button),
+                )
+            else:
+                st.warning("未找到任务书文件。")
+
+            mission_path = META_DIR / "mission_text.txt"
+            if mission_path.exists():
+                mission_text = read_text_with_fallback(mission_path)
+                with st.expander("👁️ 查看任务书核心摘录", expanded=True):
+                    st.markdown(
+                        f'''<div style="font-size:13px; color:#48484a; line-height:1.6;
+                        max-height:280px; overflow-y:auto; padding:12px;
+                        background:rgba(0,0,0,0.03); border-radius:8px; border: 1px solid rgba(0,0,0,0.08);">
+                        {mission_text[:1800].replace(chr(10), "<br>")}</div>''',
+                        unsafe_allow_html=True
+                    )
+
+    with col2:
+        with st.container(border=True):
+            st.markdown("#### 📗 毕业设计开题报告")
+            st.caption("前期调研、文献综述与核心技术路线推演报告。")
+            if PROPOSAL_PATH.exists():
+                st.download_button(
+                    "📥 下载开题报告 PDF",
+                    PROPOSAL_PATH.read_bytes(),
+                    file_name=PROPOSAL_PATH.name,
+                    mime="application/pdf",
+                    type="primary",
+                    **stretch_width(st.download_button),
+                )
+            else:
+                st.warning("未找到开题报告文件。")
+
+            with st.expander("👁️ 查看核心框架提纲", expanded=True):
+                st.markdown(
+                    '''<div style="font-size:13px; color:#48484a; line-height:1.6;
+                    max-height:280px; overflow-y:auto; padding:12px;
+                    background:rgba(0,0,0,0.03); border-radius:8px; border: 1px solid rgba(0,0,0,0.08);">
+                    <b style="color:#1d1d1f;">第一部分：现状研判与问题痛点</b><br>
+                    • 历史文脉断裂与空间感知弱化<br>
+                    • 工业遗存与建筑资产闲置低效<br>
+                    • 跨铁路交通微循环与慢行系统不畅<br><br>
+                    <b style="color:#1d1d1f;">第二部分：目标定位与愿景</b><br>
+                    数字孪生驱动的"古今共振"街区微更新规划<br><br>
+                    <b style="color:#1d1d1f;">第三部分：拟采用的核心技术路线</b><br>
+                    <code>GIS底座构建</code> ➔ <code>多源数据语义萃取</code> ➔ <code>AHP-MPI 潜力评估</code> ➔ <code>AIGC (SD/ControlNet) 推演</code>
+                    </div>''',
+                    unsafe_allow_html=True
+                )
+
+
+# ============================================================
+# 模块四：数据质量检查
 # ============================================================
 elif selected_sub == "📊 数据质量检查":
     render_section_intro(
@@ -367,14 +453,6 @@ elif selected_sub == "📊 数据质量检查":
 # 底部
 # ============================================================
 st.markdown("---")
-st.markdown(
-    """
-    <div style="text-align: center; padding: 20px; opacity: 0.6;">
-        <p>数据准备完成后，请前往 <b>Stage 01 任务解读</b> 开始正式工作流</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
 
 save_stage_output("00", "data_readiness", {
     "total_categories": readiness["total"],
@@ -382,3 +460,15 @@ save_stage_output("00", "data_readiness", {
     "required_loaded": readiness["required_loaded"],
     "is_ready": readiness["is_ready"],
 })
+
+render_stage_summary(
+    stage_code="01",
+    title="项目边界与任务要求锁定",
+    findings=[
+        {"point": "研究范围约 150 公顷，涵盖 5 个重点深化地段", "evidence": "任务书明确的核心片区边界"},
+        {"point": "核心任务为系统性概念设计 + 数字孪生与 AIGC 推演表达", "evidence": "任务书核心任务条款"},
+        {"point": "四大核心痛点：用地混杂、交通割裂、老龄化、环境品质不足", "evidence": "开题报告现状诊断结论"},
+    ],
+    methodology="基于毕业设计任务书与开题报告的文本解析",
+    implication="为后续资料收集（Stage 02）和现场调研（Stage 03）提供了明确的工作边界",
+)

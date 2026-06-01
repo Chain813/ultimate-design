@@ -28,7 +28,6 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow.stage_keys import SK
-from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="09 专项系统设计", layout="wide", initial_sidebar_state="collapsed")
@@ -113,7 +112,7 @@ with st.sidebar:
         help="专项系统需要深度分析，建议使用 Pro 模型",
     )
 
-SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态、风貌与立面", "🎨 风貌景观与文保", "🖼️ 图纸提示词生成"]
+SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态、风貌与立面", "🎨 风貌景观与文保"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -435,13 +434,6 @@ elif selected_sub == "🎨 风貌景观与文保":
         with st.expander("📋 已生成的风貌景观设计方案", expanded=False):
             st.markdown(saved)
 
-
-# ═══════════════════════════════════════════
-# 模块五：图纸提示词生成
-# ═══════════════════════════════════════════
-
-elif selected_sub == "🖼️ 图纸提示词生成":
-    render_drawing_prompt_ui("09", key_prefix="p9", stage_title="专项系统设计")
 
 
 st.markdown("---")

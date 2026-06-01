@@ -6,6 +6,7 @@ Usage:
 
 import os
 import json
+import logging
 import time
 from pathlib import Path
 import streamlit as st
@@ -32,10 +33,12 @@ def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, lat
         "total_tokens": total_tokens,
     }
     
-    # Store in Streamlit session state for live update
+    # Store in Streamlit session state for live update (cap at 100 entries)
     if "llm_metrics" not in st.session_state:
         st.session_state["llm_metrics"] = []
     st.session_state["llm_metrics"].append(record)
+    if len(st.session_state["llm_metrics"]) > 100:
+        st.session_state["llm_metrics"] = st.session_state["llm_metrics"][-100:]
     
     # Persist to disk
     try:
@@ -45,15 +48,15 @@ def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, lat
             try:
                 records = json.loads(LOG_FILE.read_text(encoding="utf-8"))
             except Exception:
+                logging.debug("LLM 日志文件解析失败，重置为空", exc_info=True)
                 records = []
         records.append(record)
         # Limit local log to last 500 entries to prevent bloat
         if len(records) > 500:
             records = records[-500:]
         LOG_FILE.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception as e:
-        # Silently fail if log directory is write-protected
-        pass
+    except Exception:
+        logging.debug("LLM 日志写入失败", exc_info=True)
 
 def get_llm_metrics():
     """Retrieve all LLM metrics from session state and disk."""

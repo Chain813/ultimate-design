@@ -47,6 +47,9 @@ class SK:
     # Stage 12 城市设计导则
     DESIGN_GUIDELINE = "design_guideline"
 
+    # 合成产物
+    DESIGN_BRIEF = "design_brief"
+
     # Stage 13 成果表达
     FINAL_REPORT = "final_report"
 

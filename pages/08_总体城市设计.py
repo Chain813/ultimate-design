@@ -27,7 +27,6 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow.stage_keys import SK
-from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
 @st.cache_resource
@@ -159,7 +158,7 @@ with st.sidebar:
         help="deepseek-v4-pro 适合空间结构的深度推演，deepseek-v4-flash 适合快速迭代",
     )
 
-SUB_OPTIONS = ["🗺️ 空间结构推演", "🎛️ 用地结构优化沙盘", "🖼️ 图纸提示词生成"]
+SUB_OPTIONS = ["🗺️ 空间结构推演", "🎛️ 用地结构优化沙盘"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
@@ -557,13 +556,6 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
             })
             st.success("✅ 沙盘评估完成，已存入数据总线。")
 
-
-# ═══════════════════════════════════════════
-# 模块三：图纸提示词生成
-# ═══════════════════════════════════════════
-
-elif selected_sub == "🖼️ 图纸提示词生成":
-    render_drawing_prompt_ui("08", key_prefix="p8", stage_title="总体城市设计")
 
 
 st.markdown("---")

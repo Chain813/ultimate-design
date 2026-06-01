@@ -1,15 +1,16 @@
-"""阶段 02：资料收集 —— 语义萃取引擎 + 空间数据资产清单 + 物理底座管理。"""
+"""阶段 02-03：资料收集与现场调研 —— 语义萃取、数据资产管理、街景核验、制图模板。"""
 
 import json
+import logging
 import tempfile
 from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from markitdown import MarkItDown
+from PIL import Image
 
-from src.config import DATA_FILES, SHP_FILES
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_rag_pipeline_hud
+from src.config import DATA_FILES, SHP_FILES, get_static_url
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_rag_pipeline_hud, render_survey_pipeline_hud
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.output_flow_panel import render_output_flow_prompt_panel
@@ -25,26 +26,31 @@ from src.workflow.template_assets import (
     summarize_template_assets_for_prompt,
 )
 
-st.set_page_config(page_title="02 资料收集", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="02 资料收集与现场调研", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
 
 render_page_banner(
-    title="资料收集",
-    description="汇总空间数据资产、策略语义萃取和物理底座管理，确保数据基础完备。",
-    eyebrow="Stage 02",
-    tags=["空间数据资产", "语义萃取", "数据完备度"],
+    title="资料收集与现场调研",
+    description="汇总空间数据资产、语义萃取、街景核验和物理底座管理，确保数据基础完备。",
+    eyebrow="Stage 02-03",
+    tags=["空间数据资产", "语义萃取", "街景核验", "数据完备度"],
     graphic_html=render_rag_pipeline_hud(as_html=True),
 )
 render_evidence_chain_bar("02", ["01", "02", "03", "04", "05"])
 
-SUB_OPTIONS = ["📑 语义萃取引擎", "⚙️ 空间数据资产管理", "🧩 固定制图模板"]
+SUB_OPTIONS = ["📑 语义萃取引擎", "⚙️ 空间数据资产管理", "📍 现场调研", "🧩 固定制图模板"]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
 
+
+# ============================================================
+# 模块一：语义萃取引擎
+# ============================================================
 if selected_sub == "📑 语义萃取引擎":
     render_section_intro("语义萃取引擎", "批量上传规划文档，转为可检索和引用的结构化文本。", eyebrow="MarkItDown")
     up_files = st.file_uploader("上传规划文档 (PDF/Word/PPT)", accept_multiple_files=True)
     if up_files and st.button("🚀 启动语义萃取", type="primary", **stretch_width(st.button)):
+        from markitdown import MarkItDown
         res_list = []
         progress = st.progress(0)
         md_engine = MarkItDown()
@@ -73,6 +79,10 @@ if selected_sub == "📑 语义萃取引擎":
         selected_text = next(r["text"] for r in results if r["file"] == sel_file)
         st.text_area("Markdown 预览", value=selected_text, height=420)
 
+
+# ============================================================
+# 模块二：空间数据资产管理
+# ============================================================
 elif selected_sub == "⚙️ 空间数据资产管理":
     render_section_intro("空间数据资产台", "核对底座文件、查看数据挂载情况。", eyebrow="Spatial Assets")
 
@@ -84,6 +94,7 @@ elif selected_sub == "⚙️ 空间数据资产管理":
                 return len(pd.read_csv(path))
             return len(json.loads(path.read_text(encoding="utf-8")).get("features", []))
         except Exception:
+            logging.debug("要素计数失败: %s", path, exc_info=True)
             return 0
 
     inventory = [
@@ -105,6 +116,131 @@ elif selected_sub == "⚙️ 空间数据资产管理":
     st.dataframe(pd.DataFrame(rows), hide_index=True, **stretch_width(st.dataframe))
     save_stage_output("02", "data_completeness", f"{total_loaded}/{len(inventory)}")
 
+
+# ============================================================
+# 模块三：现场调研 (原 Stage 03)
+# ============================================================
+elif selected_sub == "📍 现场调研":
+    render_section_intro("街景样本库", "基于 2D 街区底图与 CSV 坐标索引，进行采样点实景核验与空间标注。", eyebrow="Field Survey")
+
+    sv_root = Path("data/streetview")
+    csv_path = Path("data/csv/Changchun_Precise_Points.csv")
+
+    if not csv_path.exists() or not sv_root.exists():
+        st.error("缺失核心资源文件 (CSV/Streetview)。")
+    else:
+        df_all = pd.read_csv(csv_path)
+        df_all["ID"] = df_all["ID"].astype(int)
+
+        available_ids = [int(d.name.split("_")[1]) for d in sv_root.iterdir() if d.is_dir() and d.name.startswith("Point_")]
+        df_points = df_all[df_all["ID"].isin(available_ids)].copy()
+        df_points["name"] = df_points["ID"].apply(lambda x: f"Point_{x}")
+
+        if "selected_point_id" not in st.session_state:
+            st.session_state.selected_point_id = int(df_points.iloc[0]["ID"])
+
+        col_title, col_nav = st.columns([2, 1])
+        with col_title:
+            st.markdown("### 2D 街区采样地图 (CartoDB Dark)")
+            st.caption("🔍 点击地图蓝色点位或使用右侧跳转进行实景核验")
+
+        with col_nav:
+            selected_id_nav = st.selectbox(
+                "采样点快捷跳转",
+                [int(x) for x in df_points["ID"].tolist()],
+                format_func=lambda x: f"Point_{x}",
+                index=int(df_points[df_points["ID"] == st.session_state.selected_point_id].index[0]),
+                label_visibility="collapsed"
+            )
+
+        if selected_id_nav != st.session_state.selected_point_id:
+            st.session_state.selected_point_id = selected_id_nav
+            st.rerun()
+
+        @st.fragment
+        def render_silent_survey(df_points, sv_root):
+            st.markdown("""
+                <style>
+                .stPlotlyChart { margin-bottom: -45px !important; }
+                .plotly .modebar { display: none !important; }
+                [data-testid="stVerticalBlock"] > div { padding-top: 0px !important; padding-bottom: 0px !important; }
+                [data-testid="stFragment"] { transition: none !important; opacity: 1 !important; }
+                </style>
+            """, unsafe_allow_html=True)
+
+            if "map_init" not in st.session_state:
+                st.session_state.map_init = True
+                st.session_state.lat_base = df_points["Lat"].mean()
+                st.session_state.lon_base = df_points["Lng"].mean()
+
+            colors = ["#ff4b4b" if pid == st.session_state.selected_point_id else "#00f2ff" for pid in df_points["ID"]]
+            sizes = [18 if pid == st.session_state.selected_point_id else 10 for pid in df_points["ID"]]
+
+            import plotly.graph_objects as go
+            fig = go.Figure()
+            fig.add_trace(go.Scattermapbox(
+                lon=df_points["Lng"],
+                lat=df_points["Lat"],
+                mode="markers",
+                marker=dict(size=sizes, color=colors, opacity=0.9),
+                text=df_points["name"],
+                hoverinfo="text",
+                customdata=df_points["ID"]
+            ))
+
+            fig.update_layout(
+                mapbox=dict(
+                    style="carto-darkmatter",
+                    center=dict(lat=st.session_state.lat_base, lon=st.session_state.lon_base),
+                    zoom=13.5,
+                ),
+                margin=dict(l=0, r=0, t=0, b=0),
+                height=420,
+                showlegend=False,
+                dragmode="pan",
+                uirevision="constant_view"
+            )
+
+            event_data = st.plotly_chart(
+                fig,
+                use_container_width=True,
+                on_select="rerun",
+                config={'displayModeBar': False, 'scrollZoom': True}
+            )
+
+            if event_data and "selection" in event_data and event_data["selection"]["points"]:
+                try:
+                    p_idx = event_data["selection"]["points"][0]["point_index"]
+                    new_id = int(df_points.iloc[p_idx]["ID"])
+                    if new_id != st.session_state.selected_point_id:
+                        st.session_state.selected_point_id = new_id
+                except Exception:
+                    pass
+
+            cur_id = st.session_state.selected_point_id
+            cur_name = f"Point_{cur_id}"
+            p_path = sv_root / cur_name
+
+            img_cols = st.columns(4)
+            for i, h in enumerate([0, 90, 180, 270]):
+                with img_cols[i]:
+                    i_path = p_path / f"heading_{h}.jpg"
+                    if i_path.exists():
+                        st.image(str(i_path), caption=f"{h}°", use_container_width=True)
+
+            save_stage_output("03", "survey_points", len(df_points))
+            save_stage_output("03", "current_view", cur_name)
+
+        render_silent_survey(df_points, sv_root)
+
+        current_point_name = f"Point_{st.session_state.selected_point_id}"
+        save_stage_output("03", "survey_points", len(df_points))
+        save_stage_output("03", "current_view", current_point_name)
+
+
+# ============================================================
+# 模块四：固定制图模板
+# ============================================================
 elif selected_sub == "🧩 固定制图模板":
     render_section_intro(
         "固定底图、范围、地块与图框",
@@ -196,6 +332,10 @@ elif selected_sub == "🧩 固定制图模板":
 
     render_output_flow_prompt_panel(manifest, expanded=False)
 
+
+# ============================================================
+# 底部
+# ============================================================
 st.markdown("---")
 asset_manifest = load_template_asset_manifest()
 asset_rows = get_template_asset_rows(asset_manifest)

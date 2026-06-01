@@ -11,7 +11,6 @@
 """
 
 import streamlit as st
-import plotly.graph_objects as go
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
@@ -27,7 +26,6 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow.stage_keys import SK
-from src.ui.drawing_prompt_ui import render_drawing_prompt_ui
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="10 重点地段深化", layout="wide", initial_sidebar_state="collapsed")
@@ -113,7 +111,6 @@ SUB_OPTIONS = [
     "👥 目标人群与行为画像",
     "🏗️ 空间深化设计方案",
     "🔄 Before/After 推演",
-    "🖼️ 图纸提示词生成",
 ]
 selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
 st.markdown("---")
@@ -169,6 +166,7 @@ if selected_sub == "📍 重点地块诊断雷达":
 
     values = [mpi_norm, gvi_norm, svf_norm, enc_norm, poi_norm]
 
+    import plotly.graph_objects as go
     fig = go.Figure()
     fig.add_trace(go.Scatterpolar(
         r=values + [values[0]],
@@ -493,13 +491,6 @@ elif selected_sub == "🔄 Before/After 推演":
     else:
         st.warning("暂无 AIGC 渲染结果。请先在 **AIGC设计推演** 页面生成街景效果图。")
 
-
-# ═══════════════════════════════════════════
-# 模块六：图纸提示词生成
-# ═══════════════════════════════════════════
-
-elif selected_sub == "🖼️ 图纸提示词生成":
-    render_drawing_prompt_ui("10", key_prefix="p10", stage_title="重点地段深化")
 
 
 st.markdown("---")

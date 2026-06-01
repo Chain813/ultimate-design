@@ -199,7 +199,7 @@
                     }
                     return res;
                 }).then(res => res.json()),
-                onDataLoad: (data) => console.log(`[Building] Loaded ${data.features?.length} features from ${fetchUrl}`),
+                onDataLoad: () => {},
                 onError: (err) => console.error(`[Building] Load Failed: ${err.message}`)
             }));
         }
@@ -770,9 +770,7 @@
         // ==========================================
         // 🌐 建筑层异步状态监控 (仅保留日志，渲染由上层 GeoJsonLayer 托管)
         // ==========================================
-        if (b_data && typeof b_data === 'string') {
-             console.log(`[System] Building layer will be loaded asynchronously from: ${b_data}`);
-        }
+        // Building layer async loading handled by GeoJsonLayer above
     </script>
 
     <!-- 🎬 视频录制视角旋转控制 (放置于左上角，避免与右侧图例面板冲突) -->

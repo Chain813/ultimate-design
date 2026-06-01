@@ -80,8 +80,10 @@ def get_copilot_response(user_msg: str) -> str:
         logger.error(f"Copilot LLM call failed: {e}")
         response = f"⚠️ 对不起，AI 助理连接超时（{e}）。请检查您的网络设置或 DeepSeek API 密钥。"
 
-    # 4. Commit to history
+    # 4. Commit to history (cap at 50 messages = 25 turns)
     st.session_state["copilot_history"].append({"role": "user", "content": user_msg})
     st.session_state["copilot_history"].append({"role": "assistant", "content": response})
+    if len(st.session_state["copilot_history"]) > 50:
+        st.session_state["copilot_history"] = st.session_state["copilot_history"][-50:]
 
     return response

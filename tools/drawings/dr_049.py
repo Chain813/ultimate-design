@@ -14,7 +14,7 @@ import matplotlib.patheffects as path_effects
 import geopandas as gpd
 from PIL import Image
 
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=None):
     if water is not None and not water.empty:
         water.plot(ax=ax, facecolor="#D0E6F7", edgecolor="none", zorder=1)
     if roads is not None and not roads.empty:
@@ -23,9 +23,14 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     # Draw height limit buffer overlay circles around Palace
     px_palace, py_palace = get_xy(125.3422, 43.9036)
     palace_pt = Point(px_palace, py_palace)
-    # Expand buffer radius: 450m and 900m
-    buf_450 = palace_pt.buffer(450)
-    buf_900 = palace_pt.buffer(900)
+    # Expand buffer radius (LLM-guided or default)
+    r1 = 450
+    r2 = 900
+    if params and "buffer_radii" in params:
+        r1 = params["buffer_radii"].get("heritage", 450)
+        r2 = params["buffer_radii"].get("transition", 900)
+    buf_450 = palace_pt.buffer(r1)
+    buf_900 = palace_pt.buffer(r2)
 
     # Overlay circles are clipped to the study boundary
     bnd_geom = boundary.unary_union

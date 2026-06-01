@@ -24,7 +24,10 @@ def load_bge_micro_model():
     """Lazily load BAAI/bge-micro-zh-v4 for vector retrieval."""
     try:
         from transformers import AutoTokenizer, AutoModel
-        os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
+        from src.config.loader import load_global_config
+        hf_mirror = load_global_config().get("engines", {}).get("hf_mirror", "")
+        if hf_mirror:
+            os.environ["HF_ENDPOINT"] = hf_mirror
         tokenizer = AutoTokenizer.from_pretrained("BAAI/bge-micro-zh-v4")
         model = AutoModel.from_pretrained("BAAI/bge-micro-zh-v4")
         model.eval()

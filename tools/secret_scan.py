@@ -1,6 +1,7 @@
 """Basic secret pattern scanner for repository and local env files."""
 
 from pathlib import Path
+import logging
 import re
 import sys
 
@@ -66,6 +67,7 @@ def main() -> int:
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except Exception:
+            logging.debug("无法读取文件: %s", path, exc_info=True)
             continue
 
         for line_number, line in enumerate(text.splitlines(), start=1):

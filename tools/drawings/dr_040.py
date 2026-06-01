@@ -14,7 +14,7 @@ import matplotlib.patheffects as path_effects
 import geopandas as gpd
 from PIL import Image
 
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=None):
     if water is not None and not water.empty:
         water.plot(ax=ax, facecolor="#E2F0FD", edgecolor="none", zorder=1.5)
     if roads is not None and not roads.empty:
@@ -36,11 +36,13 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             (buildings_copy["geometry"].centroid.x < 125.335) | (buildings_copy["geometry"].centroid.x > 125.346),
             (dists > 450)
         ]
+        # LLM-guided color overrides
+        c = params.get("color_overrides", {}) if params else {}
         choices = [
-            "#B45309", # 保护修缮: 历史核心 (古铜)
-            "#F59E0B", # 整治提升: 过渡风貌 (橙黄)
-            "#10B981", # 微更新: 老社区修补 (绿)
-            "#3B82F6"  # 功能置换: 工业转型 (蓝)
+            c.get("heritage_core", "#B45309"),   # 保护修缮: 历史核心 (古铜)
+            c.get("transition_zone", "#F59E0B"),  # 整治提升: 过渡风貌 (橙黄)
+            c.get("micro_update", "#10B981"),     # 微更新: 老社区修补 (绿)
+            c.get("functional_replace", "#3B82F6") # 功能置换: 工业转型 (蓝)
         ]
         buildings_copy["color"] = np.select(conditions, choices, default="#F59E0B")
         buildings_copy.plot(ax=ax, color=buildings_copy["color"], edgecolor="#475569", linewidth=0.15, zorder=2.2)

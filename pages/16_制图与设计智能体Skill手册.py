@@ -6,10 +6,10 @@ import os
 import sys
 import subprocess
 import json
+import logging
 from pathlib import Path
 from PIL import Image
 import streamlit as st
-import plotly.graph_objects as go
 
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
@@ -149,7 +149,7 @@ if "drawing" in skill_files[selected_skill_name]:
                     img = Image.open(img_path)
                     st.image(img, caption=f"{selected_draw} 历史图集生成缓存预览", **stretch_width(st.image))
                 except Exception:
-                    pass
+                    logging.debug("图集预览加载失败: %s", img_path, exc_info=True)
             else:
                 st.info("点击“开始编译并预览”按钮，运行底层制图脚本。")
 else:
@@ -265,6 +265,7 @@ else:
             roles.append(roles[0])
             sats.append(sats[0])
             
+            import plotly.graph_objects as go
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
                 r=sats,

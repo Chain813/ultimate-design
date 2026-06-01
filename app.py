@@ -36,6 +36,10 @@ def get_page_route(page_path):
 # 加载顶部导航与系统状态警报
 render_top_nav()
 render_engine_status_alert()
+
+# 启动后台缓存预热（静默加载其他页面数据）
+from src.utils.preloader import start_preloading
+start_preloading()
 top_stats = get_hud_statistics()
 
 # 🎬 演示模式：最大化显示区域 (使用 style.css 中的 .presentation-active 类)
@@ -51,10 +55,10 @@ MODULE_SECTIONS = [
         "badge_class": "badge-data",
         "modules": [
             {
-                "title": "数据准备与上传",
-                "desc": "上传研究边界、建筑轮廓、POI、交通、街景、文本评论等各类原始数据。",
+                "title": "数据准备与任务解读",
+                "desc": "上传原始数据、查阅获取教程、锁定研究范围与任务要求。",
                 "image": "assets/03_digital_twin.png",
-                "path": "pages/00_数据准备.py",
+                "path": "pages/00_数据准备与任务解读.py",
             },
         ],
     },
@@ -63,10 +67,10 @@ MODULE_SECTIONS = [
         "badge_class": "badge-early",
         "modules": [
             {
-                "title": "前期数据获取与现状分析",
-                "desc": "任务解读、资料收集、现场调研、现状分析、问题诊断。",
+                "title": "资料收集与现场调研",
+                "desc": "语义萃取、空间数据资产管理、街景核验、固定制图模板。",
                 "image": "assets/04_urban_diagnosis.png",
-                "path": "pages/01_任务解读.py",
+                "path": "pages/02_资料收集与现场调研.py",
             },
         ],
     },
