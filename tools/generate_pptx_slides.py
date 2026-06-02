@@ -9,11 +9,12 @@ from pptx.enum.shapes import MSO_SHAPE
 sys.stdout.reconfigure(encoding='utf-8')
 
 # Separate template and output paths to prevent modifying template directly
-ppt_template_path = r"C:\Users\23902\Desktop\城环杯\附件4 成果演示幻灯（模板）.pptx"
-ppt_output_path = r"C:\Users\23902\Desktop\城环杯\附件4 成果演示幻灯.pptx"
-temp_img_dir = r"C:\Users\23902\Desktop\城环杯\temp_images"
+user_home = os.path.expanduser("~")
+ppt_template_path = os.path.join(user_home, "Desktop", "城环杯", "附件4 成果演示幻灯（模板）.pptx")
+ppt_output_path = os.path.join(user_home, "Desktop", "城环杯", "附件4 成果演示幻灯.pptx")
+temp_img_dir = os.path.join(user_home, "Desktop", "城环杯", "temp_images")
 atlas_dir = r"e:\AI-based-project\urban-platform\static\atlas"
-brain_prev_dir = r"C:\Users\23902\.gemini\antigravity\brain\a7a0a585-8fe2-47a0-8b18-0be8b3147e91"
+brain_prev_dir = os.path.join(user_home, ".gemini", "antigravity", "brain", "a7a0a585-8fe2-47a0-8b18-0be8b3147e91")
 
 os.makedirs(temp_img_dir, exist_ok=True)
 

@@ -1,0 +1,167 @@
+/* ═══════════════════════════════════════════════════
+   Apple HIG Navigation — Pure CSS Hover Dropdowns
+   ═══════════════════════════════════════════════════ */
+
+/* ── Fixed navbar wrapper ── */
+.apple-nav-wrapper {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 999990;
+    height: 52px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: visible !important;
+}
+
+/* Strip all default underlines and colors */
+.apple-nav-wrapper a,
+.apple-nav-wrapper a:hover,
+.apple-nav-wrapper a:focus,
+.apple-nav-wrapper a:active,
+.apple-nav-wrapper a:visited {
+    text-decoration: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+}
+
+.apple-navbar-bar {
+    position: relative; z-index: 2;
+    display: flex; align-items: center; justify-content: center; gap: 28px;
+    height: 52px; padding: 0 32px;
+    background: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+}
+
+/* ── Brand / Home ── */
+.apple-nav-brand {
+    display: flex; align-items: center; gap: 9px;
+    text-decoration: none !important;
+    color: #1d1d1f !important;
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+    transition: color 0.2s; white-space: nowrap;
+    border: none !important; outline: none !important;
+}
+.apple-nav-brand:hover { color: #000000 !important; }
+.apple-nav-brand svg { opacity: 0.85; }
+
+/* ── Nav item (hover trigger) ── */
+.apple-nav-items { display: flex; align-items: center; gap: 0; height: 52px; }
+
+.apple-nav-item {
+    position: relative;
+    display: flex; align-items: center; gap: 4px;
+    padding: 0 15px; height: 52px;
+    font-size: 14px; font-weight: 500;
+    color: #515154 !important;
+    cursor: default; white-space: nowrap;
+    transition: color 0.15s;
+}
+.apple-nav-item:hover { color: #000000 !important; }
+
+.apple-nav-chevron {
+    transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); opacity: 0.6;
+}
+.apple-nav-item:hover .apple-nav-chevron {
+    opacity: 0.95; transform: rotate(180deg);
+}
+
+/* ── Dropdown panel (CSS-only hover) ── */
+.apple-dropdown {
+    position: fixed; top: 52px; left: 0; right: 0;
+    max-height: 0; overflow: hidden;
+    opacity: 0; pointer-events: none;
+    background: rgba(245, 245, 247, 0.88) !important;
+    backdrop-filter: saturate(180%) blur(30px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(30px) !important;
+    border-bottom: 0.5px solid rgba(0, 0, 0, 0.08) !important;
+    transition: max-height 0.32s cubic-bezier(0.4,0,0.2,1),
+                opacity 0.22s ease,
+                box-shadow 0.3s ease;
+    z-index: 999991;
+}
+
+/* Hover bridge: invisible area between nav-item and dropdown */
+.apple-nav-item::after {
+    content: '';
+    position: fixed; top: 52px; left: 0; right: 0;
+    height: 12px;
+    display: none; z-index: 999991;
+}
+
+/* Show dropdown on hover */
+.apple-nav-item:hover::after { display: block; }
+.apple-nav-item:hover > .apple-dropdown {
+    max-height: 520px; opacity: 1; pointer-events: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08) !important;
+}
+
+.apple-dropdown-inner {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 16px 28px;
+    padding: 24px 36px 30px;
+    max-width: 1200px; margin: 0 auto;
+}
+
+/* ── Group title ── */
+.apple-dd-group { padding: 6px 0; }
+.apple-dd-group-title {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px !important; border-radius: 10px !important;
+    font-size: 14px !font-weight: 600; color: #1d1d1f !important;
+    font-weight: 600 !important;
+    text-decoration: none !important; transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+.apple-dd-group-title:hover {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border-color: rgba(0, 0, 0, 0.02) !important;
+    color: #000000 !important;
+}
+.apple-dd-arrow { opacity: 0; transform: translateX(-4px); transition: all 0.2s ease; }
+.apple-dd-group-title:hover .apple-dd-arrow { opacity: 0.7; transform: translateX(0); }
+
+/* ── Sub-module links (Decoupled Card Style) ── */
+.apple-dd-modules {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+    padding-left: 0;
+    margin-left: 0;
+    border-left: none !important;
+}
+.apple-dd-module {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px !important; border-radius: 8px !important;
+    font-size: 13px !important; color: #424245 !important;
+    background: rgba(0, 0, 0, 0.03) !important;
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    text-decoration: none !important; transition: all 0.2s ease !important;
+}
+.apple-dd-module:hover {
+    color: #000000 !important;
+    background: rgba(0, 0, 0, 0.06) !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+.apple-dd-module-dot {
+    width: 5px; height: 5px; border-radius: 50%; opacity: 0.65; flex-shrink: 0;
+    transition: opacity 0.18s, transform 0.18s;
+}
+.apple-dd-module:hover .apple-dd-module-dot { opacity: 1; transform: scale(1.3); }
+
+/* ── Scroll compaction ── */
+.apple-nav-wrapper.scrolled .apple-navbar-bar { height: 44px; }
+.apple-nav-wrapper.scrolled .apple-nav-item { height: 44px; font-size: 13px; }
+.apple-nav-wrapper.scrolled .apple-nav-brand { font-size: 14px; }
+.apple-nav-wrapper.scrolled .apple-dropdown { top: 44px; }
+.apple-nav-wrapper.scrolled .apple-nav-item::after { top: 44px; }
+
+/* ── Streamlit container fixes ── */
+div.element-container:has(.apple-nav-wrapper),
+div.stMarkdown:has(.apple-nav-wrapper),
+div[data-testid="stMarkdownContainer"]:has(.apple-nav-wrapper) {
+    overflow: visible !important;
+}

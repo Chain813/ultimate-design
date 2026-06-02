@@ -15,6 +15,7 @@ from src.ui.design_system import render_page_banner, render_section_intro, rende
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.app_shell import render_top_nav, render_engine_status_alert
 from src.ui.module_summary import render_stage_summary
+from src.ui.persistent_outputs import register_report_output
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_data_injector import (
@@ -25,6 +26,7 @@ from src.engines.spatial_data_injector import (
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -111,8 +113,9 @@ SUB_OPTIONS = [
     "👥 目标人群与行为画像",
     "🏗️ 空间深化设计方案",
     "🔄 Before/After 推演",
+    "🔬 特色专项研究",
 ]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 # 预加载地块诊断数据
@@ -258,10 +261,16 @@ MPI 得分 ({d['mpi_score']})、现状 GVI ({d['gvi_mean']}%) 等数据进行推
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("10", f"{SK.PLOT_METRICS}_{selected_plot}", result)
             st.success(f"✅ {selected_plot} 控规指标推演完成（{len(result)} 字）")
+            register_report_output(
+                label=f"{selected_plot} 控规指标",
+                content=result,
+                stage_code="10",
+                key=f"plot_metrics_{selected_plot}",
+            )
 
     saved = load_stage_output("10", f"{SK.PLOT_METRICS}_{selected_plot}", "")
     if saved and not st.session_state.get("s10_metrics"):
-        with st.expander("📋 已生成的控规指标", expanded=False):
+        with st.expander("📋 已生成的控规指标", expanded=True):
             st.markdown(saved)
 
 
@@ -342,10 +351,16 @@ elif selected_sub == "👥 目标人群与行为画像":
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("10", f"{SK.PLOT_PERSONAS}_{selected_plot}", result)
             st.success(f"✅ {selected_plot} 人群画像生成完成（{len(result)} 字）")
+            register_report_output(
+                label=f"{selected_plot} 人群画像",
+                content=result,
+                stage_code="10",
+                key=f"plot_personas_{selected_plot}",
+            )
 
     saved = load_stage_output("10", f"{SK.PLOT_PERSONAS}_{selected_plot}", "")
     if saved and not st.session_state.get("s10_persona"):
-        with st.expander("📋 已生成的人群画像", expanded=False):
+        with st.expander("📋 已生成的人群画像", expanded=True):
             st.markdown(saved)
 
 
@@ -457,10 +472,16 @@ elif selected_sub == "🏗️ 空间深化设计方案":
         if isinstance(result, str) and len(result) > 300:
             save_stage_output("10", f"{SK.PLOT_DESIGN}_{selected_plot}", result)
             st.success(f"✅ {selected_plot} 深化设计方案生成完成（{len(result)} 字）")
+            register_report_output(
+                label=f"{selected_plot} 深化设计方案",
+                content=result,
+                stage_code="10",
+                key=f"plot_design_{selected_plot}",
+            )
 
     saved = load_stage_output("10", f"{SK.PLOT_DESIGN}_{selected_plot}", "")
     if saved and not st.session_state.get("s10_design"):
-        with st.expander("📋 已生成的深化设计方案", expanded=False):
+        with st.expander("📋 已生成的深化设计方案", expanded=True):
             st.markdown(saved)
 
 
@@ -491,6 +512,60 @@ elif selected_sub == "🔄 Before/After 推演":
     else:
         st.warning("暂无 AIGC 渲染结果。请先在 **AIGC设计推演** 页面生成街景效果图。")
 
+
+# ============================================================
+# 模块六：特色专项研究 (毕业设计答辩稿 第5.1节补充)
+# ============================================================
+elif selected_sub == "🔬 特色专项研究":
+    render_section_intro(
+        "特色专项研究",
+        "提炼本项目的特色研究方向与技术方法（如数字孪生、AIGC推演、多主体协商等）。",
+        eyebrow="Specialized Study",
+    )
+
+    from src.workflow.design_context import build_design_context
+    ctx = build_design_context()
+
+    if st.button("🔬 生成特色专项研究", type="primary", key="s10_specialized", **stretch_width(st.button)):
+        prompt = f"""你是一位城市设计方法研究专家。请撰写一份项目特色专项研究文本（不限字数）。
+
+本项目特色在于将大模型、多模态AI、数字孪生等技术应用于城市更新规划设计，
+形成了一套完整的智能推演工作流。
+
+请涵盖以下特色专项：
+1. 数字孪生底座构建（多源 GIS + 街景 + POI 融合）
+2. AIGC 设计推演（Stable Diffusion + ControlNet 空间约束）
+3. LLM 多方协同推演（模拟居民/开发商/规划师三轮博弈协商）
+4. MPI 更新潜力评估模型（AHP 多因子加权）
+
+【设计上下文】
+设计纲要：{ctx.design_brief[:1500] if ctx.design_brief else '暂无'}
+诊断报告：{ctx.diagnosis_report[:1000] if ctx.diagnosis_report else '暂无'}
+空间结构：{ctx.spatial_structure[:1000] if ctx.spatial_structure else '暂无'}
+
+请用学术论文格式撰写，说明每项特木的研究意义、方法逻辑和应用价值。
+不限定字数，务必详实。"""
+
+        stream = call_llm_engine_stream(
+            prompt=prompt,
+            system_prompt="你是城市设计方法研究专家，精通数字孪生、AIGC与智能规划技术。",
+            model=model_tag,
+        )
+        result = st.write_stream(stream)
+        if isinstance(result, str) and len(result) > 200:
+            save_stage_output("10", SK.SPECIALIZED_STUDY, result)
+            st.success(f"✅ 特色专项研究报告生成完成（{len(result)} 字）")
+            register_report_output(
+                label="特色专项研究",
+                content=result,
+                stage_code="10",
+                key="specialized_study",
+            )
+
+    saved = load_stage_output("10", SK.SPECIALIZED_STUDY, "")
+    if saved and not st.session_state.get("s10_specialized"):
+        with st.expander("📋 已生成的特色专项研究报告", expanded=True):
+            st.markdown(saved)
 
 
 st.markdown("---")

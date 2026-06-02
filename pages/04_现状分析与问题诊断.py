@@ -21,7 +21,9 @@ from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
+from src.ui.persistent_outputs import register_report_output, register_output
 
 st.set_page_config(page_title="04 现状分析与问题诊断", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -45,8 +47,8 @@ render_page_banner(
 )
 render_evidence_chain_bar("04", ["01", "02", "03", "04", "05"])
 
-SUB_OPTIONS = ["🏙️ 3D 现状全息底座", "📊 MPI 更新潜力评估", "🎯 地块雷达诊断", "🔬 AI 前期诊断报告"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+SUB_OPTIONS = ["🏙️ 3D 现状全息底座", "📊 MPI 更新潜力评估", "🎯 地块雷达诊断", "🔬 AI 前期诊断报告", "📋 专项资源分析"]
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -168,6 +170,14 @@ elif selected_sub == "📊 MPI 更新潜力评估":
         mime="text/csv",
         **stretch_width(st.download_button),
     )
+    register_output(
+        label="MPI更新潜力评估排行榜",
+        data=csv_report,
+        mime="text/csv",
+        filename="MPI_Report.csv",
+        category="data",
+        key="mpi_ranking_csv",
+    )
 
     if not df_filtered.empty:
         import plotly.express as px
@@ -229,6 +239,8 @@ elif selected_sub == "🎯 地块雷达诊断":
 # 模块四：AI 前期诊断报告 (原 Stage 05)
 # ============================================================
 elif selected_sub == "🔬 AI 前期诊断报告":
+    if "stage1_output" not in st.session_state:
+        st.session_state["stage1_output"] = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
     render_section_intro("AI 前期问题诊断", "自动读取 MPI/GVI/POI 数据，调用本地 DeepSeek 生成数据驱动的问题诊断报告。", eyebrow="LLM Stage 01")
 
     with st.sidebar:
@@ -267,12 +279,105 @@ elif selected_sub == "🔬 AI 前期诊断报告":
                 st.session_state["stage1_output"] = result
                 save_stage_output("05", SK.DIAGNOSIS_REPORT, result)
                 st.toast("✅ 前期诊断报告生成完成！", icon="📊")
+                register_report_output(label="AI前期诊断报告", content=result, stage_code="04", key="diagnosis_report")
     else:
         st.warning("暂无地块诊断数据。")
 
     if st.session_state.get("stage1_output") and not st.session_state.get("s1_btn"):
         st.markdown("#### 📋 前期诊断报告")
         st.markdown(st.session_state["stage1_output"])
+
+
+# ============================================================
+# 模块五：专项资源分析 (毕业设计答辩稿 第2章补充)
+# ============================================================
+elif selected_sub == "📋 专项资源分析":
+    render_section_intro(
+        "专项资源分析",
+        "为毕业设计答辩稿第2章提供文化资源、产业业态和人群需求的概要分析（~50字/节）。",
+        eyebrow="Supplementary Analysis",
+    )
+
+    from src.engines.spatial_data_injector import get_full_spatial_context
+    spatial_ctx = get_full_spatial_context()
+
+    # ── 2.6 文化资源分析 ──
+    saved_cultural = load_stage_output("04", SK.CULTURAL_ANALYSIS, "")
+    with st.expander("🏛️ 2.6 文化资源分析", expanded=bool(saved_cultural) or True):
+        st.caption("基于历史建筑分布、工业遗产和伪满皇宫周边文化资源，生成约300字分析文本。")
+        if st.button("🧠 生成文化资源分析", key="p04_cultural", **stretch_width(st.button)):
+            with st.spinner("LLM 分析中..."):
+                prompt = f"""请分析研究范围内的文化资源特征，撰写约300字的文化资源分析文本。
+要涵盖：1. 伪满皇宫为核心的近代历史建筑群；2. 中车工业遗产；3. 文化资源分布格局。
+
+【空间数据】
+{spatial_ctx[:2000]}
+
+只输出分析文本正文，不要标题。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的文化遗产分析专家。",
+                    model="deepseek-v4-flash",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 30:
+                    save_stage_output("04", SK.CULTURAL_ANALYSIS, text)
+                    st.success(f"✅ 文化资源分析已生成（{len(text)} 字）")
+
+        if saved_cultural:
+            st.markdown(saved_cultural)
+
+    # ── 2.7 产业业态分析 ──
+    saved_industry = load_stage_output("04", SK.INDUSTRY_ANALYSIS, "")
+    with st.expander("🏪 2.7 产业业态分析", expanded=bool(saved_industry)):
+        st.caption("基于 POI 数据和用地现状，分析产业业态分布特征。")
+        if st.button("🧠 生成产业业态分析", key="p04_industry", **stretch_width(st.button)):
+            with st.spinner("LLM 分析中..."):
+                prompt = f"""请分析研究范围内的产业业态特征，撰写约300字的产业业态分析文本。
+要涵盖：1. 现状商业分布；2. POI 类型构成；3. 产业集聚特征。
+
+【空间数据】
+{spatial_ctx[:2000]}
+
+只输出分析文本正文，不要标题。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的产业经济分析专家。",
+                    model="deepseek-v4-flash",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 30:
+                    save_stage_output("04", SK.INDUSTRY_ANALYSIS, text)
+                    st.success(f"✅ 产业业态分析已生成（{len(text)} 字）")
+
+        if saved_industry:
+            st.markdown(saved_industry)
+
+    # ── 2.8 人群需求分析 ──
+    saved_population = load_stage_output("04", SK.POPULATION_ANALYSIS, "")
+    with st.expander("👥 2.8 人群需求分析", expanded=bool(saved_population)):
+        st.caption("基于 POI 分布、街景品质、住宅类型等推断人群结构和社区需求。")
+        if st.button("🧠 生成人群需求分析", key="p04_population", **stretch_width(st.button)):
+            with st.spinner("LLM 分析中..."):
+                prompt = f"""请分析研究范围内的社区人群需求特征，撰写约300字的人群需求分析文本。
+要涵盖：1. 居民年龄结构和居住类型推断；2. 公共服务设施需求；3. 社区更新诉求。
+
+【空间数据】
+{spatial_ctx[:2000]}
+
+只输出分析文本正文，不要标题。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的社区规划专家，擅长人群需求分析。",
+                    model="deepseek-v4-flash",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 30:
+                    save_stage_output("04", SK.POPULATION_ANALYSIS, text)
+                    st.success(f"✅ 人群需求分析已生成（{len(text)} 字）")
+
+        if saved_population:
+            st.markdown(saved_population)
 
 
 # ============================================================

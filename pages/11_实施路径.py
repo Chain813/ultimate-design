@@ -19,6 +19,7 @@ from src.engines.spatial_data_injector import (
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -132,7 +133,7 @@ SUB_OPTIONS = [
     "📍 第二层：重点地块实施路径",
     "🏗️ 更新方式分类",
 ]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -162,7 +163,7 @@ if selected_sub == "🌐 第一层：全域实施路径":
     if st.button("🌐 生成全域实施路径", type="primary", key="s11_region", **stretch_width(st.button)):
         prompt = f"""你是一位资深城市更新实施策划专家。
 
-基于以下前期分析数据，制定覆盖**整个研究范围（伪满皇宫周边约150公顷）**的全域实施路径。
+基于以下前期分析数据，制定覆盖**整个研究范围（伪满皇宫周边约160公顷）**的全域实施路径。
 
 【策略矩阵】：{strategy[:2000] if strategy else '政策引导→产业导入→经济盘活→空间更新的良性循环'}
 【空间数据】：{spatial_ctx[:3000]}
@@ -201,7 +202,7 @@ if selected_sub == "🌐 第一层：全域实施路径":
 
     saved = load_stage_output("11", "region_phasing", "")
     if saved and not st.session_state.get("s11_region"):
-        with st.expander("📋 已生成的全域实施路径", expanded=False):
+        with st.expander("📋 已生成的全域实施路径", expanded=True):
             st.markdown(saved)
 
 
@@ -291,7 +292,7 @@ elif selected_sub == "📍 第二层：重点地块实施路径":
 
     saved_plot = load_stage_output("11", f"plot_phasing_{selected_plot}", "")
     if saved_plot and not st.session_state.get(btn_key):
-        with st.expander("📋 已生成的重点地块实施路径", expanded=False):
+        with st.expander("📋 已生成的重点地块实施路径", expanded=True):
             st.markdown(saved_plot)
 
 

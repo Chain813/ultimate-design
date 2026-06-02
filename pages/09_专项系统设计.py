@@ -27,7 +27,9 @@ from src.engines.spatial_data_injector import (
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
+from src.ui.persistent_outputs import register_report_output
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="09 专项系统设计", layout="wide", initial_sidebar_state="collapsed")
@@ -112,8 +114,8 @@ with st.sidebar:
         help="专项系统需要深度分析，建议使用 Pro 模型",
     )
 
-SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态、风貌与立面", "🎨 风貌景观与文保"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "🏛️ 建筑形态、风貌与立面", "🎨 风貌景观与文保", "🏭 产业业态规划"]
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 # 加载 Stage 08 空间结构
@@ -169,7 +171,7 @@ if selected_sub == "🚗 交通网络与TOD":
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深交通规划师，精通城市更新中的交通网络优化与 TOD 开发模式。
 
-基于以下空间数据，为研究范围（伪满皇宫周边约150公顷）制定交通系统设计方案。
+基于以下空间数据，为研究范围（伪满皇宫周边约160公顷）制定交通系统设计方案。
 
 【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
 【全域空间数据】：{spatial_ctx[:3500]}
@@ -210,11 +212,12 @@ if selected_sub == "🚗 交通网络与TOD":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("09", SK.TRAFFIC_SYSTEM, result)
+            register_report_output(label="交通系统设计方案", content=result, stage_code="09", key="traffic_system")
             st.success(f"✅ 交通系统设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.TRAFFIC_SYSTEM, "")
     if saved and not st.session_state.get("s9_traffic"):
-        with st.expander("📋 已生成的交通系统设计方案", expanded=False):
+        with st.expander("📋 已生成的交通系统设计方案", expanded=True):
             st.markdown(saved)
 
 
@@ -283,11 +286,12 @@ elif selected_sub == "🌳 公共空间与15分钟圈":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("09", SK.PUBLIC_SPACE, result)
+            register_report_output(label="公共空间系统设计方案", content=result, stage_code="09", key="public_space")
             st.success(f"✅ 公共空间系统设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.PUBLIC_SPACE, "")
     if saved and not st.session_state.get("s9_public"):
-        with st.expander("📋 已生成的公共空间系统设计方案", expanded=False):
+        with st.expander("📋 已生成的公共空间系统设计方案", expanded=True):
             st.markdown(saved)
 
 
@@ -360,11 +364,12 @@ elif selected_sub == "🏛️ 建筑形态、风貌与立面":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("09", SK.BUILDING_FORM, result)
+            register_report_output(label="建筑形态风貌与立面控制方案", content=result, stage_code="09", key="building_form")
             st.success(f"✅ 建筑形态、风貌与立面控制方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.BUILDING_FORM, "")
     if saved and not st.session_state.get("s9_building"):
-        with st.expander("📋 已生成的建筑形态、风貌与立面控制方案", expanded=False):
+        with st.expander("📋 已生成的建筑形态、风貌与立面控制方案", expanded=True):
             st.markdown(saved)
 
 
@@ -427,13 +432,78 @@ elif selected_sub == "🎨 风貌景观与文保":
         result = st.write_stream(stream)
         if isinstance(result, str) and len(result) > 200:
             save_stage_output("09", SK.LANDSCAPE_STYLE, result)
+            register_report_output(label="风貌景观设计方案", content=result, stage_code="09", key="landscape_style")
             st.success(f"✅ 风貌景观设计方案生成完成（{len(result)} 字）")
 
     saved = load_stage_output("09", SK.LANDSCAPE_STYLE, "")
     if saved and not st.session_state.get("s9_landscape"):
-        with st.expander("📋 已生成的风貌景观设计方案", expanded=False):
+        with st.expander("📋 已生成的风貌景观设计方案", expanded=True):
             st.markdown(saved)
 
+
+# ============================================================
+# 模块五：产业业态规划 (毕业设计答辩稿 第4.6节补充)
+# ============================================================
+elif selected_sub == "🏭 产业业态规划":
+    render_section_intro(
+        "产业业态规划",
+        "基于空间结构和用地沙盘，规划产业布局与业态引导策略。",
+        eyebrow="Industry Planning",
+    )
+
+    spatial_ctx = get_full_spatial_context()
+    spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
+    landuse_sandbox = load_stage_output("08", SK.LANDUSE_SANDBOX, "")
+    strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+
+    if st.button("🏭 生成产业业态规划方案", type="primary", key="s9_industry", **stretch_width(st.button)):
+        prompt = f"""你是一位资深城市产业规划师，精通历史街区更新中的产业业态策划。
+
+基于以下数据，为研究范围制定产业业态规划方案。
+
+【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
+【用地沙盘】：{landuse_sandbox if landuse_sandbox else '暂无'}
+【策略矩阵】：{strategy_matrix[:1500] if strategy_matrix else '暂无'}
+【全域空间数据】：{spatial_ctx[:3000]}
+
+请生成【产业业态规划方案】（不限字数，务必详实）：
+
+一、产业定位与愿景
+  - 基于"古今共振"的产业定位
+  - 与伪满皇宫文旅资源的产业协同
+
+二、业态分区引导
+  - 历史风貌区：文化展示、非遗传承、精品民宿
+  - 工业遗存区：创意办公、数字艺术、青年创客
+  - TOD 站前区：商业服务、商务办公、交通枢纽型商业
+  - 社区生活区：便民服务、社区商业、养老服务
+
+三、业态准入与管控
+  - 鼓励业态清单
+  - 限制业态清单（如大型批发市场、重污染工业）
+  - 业态面积配比建议
+
+四、产业导入时序
+  - 近期启动的触媒型业态
+  - 中期培育的成长型业态
+  - 远期提升的品牌型业态
+
+每一条建议都必须引用空间数据，并指明具体地块落位。"""
+
+        stream = call_llm_engine_stream(
+            prompt=prompt,
+            system_prompt="资深城市产业规划师，精通历史街区更新与产业导入策略。",
+            model=model_tag,
+        )
+        result = st.write_stream(stream)
+        if isinstance(result, str) and len(result) > 200:
+            save_stage_output("09", SK.INDUSTRY_PLANNING, result)
+            st.success(f"✅ 产业业态规划方案生成完成（{len(result)} 字）")
+
+    saved = load_stage_output("09", SK.INDUSTRY_PLANNING, "")
+    if saved and not st.session_state.get("s9_industry"):
+        with st.expander("📋 已生成的产业业态规划方案", expanded=True):
+            st.markdown(saved)
 
 
 st.markdown("---")

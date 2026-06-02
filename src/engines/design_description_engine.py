@@ -56,7 +56,7 @@ def generate_dynamic_design_description(tmpl_name: str, stage_code: str) -> tupl
         resp = call_llm_engine(
             prompt=prompt,
             system_prompt="你是一位专业的城市规划制图专家，擅长将数据指标与 AI 制图约束有机结合。",
-            model="deepseek-v4-flash"
+            model="deepseek-v4-pro"
         )
 
         from src.utils.llm_json_parser import parse_llm_json

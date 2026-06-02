@@ -19,7 +19,7 @@
 
 ## 🌟 Overview
 
-UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 170.2-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 17 standardized stages — from data preparation through site diagnostics, conceptual strategy, overall/specialized systems, design detailing, to presentation video and AIGC inference — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → Python/PIL A3 drawing generation → AIGC design inference → defense video production**.
+UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 170.2-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 16 standardized stages — from data preparation through site diagnostics, conceptual strategy, overall/specialized systems, design detailing, to AIGC inference and agent manual — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → Python/PIL A3 drawing generation → AIGC design inference → regulatory guidelines**.
 
 ---
 
@@ -120,7 +120,7 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 06 | Goal Setting | LLM case benchmarking (Xintiandi / King's Cross) |
 | 07 | Design Strategy | Tri-stakeholder simulation, consensus radar |
 
-### 🔴 Design & Delivery (Stage 08–14)
+### 🔴 Design & Delivery (Stage 08–13)
 
 | Stage | Page | Core Function |
 |---|---|---|
@@ -130,7 +130,6 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 11 | Implementation Path | 6 renewal modes, 3-phase timeline Gantt chart |
 | 12 | Design Guidelines | Two-step guideline generation + RAG policy retrieval |
 | 13 | Output & Presentation | Python map rendering, Web LLM redraw prompts, Auto PIL title block |
-| 14 | Video Generation | Dynamic data injection, storyboard script generation for screen recording |
 
 ### 🟣 AIGC & Agent Skills (Stage 15–16)
 

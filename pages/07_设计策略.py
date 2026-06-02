@@ -26,7 +26,9 @@ from src.engines.spatial_data_injector import (
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
+from src.ui.persistent_outputs import register_report_output
 from src.ui.streamlit_compat import stretch_width
 
 st.set_page_config(page_title="07 设计策略", layout="wide", initial_sidebar_state="collapsed")
@@ -122,8 +124,8 @@ with st.sidebar:
     temp = st.slider("决策倾向 (Temperature)", 0.0, 1.0, 0.7, key="p7_temp")
     enable_policy = st.checkbox("📜 启用政策合规校验", value=True, key="p7_policy")
 
-SUB_OPTIONS = ["⚖️ 多主体协同推演", "📊 共识雷达"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+SUB_OPTIONS = ["⚖️ 多主体协同推演", "📊 共识雷达", "📐 设计纲领提炼"]
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -679,6 +681,7 @@ if selected_sub == "⚖️ 多主体协同推演":
             full_log_content = "\n".join(detailed_log)
             st.session_state["p7_negotiation_log"] = full_log_content
             save_stage_output("07", SK.NEGOTIATION_RESULT, full_log_content)
+            register_report_output(label="三方协商博弈推演记录", content=full_log_content, stage_code="07", key="negotiation_log")
             save_stage_output("07", "negotiation_dialogues", new_dialogues_list)
 
             # 生成策略矩阵
@@ -702,6 +705,7 @@ if selected_sub == "⚖️ 多主体协同推演":
             if isinstance(summary, str):
                 st.session_state["stage4_output"] = summary
                 save_stage_output("07", SK.STRATEGY_MATRIX, summary)
+                register_report_output(label="策略共识矩阵", content=summary, stage_code="07", key="strategy_matrix")
             st.session_state["p7_running_negotiation"] = False
 
     # 总是展示导出本次思考过程的下载按钮
@@ -752,6 +756,116 @@ elif selected_sub == "📊 共识雷达":
             st.success("✅ 三方达成高度共识！所有主体的利益满意度均达到 60% 以上，协同性高。")
     else:
         st.warning("暂无共识数据，请先完成多主体协同推演。")
+
+
+# ============================================================
+# 模块三：设计纲领提炼 (毕业设计答辩稿 第3章补充)
+# ============================================================
+elif selected_sub == "📐 设计纲领提炼":
+    render_section_intro(
+        "设计纲领提炼",
+        "为毕业设计答辩稿第3章补充设计依据、设计原则和设计定位（~200字/节）。",
+        eyebrow="Design Creed",
+    )
+
+    from src.engines.spatial_data_injector import get_full_spatial_context
+    spatial_ctx = get_full_spatial_context()
+
+    design_concept = load_stage_output("06", SK.DESIGN_CONCEPT, "")
+    strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+    negotiation_result = load_stage_output("07", SK.NEGOTIATION_RESULT, "")
+
+    shared = f"""设计概念：{design_concept[:1500] if design_concept else '暂无'}
+策略矩阵：{strategy_matrix[:1500] if strategy_matrix else '暂无'}
+空间数据：{spatial_ctx[:1500]}"""
+
+    # ── 3.1 设计依据 ──
+    saved_basis = load_stage_output("07", SK.DESIGN_BASIS, "")
+    with st.expander("📜 3.1 设计依据", expanded=bool(saved_basis) or True):
+        st.caption("提炼上位规划、政策法规和案例分析的设计依据（~500字，供压缩为200字）。")
+        if st.button("🧠 提炼设计依据", key="p07_basis", **stretch_width(st.button)):
+            with st.spinner("LLM 提炼中..."):
+                prompt = f"""请提炼本研究的设计依据，撰写约500字的文本（将用于压缩为200字正文）。
+
+设计依据应涵盖：
+1. 上位规划依据（长春市总体规划、历史文化名城保护规划等）
+2. 政策法规依据（历史文化保护条例、城市更新政策等）
+3. 案例分析依据（国内外历史街区更新案例经验）
+
+{shared}
+
+只输出正文，不要标题。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的设计方法论专家。",
+                    model="deepseek-v4-pro",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 50:
+                    save_stage_output("07", SK.DESIGN_BASIS, text)
+                    st.success(f"✅ 设计依据已生成（{len(text)} 字）")
+
+        if saved_basis:
+            st.markdown(saved_basis)
+
+    # ── 3.2 设计原则 ──
+    saved_principles = load_stage_output("07", SK.DESIGN_PRINCIPLES, "")
+    with st.expander("📏 3.2 设计原则", expanded=bool(saved_principles)):
+        st.caption("提炼保护优先、有机更新、多方参与等核心设计原则。")
+        if st.button("🧠 提炼设计原则", key="p07_principles", **stretch_width(st.button)):
+            with st.spinner("LLM 提炼中..."):
+                prompt = f"""请提炼本研究的设计原则，撰写约500字的文本（将用于压缩为200字正文）。
+
+设计原则应从以下产出中提取核心理念：
+1. 保护优先原则
+2. 有机更新原则
+3. 多方参与原则
+4. 文化传承原则
+
+{shared}
+
+只输出正文，不要标题。遵循严格的学术语言。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的设计方法论专家。",
+                    model="deepseek-v4-pro",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 50:
+                    save_stage_output("07", SK.DESIGN_PRINCIPLES, text)
+                    st.success(f"✅ 设计原则已生成（{len(text)} 字）")
+
+        if saved_principles:
+            st.markdown(saved_principles)
+
+    # ── 3.4 设计定位 ──
+    saved_positioning = load_stage_output("07", SK.DESIGN_POSITIONING, "")
+    with st.expander("📍 3.4 设计定位", expanded=bool(saved_positioning)):
+        st.caption("提炼功能定位和空间形象定位。")
+        if st.button("🧠 提炼设计定位", key="p07_positioning", **stretch_width(st.button)):
+            with st.spinner("LLM 提炼中..."):
+                prompt = f"""请提炼本研究的设计定位，撰写约500字的文本（将用于压缩为200字正文）。
+
+设计定位应从以下产出中提取：
+1. 项目功能定位
+2. 空间形象定位（如"数字孪生·古今共振"）
+3. 与伪满皇宫、长春站等核心节点的关系定位
+
+{shared}
+
+只输出正文，不要标题。"""
+                result = call_llm_engine_stream(
+                    prompt=prompt,
+                    system_prompt="你是城乡规划专业的设计定位专家。",
+                    model="deepseek-v4-pro",
+                )
+                text = st.write_stream(result)
+                if isinstance(text, str) and len(text) > 50:
+                    save_stage_output("07", SK.DESIGN_POSITIONING, text)
+                    st.success(f"✅ 设计定位已生成（{len(text)} 字）")
+
+        if saved_positioning:
+            st.markdown(saved_positioning)
 
 
 st.markdown("---")

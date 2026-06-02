@@ -117,7 +117,6 @@ STAGE_MAP = {
     "11": "实施路径",
     "12": "城市设计导则",
     "13": "成果表达",
-    "14": "视频生成",
     "15": "AIGC设计推演"
 }
 
@@ -140,7 +139,7 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
         # 构造 HTML
         label_html = f'<span class="ec-num">{code}</span><span class="ec-divider"></span><span class="ec-name">{name}</span>'
         
-        pill_html = f'<a href="/{page_slug}" target="_self" style="text-decoration:none;"><div class="ec-pill {cls}">{label_html}</div></a>'
+        pill_html = f'<div class="ec-pill {cls}">{label_html}</div>'
         pills.append(pill_html)
 
     # 构造完整的 HTML 并压缩
@@ -161,7 +160,7 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
             border-radius: 100px; 
             font-size: 13px; 
             transition: all 0.2s ease;
-            cursor: pointer;
+            cursor: default;
             border: 1px solid transparent;
             white-space: nowrap;
         }
@@ -185,10 +184,6 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
             color: #4ade80; 
             border-color: rgba(34, 197, 94, 0.3); 
         }
-        .ec-done:hover {
-            background: rgba(34, 197, 94, 0.2); 
-            transform: translateY(-1px);
-        }
         
         .ec-current { 
             background: rgba(129, 140, 248, 0.2); 
@@ -201,10 +196,6 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
             background: rgba(148, 163, 184, 0.08); 
             color: #94a3b8; 
             border-color: rgba(148, 163, 184, 0.15); 
-        }
-        .ec-pending:hover {
-            background: rgba(148, 163, 184, 0.15); 
-            transform: translateY(-1px);
         }
         </style>
     """
@@ -283,7 +274,7 @@ def generate_stage_transition_summary(current_stage: str) -> str:
     return call_llm_engine(
         prompt=prompt, 
         system_prompt="你是一位资深的城市设计项目经理，善于跨阶段整合规划策略。", 
-        model="deepseek-v4-flash"
+        model="deepseek-v4-pro"
     )
 
 

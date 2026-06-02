@@ -105,14 +105,14 @@ MODULES = [mod for section in MODULE_SECTIONS for mod in section["modules"]]
 
 render_page_banner(
     title="长春伪满皇宫周边街区微更新支持平台",
-    description="按城乡规划专业 13 阶段组织为前期、中期、后期三大板块，统一调度已有功能页与占位深化页。",
+    description="集成 AHP 空间潜力诊断、LLM 规划多主体协同决策与 AIGC + ControlNet 生成式设计推演，打造全流程智能城乡规划微更新支持底盘。",
     eyebrow="Home",
-    tags=["前期数据获取与现状分析", "中期概念生成与应对策略", "后期设计生成与成果表达"],
+    tags=["AHP-MPI 空间量化分析法", "LLM 多智能体协同决策", "AIGC + ControlNet 视觉风貌推演"],
     metrics=[
-        {"value": "150 公顷", "label": "研究范围", "meta": "围绕历史街区与周边复合片区"},
-        {"value": len(MODULES), "label": "核心页面", "meta": "覆盖 01-05 全链路实验室"},
-        {"value": top_stats["poi_count"], "label": "POI 资产", "meta": "挂载到空间活力诊断的数据点"},
-        {"value": top_stats["gvi_count"], "label": "街景样本", "meta": "支撑环境品质与风貌分析"},
+        {"value": "AHP-MPI", "label": "多维量化评估", "meta": "基于空间、社会与环境特征的更新潜力诊断"},
+        {"value": "LLM Agent", "label": "多主体协同决策", "meta": "居民、开发商与规划师在线协商博弈"},
+        {"value": "AIGC+CNet", "label": "生成式风貌设计", "meta": "基于空间骨架控制的意向渲染技术"},
+        {"value": "13 阶段", "label": "全链路工作流", "meta": "覆盖数据准备、前、中、后期全套规划"},
     ],
     image_url=f"{get_static_url('research_scope_2d_cropped.png')}?v=22"
 )

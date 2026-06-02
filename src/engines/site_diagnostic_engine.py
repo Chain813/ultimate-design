@@ -194,7 +194,7 @@ def generate_policy_matrix(proposal: str) -> list:
             ...
         ]
         """
-        resp = call_llm_engine(prompt=prompt, system_prompt="你是一位客观的城市规划法规审计师。", model="deepseek-v4-flash")
+        resp = call_llm_engine(prompt=prompt, system_prompt="你是一位客观的城市规划法规审计师。", model="deepseek-v4-pro")
         parsed = parse_llm_json(resp, fallback=None)
         if parsed and isinstance(parsed, list) and len(parsed) == len(top_clauses):
             for item in parsed:

@@ -22,6 +22,7 @@ from src.engines.spatial_data_injector import (
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -99,7 +100,13 @@ with st.sidebar:
     )
 
 SUB_OPTIONS = ["📚 案例对标分析", "🎯 全域设计目标策划"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
+
+if "stage2_output" not in st.session_state:
+    st.session_state["stage2_output"] = load_stage_output("06", SK.CASE_BENCHMARK, "")
+if "stage3_output" not in st.session_state:
+    st.session_state["stage3_output"] = load_stage_output("06", SK.DESIGN_CONCEPT, "")
+
 st.markdown("---")
 
 # ═══════════════════════════════════════════

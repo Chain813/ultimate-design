@@ -6,7 +6,7 @@ engines:
   llm:
     api_url: "https://api.deepseek.com/chat/completions"
     ollama_url: "http://127.0.0.1:11434/api/chat"
-    default_model: "deepseek-v4-flash"
+    default_model: "deepseek-v4-pro"
     timeout: 120
   hf_mirror: "https://hf-mirror.com"  # 可选，留空则使用 HuggingFace 官方源
   
@@ -25,7 +25,7 @@ engines:
       default_module: "canny"
     quality:
       vision_model: "auto"
-      text_model: "deepseek-v4-flash"
+      text_model: "deepseek-v4-pro"
       max_retries: 2
       rating_threshold: "B"
 

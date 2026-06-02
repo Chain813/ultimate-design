@@ -47,7 +47,7 @@ def _llm_classify_batch(batch: list[str]) -> list[dict]:
         ...
     ]
     """
-    resp = call_llm_engine(prompt=prompt, system_prompt="你是一位专业的城市规划舆情分析师。", model="deepseek-v4-flash")
+    resp = call_llm_engine(prompt=prompt, system_prompt="你是一位专业的城市规划舆情分析师。", model="deepseek-v4-pro")
     parsed = parse_llm_json(resp, fallback=None)
     if parsed and isinstance(parsed, list) and len(parsed) == len(batch):
         return parsed

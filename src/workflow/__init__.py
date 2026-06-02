@@ -10,6 +10,7 @@ __all__ = [
     "board_stage_options",
     "resolve_stage_option",
     "resolve_subpage_option",
+    "resolve_subpage_value",
     "render_stage_workbench",
     "stage_code_from_option",
     "stage_modules",

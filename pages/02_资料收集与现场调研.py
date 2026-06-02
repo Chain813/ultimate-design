@@ -15,7 +15,8 @@ from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.output_flow_panel import render_output_flow_prompt_panel
 from src.ui.streamlit_compat import stretch_width
-from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
+from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
+from src.workflow import resolve_subpage_value
 from src.workflow.template_assets import (
     get_template_asset_rows,
     get_template_asset_specs,
@@ -39,7 +40,7 @@ render_page_banner(
 render_evidence_chain_bar("02", ["01", "02", "03", "04", "05"])
 
 SUB_OPTIONS = ["📑 语义萃取引擎", "⚙️ 空间数据资产管理", "📍 现场调研", "🧩 固定制图模板"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -47,6 +48,8 @@ st.markdown("---")
 # 模块一：语义萃取引擎
 # ============================================================
 if selected_sub == "📑 语义萃取引擎":
+    if "extraction_res" not in st.session_state:
+        st.session_state["extraction_res"] = load_stage_output("02", "extraction_res", [])
     render_section_intro("语义萃取引擎", "批量上传规划文档，转为可检索和引用的结构化文本。", eyebrow="MarkItDown")
     up_files = st.file_uploader("上传规划文档 (PDF/Word/PPT)", accept_multiple_files=True)
     if up_files and st.button("🚀 启动语义萃取", type="primary", **stretch_width(st.button)):
@@ -70,6 +73,7 @@ if selected_sub == "📑 语义萃取引擎":
                     temp_path.unlink()
             progress.progress((idx + 1) / len(up_files))
         st.session_state["extraction_res"] = res_list
+        save_stage_output("02", "extraction_res", res_list)
         save_stage_output("02", "extracted_docs", len(res_list))
         st.success("语义萃取完成。")
 
@@ -137,7 +141,7 @@ elif selected_sub == "📍 现场调研":
         df_points["name"] = df_points["ID"].apply(lambda x: f"Point_{x}")
 
         if "selected_point_id" not in st.session_state:
-            st.session_state.selected_point_id = int(df_points.iloc[0]["ID"])
+            st.session_state.selected_point_id = load_stage_output("03", "selected_point_id", int(df_points.iloc[0]["ID"]))
 
         col_title, col_nav = st.columns([2, 1])
         with col_title:
@@ -155,6 +159,7 @@ elif selected_sub == "📍 现场调研":
 
         if selected_id_nav != st.session_state.selected_point_id:
             st.session_state.selected_point_id = selected_id_nav
+            save_stage_output("03", "selected_point_id", selected_id_nav)
             st.rerun()
 
         @st.fragment
@@ -214,6 +219,7 @@ elif selected_sub == "📍 现场调研":
                     new_id = int(df_points.iloc[p_idx]["ID"])
                     if new_id != st.session_state.selected_point_id:
                         st.session_state.selected_point_id = new_id
+                        save_stage_output("03", "selected_point_id", new_id)
                 except Exception:
                     pass
 

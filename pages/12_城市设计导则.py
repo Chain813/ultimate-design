@@ -16,6 +16,7 @@ from src.engines.spatial_data_injector import get_full_spatial_context
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -110,7 +111,7 @@ GUIDELINE_SECTIONS = [
 ]
 
 SUB_OPTIONS = ["📜 分板块导则生成", "📊 管控指标汇总", "📄 一键导出"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -160,7 +161,7 @@ if selected_sub == "📜 分板块导则生成":
 
         with st.expander(
             f"{'✅' if is_done else '⬜'} 第{sec['id']}章 {sec['title']}",
-            expanded=not is_done,
+            expanded=True,
         ):
             st.markdown(f"**内容范围：** {sec['description']}")
             st.caption(f"📊 数据依据：{sec['data_hint']}")
@@ -207,7 +208,7 @@ if selected_sub == "📜 分板块导则生成":
 
 ═══ 项目基本信息 ═══
 - 项目：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计
-- 地点：长春市宽城区，约150公顷
+- 地点：长春市宽城区，约160公顷
 - 核心地标：伪满皇宫（全国重点文保单位）
 - 管控红线：容积率≤1.4、核心区限高≤9m、一般区≤18m、绿地率≥25%
 

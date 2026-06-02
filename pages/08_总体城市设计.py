@@ -26,6 +26,7 @@ from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -159,7 +160,7 @@ with st.sidebar:
     )
 
 SUB_OPTIONS = ["🗺️ 空间结构推演", "🎛️ 用地结构优化沙盘"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 # ═══════════════════════════════════════════
@@ -231,7 +232,7 @@ if selected_sub == "🗺️ 空间结构推演":
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深城市设计总师，精通空间结构分析与功能分区策划。
 
-基于以下前期分析数据，为**整个研究范围（伪满皇宫周边约150公顷）**推演总体空间结构。
+基于以下前期分析数据，为**整个研究范围（伪满皇宫周边约160公顷）**推演总体空间结构。
 
 【前期设计目标（Stage 06）】：{design_concept[:2000] if design_concept else '数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新'}
 【策略矩阵（Stage 07）】：{strategy[:2000] if strategy else '政策引导→产业导入→经济盘活→空间更新的良性循环'}
@@ -283,7 +284,7 @@ if selected_sub == "🗺️ 空间结构推演":
 
     saved_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
     if saved_structure and not st.session_state.get("s8_structure"):
-        with st.expander("📋 已生成的空间结构推演报告", expanded=False):
+        with st.expander("📋 已生成的空间结构推演报告", expanded=True):
             st.markdown(saved_structure)
 
 
@@ -292,6 +293,19 @@ if selected_sub == "🗺️ 空间结构推演":
 # ═══════════════════════════════════════════
 
 elif selected_sub == "🎛️ 用地结构优化沙盘":
+    sandbox_data = load_stage_output("08", SK.LANDUSE_SANDBOX, {})
+    if sandbox_data:
+        if "sb_res" not in st.session_state:
+            st.session_state["sb_res"] = sandbox_data.get("res_pct", 48)
+        if "sb_com" not in st.session_state:
+            st.session_state["sb_com"] = sandbox_data.get("com_pct", 16)
+        if "sb_off" not in st.session_state:
+            st.session_state["sb_off"] = sandbox_data.get("off_pct", 8)
+        if "sb_green" not in st.session_state:
+            st.session_state["sb_green"] = sandbox_data.get("green_pct", 10)
+        if "sb_pub" not in st.session_state:
+            st.session_state["sb_pub"] = sandbox_data.get("public_pct", 6)
+
     render_section_intro(
         "用地结构优化沙盘",
         "交互式模拟不同用地功能占比的调整方案，"
@@ -505,7 +519,7 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
         )
         prompt = f"""你是一位城市规划经济学家，精通城市更新中的用地结构优化。
 
-研究范围（伪满皇宫周边约150公顷）的现状用地结构为：
+研究范围（伪满皇宫周边约160公顷）的现状用地结构为：
 {get_landuse_summary()}
 
 规划师拟将用地结构调整为：
@@ -555,6 +569,11 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
                 "remain": remain
             })
             st.success("✅ 沙盘评估完成，已存入数据总线。")
+
+    if sandbox_data and "evaluation" in sandbox_data and not st.session_state.get("s8_sandbox"):
+        st.markdown("#### 📋 沙盘方案评估报告")
+        st.info(f"方案：{sandbox_data['scenario']}")
+        st.markdown(sandbox_data["evaluation"])
 
 
 

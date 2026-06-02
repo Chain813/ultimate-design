@@ -14,6 +14,7 @@ from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
+from src.workflow import resolve_subpage_value
 from src.utils.text_io import read_text_with_fallback
 
 st.set_page_config(page_title="00 数据准备与任务解读", layout="wide", initial_sidebar_state="collapsed")
@@ -188,7 +189,7 @@ render_page_banner(
     tags=["数据上传", "数据获取", "任务书解析", "质量校验"],
     metrics=[
         {"value": f"{readiness['total']} 类", "label": "数据类别", "meta": "空间、POI、街景、文本、房价等"},
-        {"value": "150 公顷", "label": "研究范围", "meta": "任务书明确的核心片区"},
+        {"value": "约160 公顷", "label": "研究范围", "meta": "任务书明确的核心片区"},
         {"value": "5 个", "label": "深化地段", "meta": "任务书要求重点设计单元"},
     ],
     graphic_html=render_data_pipeline(as_html=True)
@@ -207,7 +208,7 @@ st.markdown("---")
 # 子标签选择
 # ============================================================
 SUB_OPTIONS = ["📦 数据上传中心", "📚 数据获取教程", "📋 项目概况与任务要求", "📊 数据质量检查"]
-selected_sub = st.radio("功能模块", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 
@@ -327,7 +328,7 @@ elif selected_sub == "📋 项目概况与任务要求":
     info_data = {
         "项目名称": "AI赋能下的伪满皇宫周边街区更新规划设计",
         "设计类型": "城市更新 · 历史街区 · 数字孪生",
-        "研究范围": "约150公顷，由长春大街、长白路、东九条、亚泰快速路围合",
+        "研究范围": "约160公顷，由长春大街、长白路、东九条、亚泰快速路围合",
         "设计深度": "总体城市设计 + 5个重点地块深化设计",
         "成果形式": "A3图册（≥60页）+ A1展板（≥3张）+ 规划文本 + PPT",
         "核心矛盾": "历史保护与活力不足、工业低效、社区老化、交通割裂",
@@ -465,7 +466,7 @@ render_stage_summary(
     stage_code="01",
     title="项目边界与任务要求锁定",
     findings=[
-        {"point": "研究范围约 150 公顷，涵盖 5 个重点深化地段", "evidence": "任务书明确的核心片区边界"},
+        {"point": "研究范围约 160 公顷，涵盖 5 个重点深化地段", "evidence": "任务书明确的核心片区边界"},
         {"point": "核心任务为系统性概念设计 + 数字孪生与 AIGC 推演表达", "evidence": "任务书核心任务条款"},
         {"point": "四大核心痛点：用地混杂、交通割裂、老龄化、环境品质不足", "evidence": "开题报告现状诊断结论"},
     ],

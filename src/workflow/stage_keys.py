@@ -57,3 +57,20 @@ class SK:
     AIGC_IMAGE = "image"
     AIGC_PROMPT = "prompt"
     AIGC_SEED = "seed"
+
+    # ── 毕业设计答辩稿 补充章节 (跨阶段) ──
+    # Stage 04 专项资源分析
+    CULTURAL_ANALYSIS = "p04_cultural_analysis"
+    INDUSTRY_ANALYSIS = "p04_industry_analysis"
+    POPULATION_ANALYSIS = "p04_population_analysis"
+
+    # Stage 07 设计纲领
+    DESIGN_BASIS = "p07_design_basis"
+    DESIGN_PRINCIPLES = "p07_design_principles"
+    DESIGN_POSITIONING = "p07_design_positioning"
+
+    # Stage 09 产业业态
+    INDUSTRY_PLANNING = "p09_industry_planning"
+
+    # Stage 10 特色专项
+    SPECIALIZED_STUDY = "p10_specialized_study"

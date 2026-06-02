@@ -6,7 +6,8 @@ import matplotlib.patches as patches
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False
 
-output_dir = r"C:\Users\23902\.gemini\antigravity\brain\4548a8df-fff1-40c0-a394-3f74511d5d61\scratch\images"
+user_home = os.path.expanduser("~")
+output_dir = os.path.join(user_home, ".gemini", "antigravity", "brain", "4548a8df-fff1-40c0-a394-3f74511d5d61", "scratch", "images")
 os.makedirs(output_dir, exist_ok=True)
 
 # Theme colors

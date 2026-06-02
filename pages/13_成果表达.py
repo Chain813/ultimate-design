@@ -2,14 +2,17 @@ import streamlit as st
 import shutil
 import io
 import os
+import traceback
 from pathlib import Path
 from PIL import Image
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.app_shell import render_top_nav
 from src.ui.module_summary import render_stage_summary
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.workflow import resolve_subpage_value
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
+from src.ui.persistent_outputs import register_thesis_output, register_report_output
 
 st.set_page_config(page_title="13 成果表达", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -22,8 +25,8 @@ render_page_banner(
 )
 render_evidence_chain_bar("13", ["10", "11", "12", "13"])
 
-SUB_OPTIONS = ["🗺️ 规划图纸代码生成", "🖼️ 图册自动组装", "📤 文档导出"]
-selected_sub = st.radio("工作流步骤", SUB_OPTIONS, horizontal=True, label_visibility="collapsed")
+SUB_OPTIONS = ["🗺️ 规划图纸代码生成", "🖼️ 图册自动组装", "📤 文档导出", "📝 毕业设计答辩稿"]
+selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -129,11 +132,11 @@ elif selected_sub == "🖼️ 图册自动组装":
         default_desc = {
             "现状区位图": [
                 "1. 地理区位：本项目位于吉林省长春市宽城区历史文化核心街区，紧邻长春火车站与伪满皇宫博物院，是连接历史风貌区与现代城市中心的关键枢纽地带。",
-                "2. 规划范围：规划研究范围东至伊通河、西至亚泰大街、南至长通路、北至京哈铁路，总规划研究面积约150公顷。包含5大重点更新地块。",
+                "2. 规划范围：规划研究范围东至伊通河、西至亚泰大街、南至长通路、北至京哈铁路，总规划研究面积约160公顷。包含5大重点更新地块。",
                 "3. 指标现状：核心区现状路网密度6.2km/km²，建筑密度42%，水绿覆盖率约12.4%。规划定位为“数字孪生·古今共振”的历史风貌与双创活力街区。"
             ],
             "研究范围图": [
-                "1. 核心范围：规划确定的更新改造研究边界西起亚泰大街，东至伊通河，南至长通路，北至京哈铁路，总用地面积约为 150 公顷。",
+                "1. 核心范围：规划确定的更新改造研究边界西起亚泰大街，东至伊通河，南至长通路，北至京哈铁路，总用地面积约为 160 公顷。",
                 "2. 重点地块：规划重点针对片区内 5 个低效国有或集体资产地块进行城市设计与活力针灸，包括老水产批发市场 and 中车旧厂区等。",
                 "3. 现状本底：周边路网成熟，紧邻长春站交通门户，是缝合老宽城铁北地区与长春历史文化中轴线的空间关键锁扣。"
             ],
@@ -275,8 +278,8 @@ elif selected_sub == "🖼️ 图册自动组装":
         desc_3 = st.text_input("说明第 3 条", value=current_desc[2])
         
         st.markdown("### 3. 图签与图例基本信息")
-        author = st.text_input("制作人", value="陈礼冲")
-        author_id = st.text_input("学号", value="202111003")
+        author = st.text_input("制作人", value="", placeholder="请输入姓名")
+        author_id = st.text_input("学号", value="", placeholder="请输入学号")
         organization = st.text_area("学校班级", value="吉林建筑大学建筑与规划学院\n城乡规划211班", height=60)
         
         if st.button("🎨 一键代码绘图并组装图纸", type="primary", **stretch_width(st.button)):
@@ -349,18 +352,30 @@ elif selected_sub == "🖼️ 图册自动组装":
 
 elif selected_sub == "📤 文档导出":
     render_section_intro("全案文档导出", "导出前期分析诊断、总体设计导则以及全阶段生成汇总报告文本。", eyebrow="Document Export")
-    
+
     col1, col2, col3 = st.columns(3)
     with col1:
         guideline = load_stage_output("12", SK.DESIGN_GUIDELINE, "")
         if guideline:
+            register_report_output(
+                label="城市设计导则",
+                content=guideline,
+                stage_code="12",
+                key="design_guideline",
+            )
             st.download_button("📥 下载城市设计导则 (Markdown)", guideline, file_name="城市设计导则.md", **stretch_width(st.download_button))
         else:
             st.info("暂无导则数据，请在 Stage 12 生成。")
-            
+
     with col2:
         diagnosis = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
         if diagnosis:
+            register_report_output(
+                label="前期诊断报告",
+                content=diagnosis,
+                stage_code="05",
+                key="diagnosis_report",
+            )
             st.download_button("📥 下载前期诊断报告 (Markdown)", diagnosis, file_name="诊断报告.md", **stretch_width(st.download_button))
         else:
             st.info("暂无诊断数据，请在 Stage 05 生成。")
@@ -371,6 +386,12 @@ elif selected_sub == "📤 文档导出":
             try:
                 with open(report_file_path, "r", encoding="utf-8") as f:
                     report_content = f.read()
+                register_report_output(
+                    label="全阶段生成汇总报告",
+                    content=report_content,
+                    stage_code="13",
+                    key="stage_generation_report",
+                )
                 st.download_button(
                     "📥 下载全阶段生成汇总报告 (Markdown)",
                     report_content,
@@ -381,6 +402,308 @@ elif selected_sub == "📤 文档导出":
                 st.error(f"读取全阶段汇总报告失败：{e}")
         else:
             st.info("暂无汇总报告，请先运行其他阶段的生成模块以生成本底数据。")
+
+    # Row 2: 设计纲要, 设计策略矩阵
+    col4, col5 = st.columns(2)
+    with col4:
+        design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
+        if design_brief:
+            register_report_output(
+                label="设计纲要",
+                content=design_brief,
+                stage_code="07",
+                key="design_brief",
+            )
+            st.download_button("📥 下载设计纲要 (Markdown)", design_brief, file_name="设计纲要.md", **stretch_width(st.download_button))
+        else:
+            st.info("暂无设计纲要数据，请在 Stage 07 生成。")
+
+    with col5:
+        strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+        if strategy_matrix:
+            register_report_output(
+                label="设计策略矩阵",
+                content=strategy_matrix,
+                stage_code="07",
+                key="strategy_matrix",
+            )
+            st.download_button("📥 下载设计策略矩阵 (Markdown)", strategy_matrix, file_name="设计策略矩阵.md", **stretch_width(st.download_button))
+        else:
+            st.info("暂无设计策略矩阵数据，请在 Stage 07 生成。")
+
+
+elif selected_sub == "📝 毕业设计答辩稿":
+    render_section_intro(
+        "毕业设计答辩稿生成",
+        "按吉林建筑大学模板规范生成毕业设计答辩稿（设计说明），严格遵循5章结构、字数约束和格式化排版。",
+        eyebrow="Graduation Thesis Composer",
+    )
+
+    from src.engines.thesis_composer import (
+        THESIS_CHAPTERS, assemble_thesis_docx, StudentInfo,
+        build_thesis_context, generate_single_section,
+    )
+
+    # ── 学生信息 ──
+    st.markdown("### 👤 学籍信息")
+    col_s1, col_s2, col_s3 = st.columns(3)
+    with col_s1:
+        student_name = st.text_input("学生姓名", value="", key="thesis_name", placeholder="请输入姓名")
+        student_id = st.text_input("学号", value="", key="thesis_id", placeholder="请输入学号")
+    with col_s2:
+        student_advisor = st.text_input("指导教师", value="", key="thesis_advisor")
+        student_date = st.text_input("答辩日期", value="2026年6月", key="thesis_date")
+    with col_s3:
+        student_college = st.text_input("学院", value="建筑与规划学院", key="thesis_college")
+        student_major = st.text_input("专业", value="城乡规划", key="thesis_major")
+
+    student = StudentInfo(
+        name=student_name,
+        student_id=student_id,
+        advisor=student_advisor,
+        college=student_college,
+        major=student_major,
+        date=student_date,
+    )
+
+    st.markdown("---")
+
+    # ══════════════════════════════════════
+    # 一键生成管道
+    # ══════════════════════════════════════
+    st.markdown("### 🚀 一键生成管道")
+
+    from src.engines.thesis_pipeline import run_light_pipeline, run_full_pipeline
+
+    # ── 降 AI 率选项 ──
+    if "thesis_enable_deai" not in st.session_state:
+        st.session_state["thesis_enable_deai"] = True
+    if "thesis_deai_intensity" not in st.session_state:
+        st.session_state["thesis_deai_intensity"] = 0.7
+
+    col_deai_opt, col_deai_int = st.columns([3, 1])
+    with col_deai_opt:
+        st.session_state["thesis_enable_deai"] = st.checkbox(
+            "🧬 启用 AI 率优化（降 AIGC 检测率）",
+            value=st.session_state["thesis_enable_deai"],
+            help="启用后管道会自动对生成的文本进行降 AI 处理：规则打散 + LLM 风格扰动 + 个人观察注入。可显著降低知网 AIGC 检测率。",
+        )
+    with col_deai_int:
+        if st.session_state["thesis_enable_deai"]:
+            st.session_state["thesis_deai_intensity"] = st.slider(
+                "处理强度", 0.3, 1.0, st.session_state["thesis_deai_intensity"], 0.1,
+                help="越高改动越多，AI 痕迹越少，但可能与原文差异越大。建议 0.5-0.7。",
+            )
+
+    col_a, col_b = st.columns(2)
+
+    # ── 管道 A: 轻量 ──
+    with col_a:
+        with st.container(border=True):
+            st.markdown("#### ⚡ 轻量管道")
+            st.caption("基于各阶段**已生成**的 AI 报告，快速产出答辩稿。适用于各阶段已运行过的场景。")
+            st.caption("约 36 步 · 预计 1-3 分钟")
+
+            if st.button("🚀 一键生成答辩稿（轻量）", key="pipeline_light", type="primary",
+                         **stretch_width(st.button)):
+                with st.status("轻量管道运行中...", expanded=True) as status:
+                    log_lines = []
+                    progress_bar = st.progress(0, text="准备中...")
+
+                    def pc(cur, tot, label):
+                        progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
+
+                    def lc(msg):
+                        log_lines.append(msg)
+                        # 只显示最后 8 行避免刷屏
+                        st.text("\n".join(log_lines[-8:]))
+
+                    try:
+                        chapters, buf = run_light_pipeline(
+                            student=student,
+                            progress_callback=pc,
+                            log_callback=lc,
+                            enable_deai=st.session_state["thesis_enable_deai"],
+                            deai_intensity=st.session_state["thesis_deai_intensity"],
+                        )
+                        st.session_state["thesis_chapters"] = chapters
+                        st.session_state["thesis_docx_buf"] = buf
+                        register_thesis_output(buf, student_name, student_id, chapters)
+                        status.update(label="✅ 轻量管道执行完毕！", state="complete")
+                    except Exception as e:
+                        status.update(label=f"❌ 管道执行失败: {e}", state="error")
+                        st.error(traceback.format_exc())
+
+    # ── 管道 B: 全流程 ──
+    with col_b:
+        with st.container(border=True):
+            st.markdown("#### 🔄 全流程管道")
+            st.caption("**从零开始**自动生成所有阶段报告，无需任何已有数据。适用于全新项目。")
+            st.caption("约 50+ 步 · 50+ 次 LLM 调用 · 预计 5-10 分钟")
+
+            if st.button("🚀 全流程自动生成（从零开始）", key="pipeline_full", type="primary",
+                         **stretch_width(st.button)):
+                with st.status("全流程管道运行中...", expanded=True) as status:
+                    log_lines = []
+                    progress_bar = st.progress(0, text="准备中...")
+
+                    def pc(cur, tot, label):
+                        progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
+
+                    def lc(msg):
+                        log_lines.append(msg)
+                        st.text("\n".join(log_lines[-8:]))
+
+                    try:
+                        chapters, buf = run_full_pipeline(
+                            student=student,
+                            progress_callback=pc,
+                            log_callback=lc,
+                            enable_deai=st.session_state["thesis_enable_deai"],
+                            deai_intensity=st.session_state["thesis_deai_intensity"],
+                        )
+                        st.session_state["thesis_chapters"] = chapters
+                        st.session_state["thesis_docx_buf"] = buf
+                        register_thesis_output(buf, student_name, student_id, chapters)
+                        status.update(label="✅ 全流程管道执行完毕！", state="complete")
+                    except Exception as e:
+                        status.update(label=f"❌ 管道执行失败: {e}", state="error")
+                        st.error(traceback.format_exc())
+
+    # ── 管道完成后自动显示下载按钮 ──
+    if "thesis_docx_buf" in st.session_state and st.session_state["thesis_docx_buf"] is not None:
+        st.success("✅ 答辩稿已就绪，点击下方按钮下载：")
+        st.download_button(
+            "💾 下载毕业设计答辩稿.docx",
+            st.session_state["thesis_docx_buf"],
+            file_name=f"毕业设计答辩稿_{student_name}_{student_id}.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            **stretch_width(st.download_button),
+        )
+
+    st.markdown("---")
+
+    # ── 章节生成面板 ──
+    st.markdown("### 📝 章节生成")
+
+    # 初始化 session state
+    if "thesis_chapters" not in st.session_state:
+        st.session_state["thesis_chapters"] = {}
+    if "thesis_generating" not in st.session_state:
+        st.session_state["thesis_generating"] = False
+
+    thesis_chapters = st.session_state["thesis_chapters"]
+
+    # 分组展示按章节
+    for ch in range(1, 6):
+        ch_sections = [s for s in THESIS_CHAPTERS if s.chapter == ch]
+        ch_names = {
+            1: "第1章 项目背景与概况",
+            2: "第2章 现状调查与分析",
+            3: "第3章 设计理念与构思",
+            4: "第4章 总体方案设计",
+            5: "第5章 重点地块设计",
+        }
+
+        any_generated = any(s.section_id in thesis_chapters for s in ch_sections)
+        with st.expander(
+            f"{ch_names[ch]} （{len([s for s in ch_sections if s.section_id in thesis_chapters])}/{len(ch_sections)} 节已生成）",
+            expanded=any_generated or (ch == 1)
+        ):
+            for sec in ch_sections:
+                generated = sec.section_id in thesis_chapters
+                status = "✅" if generated else "⏳"
+                col_sec, col_btn = st.columns([5, 1])
+                with col_sec:
+                    st.markdown(f"{status} **{sec.section_id} {sec.title}** — 约{sec.word_count}字")
+                    if generated:
+                        st.markdown(thesis_chapters[sec.section_id])
+                with col_btn:
+                    if st.button("🔄 重新生成" if generated else "🧠 生成", key=f"thesis_gen_{sec.section_id}"):
+                        with st.spinner(f"生成 {sec.section_id} {sec.title}..."):
+                            ctx_data = build_thesis_context()
+                            text = generate_single_section(sec, ctx_data)
+                            thesis_chapters[sec.section_id] = text
+                            st.session_state["thesis_chapters"] = thesis_chapters
+                            st.rerun()
+
+    # ── 一键生成全部 ──
+    st.markdown("---")
+    col_all, col_clear = st.columns([3, 1])
+    with col_all:
+        if st.button("🚀 一键生成全部章节", type="primary", disabled=st.session_state["thesis_generating"],
+                     **stretch_width(st.button)):
+            st.session_state["thesis_generating"] = True
+            st.rerun()
+
+    with col_clear:
+        if st.button("🗑️ 清空已生成", **stretch_width(st.button)):
+            st.session_state["thesis_chapters"] = {}
+            st.rerun()
+
+    # 执行批量生成
+    if st.session_state["thesis_generating"]:
+        ctx_data = build_thesis_context()
+        all_sections = THESIS_CHAPTERS
+        total = len(all_sections)
+        progress_bar = st.progress(0, text="准备生成...")
+        status_text = st.empty()
+
+        for i, sec in enumerate(all_sections):
+            progress_bar.progress((i) / total, text=f"生成 {sec.section_id} {sec.title}...")
+            status_text.info(f"⏳ 正在生成：{sec.section_id} {sec.title} （{i+1}/{total}）")
+
+            if sec.section_id not in thesis_chapters:
+                try:
+                    text = generate_single_section(sec, ctx_data)
+                    thesis_chapters[sec.section_id] = text
+                    st.session_state["thesis_chapters"] = thesis_chapters
+                except Exception as e:
+                    thesis_chapters[sec.section_id] = f"[生成异常] {e}"
+                    st.session_state["thesis_chapters"] = thesis_chapters
+
+        progress_bar.progress(1.0, text="全部生成完成!")
+        status_text.success(f"✅ 全部 {total} 节生成完毕！")
+        st.session_state["thesis_generating"] = False
+        st.rerun()
+
+    # ── 统计 ──
+    generated_count = len(thesis_chapters)
+    total_count = len(THESIS_CHAPTERS)
+    if generated_count > 0:
+        total_chars = sum(len(v) for v in thesis_chapters.values())
+        st.info(f"已生成 {generated_count}/{total_count} 节，共 {total_chars} 字")
+
+    # ── 导出面板 ──
+    st.markdown("---")
+    st.markdown("### 📥 导出答辩稿")
+
+    if generated_count == total_count:
+        if st.button("📥 导出毕业设计答辩稿 (.docx)", type="primary", **stretch_width(st.button)):
+            with st.spinner("正在组装 Word 文档（严格按模板格式）..."):
+                try:
+                    buf = assemble_thesis_docx(
+                        chapters=thesis_chapters,
+                        student=student,
+                    )
+                    st.session_state["thesis_docx_buf"] = buf
+                    register_thesis_output(buf, student_name, student_id, thesis_chapters)
+                    st.success("✅ 答辩稿生成成功！请点击下方按钮下载。")
+                    st.download_button(
+                        "💾 下载毕业设计答辩稿.docx",
+                        buf,
+                        file_name=f"毕业设计答辩稿_{student_name}_{student_id}.docx",
+                        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        **stretch_width(st.download_button),
+                    )
+                except Exception as e:
+                    st.error(f"文档组装失败：{e}")
+                    import traceback
+                    st.code(traceback.format_exc())
+    else:
+        pct = generated_count / total_count * 100 if total_count else 0
+        st.warning(f"⏳ 已完成 {pct:.0f}%（{generated_count}/{total_count} 节），全部生成后方可导出。")
+
 
 st.markdown("---")
 render_stage_summary(

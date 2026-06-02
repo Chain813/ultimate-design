@@ -292,7 +292,7 @@ def generate_spatial_insights() -> str:
     
     spatial_ctx = get_full_spatial_context()
     prompt = f"""
-    你是一位资深城市空间数据分析专家。以下是吉林省长春市宽城区伪满皇宫周边街区（约150公顷）的各项现状空间统计数据：
+    你是一位资深城市空间数据分析专家。以下是吉林省长春市宽城区伪满皇宫周边街区（约160公顷）的各项现状空间统计数据：
     
     {spatial_ctx}
     

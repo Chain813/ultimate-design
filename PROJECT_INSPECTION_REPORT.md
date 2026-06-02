@@ -12,7 +12,7 @@
 |---|---|
 | 项目类型 | Streamlit 城市设计决策支持平台 |
 | 主入口 | `app.py` |
-| 页面体系 | `pages/00_数据准备与任务解读.py` ~ `pages/16_制图与设计智能体Skill手册.py`（14 个） |
+| 页面体系 | `app.py` + `pages/` 下 13 个阶段页面，共 14 个页面 |
 | 引擎模块 | `src/engines/`（19 个：LLM / SD / Drawing / Quality / Spatial / RAG 等） |
 | UI 组件 | `src/ui/`（8 个：外壳 / 设计系统 / 图表配色 / 制图面板等） |
 | 工具函数 | `src/utils/`（8 个：坐标转换 / 服务检测等） |
