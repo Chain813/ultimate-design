@@ -1,67 +1,192 @@
 # -*- coding: utf-8 -*-
-from shapely.geometry import Point
+from pathlib import Path
+import geopandas as gpd
 import pandas as pd
 import numpy as np
-from pathlib import Path
-ROOT = Path(__file__).resolve().parent.parent.parent
-STATIC_DIR = ROOT / "static"
-GIS_DIR = ROOT / "data/gis"
-ASSETS_DIR = ROOT / "assets"
-
-import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
 import matplotlib.patheffects as path_effects
-import geopandas as gpd
 from PIL import Image
 
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
-    # 1. 绘制遥感卫星底图
+ROOT = Path(__file__).resolve().parent.parent.parent
+STATIC_DIR = ROOT / "static"
+
+# Use the DR-013/DR-004 style full-page layout instead of the standard A3 title frame.
+NO_FRAME = True
+
+def wrap_text(text, max_len=30):
+    lines = []
+    current = []
+    width = 0
+    for char in text:
+        char_w = 2 if ord(char) > 127 else 1
+        if char == "\n":
+            lines.append("".join(current))
+            current = []
+            width = 0
+            continue
+        if width + char_w > max_len:
+            lines.append("".join(current))
+            current = [char]
+            width = char_w
+        else:
+            current.append(char)
+            width += char_w
+    if current:
+        lines.append("".join(current))
+    return "\n".join(lines)
+
+def _font(font_prop, size, weight="normal"):
+    return fm.FontProperties(family=font_prop["family"], size=size, weight=weight)
+
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, *args, **kwargs):
+    fig = ax.get_figure()
+
+    ax.set_facecolor("#F8FAFC")
+    ax.set_xlim(0, 141.42)
+    ax.set_ylim(0, 100)
+    ax.set_axis_off()
+
+    # Draw grid
+    for x in range(5, 140, 5):
+        ax.plot([x, x], [0, 100], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+    for y in range(5, 100, 5):
+        ax.plot([0, 141.42], [y, y], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+
+    # Header Panel
+    ax.add_patch(mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor="#D97706", edgecolor="none", zorder=3))
+    
+    ax.text(3.5, 93.6, "研究范围图", color="#0F172A", ha="left", va="center",
+            fontproperties=_font(font_prop, 26, "bold"), zorder=4)
+    ax.text(3.5, 90.7, "展示项目的规划设计研究范围与五大重点更新改造地块的地理本底分布。",
+            color="#334155", ha="left", va="center", fontproperties=_font(font_prop, 15.0), zorder=4)
+
+    # Main map on the left
+    ax.add_patch(mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    
+    # Exact sub-axes of DR-004
+    ax_map = fig.add_axes([3.0 / 141.42, 5.0 / 100.0, 96.0 / 141.42, 81.0 / 100.0], facecolor="#F8FAFC", zorder=3)
+    ax_map.set_xlim(cx - view_w / 2, cx + view_w / 2)
+    ax_map.set_ylim(cy - view_h / 2, cy + view_h / 2)
+    ax_map.set_axis_off()
+    ax_map.set_aspect("equal")
+
+    # 1. Satellite Base
     sat_path = STATIC_DIR / "assets/generated_base/satellite_cropped.png"
     if sat_path.exists():
         try:
             sat_img = Image.open(sat_path)
             extent = [cx - view_w / 2, cx + view_w / 2, cy - view_h / 2, cy + view_h / 2]
-            ax.imshow(sat_img, extent=extent, zorder=0)
+            ax_map.imshow(sat_img, extent=extent, zorder=0)
         except Exception as e:
             print(f"Error loading satellite image: {e}")
-            ax.text(cx, cy, "卫星遥感底图加载失败", ha='center', va='center', fontsize=24, color='#FF3B30', fontproperties=fm.FontProperties(family=font_prop['family']))
-    else:
-        ax.text(cx, cy, "卫星遥感底图未找到", ha='center', va='center', fontsize=24, color='#8E8E93', fontproperties=fm.FontProperties(family=font_prop['family']))
-
-    # 2. 叠加半透明蓝色伊通河水系以增加可读性
+            
+    # 2. Transparent Blue Water
     if water is not None and not water.empty:
-        water.plot(ax=ax, facecolor="#0066CC", edgecolor="none", alpha=0.35, zorder=1)
+        water.plot(ax=ax_map, facecolor="#0066CC", edgecolor="none", alpha=0.35, zorder=1)
 
-    # 3. 绘制研究范围边界外的半透明掩膜遮罩（使研究范围之外白化，高亮核心研究范围内区域）
+    # 3. Outer Mask
     try:
         from shapely.geometry import box
         large_box = box(cx - view_w, cy - view_h, cx + view_w, cy + view_h)
         boundary_union = boundary.geometry.union_all() if hasattr(boundary.geometry, "union_all") else boundary.geometry.unary_union
         mask_poly = large_box.difference(boundary_union)
-        gpd.GeoSeries([mask_poly]).plot(ax=ax, facecolor="#FAFAFC", alpha=0.45, edgecolor="none", zorder=3)
+        gpd.GeoSeries([mask_poly]).plot(ax=ax_map, facecolor="#FAFAFC", alpha=0.45, edgecolor="none", zorder=3)
     except Exception as e:
         print(f"Error drawing boundary mask: {e}")
 
-    # 4. 绘制铁路线（仅在核心高亮区域内可见，且zorder高于外部遮罩）
+    # 4. Rails
     if rails is not None and not rails.empty:
-        rails.plot(ax=ax, color="#475569", linewidth=1.2, linestyle=(0, (5, 5)), zorder=4)
+        rails.plot(ax=ax_map, color="#475569", linewidth=1.8, linestyle=(0, (6, 6)), zorder=4)
 
-    # 5. 绘制五大重点更新地块高亮范围
+    # 5. Key Plots
     if key_plots is not None and not key_plots.empty:
-        # 半透明浅蓝色填充
-        key_plots.plot(ax=ax, facecolor="#3B82F6", alpha=0.25, edgecolor="none", zorder=4.8)
-        # 深蓝色边界线
-        key_plots.plot(ax=ax, facecolor="none", edgecolor="#2563EB", linewidth=2.2, zorder=5)
-        
+        key_plots.plot(ax=ax_map, facecolor="#3B82F6", alpha=0.25, edgecolor="none", zorder=4.8)
+        key_plots.plot(ax=ax_map, facecolor="none", edgecolor="#2563EB", linewidth=2.2, zorder=5)
         for idx, row in key_plots.iterrows():
             geom = row.geometry
             cx_kp = geom.centroid.x
             cy_kp = geom.centroid.y
             name_kp = row.get("name", f"地块 {idx+1}")
-            txt = ax.text(cx_kp, cy_kp, name_kp, color='#1D4ED8', ha='center', va='center', 
-                          fontsize=12, fontweight='bold', zorder=6, 
-                          fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=12))
+            txt = ax_map.text(cx_kp, cy_kp, name_kp, color='#1D4ED8', ha='center', va='center', 
+                           fontproperties=_font(font_prop, 12, "bold"), zorder=6)
             txt.set_path_effects([path_effects.withStroke(linewidth=3, foreground='#FFFFFF')])
+
+    # 6. Red Boundary Line
+    if boundary is not None and not boundary.empty:
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=7)
+
+    # Right legend card
+    ax.add_patch(mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 82.8, "图例 / LEGEND", color="#D97706", ha="left", va="center",
+            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
+
+    legend_rows = [
+        ("规划研究范围", "outline_red"),
+        ("重点更新地块", "outline_blue"),
+        ("伊通河水系", "water"),
+        ("现状铁路线", "rail"),
+        ("卫星遥感底图", "sat_base"),
+    ]
+    for i, (label, style) in enumerate(legend_rows):
+        x = 103.5 + (i % 2) * 18.0
+        y = 80.0 - (i // 2) * 3.3
+        if style == "outline_red":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="none", edgecolor="#FF3B30", linewidth=1.8, zorder=4))
+        elif style == "outline_blue":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="none", edgecolor="#2563EB", linewidth=1.8, zorder=4))
+        elif style == "water":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#0066CC", alpha=0.5, edgecolor="none", zorder=4))
+        elif style == "rail":
+            ax.plot([x, x + 2.7], [y, y], color="#475569", linewidth=1.8, linestyle=(0, (5, 4)), zorder=4)
+        elif style == "sat_base":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#64748B", alpha=0.6, edgecolor="none", zorder=4))
+        ax.text(x + 3.6, y, label, color="#334155", ha="left", va="center",
+                fontproperties=_font(font_prop, 13.5), zorder=4)
+
+    # Scale Bar
+    scale_len = 500 / (view_w / 96.0)
+    x_start = 120.45 - scale_len / 2
+    x_end = x_start + scale_len
+    y_bar = 68.7
+    ax.plot([x_start, x_end], [y_bar, y_bar], color="#0F172A", linewidth=1.5, zorder=4)
+    for x_tick in [x_start, x_start + scale_len / 2, x_end]:
+        ax.plot([x_tick, x_tick], [y_bar - 0.8, y_bar + 0.8], color="#0F172A", linewidth=1.5, zorder=4)
+    ax.text(x_start, 70.5, "0", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    ax.text(x_start + scale_len / 2, 70.5, "250m", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    ax.text(x_end, 70.5, "500m", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    scale_ratio = view_w / 0.31968
+    scale_rounded = int(round(scale_ratio / 500)) * 500
+    ax.text((x_start + x_end) / 2, 67.4, f"比例尺 1:{scale_rounded}", color="#334155", ha="center", va="center",
+            fontproperties=_font(font_prop, 11, "bold"), zorder=4)
+
+    # Right explanation card
+    ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 61.0, "范围说明 / SCOPE ANALYSIS", color="#D97706", ha="left", va="center",
+            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
+
+    rows = [
+        ("1. 核心范围", "规划确定的更新改造研究边界西起亚泰快速路，东至东九条，南至长春大街，北至长白路，总用地面积约为 150 公顷。"),
+        ("2. 重点地块", "规划重点针对片区内 5 个低效国有或集体资产地块进行城市设计与活力针灸，包括老水产批发市场和中车旧厂区等。"),
+        ("3. 现状本底", "周边路网成熟，紧邻长春站交通门户，是缝合老宽城铁北地区与长春历史文化中轴线的空间关键锁扣。"),
+    ]
+    y = 56.0
+    for title, body in rows:
+        ax.text(103.5, y, title, color="#0F172A", ha="left", va="top",
+                fontproperties=_font(font_prop, 15.0, "bold"), zorder=4)
+        y -= 2.5
+        for line in wrap_text(body, 44).split("\n"):
+            ax.text(103.5, y, line, color="#334155", ha="left", va="top",
+                    fontproperties=_font(font_prop, 15.0), zorder=4)
+            y -= 2.85
+        y -= 2.2
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
@@ -71,7 +196,7 @@ legend_items = [
 ]
 
 description_lines = [
-    "1. 核心范围：规划确定的更新改造研究边界西起亚泰大街，东至伊通河，南至长通路，北至京哈铁路，总用地面积约为 150 公顷。",
+    "1. 核心范围：规划确定的更新改造研究边界西起亚泰快速路，东至东九条，南至长春大街，北至长白路，总用地面积约为 150 公顷。",
     "2. 重点地块：规划重点针对片区内 5 个低效国有或集体资产地块进行城市设计与活力针灸，包括老水产批发市场和中车旧厂区等。",
     "3. 现状本底：周边路网成熟，紧邻长春站交通门户，是缝合老宽城铁北地区与长春历史文化中轴线的空间关键锁扣。"
 ]

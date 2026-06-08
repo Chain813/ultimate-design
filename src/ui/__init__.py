@@ -12,7 +12,6 @@ from src.ui.design_system import (
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.app_shell import render_engine_status_alert, render_top_nav
 
 __all__ = [
     "CHART_PALETTE",
@@ -27,3 +26,11 @@ __all__ = [
     "render_top_nav",
     "rgba_from_hex",
 ]
+
+
+def __getattr__(name):
+    if name in {"render_engine_status_alert", "render_top_nav"}:
+        from src.ui import app_shell
+
+        return getattr(app_shell, name)
+    raise AttributeError(f"module 'src.ui' has no attribute {name!r}")

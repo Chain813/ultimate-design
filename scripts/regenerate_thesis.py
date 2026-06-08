@@ -27,18 +27,11 @@ from src.engines.thesis_composer import (
     _generate_abstract_from_chapters, _generate_english_abstract,
     _extract_keywords_from_chapters, _extract_english_keywords,
     _generate_references_from_chapters, _generate_acknowledgments,
-    THESIS_CHAPTERS,
+    THESIS_CHAPTERS, load_student_info_json,
 )
 from src.engines.thesis_pipeline import run_light_pipeline
 
-student = StudentInfo(
-    name='',
-    student_id='',
-    advisor='',
-    college='建筑与规划学院',
-    major='城乡规划',
-    date='2026年6月',
-)
+student = load_student_info_json()
 
 print("Regenerating thesis with AI/AIGC-focused abstract...")
 print("This will regenerate all 27 chapters + de-AI processing + new abstract")
@@ -56,8 +49,14 @@ chapters, buf = run_light_pipeline(
 # Save
 fname = f'毕业设计答辩稿_{student.name}_{student.student_id}.docx'
 outpath = Path('output') / fname
-with open(outpath, 'wb') as f:
-    f.write(buf.getvalue())
+try:
+    with open(outpath, 'wb') as f:
+        f.write(buf.getvalue())
+except PermissionError:
+    fname = f'毕业设计答辩稿_{student.name}_{student.student_id}_new.docx'
+    outpath = Path('output') / fname
+    with open(outpath, 'wb') as f:
+        f.write(buf.getvalue())
 
 total_chars = sum(len(v) for v in chapters.values())
 print(f'\n{"=" * 60}')

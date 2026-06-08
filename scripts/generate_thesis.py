@@ -21,17 +21,10 @@ if env_path.exists():
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
-from src.engines.thesis_composer import StudentInfo
+from src.engines.thesis_composer import StudentInfo, load_student_info_json
 from src.engines.thesis_pipeline import run_light_pipeline
 
-student = StudentInfo(
-    name='',
-    student_id='',
-    advisor='',
-    college='建筑与规划学院',
-    major='城乡规划',
-    date='2026年6月',
-)
+student = load_student_info_json()
 
 output_dir = Path('output')
 output_dir.mkdir(exist_ok=True)
@@ -63,8 +56,14 @@ try:
     # Save
     fname = f'毕业设计答辩稿_{student.name}_{student.student_id}.docx'
     outpath = output_dir / fname
-    with open(outpath, 'wb') as f:
-        f.write(buf.getvalue())
+    try:
+        with open(outpath, 'wb') as f:
+            f.write(buf.getvalue())
+    except PermissionError:
+        fname = f'毕业设计答辩稿_{student.name}_{student.student_id}_new.docx'
+        outpath = output_dir / fname
+        with open(outpath, 'wb') as f:
+            f.write(buf.getvalue())
 
     elapsed = time.time() - start_time
     mins = int(elapsed // 60)

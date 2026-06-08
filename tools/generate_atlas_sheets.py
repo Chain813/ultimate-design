@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from tools.draw_scope_map import draw_spatial_map, process_a3_layout
+from tools.draw_scope_map import draw_spatial_map, process_a3_layout, wrap_text_by_pixels
 
 STATIC_DIR = ROOT / "static"
 ASSETS_DIR = ROOT / "assets"
@@ -53,145 +53,220 @@ def draw_cover(output_path, author="陈礼冲", author_id="202111003", organizat
 
 def draw_toc(output_path, author="陈礼冲", author_id="202111003", organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
     print("Generating Table of Contents...")
-    template = Image.open(STATIC_DIR / 'a3_layout_preview_full.png').convert('RGB')
-    draw = ImageDraw.Draw(template)
+    # Create a clean canvas of 2240x1584
+    toc_img = Image.new("RGB", (2240, 1584), color=(248, 250, 252)) # slate-50
+    draw = ImageDraw.Draw(toc_img)
+
+    # Fonts loading
+    font_path = 'C:/Windows/Fonts/msyh.ttc'
+    font_bold_path = 'C:/Windows/Fonts/msyhbd.ttc'
+    try:
+        font_large_title = ImageFont.truetype(font_bold_path, 36)
+        font_card_title = ImageFont.truetype(font_bold_path, 20)
+        font_table_header = ImageFont.truetype(font_bold_path, 15)
+        font_body_bold = ImageFont.truetype(font_bold_path, 12)
+        font_body = ImageFont.truetype(font_path, 12)
+        font_desc = ImageFont.truetype(font_path, 15)
+        font_desc_bold = ImageFont.truetype(font_bold_path, 15)
+    except IOError:
+        font_large_title = ImageFont.load_default()
+        font_card_title = ImageFont.load_default()
+        font_table_header = ImageFont.load_default()
+        font_body_bold = ImageFont.load_default()
+        font_body = ImageFont.load_default()
+        font_desc = ImageFont.load_default()
+        font_desc_bold = ImageFont.load_default()
+
+    # Draw background grid
+    grid_spacing = 79.2  # 5 units in coordinate space
+    for x in range(1, int(2240 / grid_spacing)):
+        lx = int(x * grid_spacing)
+        draw.line([(lx, 0), (lx, 1584)], fill=(226, 232, 240), width=1)
+    for y in range(1, int(1584 / grid_spacing)):
+        ly = int(y * grid_spacing)
+        draw.line([(0, ly), (2240, ly)], fill=(226, 232, 240), width=1)
+
+    # 1. Header Card (X: 32 to 2198, Y: 60 to 174)
+    draw.rectangle([36, 64, 2202, 178], fill=(226, 232, 240)) # drop shadow
+    draw.rectangle([32, 60, 2198, 174], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([32, 60, 2198, 66], fill=(217, 119, 6)) # top accent bar
     
-    font_title = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 24)
-    font_body = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 13)
-    font_body_bold = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 14)
+    draw.text((55, 117), "图册目录", fill=(15, 23, 42), font=font_large_title, anchor="lm")
+    draw.text((230, 117), "本图册的图纸索引与主要编制说明。本规划旨在重塑历史地段活力，推动数字孪生与古今共振。", 
+              fill=(100, 116, 139), font=font_desc, anchor="lm")
+
+    # 2. Left giant Table of Contents Card (X: 32 to 1584, Y: 206 to 1520)
+    draw.rectangle([36, 210, 1588, 1524], fill=(226, 232, 240)) # drop shadow
+    draw.rectangle([32, 206, 1584, 1520], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([32, 206, 1584, 212], fill=(217, 119, 6)) # top accent bar
+
+    draw.text((60, 250), "图例分类与图纸索引 / TABLE OF CONTENTS", fill=(217, 119, 6), font=font_card_title)
     
-    draw.rectangle([183, 289, 1888, 1658], fill=(248, 250, 252))
-    
-    draw.text((250, 310), "图册目录 / TABLE OF CONTENTS", fill=(15, 23, 42), font=font_title)
-    draw.rectangle([250, 345, 1820, 347], fill=(226, 232, 240))
-    
-    draw.text((250, 360), "图纸编号 / CODE", fill=(100, 116, 139), font=font_body_bold)
-    draw.text((420, 360), "图纸名称 / SHEET NAME", fill=(100, 116, 139), font=font_body_bold)
-    draw.text((700, 360), "图纸表达内容与说明 / DESCRIPTION", fill=(100, 116, 139), font=font_body_bold)
-    draw.rectangle([250, 385, 1820, 387], fill=(203, 213, 225))
-    
+    # Table headers
+    draw.text((80, 300), "图纸编号 / CODE", fill=(100, 116, 139), font=font_table_header)
+    draw.text((220, 300), "图纸名称 / SHEET NAME", fill=(100, 116, 139), font=font_table_header)
+    draw.text((550, 300), "图纸表达内容与说明 / DESCRIPTION", fill=(100, 116, 139), font=font_table_header)
+    draw.line([(60, 325), (1556, 325)], fill=(203, 213, 225), width=2)
+
     sheets = [
         ("DR-001", "规划设计图册封面", "图册主标题与设计团队信息"),
         ("DR-002", "图册目录", "本图册的图纸索引与主要编制说明"),
-        # Section 1
-        ("一、现状调查与诊断篇", "STATUS & DIAGNOSIS", "------------------------------------------------------------------------------------------------------------------------"),
-        ("DR-004", "现状区位图", "规划研究范围及5大重点更新地块现状区位"),
-        ("DR-005", "研究范围图", "明确研究范围、设计范围和重点地块边界"),
-        ("DR-013", "数据来源与遥感现状图", "2024最新高分辨率遥感影像底图叠加"),
-        ("DR-014", "用地现状分析图", "二类居住用地、商业用地、混合及工业遗存用地现状分布"),
-        ("DR-017", "建筑高度现状图", "现状1-3层低层建筑、4-7层多层建筑及高层建筑层高分布"),
-        ("DR-018", "建筑风貌识别图", "现状历史保护风貌、附属景观风貌、现代风貌分布识别"),
-        ("DR-019", "历史建筑与工业遗产分布图", "现状重点历史遗存及中车老旧厂房工业遗产保护界线"),
-        ("DR-020", "道路交通现状图", "城市快速路、主干路、次干路、支路及现状京哈线分布"),
-        ("DR-021", "空间句法可达性分析图", "路网拓扑全局与步行可达性分析，协同度散点图表达"),
-        ("DR-030", "环境品质问题地图", "识别低绿视率点、铁路噪声割裂带和界面痛点"),
-        # Section 2
-        ("二、策略规划与方案篇", "STRATEGY & DESIGN PLANS", "------------------------------------------------------------------------------------------------------------------------"),
-        ("DR-040", "更新模式分区图", "保护修缮、整治提升、功能置换、拆改更新分区分布"),
-        ("DR-042", "空间结构规划图", "规划“一核、双轴、五地块”的总体更新规划结构"),
-        ("DR-044", "总体规划图", "商业与文创混合区布局、绿化修补与微更新布局"),
-        ("DR-048", "建筑更新控制图", "保留、修缮、整治、置换、新建建筑控制分布"),
-        ("DR-049", "建筑高度控制图", "伪满皇宫周边限高9m/18m/24m的三级分区控制"),
-        ("DR-051", "道路交通系统规划图", "规划小街区密路网及内外交通转换顺畅组织"),
-        ("DR-056", "绿地景观系统图", "伊通河滨水生态廊道与街区绿色触角蓝绿空间"),
-        ("DR-057", "历史文化展示系统图", "文化游线展示路径与解说设施展示布点分布"),
-        ("DR-081", "AIGC技术推演过程图", "NLP诊断、ControlNet手绘生成与LLM智能体协同决策"),
-        ("DR-082", "实施分期图", "近期、中期、远期实施地块与分期更新节奏控制"),
-        ("DR-083", "图册章节结构导图", "规划设计图册全册文章结构与页面导向脉络图"),
-        ("DR-084", "数据处理管线导图", "GIS、遥感、街景绿视率及社交媒体情感分析处理流程"),
-        ("DR-085", "规划协同工作流程图", "多源数据诊断、AIGC协同方案推演与指标闭环流程图"),
-        ("DR-086", "城乡规划知识体系导图", "空间规划编制层级划分与三区三线用途管制知识框架"),
+        # 第1章 项目背景与概况
+        ("第1章 项目背景与概况", "PROJECT BACKGROUND", "-------------------------------------------------------------------------------------------------------------"),
+        ("DR-003", "项目背景与政策解读图", "国家城市更新·数字中国·历史名城三级政策框架"),
+        ("DR-004", "现状区位图", "包含国家、省、市、区四级区位关系展示"),
+        ("DR-005", "研究范围图", "约170公顷范围及5大重点地块设计边界"),
+        ("A原始数据", "原始数据清单", "遥感影像、GVI、现状路网等14项核心现状底数"),
+        # 第2章 现状调查与分析
+        ("第2章 现状调查与分析", "SITE INVESTIGATION & ANALYSIS", "-------------------------------------------------------------------------------------------------------------"),
+        ("DR-013", "数据来源与遥感现状图", "2024高分辨率遥感影像底图及GIS数据源"),
+        ("DR-014", "用地现状分析图", "居住56.6%、商服约20%等非均衡现状结构"),
+        ("DR-020", "道路交通现状图", "宽马路表征与现状铁路割裂带分布诊断"),
+        ("DR-017", "建筑高度现状图", "平均层高11.9米，低层及老旧住宅为主"),
+        ("DR-018", "建筑风貌识别图", "历史保护、中车工业遗存与现代风貌分布"),
+        ("DR-030", "环境品质问题地图", "绿视率仅8.7%硬质化区域与垃圾痛点空间"),
+        ("DR-028", "街区景观品质分析图", "平均绿视率仅8.7%，78.3%的采样点低于15%宜居阈值"),
+        ("DR-019", "历史建筑与工业遗产分布图", "伪满皇宫核心区及中车老厂房遗存定位"),
+        ("DR-023", "文化资源分析图", "伪满皇宫与中车厂区双核集聚及轴线割裂格局"),
+        ("DR-032", "遗产价值评估热力图", "基于多准则分析的历史文化遗产价值衰减"),
+        ("DR-027", "POI产业活力分析图", "生活服务及餐饮占40%、购物占4.9%的业态分布"),
+        ("DR-029", "人群需求与老龄化分布图", "30%老龄化社区适老化设施500米供需缺口"),
+        ("DR-021", "空间句法可达性分析图", "路网拓扑分析步行整合度与车行选择度"),
+        # 第3章 设计理念与构思
+        ("第3章 设计理念与构思", "DESIGN CONCEPT & STRATEGY", "-------------------------------------------------------------------------------------------------------------"),
+        ("A数学公式", "核心算法与数学公式目录", "三维度综合加权评估、天际线纵深指数等13项公式"),
+        ("A核心代码清单", "平台核心代码文件清单", "空间统计引擎、多智能体协同等14项核心引擎代码"),
+        ("DR-007", "上位规划解读图", "总体格局、历史保护与空间结构解译"),
+        ("DR-008", "上位专项规划解读图", "土地利用、综合交通与绿地系统专项解译"),
+        ("DR-037", "设计原则与理念图", "微创织补与全龄友好为核心的四项设计原则"),
+        ("DR-038", "设计目标体系图", "生态韧性、全龄服务与风貌管控量化目标"),
+        ("DR-039", "总体策略图", "微创修缮、细胞微更新与慢行系统搭桥"),
+        # 第4章 总体方案设计
+        ("第4章 总体方案设计", "MASTER PLAN DESIGN", "-------------------------------------------------------------------------------------------------------------"),
+        ("DR-044", "用地规划图", "商业与文创混合区布局、结构优化与总体设计"),
+        ("DR-049", "建筑高度控制图", "核心9米、过渡18米、外围24米三级管控"),
+        ("DR-051", "道路交通系统规划图", "加密支路网，提升微循环与交通整合度"),
+        ("DR-053", "慢行系统规划图", "无障碍适老化慢跑道与景观漫步双环系统"),
+        ("DR-042", "空间结构规划图", "规划“一核、一廊、多点”的总体空间结构"),
+        ("DR-055", "公共空间系统图", "500米半径5个邻里细胞生活盒子精准补缺"),
+        ("DR-046", "产业业态规划图", "“三区一带”数字文创与全龄服务业态规划"),
+        ("DR-056", "绿地景观系统图", "伊通河滨水生态廊道及绿地率35%的补绿规划"),
+        ("DR-057", "历史文化展示系统图", "核心区文化游线路径与视觉通廊控制规划"),
+        ("DR-040", "更新模式分区图", "保护修缮、整治提升、拆改更新控制分区"),
+        ("DR-048", "建筑更新控制图", "建筑分类更新控制、修缮整治置换措施引导"),
+        # 第5章 重点地块设计
+        ("第5章 重点地块设计", "KEY PLOT DESIGN", "-------------------------------------------------------------------------------------------------------------"),
+        ("DR-081", "AIGC技术推演过程图", "数字孪生—AIGC推演—MPI评估全流程技术矩阵"),
+        ("DR-082", "实施分期图", "近期、中期、远期实施地块与分期节奏"),
+        ("DR-076", "五地块深化设计总图", "老水产、调料市场等5大深化地块核心指标"),
+        ("A特色专项设计", "特色专项设计图", "特色地块与重点区域专项设计意向与说明"),
+        ("DR-083", "图册章节结构导图", "图册五大章节与核心规划图纸树状组织结构"),
+        ("DR-084", "数据处理管线导图", "多源异构数据至空间计算与GIS库流向管线"),
+        ("DR-085", "规划协同工作流程图", "多利益智能体LLM博弈与指标刚性校验流程"),
+        ("DR-086", "城乡规划知识体系导图", "上位法理、规划层级至图册成果金字塔树"),
     ]
-    
-    y = 395
-    spacing = 30
+
+    y = 338
+    spacing = 23
     for code, name, desc in sheets:
-        if code in ["一、现状调查与诊断篇", "二、策略规划与方案篇"]:
-            draw.rectangle([250, y, 1820, y + 24], fill=(230, 235, 245))
-            draw.text((260, y + 2), code, fill=(15, 23, 42), font=font_body_bold)
-            draw.text((420, y + 2), name, fill=(71, 85, 105), font=font_body_bold)
-            y += spacing
-            continue
-            
-        draw.text((250, y), code, fill=(15, 23, 42) if "DR-" in code else (100, 116, 139), font=font_body_bold)
-        draw.text((420, y), name, fill=(15, 23, 42), font=font_body)
-        draw.text((700, y), desc, fill=(71, 85, 105), font=font_body)
-        draw.rectangle([250, y + 24, 1820, y + 25], fill=(241, 245, 249))
+        if "第" in code and "章" in code:
+            draw.rectangle([60, y - 2, 1556, y + 17], fill=(230, 235, 245))
+            draw.text((80, y), code, fill=(15, 23, 42), font=font_body_bold)
+            draw.text((220, y), name, fill=(71, 85, 105), font=font_body_bold)
+            draw.text((550, y), desc, fill=(148, 163, 184), font=font_body)
+        else:
+            draw.text((80, y), code, fill=(15, 23, 42) if "DR-" in code or "A" in code else (100, 116, 139), font=font_body_bold)
+            draw.text((220, y), name, fill=(15, 23, 42), font=font_body)
+            draw.text((550, y), desc, fill=(71, 85, 105), font=font_body)
+            draw.line([(60, y + 17), (1556, y + 17)], fill=(241, 245, 249), width=1)
         y += spacing
-        
-    windrose = Image.open(ASSETS_DIR / '长春市风玫瑰.png')
-    draw.rectangle([1891, 292, 2309, 605], fill=(255, 255, 255))
-    wr_w, wr_h = windrose.size
-    new_h = 200
-    new_w = int(new_h * wr_w / wr_h)
-    wr_resized = windrose.resize((new_w, new_h), Image.Resampling.LANCZOS)
-    template.paste(wr_resized, (1891 + (418 - new_w) // 2, 292 + (313 - new_h) // 2), wr_resized if wr_resized.mode == 'RGBA' else None)
-    
-    draw.rectangle([1890, 1394, 2312, 1816], fill=(241, 245, 249), outline=(15, 23, 42), width=2)
-    draw.line([(1890, 1464), (2312, 1464)], fill=(15, 23, 42), width=1)
-    draw.line([(1890, 1564), (2312, 1564)], fill=(15, 23, 42), width=1)
-    draw.line([(1890, 1664), (2312, 1664)], fill=(15, 23, 42), width=1)
-    draw.line([(1890, 1734), (2312, 1734)], fill=(15, 23, 42), width=1)
-    draw.line([(2090, 1734), (2090, 1816)], fill=(15, 23, 42), width=1)
-    
-    font_stamp_large = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 26)
-    font_stamp_title = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 20)
-    font_stamp_label = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 12)
-    font_stamp_body = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 13)
-    
-    draw.text((1905, 1406), "图纸名称 / TITLE", fill=(120, 120, 125), font=font_stamp_label)
-    draw.text((1905, 1424), "图册目录", fill=(15, 23, 42), font=font_stamp_large)
-    
-    draw.text((1905, 1472), "项目名称 / PROJECT", fill=(120, 120, 125), font=font_stamp_label)
-    draw.text((1905, 1494), "数字孪生·古今共振——", fill=(15, 23, 42), font=font_stamp_body)
-    draw.text((1905, 1524), "AI赋能下的伪满皇宫周边街区更新规划设计", fill=(15, 23, 42), font=font_stamp_body)
-    
-    draw.text((1905, 1572), "学校班级 / ORGANIZATION", fill=(120, 120, 125), font=font_stamp_label)
-    org_lines = organization.split('\n')
-    org_y = 1594
-    for ol in org_lines[:2]:
-        draw.text((1905, org_y), ol, fill=(15, 23, 42), font=font_stamp_body)
-        org_y += 30
-        
-    draw.text((1905, 1742), "制作人 / AUTHOR", fill=(120, 120, 125), font=font_stamp_label)
-    draw.text((1905, 1768), author, fill=(15, 23, 42), font=font_stamp_title)
-    
-    draw.text((2105, 1742), "学号 / ID", fill=(120, 120, 125), font=font_stamp_label)
-    draw.text((2105, 1768), author_id, fill=(15, 23, 42), font=font_stamp_body)
-    
-    draw.rectangle([184, 1661, 1887, 1815], fill=(248, 250, 252))
-    draw.text((210, 1670), "设计说明与规划指标 (Design Notes & Planning Indicators)", fill=(29, 29, 31), font=font_title)
-    
+
+    # 3. Right Top Card (X: 1608 to 2198, Y: 206 to 602)
+    draw.rectangle([1612, 210, 2202, 606], fill=(226, 232, 240)) # drop shadow
+    draw.rectangle([1608, 206, 2198, 602], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([1608, 206, 2198, 212], fill=(217, 119, 6)) # top accent bar
+
+    draw.text((1630, 240), "图册编制说明 / PURPOSE", fill=(217, 119, 6), font=font_card_title)
+    draw.line([(1630, 270), (2176, 270)], fill=(203, 213, 225), width=1)
+
     desc_lines = [
         "1. 编制目的：本图册旨在通过多源城市大数据分析与系统制图，对长春市宽城区伪满皇宫周边150公顷研究范围进行现状诊断与更新规划。",
         "2. 成果结构：本图册分为“现状调查与诊断篇”与“策略规划与方案篇”，侧重于空间物理诊断与多尺度方案的AI辅助推演设计表达。",
         "3. 数据基准：所有制图地理底图均采用 WGS-84 坐标系，核心矢量图层经由实地踏勘修正，保障现状测算与规划设计红线的精确度。"
     ]
-    y_desc = 1712
+    
+    y_desc = 295
     for line in desc_lines:
-        draw.text((210, y_desc), line, fill=(72, 72, 74), font=font_body)
-        y_desc += 32
-        
-    paper_frame = template.crop((100, 260, 2340, 1844))
-    paper_frame.save(output_path)
+        wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
+        for wl in wrapped:
+            draw.text((1630, y_desc), wl, fill=(71, 85, 105), font=font_desc)
+            y_desc += 26
+        y_desc += 10
+
+    # 4. Right Bottom Card (X: 1608 to 2198, Y: 634 to 1520)
+    draw.rectangle([1612, 638, 2202, 1524], fill=(226, 232, 240)) # drop shadow
+    draw.rectangle([1608, 634, 2198, 1520], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([1608, 634, 2198, 640], fill=(217, 119, 6)) # top accent bar
+
+    draw.text((1630, 668), "设计团队与版记 / SIGNATURE", fill=(217, 119, 6), font=font_card_title)
+    draw.line([(1630, 698), (2176, 698)], fill=(203, 213, 225), width=1)
+
+    # Stamp details
+    details = [
+        ("项目名称 / PROJECT NAME", "数字孪生·古今共振——\nAI赋能下的长春宽城区伪满皇宫周边街区更新规划设计"),
+        ("设计团队 / AUTHOR TEAM", organization),
+        ("制作人 / AUTHOR", f"{author} ({author_id})"),
+        ("指导教师 / TUTOR", "崔诚慧"),
+        ("制图标准 / STANDARDS", "图幅大小：A3 (420mm x 297mm)\n比例尺：如单图所示\n制图日期：2026年6月")
+    ]
+    
+    y_detail = 720
+    for label, val in details:
+        draw.text((1630, y_detail), label, fill=(148, 163, 184), font=font_body_bold)
+        y_detail += 22
+        val_lines = val.split('\n')
+        for vl in val_lines:
+            draw.text((1630, y_detail), vl, fill=(15, 23, 42), font=font_desc)
+            y_detail += 24
+        y_detail += 12
+
+    toc_img.save(output_path)
     print(f"Table of Contents generated and saved to {output_path}")
 
 def generate_single_sheet(args):
     drawing_type, filename, code = args
     print(f"Generating sheet: {filename}...")
     output_path = ATLAS_DIR / filename
+    if code == "DR-045":
+        try:
+            from tools.generate_indicator_images import draw_tables
+            draw_tables()
+            print(f"Successfully generated custom sheet {filename}")
+        except Exception as e:
+            print(f"Failed to generate custom sheet {filename}: {e}")
+        return
     temp_map_path = STATIC_DIR / f"temp_drawn_map_{code}.png"
     try:
         view_w = draw_spatial_map(temp_map_path, drawing_type=drawing_type)
-        title_to_use = "系统架构图" if drawing_type == "AIGC技术推演过程图" else drawing_type
-        process_a3_layout(
-            map_path=temp_map_path,
-            output_path=str(output_path),
-            view_w=view_w,
-            drawing_type=drawing_type,
-            title=title_to_use,
-            drawing_number=code
-        )
+        from tools.draw_scope_map import get_drawing_module
+        module = get_drawing_module(drawing_type)
+        has_no_frame = (module is not None and getattr(module, "NO_FRAME", False))
+        
+        if has_no_frame:
+            img = Image.open(str(temp_map_path))
+            img_resized = img.resize((2240, 1584), Image.Resampling.LANCZOS)
+            img_resized.save(str(output_path))
+            print(f"Skipped layout template frame and resized to 2240x1584 for {code}.")
+        else:
+            title_to_use = "用地规划图" if "用地规划图" in drawing_type else ("系统架构图" if drawing_type == "AIGC技术推演过程图" else drawing_type)
+            process_a3_layout(
+                map_path=temp_map_path,
+                output_path=str(output_path),
+                view_w=view_w,
+                drawing_type=drawing_type,
+                title=title_to_use,
+                drawing_number=code
+            )
         print(f"Successfully saved {filename}")
     except Exception as e:
         print(f"Failed to generate {filename}: {e}")
@@ -217,26 +292,48 @@ def generate_all_atlas_drawings(targets=None):
     
     # 3. Generate GIS Drawings
     gis_drawings = [
+        # 第1章 项目背景与概况
+        ("项目背景与政策解读图", "DR-003_项目背景与政策解读图.png", "DR-003"),
         ("现状区位图", "DR-004_现状区位图.png", "DR-004"),
         ("研究范围图", "DR-005_研究范围图.png", "DR-005"),
-        ("卫星图", "DR-013_数据来源与遥感现状图.png", "DR-013"),
-        ("土地利用现状图", "DR-014_用地现状分析图.png", "DR-014"),
+        # 第2章 现状调查与分析
+        ("数据来源与遥感现状图", "DR-013_数据来源与遥感现状图.png", "DR-013"),
+        ("用地现状分析图", "DR-014_用地现状分析图.png", "DR-014"),
+        ("道路交通现状图", "DR-020_道路交通现状图.png", "DR-020"),
         ("建筑高度现状图", "DR-017_建筑高度现状图.png", "DR-017"),
-        ("建筑风貌现状图", "DR-018_建筑风貌识别图.png", "DR-018"),
-        ("历史建筑与工业遗产分布图", "DR-019_历史建筑与工业遗产分布图.png", "DR-019"),
-        ("交通分析图", "DR-020_道路交通现状图.png", "DR-020"),
-        ("空间句法可达性分析图", "DR-021_空间句法可达性分析图.png", "DR-021"),
+        ("建筑风貌识别图", "DR-018_建筑风貌识别图.png", "DR-018"),
         ("环境品质问题地图", "DR-030_环境品质问题地图.png", "DR-030"),
-        ("更新模式分区图", "DR-040_更新模式分区图.png", "DR-040"),
-        ("空间结构规划图", "DR-042_空间结构规划图.png", "DR-042"),
-        ("总平面图", "DR-044_总体规划图.png", "DR-044"),
-        ("建筑更新控制图", "DR-048_建筑更新控制图.png", "DR-048"),
+        ("街区景观品质分析图", "DR-028_街区景观品质分析图.png", "DR-028"),
+        ("历史建筑与工业遗产分布图", "DR-019_历史建筑与工业遗产分布图.png", "DR-019"),
+        ("文化资源分析图", "DR-023_文化资源分析图.png", "DR-023"),
+        ("遗产价值评估热力图", "DR-032_遗产价值评估热力图.png", "DR-032"),
+        ("POI产业活力分析图", "DR-027_POI产业活力分析图.png", "DR-027"),
+        ("人群需求与老龄化分布图", "DR-029_人群需求与老龄化分布图.png", "DR-029"),
+        ("空间句法可达性分析图", "DR-021_空间句法可达性分析图.png", "DR-021"),
+        # 第3章 设计理念与构思
+        ("上位规划解读图", "DR-007_上位规划解读图.png", "DR-007"),
+        ("上位专项规划解读图", "DR-008_上位专项规划解读图.png", "DR-008"),
+        ("设计原则与理念图", "DR-037_设计原则与理念图.png", "DR-037"),
+        ("设计目标体系图", "DR-038_设计目标体系图.png", "DR-038"),
+        ("总体策略图", "DR-039_总体策略图.png", "DR-039"),
+        # 第4章 总体方案设计
+        ("用地规划图", "DR-044_用地规划图.png", "DR-044"),
+        ("用地规划图_带建筑轮廓", "DR-044_用地规划图_带建筑轮廓.png", "DR-044_WITH_BUILDINGS"),
+        ("用地规划指标表", "DR-045_用地规划指标表.png", "DR-045"),
         ("建筑高度控制图", "DR-049_建筑高度控制图.png", "DR-049"),
         ("道路交通系统规划图", "DR-051_道路交通系统规划图.png", "DR-051"),
+        ("慢行系统规划图", "DR-053_慢行系统规划图.png", "DR-053"),
+        ("空间结构规划图", "DR-042_空间结构规划图.png", "DR-042"),
+        ("公共空间系统图", "DR-055_公共空间系统图.png", "DR-055"),
+        ("产业业态规划图", "DR-046_产业业态规划图.png", "DR-046"),
         ("绿地景观系统图", "DR-056_绿地景观系统图.png", "DR-056"),
         ("历史文化展示系统图", "DR-057_历史文化展示系统图.png", "DR-057"),
+        ("更新模式分区图", "DR-040_更新模式分区图.png", "DR-040"),
+        ("建筑更新控制图", "DR-048_建筑更新控制图.png", "DR-048"),
+        # 第5章 重点地块设计
         ("AIGC技术推演过程图", "DR-081_AIGC技术推演过程图.png", "DR-081"),
         ("实施分期图", "DR-082_实施分期图.png", "DR-082"),
+        ("五地块深化设计总图", "DR-076_五地块深化设计总图.png", "DR-076"),
         ("图册章节结构导图", "DR-083_图册章节结构导图.png", "DR-083"),
         ("数据处理管线导图", "DR-084_数据处理管线导图.png", "DR-084"),
         ("规划协同工作流程图", "DR-085_规划协同工作流程图.png", "DR-085"),
@@ -255,10 +352,15 @@ def generate_all_atlas_drawings(targets=None):
         
     import multiprocessing
     num_workers = min(multiprocessing.cpu_count(), 8, len(gis_drawings))
-    print(f"Starting parallel generation of {len(gis_drawings)} sheets using {num_workers} processes...")
     
-    with multiprocessing.Pool(processes=num_workers) as pool:
-        pool.map(generate_single_sheet, gis_drawings)
+    if num_workers <= 1:
+        print(f"Starting sequential generation of {len(gis_drawings)} sheet...")
+        for drawing in gis_drawings:
+            generate_single_sheet(drawing)
+    else:
+        print(f"Starting parallel generation of {len(gis_drawings)} sheets using {num_workers} processes...")
+        with multiprocessing.Pool(processes=num_workers) as pool:
+            pool.map(generate_single_sheet, gis_drawings)
 
 if __name__ == "__main__":
     targets = sys.argv[1:] if len(sys.argv) > 1 else None

@@ -127,6 +127,7 @@ class SDPipeline:
     def __init__(self, base_url: str = "", timeout: int = 0):
         aigc = _load_config_aigc()
         self._aigc = aigc
+        self._explicit_base_url = bool(base_url)
         self.base_url = base_url or aigc.get("sd_webui_url", "http://127.0.0.1:7860")
         self.timeout = timeout or aigc.get("timeout", 180)
         self._steps: List[PipelineStep] = []
@@ -218,8 +219,9 @@ class SDPipeline:
         """Execute all pipeline steps sequentially."""
         if not self._steps:
             raise ValueError("Pipeline has no steps -- call txt2img/img2img/inpaint/upscale first")
+        self._validate_steps()
 
-        if is_demo_mode():
+        if is_demo_mode() and not self._explicit_base_url:
             return self.run_demo()
 
         start_time = time.time()
@@ -246,6 +248,17 @@ class SDPipeline:
             info=last_info,
             elapsed_seconds=round(elapsed, 2),
         )
+
+    def _validate_steps(self) -> None:
+        has_image = False
+        for step in self._steps:
+            if step.mode in {"txt2img", "img2img", "inpaint"}:
+                has_image = True
+                continue
+            if step.mode == "upscale":
+                if step.params.get("image") is None and not has_image:
+                    raise ValueError("No image to upscale -- provide image or chain after a generation step")
+                has_image = True
 
     def run_demo(self) -> SDResult:
         """Return a placeholder result in demo mode."""

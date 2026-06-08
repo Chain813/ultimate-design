@@ -440,6 +440,23 @@ def build_chapter_prompt(sec: ThesisSection, ctx: Dict[str, str]) -> str:
 9. 源材料不足时，写短不写长，绝不填充编造
 10. 只输出正文段落，不输出章节标题"""
 
+    # 默认/生成策略
+    return f"""【章节】{sec.section_id} {sec.title}
+【字数要求】约{sec.word_count}字
+【内容说明】{sec.description}
+
+请基于以下项目源材料，生成本节的正文段落：
+
+【源材料开始】
+{source_text}
+【源材料结束】
+
+【生成铁律 — 逐一核对】
+1. 约{sec.word_count}字，结构紧凑，陈述客观，术语规范。
+2. 所有数值（面积、百分比、指标、编号）和地名必须与源材料完全一致，严禁任何形式的编造或泛化。
+3. 严格基于数据事实，不得填充任何源材料中未提及的案例、规划内容或未来设想。
+4. 只输出正文段落，不输出章节标题。"""
+
 
 # ═══════════════════════════════════════════════════════════════
 # 章节生成编排
@@ -659,6 +676,71 @@ class StudentInfo:
     date: str = "2026年6月"
 
 
+def load_student_info_json() -> StudentInfo:
+    """从 config/student_info.json 加载学生配置，确保不硬编码隐私数据"""
+    import os
+    import json
+    from src.config.runtime import resolve_path
+    
+    default_info = StudentInfo()
+    try:
+        config_path = resolve_path("config/student_info.json")
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return StudentInfo(
+                    name=data.get("name", ""),
+                    student_id=data.get("student_id", ""),
+                    advisor=data.get("advisor", ""),
+                    college=data.get("college", default_info.college),
+                    major=data.get("major", default_info.major),
+                    date=data.get("date", default_info.date),
+                )
+    except Exception as e:
+        logger.warning(f"Failed to load config/student_info.json: {e}")
+    return default_info
+
+
+def save_student_info_json(student: StudentInfo) -> None:
+    """将学生学籍配置写入本地 config/student_info.json (已被 gitignore 忽略)"""
+    import os
+    import json
+    from src.config.runtime import resolve_path
+    
+    try:
+        config_dir = resolve_path("config")
+        config_dir.mkdir(exist_ok=True)
+        config_path = config_dir / "student_info.json"
+        
+        data = {
+            "name": student.name,
+            "student_id": student.student_id,
+            "advisor": student.advisor,
+            "college": student.college,
+            "major": student.major,
+            "date": student.date,
+        }
+        with open(config_path, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        logger.warning(f"Failed to save config/student_info.json: {e}")
+
+
+def scan_local_references() -> List[str]:
+    """扫描本地参考文献文件夹中的所有 PDF 文件名"""
+    import os
+    path = r"C:\Users\23902\Desktop\陈礼冲 毕设\参考文献"
+    if os.path.exists(path):
+        try:
+            files = [f for f in os.listdir(path) if f.lower().endswith('.pdf')]
+            files.sort()
+            return files
+        except Exception as e:
+            logger.warning(f"Failed to scan local references: {e}")
+            return []
+    return []
+
+
 def assemble_thesis_docx(
     chapters: Dict[str, str],
     student: Optional[StudentInfo] = None,
@@ -685,76 +767,6 @@ def assemble_thesis_docx(
         section.bottom_margin = Cm(2.54)
         section.left_margin = Cm(3.18)
         section.right_margin = Cm(3.18)
-
-    # ════════════════════════════════════
-    # 封面
-    # ════════════════════════════════════
-    _add_centered_line(doc, "", font_size=12, space_after=36)  # 顶部留白
-    _add_centered_line(doc, "吉林建筑大学", font_size=26, bold=True, east_asia="黑体", space_after=12)
-    _add_centered_line(doc, "本科毕业设计答辩稿（设计说明）", font_size=18, bold=True, east_asia="黑体", space_after=36)
-
-    cover_items = [
-        ("学　　院：", student.college),
-        ("专　　业：", student.major),
-        ("姓　　名：", student.name),
-        ("学　　号：", student.student_id),
-        ("指导教师：", student.advisor),
-        ("答辩日期：", student.date),
-    ]
-    for label, value in cover_items:
-        p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        pf = p.paragraph_format
-        pf.line_spacing = 2.0
-        pf.first_line_indent = Pt(0)
-        pf.space_after = Pt(4)
-
-        run_l = p.add_run(label)
-        _set_font_run(run_l)
-        run_l.font.size = Pt(15)
-
-        run_v = p.add_run(value)
-        _set_font_run(run_v)
-        run_v.font.size = Pt(15)
-        run_v.underline = True
-
-    _add_page_break(doc)
-
-    # ════════════════════════════════════
-    # 原创性声明
-    # ════════════════════════════════════
-    _add_centered_line(doc, "原创性声明", font_size=16, bold=True, east_asia="黑体", space_after=12)
-    _add_body_paragraph(doc,
-        "本人郑重声明：所呈交的毕业设计（设计说明），是本人在指导教师指导下，"
-        "独立进行研究工作所取得的成果。除文中已经注明引用的内容外，"
-        "本设计说明不包含任何其他个人或集体已经发表或撰写过的作品成果。"
-        "对本设计的研究做出重要贡献的个人和集体，均已在文中以明确方式标明。"
-        "本人完全意识到本声明的法律后果由本人承担。",
-        first_indent=True,
-    )
-    _add_body_paragraph(doc, "", first_indent=False)
-    _add_body_paragraph(doc, f"设计人签名：{student.name}", first_indent=False)
-    _add_body_paragraph(doc, f"日　　期：{student.date}", first_indent=False)
-
-    _add_page_break(doc)
-
-    # ════════════════════════════════════
-    # 版权使用授权书
-    # ════════════════════════════════════
-    _add_centered_line(doc, "版权使用授权书", font_size=16, bold=True, east_asia="黑体", space_after=12)
-    _add_body_paragraph(doc,
-        "本人完全了解吉林建筑大学有关保留、使用毕业设计（设计说明）的规定，"
-        "同意吉林建筑大学向国家有关部门或机构送交本设计说明的复印件和电子版，"
-        "允许设计说明被查阅和借阅；本人授权吉林建筑大学可以将本设计说明的全部或部分内容"
-        "编入有关数据库进行检索，可以采用影印、缩印或其他复制手段保存和汇编本设计说明。",
-        first_indent=True,
-    )
-    _add_body_paragraph(doc, "", first_indent=False)
-    _add_body_paragraph(doc, f"设计人签名：{student.name}", first_indent=False)
-    _add_body_paragraph(doc, f"指导教师签名：{student.advisor}", first_indent=False)
-    _add_body_paragraph(doc, f"日　　期：{student.date}", first_indent=False)
-
-    _add_page_break(doc)
 
     # ════════════════════════════════════
     # 中文摘要
@@ -1084,14 +1096,17 @@ def _generate_references_from_chapters(chapters: Dict[str, str]) -> str:
     from src.engines.llm_engine import call_llm_engine
 
     ctx = _all_chapters_text(chapters, 3000)
-    prompt = f"""请根据以下毕业设计内容，生成 30 篇参考文献列表，严格遵循 GB/T 7714-2015 格式。
+    local_refs = scan_local_references()
+    local_refs_str = "\n".join(f"- {f}" for f in local_refs) if local_refs else "无"
 
-要求：
-1. 总数 ≥30 篇
-2. 英文文献占比 ≥30%（≥9 篇）
-3. 近 5 年（2021-2026）文献 ≥10 篇
-4. 涵盖：期刊论文[J]、专著[M]、学位论文[D]、标准[S]、电子资源[EB/OL]等类型
-5. 编号格式：[1] [2] ... [30]
+    prompt = f"""请根据以下毕业设计内容，以及学生本地阅读的真实文献，生成至少 30 篇参考文献列表，严格遵循 GB/T 7714-2015 格式。
+
+【学生本地阅读的真实文献】（你必须首先为以下真实文献文件名生成标准的 GB/T 7714-2015 学术文献条目，并排在整个参考文献的最前面）：
+{local_refs_str}
+
+【其他相关文献生成要求】：
+请补足其余的参考文献，使总数达到至少 30 篇以上，且英文文献占比不低于 30%（即英文文献不少于 9 篇），近 5 年（2021-2026）文献不少于 10 篇。主要涵盖期刊论文[J]、专著[M]、学位论文[D]等类型。
+请按编号格式 [1] [2] ... [30] 顺序排列，合并输出。
 
 主题相关领域：
 - 城市更新与历史街区保护

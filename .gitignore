@@ -32,6 +32,7 @@ logs/
 *.err.log
 data/rag_knowledge.json
 config_daemon.json
+config/student_info.json
 assets/default_cover.jpg
 
 # 内部文档与代理运行痕迹
@@ -83,4 +84,15 @@ static/atlas/
 
 # 录屏与汇报视频指南
 obs_recording_guide.md
+
+# 排除大型附件与交付包（含潜在隐私与超大文件）
+static/附件/
+static/附件.zip
+
+# 排除包含个人/学业隐私信息的模板与中间提取文件
+tools/template.doc
+tools/template_large.doc
+tools/template_extracted.txt
+
+
 

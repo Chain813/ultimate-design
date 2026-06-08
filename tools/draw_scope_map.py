@@ -34,19 +34,20 @@ MAP_TYPE_TO_MODULE = {
     "建筑高度现状图": "dr_017",
     "建筑风貌现状图": "dr_018",
     "建筑风貌识别图": "dr_018",
-    "用地规划图": "dr_014_plan",
-    "用地规划分析图": "dr_014_plan",
+    "用地规划图": "dr_044",
+    "用地规划图_带建筑轮廓": "dr_044",
+    "用地规划分析图": "dr_044",
     "研究范围图": "dr_005",
     "空间句法可达性分析图": "dr_021",
     "环境品质问题地图": "dr_030",
     "遗产价值评估热力图": "dr_031",
     "更新模式分区图": "dr_040",
-    "建筑更新控制图": "dr_040",
+    "建筑更新控制图": "dr_048",
     "空间结构规划图": "dr_042",
     "总平面图": "dr_044",
     "总体规划图": "dr_044",
     "建筑高度控制图": "dr_049",
-    "慢行系统规划图": "dr_slow_traffic",
+    "慢行系统规划图": "dr_053",
     "公共空间系统图": "dr_public_space",
     "历史文化展示系统图": "dr_057",
     "AIGC技术推演过程图": "dr_081",
@@ -56,6 +57,20 @@ MAP_TYPE_TO_MODULE = {
     "规划协同工作流程图": "dr_085",
     "城乡规划知识体系导图": "dr_086",
     "现状区位图": "dr_004",
+    "街区景观品质分析图": "dr_028",
+    "街区景观品质诊断图": "dr_028",
+    "文化资源分析图": "dr_023",
+    "文化条件分析图": "dr_023",
+    "项目背景与政策解读图": "dr_003",
+    "POI产业活力分析图": "dr_027",
+    "人群需求与老龄化分布图": "dr_029",
+    "上位规划解读图": "dr_007",
+    "上位专项规划解读图": "dr_008",
+    "设计原则与理念图": "dr_037",
+    "设计目标体系图": "dr_038",
+    "总体策略图": "dr_039",
+    "产业业态规划图": "dr_046",
+    "五地块深化设计总图": "dr_076",
 }
 
 def get_drawing_module(drawing_type):
@@ -168,7 +183,14 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
             return res
 
     # 2. Setup figure and axes
-    fig = plt.figure(figsize=(17.05, 13.69), dpi=200, facecolor="#FAFAFC")
+    has_no_frame = False
+    if module and getattr(module, "NO_FRAME", False):
+        has_no_frame = True
+
+    if has_no_frame:
+        fig = plt.figure(figsize=(22.4, 15.84), dpi=200, facecolor="#FAFAFC")
+    else:
+        fig = plt.figure(figsize=(17.05, 13.69), dpi=200, facecolor="#FAFAFC")
     ax = fig.add_axes([0, 0, 1, 1], facecolor="#FAFAFC")
     
     # Set display bounds
@@ -192,15 +214,32 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
         return p.iloc[0].x, p.iloc[0].y
 
     # 3. Generate LLM-guided drawing params
-    params = generate_drawing_params(drawing_type)
+    if has_no_frame:
+        params = {}
+    else:
+        params = generate_drawing_params(drawing_type)
+    if not isinstance(params, dict):
+        params = {}
+    params["drawing_type"] = drawing_type
 
     # 4. Plot layers using module or default
+    import inspect
     if module and hasattr(module, "draw_map"):
-        module.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
+        sig = inspect.signature(module.draw_map)
+        has_params = "params" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+        if has_params:
+            module.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
+        else:
+            module.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
     else:
         default_mod = get_drawing_module("现状区位图")
         if default_mod and hasattr(default_mod, "draw_map"):
-            default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
+            sig = inspect.signature(default_mod.draw_map)
+            has_params = "params" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+            if has_params:
+                default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, params=params)
+            else:
+                default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
 
     # Boundary red line (Apple Red)
     boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)
@@ -230,18 +269,19 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
 
 def wrap_text_by_pixels(text, font, max_width, draw):
     lines = []
-    current_line = ""
-    for char in text:
-        test_line = current_line + char
-        w = draw.textlength(test_line, font=font)
-        if w <= max_width:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = char
-    if current_line:
-        lines.append(current_line)
+    for block in text.split('\n'):
+        current_line = ""
+        for char in block:
+            test_line = current_line + char
+            w = draw.textlength(test_line, font=font)
+            if w <= max_width:
+                current_line = test_line
+            else:
+                if current_line:
+                    lines.append(current_line)
+                current_line = char
+        if current_line:
+            lines.append(current_line)
     return lines
 
 def draw_centered_text(draw, text, cx, cy, fill, font):

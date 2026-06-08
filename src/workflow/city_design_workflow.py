@@ -271,6 +271,28 @@ STAGE_MODULE_MAP = {
 }
 
 
+def _set_module_href(stage_code, module_index, page_slug, subpage=None):
+    STAGE_MODULE_MAP[stage_code][module_index]["href"] = _module_url(page_slug, subpage)
+
+
+_set_module_href("06", 0, "目标定位", "全域设计目标策划")
+_set_module_href("06", 1, "资料收集与现场调研", "语义萃取引擎")
+_set_module_href("07", 0, "设计策略", "多主体协同推演")
+_set_module_href("07", 1, "目标定位", "案例对标分析")
+_set_module_href("07", 2, "设计策略", "共识雷达")
+_set_module_href("08", 1, "成果表达", "规划图纸代码生成")
+_set_module_href("09", 0, "现状分析与问题诊断", "3D现状全息底座")
+_set_module_href("09", 1, "成果表达", "规划图纸代码生成")
+_set_module_href("10", 2, "成果表达", "图册自动组装")
+_set_module_href("11", 0, "实施路径", "全域实施路径")
+_set_module_href("11", 1, "设计策略", "设计纲领提炼")
+_set_module_href("12", 0, "城市设计导则", "一键导出")
+_set_module_href("12", 1, "城市设计导则", "分板块导则生成")
+_set_module_href("13", 0, "成果表达", "规划图纸代码生成")
+_set_module_href("13", 1, "成果表达", "图册自动组装")
+_set_module_href("13", 2, "成果表达", "文档导出")
+
+
 def _board_by_key(board_key):
     return next(board for board in WORKFLOW_BOARDS if board["key"] == board_key)
 

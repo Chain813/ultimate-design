@@ -82,7 +82,9 @@ def get_cached_db_embeddings():
     import torch
     db_embeddings = {}
     for cid, p_info in rag_db.items():
-        content = p_info["content"]
+        content = p_info.get("content")
+        if not content:
+            continue
         inputs = tokenizer(content, padding=True, truncation=True, return_tensors="pt", max_length=512)
         with torch.no_grad():
             outputs = model(**inputs)
@@ -126,6 +128,9 @@ def retrieve_rag_context(query: str, top_k: int = 3) -> list:
 
     Returns list of (score, content, source) tuples.
     """
+    if not query:
+        return []
+
     rag_db = load_rag_knowledge()
     if not rag_db:
         return []
@@ -139,15 +144,17 @@ def retrieve_rag_context(query: str, top_k: int = 3) -> list:
             for cid, p_info in rag_db.items():
                 if cid in db_embeddings:
                     score = float(np.dot(query_emb, db_embeddings[cid]))
-                    best_chunks.append((score, p_info["content"], p_info["source"]))
+                    content = p_info.get("content", "") or ""
+                    source = p_info.get("source", "") or ""
+                    best_chunks.append((score, content, source))
 
     if not best_chunks:
         words = [w for w in jieba.cut(query) if len(w) > 1]
         for _cid, p_info in rag_db.items():
-            content = p_info["content"]
+            content = p_info.get("content", "") or ""
             score = sum(1 for w in words if w in content)
             if score > 0:
-                best_chunks.append((score, content, p_info["source"]))
+                best_chunks.append((score, content, p_info.get("source", "") or ""))
 
     best_chunks.sort(key=lambda x: x[0], reverse=True)
     return best_chunks[:top_k]

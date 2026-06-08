@@ -26,12 +26,12 @@ def test_check_package_missing():
 
 
 def test_critical_files_includes_all_pages():
-    """Verify the critical_files list includes 00 and 14 pages."""
+    """Verify the critical_files list includes key pages."""
     import tools.check_env as mod
 
     source = inspect.getsource(mod.main)
     assert "pages/00_数据准备与任务解读.py" in source
-    assert "pages/14_视频生成.py" in source
+    assert "pages/15_AIGC设计推演.py" in source
     assert "pages/02_资料收集与现场调研.py" in source
     assert "pages/13_成果表达.py" in source
 

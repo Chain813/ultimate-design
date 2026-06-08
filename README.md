@@ -10,7 +10,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-168%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-173%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -37,7 +37,7 @@ UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 *
 | **后台缓存预加载** | daemon 线程静默预热 37MB GeoJSON、RAG 模型等，页面切换秒开 |
 | **引擎懒加载** | `__getattr__` 模式延迟加载 pandas/numpy/PIL，启动速度提升 |
 | **录屏自动滑动组件** | 页面右下角常驻防穿帮录屏控制器，支持帧率级平滑像素滚动与快捷键交互 |
-| **168 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **173 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
 
 ---
 
@@ -92,7 +92,7 @@ streamlit run app.py
 ### 🩺 3. 健康自检
 
 ```powershell
-python -m pytest                    # 168 项单元测试
+python -m pytest                    # 173 项单元测试
 python tools/check_env.py           # 15 页面完整性校验
 python tools/data_quality_check.py  # 数据质量评级
 python tools/secret_scan.py         # 敏感信息扫描
@@ -274,7 +274,7 @@ ultimateDESIGN/
 │   ├── secret_scan.py                 #   敏感信息扫描
 │   ├── startup_smoke.py              #   启动冒烟测试
 │   └── video_generator/              #   HyperFrames 视频工具 (Node.js)
-├── tests/                              # 24 个测试模块 / 168 项用例
+├── tests/                              # 26 个测试模块 / 173 项用例
 ├── data/                               # 数据资产 (数据与逻辑解耦)
 ├── static/                             # Streamlit 静态资源代理
 ├── assets/                             # CSS 样式 / WebGL 模板

@@ -70,7 +70,6 @@ elif selected_sub == "🖼️ 图册自动组装":
             "研究范围图": "DR-005",
             "卫星图": "DR-013",
             "土地利用现状图": "DR-014",
-            "用地规划图": "DR-015",
             "建筑高度现状图": "DR-017",
             "建筑风貌现状图": "DR-018",
             "历史建筑与工业遗产分布图": "DR-019",
@@ -80,7 +79,7 @@ elif selected_sub == "🖼️ 图册自动组装":
             "遗产价值评估热力图": "DR-032",
             "更新模式分区图": "DR-040",
             "空间结构规划图": "DR-042",
-            "总平面图": "DR-044",
+            "用地规划图": "DR-044",
             "建筑更新控制图": "DR-048",
             "建筑高度控制图": "DR-049",
             "道路交通系统规划图": "DR-051",
@@ -97,7 +96,6 @@ elif selected_sub == "🖼️ 图册自动组装":
             "研究范围图": "研究范围图",
             "卫星图": "数据来源与遥感现状图",
             "土地利用现状图": "用地现状分析图",
-            "用地规划图": "用地结构规划图",
             "建筑高度现状图": "建筑高度现状图",
             "建筑风貌现状图": "建筑风貌识别图",
             "历史建筑与工业遗产分布图": "历史建筑与工业遗产分布图",
@@ -107,7 +105,7 @@ elif selected_sub == "🖼️ 图册自动组装":
             "遗产价值评估热力图": "遗产价值评估热力图",
             "更新模式分区图": "更新模式分区图",
             "空间结构规划图": "空间结构规划图",
-            "总平面图": "总体规划图",
+            "用地规划图": "用地规划图",
             "建筑更新控制图": "建筑更新控制图",
             "建筑高度控制图": "建筑高度控制图",
             "道路交通系统规划图": "道路交通系统规划图",
@@ -149,11 +147,6 @@ elif selected_sub == "🖼️ 图册自动组装":
                 "1. 用地构成：项目区内以居住用地（R）和商业服务业设施用地（B）为主，主要分布在亚泰大街及长通路两侧。工业与仓储用地占比较低且多属需更新工业遗存。",
                 "2. 混合利用：规划提倡在轨道站点及重点更新地段发展商住混合、文创混合等多功能混合用地（M），以提升地块经济与社会活力。",
                 "3. 用地优化：通过盘活现状低效建设用地，增加公共服务设施用地（A） and 绿地与广场用地（G），改善居民 15 分钟生活圈 of 设施供给品质。"
-            ],
-            "用地规划图": [
-                "1. 结构优化：基于多主体博弈决策沙盘比例调整，降低了低效居住用地占比，向核心区及轨道交通周边注入商业服务业与创客办公。",
-                "2. 绿地修补：针对现状绿化严重不足（仅2.9%）问题，刚性增加公园与绿地（G）空间，打通生态走廊，缝合东侧伊通河景观环线。",
-                "3. 活力重塑：结合商业/办公混合用地布局，激活光复路历史风貌廊道与站城联动轴线，实现功能织补与全天候活力的平衡。"
             ],
             "建筑高度现状图": [
                 "1. 高度特征：区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。",
@@ -200,7 +193,7 @@ elif selected_sub == "🖼️ 图册自动组装":
                 "2. 站城联动：打通长春站至伪满皇宫的空间轴线，利用高品质慢行商业街与视觉廊道建立两者的物理与文化强关联。",
                 "3. 节点触媒：以 5 个更新活力节点为针灸触点，激活周边消极的街区本底，促进历史风貌区与现代化城市的无缝衔接。"
             ],
-            "总平面图": [
+            "用地规划图": [
                 "1. 规划布局：商业与文创混合区沿亚泰大街与长通路两侧布置；老旧社区内部主要进行绿化修补与微更新，维持低容积率肌理。",
                 "2. 密路网：地块内 proposed 规划小街区密路网（3.5-5米宽人行步行街/支路），将大尺度街区切碎，极大提升空间可渗透性。",
                 "3. 景观骨架：构建环历史核心区的绿色开敞环线，并与东侧伊通河生态公园绿带无缝对接，实现蓝绿网络与城市空间融合。"
@@ -299,18 +292,27 @@ elif selected_sub == "🖼️ 图册自动组装":
                     view_w = draw_spatial_map(temp_map, drawing_type=drawing_type)
                     
                     # 2. 合成 A3 图纸、图例与说明
-                    process_a3_layout(
-                        map_path=temp_map,
-                        output_path=str(output_file_path),
-                        view_w=view_w,
-                        drawing_type=drawing_type,
-                        title=drawing_title,
-                        description_lines=[desc_1, desc_2, desc_3],
-                        drawing_number=drawing_num,
-                        author=author,
-                        author_id=author_id,
-                        organization=organization
-                    )
+                    from tools.draw_scope_map import get_drawing_module
+                    module = get_drawing_module(drawing_type)
+                    has_no_frame = (module is not None and getattr(module, "NO_FRAME", False))
+                    
+                    if has_no_frame:
+                        img = Image.open(temp_map)
+                        img_resized = img.resize((2240, 1584), Image.Resampling.LANCZOS)
+                        img_resized.save(str(output_file_path))
+                    else:
+                        process_a3_layout(
+                            map_path=temp_map,
+                            output_path=str(output_file_path),
+                            view_w=view_w,
+                            drawing_type=drawing_type,
+                            title=drawing_title,
+                            description_lines=[desc_1, desc_2, desc_3],
+                            drawing_number=drawing_num,
+                            author=author,
+                            author_id=author_id,
+                            organization=organization
+                        )
                     
                     # 记录文件以供预览
                     st.session_state["p13_latest_rendered"] = str(output_file_path)
