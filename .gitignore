@@ -23,15 +23,13 @@ data/template_assets/
 archive/
 data/gis/raw/road_network.json
 data/gis/raw/rail_network.json
-data/gis/Building_Footprints.geojson
 
 # 日志与临时元数据
 logs/
 *.log
 *.err
 *.err.log
-data/rag_knowledge.json
-config_daemon.json
+
 config/student_info.json
 assets/default_cover.jpg
 
