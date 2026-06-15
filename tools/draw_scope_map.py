@@ -71,10 +71,43 @@ MAP_TYPE_TO_MODULE = {
     "总体策略图": "dr_039",
     "产业业态规划图": "dr_046",
     "五地块深化设计总图": "dr_076",
+    # 重点地块现状分析图集
+    "老水产市场-现状卫星图": "dr_parcel_detail",
+    "老水产市场-现状土地利用": "dr_parcel_detail",
+    "老水产市场-现状肌理": "dr_parcel_detail",
+    "老水产市场-现状建筑高度": "dr_parcel_detail",
+    "老水产市场-现状业态分区": "dr_parcel_detail",
+    "食品调料市场-现状卫星图": "dr_parcel_detail",
+    "食品调料市场-现状土地利用": "dr_parcel_detail",
+    "食品调料市场-现状肌理": "dr_parcel_detail",
+    "食品调料市场-现状建筑高度": "dr_parcel_detail",
+    "食品调料市场-现状业态分区": "dr_parcel_detail",
+    "市一中北侧-现状卫星图": "dr_parcel_detail",
+    "市一中北侧-现状土地利用": "dr_parcel_detail",
+    "市一中北侧-现状肌理": "dr_parcel_detail",
+    "市一中北侧-现状建筑高度": "dr_parcel_detail",
+    "市一中北侧-现状业态分区": "dr_parcel_detail",
+    "清禾集贸市场-现状卫星图": "dr_parcel_detail",
+    "清禾集贸市场-现状土地利用": "dr_parcel_detail",
+    "清禾集贸市场-现状肌理": "dr_parcel_detail",
+    "清禾集贸市场-现状建筑高度": "dr_parcel_detail",
+    "清禾集贸市场-现状业态分区": "dr_parcel_detail",
+    "中国石油-现状卫星图": "dr_parcel_detail",
+    "中国石油-现状土地利用": "dr_parcel_detail",
+    "中国石油-现状肌理": "dr_parcel_detail",
+    "中国石油-现状建筑高度": "dr_parcel_detail",
+    "中国石油-现状业态分区": "dr_parcel_detail",
+    # 综合诊断图
+    "综合现状问题诊断图": "dr_059",
+    # MPI 更新潜力评估图
+    "MPI更新潜力评估图": "dr_061",
 }
 
 def get_drawing_module(drawing_type):
-    mod_name = MAP_TYPE_TO_MODULE.get(drawing_type, "dr_004")
+    if any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
+        mod_name = "dr_parcel_detail"
+    else:
+        mod_name = MAP_TYPE_TO_MODULE.get(drawing_type, "dr_004")
     try:
         return importlib.import_module(f"tools.drawings.{mod_name}")
     except Exception as e:
@@ -175,6 +208,33 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
     view_h = height_m * 1.55
     view_w = view_h * 1.2454
 
+    # Check if this is a parcel detail drawing and adjust viewport to zoom in
+    parcel_idx = None
+    if "老水产市场" in drawing_type:
+        parcel_idx = 0
+    elif "食品调料市场" in drawing_type:
+        parcel_idx = 1
+    elif "市一中北侧" in drawing_type:
+        parcel_idx = 2
+    elif "清禾集贸市场" in drawing_type:
+        parcel_idx = 3
+    elif "中国石油" in drawing_type:
+        parcel_idx = 4
+
+    if parcel_idx is not None and key_plots is not None and not key_plots.empty:
+        geom = key_plots.iloc[parcel_idx].geometry
+        cx = geom.centroid.x
+        cy = geom.centroid.y
+        p_minx, p_miny, p_maxx, p_maxy = geom.bounds
+        p_w = p_maxx - p_minx
+        p_h = p_maxy - p_miny
+        max_dim = max(p_w, p_h * 1.2454)
+        
+        # Override zoom factor to zoom in closer for more details on specific parcels (食品调料市场, 清禾集贸市场)
+        zoom_factor = 1.3 if any(k in drawing_type for k in ["食品调料市场", "清禾集贸市场"]) else 2.5
+        view_w = max_dim * zoom_factor
+        view_h = view_w / 1.2454
+
     # Early return if drawing has draw_map_early method (like AIGC)
     module = get_drawing_module(drawing_type)
     if module and hasattr(module, "draw_map_early"):
@@ -241,8 +301,9 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
             else:
                 default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
 
-    # Boundary red line (Apple Red)
-    boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)
+    # Boundary red line (Apple Red) - skip for parcel detail drawings to keep them clean
+    if not any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
+        boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)
 
     # 4. Add text annotations for key landmarks (if not AIGC flowchart)
     if drawing_type != "AIGC技术推演过程图":

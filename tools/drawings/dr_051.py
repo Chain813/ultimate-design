@@ -189,6 +189,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         for line in wrapped_desc.split('\n'):
             ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
                     fontproperties=_font(font_prop, 14.0), zorder=4)
+            y_text -= 2.8
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),

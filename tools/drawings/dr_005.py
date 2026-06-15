@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+import os
 from pathlib import Path
 import geopandas as gpd
 import pandas as pd
@@ -74,15 +74,61 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax_map.set_axis_off()
     ax_map.set_aspect("equal")
 
-    # 1. Satellite Base
-    sat_path = STATIC_DIR / "assets/generated_base/satellite_cropped.png"
-    if sat_path.exists():
+    # 1. Satellite Base (with high-res TIFF dynamic loading)
+    tif_path = None
+    graduate_dir = Path("E:/graduate")
+    if graduate_dir.exists():
+        for root, dirs, files in os.walk(graduate_dir):
+            for file in files:
+                if "2604161335" in file and file.lower().endswith(".tif"):
+                    tif_path = Path(root) / file
+                    break
+    
+    if not tif_path:
+        album_dir = Path("E:/画册/影像")
+        if album_dir.exists():
+            for root, dirs, files in os.walk(album_dir):
+                for file in files:
+                    if "2503142036" in file and file.lower().endswith(".tif"):
+                        tif_path = Path(root) / file
+                        break
+
+    loaded_high_res = False
+    if tif_path and tif_path.exists():
         try:
-            sat_img = Image.open(sat_path)
-            extent = [cx - view_w / 2, cx + view_w / 2, cy - view_h / 2, cy + view_h / 2]
-            ax_map.imshow(sat_img, extent=extent, zorder=0)
+            import rasterio
+            from rasterio.windows import from_bounds
+            with rasterio.open(tif_path) as src:
+                xmin = cx - view_w / 2
+                xmax = cx + view_w / 2
+                ymin = cy - view_h / 2
+                ymax = cy + view_h / 2
+                
+                # Crop with 5% safety padding to prevent boundary gaps
+                pad_w = view_w * 0.05
+                pad_h = view_h * 0.05
+                window = from_bounds(xmin - pad_w, ymin - pad_h, xmax + pad_w, ymax + pad_h, src.transform)
+                
+                # Read RGB (bands 1, 2, 3)
+                data = src.read([1, 2, 3], window=window)
+                rgb = np.transpose(data, (1, 2, 0))
+                sat_img = Image.fromarray(rgb)
+                
+                extent = [xmin - pad_w, xmax + pad_w, ymin - pad_h, ymax + pad_h]
+                ax_map.imshow(sat_img, extent=extent, zorder=0)
+                loaded_high_res = True
         except Exception as e:
-            print(f"Error loading satellite image: {e}")
+            print(f"Error loading high-res TIFF: {e}. Falling back to default satellite PNG.")
+
+    if not loaded_high_res:
+        sat_path = STATIC_DIR / "assets/generated_base/satellite_cropped.png"
+        if sat_path.exists():
+            try:
+                sat_img = Image.open(sat_path)
+                extent = [cx - view_w / 2, cx + view_w / 2, cy - view_h / 2, cy + view_h / 2]
+                ax_map.imshow(sat_img, extent=extent, zorder=0)
+            except Exception as e:
+                print(f"Error loading satellite image: {e}")
             
     # 2. Transparent Blue Water
     if water is not None and not water.empty:
