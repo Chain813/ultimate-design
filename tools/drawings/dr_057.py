@@ -175,32 +175,32 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     # Save temp insert
     temp_img_path = "temp_dr075_insert.png"
     
-                # Floating Windrose (Pure Black, 12% size) with soft white radial gradient backdrop
-        try:
-            from PIL import Image as _PIL_Image
-            import numpy as _np
-            from pathlib import Path as _Path
-            _rose_path = _Path("assets/长春市风玫瑰.png")
-            if _rose_path.exists():
-                _ax_rose = fig_map.add_axes([0.85, 0.85, 0.12, 0.12], facecolor='none', zorder=10)
-                _ax_rose.set_axis_off()
-                
-                _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
-                _r = _np.sqrt(_x_g**2 + _y_g**2)
-                _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
-                _grad_img = _np.ones((100, 100, 4))
-                _grad_img[..., 3] = _alpha
-                _ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
-                
-                _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
-                _rose_data = _np.array(_rose_img)
-                _rose_data[..., 0] = 0
-                _rose_data[..., 1] = 0
-                _rose_data[..., 2] = 0
-                _black_rose_img = _PIL_Image.fromarray(_rose_data)
-                _ax_rose.imshow(_black_rose_img, zorder=1)
-        except Exception as e:
-            print(f"Error drawing insert wind rose: {e}")
+    # Floating Windrose (Pure Black, 12% size) with soft white radial gradient backdrop
+    try:
+        from PIL import Image as _PIL_Image
+        import numpy as _np
+        from pathlib import Path as _Path
+        _rose_path = _Path("assets/长春市风玫瑰.png")
+        if _rose_path.exists():
+            _ax_rose = fig_map.add_axes([0.85, 0.85, 0.12, 0.12], facecolor='none', zorder=10)
+            _ax_rose.set_axis_off()
+            
+            _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
+            _r = _np.sqrt(_x_g**2 + _y_g**2)
+            _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
+            _grad_img = _np.ones((100, 100, 4))
+            _grad_img[..., 3] = _alpha
+            _ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
+            
+            _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
+            _rose_data = _np.array(_rose_img)
+            _rose_data[..., 0] = 0
+            _rose_data[..., 1] = 0
+            _rose_data[..., 2] = 0
+            _black_rose_img = _PIL_Image.fromarray(_rose_data)
+            _ax_rose.imshow(_black_rose_img, zorder=1)
+    except Exception as e:
+        print(f"Error drawing insert wind rose: {e}")
 
     plt.savefig(temp_img_path, dpi=120, bbox_inches='tight', pad_inches=0)
     plt.close()

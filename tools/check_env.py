@@ -16,6 +16,7 @@ PACKAGE_IMPORT_NAMES = {
     "scikit-learn": "sklearn",
     "streamlit-folium": "streamlit_folium",
     "webdriver-manager": "webdriver_manager",
+    "pywebview": "webview",
 }
 
 def check_package(package_name):

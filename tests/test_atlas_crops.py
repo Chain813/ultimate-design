@@ -36,6 +36,10 @@ def test_preserve_full_image_list_matches_non_crop_sheet_types():
 
 
 def test_key_parcel_plan_and_existing_satellite_sheets_are_preserved_from_atlas():
+    import pytest
+    if not ATLAS_DIR.exists() or not list(ATLAS_DIR.glob("*.png")):
+        pytest.skip("Atlas directory is empty or does not exist.")
+
     preserve_keywords = (
         "现状卫星图",
         "改造总平面图",

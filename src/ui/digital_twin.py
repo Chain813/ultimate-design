@@ -242,6 +242,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
     try:
         template_path = Path("assets/map3d_standalone.html")
         _mtime = template_path.stat().st_mtime if template_path.exists() else 0.0
+        html_template = _load_map_html_template(_mtime)
         map_config_json = json.dumps(get_map_viewport())
         html_template = html_template.replace('/*__MAP_CONFIG__*/{"center": [125.34064, 43.90095], "zoom": 14.4, "pitch": 73.0, "bearing": 45.0}/*__END_MAP_CONFIG__*/', map_config_json)
         html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
