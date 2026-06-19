@@ -1,4 +1,4 @@
-ID,GVI,SVF,Enclosure,Clutter,road,sidewalk,building,wall,fence,pole,traffic_light,traffic_sign,vegetation,terrain,sky,person,rider,car,truck,bus,train,motorcycle,bicycle
+﻿ID,GVI,SVF,Enclosure,Clutter,road,sidewalk,building,wall,fence,pole,traffic_light,traffic_sign,vegetation,terrain,sky,person,rider,car,truck,bus,train,motorcycle,bicycle
 1,6.42,42.71,49.87,2.09,1.01,0.25,43.45,0.0,0.72,0.92,0.17,0.27,6.42,0.0,42.71,0.56,0.01,2.54,0.14,0.0,0.0,0.52,0.3
 1001,10.31,28.06,66.24,1.11,0.31,0.01,55.37,0.55,0.18,0.65,0.0,0.27,10.31,0.0,28.06,0.08,0.0,1.63,2.47,0.0,0.0,0.0,0.1
 1006,10.75,37.17,59.99,0.77,0.45,0.02,48.93,0.31,0.51,0.03,0.0,0.23,10.75,0.01,37.17,0.14,0.0,1.34,0.04,0.0,0.0,0.0,0.07

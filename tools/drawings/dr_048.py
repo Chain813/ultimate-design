@@ -17,23 +17,49 @@ ASSETS_DIR = ROOT / "assets"
 NO_FRAME = True
 
 def wrap_text(text, max_len=44):
-    wrapped_lines = []
-    for part in text.split('\n'):
-        current_line = []
-        current_width = 0
-        for char in part:
-            char_w = 2 if ord(char) > 127 else 1
-            if current_width + char_w > max_len:
-                wrapped_lines.append("".join(current_line))
-                current_line = [char]
-                current_width = char_w
-            else:
-                current_line.append(char)
-                current_width += char_w
-        if current_line:
-            wrapped_lines.append("".join(current_line))
-    return '\n'.join(wrapped_lines)
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def char_width(c):
+        return 2 if ord(c) > 127 else 1
 
+    lines = []
+    for part in text.split('\n'):
+        if not part:
+            lines.append("")
+            continue
+        current_line = ""
+        current_w = 0
+        i = 0
+        while i < len(part):
+            char = part[i]
+            w = char_width(char)
+            if current_w + w <= 44:
+                current_line += char
+                current_w += w
+                i += 1
+            else:
+                if not current_line:
+                    current_line = char
+                    current_w = w
+                    i += 1
+                else:
+                    if part[i] in forbidden_start:
+                        current_line += part[i]
+                        i += 1
+                        while i < len(part) and part[i] in forbidden_start:
+                            current_line += part[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+                current_w = 0
+        if current_line:
+            lines.append(current_line)
+    return '\n'.join(lines)
 def _font(font_prop, size, weight="normal"):
     return fm.FontProperties(family=font_prop["family"], size=size, weight=weight)
 
@@ -238,6 +264,36 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
                     fontproperties=_font(font_prop, 15.0), zorder=4)
             y_text -= 3.2
+
+        # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
+    try:
+        from PIL import Image as _PIL_Image
+        import numpy as _np
+        from pathlib import Path as _Path
+        _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
+        _rose_path = _assets_dir / "长春市风玫瑰.png"
+        if _rose_path.exists():
+            ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
+            ax_rose.set_axis_off()
+            
+            # Draw a soft white radial gradient backdrop
+            _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
+            _r = _np.sqrt(_x_g**2 + _y_g**2)
+            _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
+            _grad_img = _np.ones((100, 100, 4))
+            _grad_img[..., 3] = _alpha
+            ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
+            
+            _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
+            _rose_data = _np.array(_rose_img)
+            _rose_data[..., 0] = 0
+            _rose_data[..., 1] = 0
+            _rose_data[..., 2] = 0
+            _black_rose_img = _PIL_Image.fromarray(_rose_data)
+            
+            ax_rose.imshow(_black_rose_img, zorder=1)
+    except Exception as e:
+        print(f"Error loading wind rose in {__file__}: {e}")
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),

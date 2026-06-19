@@ -55,17 +55,26 @@ def calculate_metrics():
     landuse_base['area_sqm'] = landuse_base.geometry.area / SCALE_FACTOR
     base_areas = landuse_base.groupby('GB_Code_Clean')['area_sqm'].sum().to_dict()
 
-    key_plots_planned = [
-        ('B', key_plots.geometry.iloc[0].area / SCALE_FACTOR),
-        ('B', key_plots.geometry.iloc[1].area / SCALE_FACTOR),
-        ('A', key_plots.geometry.iloc[2].area / SCALE_FACTOR),
-        ('B', key_plots.geometry.iloc[3].area / SCALE_FACTOR),
-        ('A', key_plots.geometry.iloc[4].area / SCALE_FACTOR)
+    # Define planned landuse ratios per plot based on layout design
+    per_plot_planned_ratios = [
+        # KP-01 农贸水产市场: 文创生活街区 -> B55% A15% G30%
+        {'B': 0.55, 'A': 0.15, 'G': 0.30},
+        # KP-02 食品调料大市场: 活态市集·风味院落 -> B50% A15% G35%
+        {'B': 0.50, 'A': 0.15, 'G': 0.35},
+        # KP-03 市一中北侧: 全龄共享社区 -> A40% R25% G35%
+        {'A': 0.40, 'R': 0.25, 'G': 0.35},
+        # KP-04 清禾集贸市场: 社区生活发生器 -> B45% A20% G35%
+        {'B': 0.45, 'A': 0.20, 'G': 0.35},
+        # KP-05 中国石油: 能量花园 -> B15% G85% (Gas station & Park)
+        {'B': 0.15, 'G': 0.85},
     ]
 
     planned_areas = base_areas.copy()
-    for code, area in key_plots_planned:
-        planned_areas[code] = planned_areas.get(code, 0.0) + area
+    for i in range(len(key_plots)):
+        pa = key_plots.geometry.iloc[i].area / SCALE_FACTOR
+        ratios = per_plot_planned_ratios[i]
+        for code, ratio in ratios.items():
+            planned_areas[code] = planned_areas.get(code, 0.0) + pa * ratio
 
     sum_exist_cat = sum(existing_areas.get(c, 0.0) for c in gb_mapping.keys())
     sum_plan_cat = sum(planned_areas.get(c, 0.0) for c in gb_mapping.keys())
@@ -106,14 +115,14 @@ def calculate_metrics():
         area_1 * 0.28 +
         area_2 * 0.25 +
         area_3 * 0.25 +
-        area_4 * 0.30
+        area_4 * 0.15
     )
     new_floor = (
         area_0 * 1.3 +
         area_1 * 1.4 +
         area_2 * 1.3 +
         area_3 * 1.3 +
-        area_4 * 1.2
+        area_4 * 0.2
     )
 
     total_plan_footprint = retained_footprint + historic_footprint + new_footprint
@@ -135,21 +144,6 @@ def calculate_metrics():
             by_type = clipped.groupby('GB_Code_Clean')['area_sqm'].sum().to_dict()
             breakdown = by_type
         per_plot_existing.append(breakdown)
-
-    # Planned land use per plot (based on thesis design: mixed-use ratios)
-    # Each entry: {code: fraction_of_plot_area}
-    per_plot_planned_ratios = [
-        # KP-01 农贸水产市场: 文创生活街区 -> B55% A15% G30%
-        {'B': 0.55, 'A': 0.15, 'G': 0.30},
-        # KP-02 食品调料大市场: 活态市集·风味院落 -> B50% A15% G35%
-        {'B': 0.50, 'A': 0.15, 'G': 0.35},
-        # KP-03 市一中北侧: 全龄共享社区 -> A40% R25% G35%
-        {'A': 0.40, 'R': 0.25, 'G': 0.35},
-        # KP-04 清禾集贸市场: 社区生活发生器 -> B45% A20% G35%
-        {'B': 0.45, 'A': 0.20, 'G': 0.35},
-        # KP-05 中国石油: 能量花园 -> A30% G35% R35%
-        {'A': 0.30, 'G': 0.35, 'R': 0.35},
-    ]
 
     per_plot_planned = []
     for i in range(len(key_plots)):
@@ -281,7 +275,7 @@ def draw_tables():
     draw.rectangle([32, 60, 2198, 66], fill=(217, 119, 6))
 
     draw.text((55, 117), "规划技术指标表", fill=(15, 23, 42), font=font_large_title, anchor="lm")
-    draw.text((360, 117), "吉林建筑大学毕业设计说明 · URBAN PLAN LAND USE & DEVELOPMENT DENSITY CONTROL METRICS (DR-045)", fill=(100, 116, 139), font=font_sub_title, anchor="lm")
+    draw.text((360, 117), "吉林建筑大学毕业设计说明 · URBAN PLAN LAND USE & DEVELOPMENT DENSITY CONTROL METRICS (DR-039)", fill=(100, 116, 139), font=font_sub_title, anchor="lm")
 
     # Helper function to draw justified text lines to ensure left and right margins are exactly equal
     def draw_justified_line(draw_obj, text, x_start, x_end, y, font, fill_color, font_bold=None):
@@ -501,7 +495,7 @@ def draw_tables():
         ["KP-02", "食品调料大市场", f"{plot_areas_ha[1]:.2f}", "B/A混合", "≤1.4", "≤28%", "≥35%", "≤18", "活态市集·风味院落"],
         ["KP-03", "市一中北侧", f"{plot_areas_ha[2]:.2f}", "A/R混合", "≤1.3", "≤25%", "≥35%", "≤18", "全龄共享生活社区"],
         ["KP-04", "清禾集贸市场", f"{plot_areas_ha[3]:.2f}", "B/A混合", "≤1.3", "≤25%", "≥35%", "9~15", "历史界面缝合·社区生活发生器"],
-        ["KP-05", "中国石油", f"{plot_areas_ha[4]:.2f}", "A/G混合", "≤1.2", "≤30%", "≥35%", "≤16", "宽城子能量花园"],
+        ["KP-05", "中国石油", f"{plot_areas_ha[4]:.2f}", "G/B混合", "≤0.2", "≤15%", "≥80%", "≤9", "宽城子能量花园"],
     ]
 
     total_key_ha = sum(plot_areas_ha)
@@ -574,7 +568,7 @@ def draw_tables():
     draw.text((1180, t4_end + 6), "注：现状用地基于GIS空间裁剪实算；规划面积依据设计方案配比推算。经高分辨率墨卡托纠偏。", fill=(100, 116, 139), font=font_footnote)
 
     ATLAS_DIR.mkdir(parents=True, exist_ok=True)
-    output_path = ATLAS_DIR / "DR-045_用地规划指标表.png"
+    output_path = ATLAS_DIR / "DR-039_用地规划指标表.png"
     img.save(output_path)
     print(f"Successfully saved tagged clean A3 landscape indicators sheet to {output_path}")
     print(f"  Image size: {img.size[0]} x {img.size[1]}")

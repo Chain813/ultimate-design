@@ -26,9 +26,8 @@ logger = logging.getLogger("ultimateDESIGN")
 @st.cache_data(ttl=3600, max_entries=20)
 def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
-    df1 = _safe_read_csv("data/csv/Changchun_POI_Real.csv", usecols=usecols)
-    # Changchun_POI_Baidu_New.csv may not exist in all deployments; treat as optional.
-    df2 = _safe_read_csv("data/csv/Changchun_POI_Baidu_New.csv", usecols=usecols)
+    df1 = _safe_read_csv(str(DATA_FILES["poi"]), usecols=usecols)
+    df2 = _safe_read_csv(str(DATA_FILES["poi_secondary"]), usecols=usecols)
 
     if not df1.empty and not df2.empty:
         df_merged = pd.concat([df1, df2], ignore_index=True)
@@ -65,7 +64,7 @@ def get_hud_statistics() -> dict:
     stats["poi_count"] = _safe_count(get_merged_poi_data, "N/A")
     stats["nlp_count"] = _safe_count_csv(str(DATA_FILES["nlp"]), "N/A")
     stats["gvi_count"] = _safe_count_csv(str(DATA_FILES["gvi"]), "N/A")
-    stats["boundary_ha"] = _calc_boundary_ha("data/gis/Boundary_Scope.geojson")
+    stats["boundary_ha"] = _calc_boundary_ha(str(GIS_FILES["boundary"]))
     return stats
 
 
@@ -91,14 +90,16 @@ def _calc_boundary_ha(geojson_path: str):
         p = resolve_path(geojson_path)
         with p.open("r", encoding="utf-8") as f:
             geo = json.load(f)
-        total = 0.0
+        total_m2 = 0.0
+        import pyproj
+        from shapely.geometry import shape
+        geod = pyproj.Geod(ellps='WGS84')
         for feat in geo.get("features", []):
-            coords = np.array(feat["geometry"]["coordinates"][0])
-            # Vectorized shoelace formula
-            x, y = coords[:, 0], coords[:, 1]
-            area_deg = abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1))) / 2
-            total += area_deg * 80 * 111 * 100
-        return round(total, 1)
+            geom = shape(feat["geometry"])
+            # Calculate geodesic area (returns area in m2 and perimeter)
+            area_m2, _ = geod.geometry_area_perimeter(geom)
+            total_m2 += abs(area_m2)
+        return round(total_m2 / 10000.0, 1)
     except Exception:
         logger.warning("Boundary area calculation failed", exc_info=True)
         return "~156.4"
@@ -302,8 +303,10 @@ def get_landuse_legend() -> list[dict]:
 def _generate_demo_spatial_data() -> pd.DataFrame:
     """Fallback demo data when source files are absent."""
     np.random.seed(42)
-    lngs = np.random.normal(loc=125.3517, scale=0.005, size=150)
-    lats = np.random.normal(loc=43.9116, scale=0.005, size=150)
+    from src.config import get_site_center
+    center = get_site_center()
+    lngs = np.random.normal(loc=center[0], scale=0.005, size=150)
+    lats = np.random.normal(loc=center[1], scale=0.005, size=150)
     return pd.DataFrame({
         "ID": range(1, 151),
         "Lng": lngs,

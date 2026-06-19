@@ -6,7 +6,7 @@ Usage:
     from src.engines.guideline_prompt import build_guideline_prompt
 """
 
-
+from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent, get_site_policies
 
 GUIDELINE_CHAPTERS = [
     {
@@ -101,7 +101,14 @@ def build_outline_prompt(
         for ch in GUIDELINE_CHAPTERS
     )
 
-    return f"""你是一位资深城市规划师，正在为长春市伪满皇宫周边街区微更新项目编制《城市设计导则》。
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
+    desc = get_site_desc()
+    adjacent = get_site_adjacent()
+    policies = "、".join(get_site_policies())
+
+    return f"""你是一位资深城市规划师，正在为{city}市{district}{site_name}微更新项目编制《城市设计导则》。
 
 请先为以下10章导则生成详细的【要素大纲】，每章列出：
 1. 本章核心论点（2-3个）
@@ -120,15 +127,15 @@ def build_outline_prompt(
 【案例对标】{case_benchmark[:2000] if case_benchmark else "暂无"}
 【设计理念】{design_concept[:2000] if design_concept else "暂无"}
 【策略协商】{strategy_matrix[:2000] if strategy_matrix else "暂无"}
-【空间统计】{spatial_stats[:1000] if spatial_stats else "研究范围约160公顷，建筑约110,289栋"}
-【政策依据】{policy_context[:2000] if policy_context else "《城市更新行动意见》《历史文化名城保护规划》"}
+【空间统计】{spatial_stats[:1000] if spatial_stats else f"研究范围：{desc}"}
+【政策依据】{policy_context[:2000] if policy_context else f"《城市更新行动意见》、{policies}"}
 
 ══════ 项目概况 ══════
 
-- 项目：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新
-- 地点：长春市宽城区，约160公顷
-- 核心地标：伪满皇宫（研究范围内，全国重点文保单位）
-- 紧邻要素：长春站（北侧，东北铁路枢纽）、伊通河（东侧，城市生态廊道）
+- 项目：数字孪生·古今共振——AI赋能下的{site_name}更新
+- 地点：{city}市{district}，{desc}
+- 核心地标：{site_name}及周边特色地标
+- 紧邻要素：{adjacent}
 - 四大矛盾：历史保护与活力不足、工业低效与功能置换、社区老化与空间缺失、交通割裂与慢行不足
 
 ══════ 输出格式 ══════
@@ -170,6 +177,11 @@ def build_expansion_prompt(
     """第二步：基于要素大纲扩展为完整导则文本。"""
 
     total_words = sum(ch["word_target"] for ch in GUIDELINE_CHAPTERS)
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
+    desc = get_site_desc()
+    adjacent = get_site_adjacent()
 
     return f"""你是一位资深城市规划师。以下是一份《城市设计导则》的要素大纲，请将其扩展为完整的导则正文。
 
@@ -199,10 +211,10 @@ def build_expansion_prompt(
 
 ══════ 项目概况 ══════
 
-- 项目：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新
-- 地点：长春市宽城区，约160公顷
-- 核心地标：伪满皇宫（研究范围内，全国重点文保单位）
-- 紧邻要素：长春站（北侧，东北铁路枢纽）、伊通河（东侧，城市生态廊道）
+- 项目：数字孪生·古今共振——AI赋能下的{site_name}更新
+- 地点：{city}市{district}，{desc}
+- 核心地标：{site_name}及周边特色地标
+- 紧邻要素：{adjacent}
 - 核心管控：容积率≤1.4、核心区限高≤9m、一般区≤18m、绿地率≥25%
 
 请将上述大纲扩展为完整的10章导则正文。每一章都必须有实质内容，条文清晰、数据准确、逻辑连贯。"""
@@ -251,8 +263,14 @@ def build_guideline_prompt(
     )
 
     total_words = sum(ch["word_target"] for ch in GUIDELINE_CHAPTERS)
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
+    desc = get_site_desc()
+    adjacent = get_site_adjacent()
+    policies = "、".join(get_site_policies())
 
-    prompt = f"""你是一位资深的城市规划师，正在为长春市宽城区伪满皇宫周边街区微更新项目编制《城市设计导则》。
+    prompt = f"""你是一位资深的城市规划师，正在为{city}市{district}{site_name}微更新项目编制《城市设计导则》。
 
 请基于以下多阶段循证数据，生成一份完整的、可交付的城市设计导则文本。
 
@@ -282,8 +300,8 @@ def build_guideline_prompt(
 
 | 管控维度 | 指标名称 | 控制要求 | 依据 |
 |---------|---------|---------|------|
-| 开发强度 | 容积率 | ≤1.4 | 历史文化名城保护规划 |
-| 建筑高度 | 核心保护区限高 | ≤9m | 伪满皇宫视廊保护 |
+| 开发强度 | 容积率 | ≤1.4 | {policies} |
+| 建筑高度 | 核心保护区限高 | ≤9m | {site_name}视廊保护 |
 | 建筑高度 | 风貌协调区限高 | ≤12m | 天际线控制 |
 | 建筑高度 | 一般更新区限高 | ≤18m | 城市设计导则 |
 | 建筑高度 | 站前服务区限高 | ≤24m | TOD开发要求 |
@@ -322,7 +340,7 @@ def build_guideline_prompt(
 八、空间数据指标
 ═══════════════════════════════════════════════════════
 
-{spatial_stats[:1500] if spatial_stats else "研究范围约160公顷，建筑总量约110,289栋。"}
+{spatial_stats[:1500] if spatial_stats else f"研究范围及特征：{desc}"}
 
 ═══════════════════════════════════════════════════════
 九、MPI 更新潜力数据
@@ -334,18 +352,17 @@ def build_guideline_prompt(
 十、政策法规依据（RAG 检索结果）
 ═══════════════════════════════════════════════════════
 
-{policy_context[:3000] if policy_context else "《中共中央办公厅国务院办公厅关于持续推进城市更新行动的意见》、《长春市历史文化名城保护规划》、《长春市国土空间总体规划》"}
+{policy_context[:3000] if policy_context else f"《城市更新行动意见》、{policies}"}
 
 ═══════════════════════════════════════════════════════
 十一、项目概况（固定信息）
 ═══════════════════════════════════════════════════════
 
-- 项目名称：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计
-- 项目地点：中国吉林省长春市宽城区
-- 研究范围：由长春大街、长白路、东九条、亚泰快速路围合
-- 总用地面积：约160公顷
-- 核心地标：伪满皇宫（研究范围内，全国重点文保单位）
-- 紧邻要素：长春站（北侧，东北铁路枢纽）、伊通河（东侧，城市生态廊道）
+- 项目名称：数字孪生·古今共振——AI赋能下的{site_name}更新规划设计
+- 项目地点：中国{city}市{district}
+- 研究范围：{desc}
+- 核心地标：{site_name}及周边特色地标
+- 紧邻要素：{adjacent}
 - 项目类型：历史街区更新、TOD综合开发、片区城市设计
 - 四大核心矛盾：历史保护与城市活力不足、工业低效与功能置换、社区老化与公共空间缺失、交通割裂与慢行体验不足
 

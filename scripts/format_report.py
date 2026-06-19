@@ -13,8 +13,9 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 
 # ── 文件路径定义 ──
-REPORT_PATH = Path(r"C:\Users\23902\Desktop\城环杯\附件3 成果研究报告.docx")
-TEMP_OUTPUT = Path(r"C:\Users\23902\Desktop\城环杯\附件3 成果研究报告_temp.docx")
+USER_HOME = os.path.expanduser("~")
+REPORT_PATH = Path(USER_HOME) / "Desktop" / "城环杯" / "附件3 成果研究报告.docx"
+TEMP_OUTPUT = Path(USER_HOME) / "Desktop" / "城环杯" / "附件3 成果研究报告_temp.docx"
 
 IMG_DIR = Path(r"e:\AI-based-project\urban-platform\static")
 IMGS = {

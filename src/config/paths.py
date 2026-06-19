@@ -3,6 +3,9 @@
 
 from .runtime import project_root
 
+from .loader import load_global_config
+from pathlib import Path
+
 ROOT_DIR = project_root()
 DATA_DIR = ROOT_DIR / "data"
 CSV_DIR = DATA_DIR / "csv"
@@ -16,23 +19,33 @@ STREETVIEW_DIR = DATA_DIR / "streetview"
 # Backward-compatible aliases
 SHP_DIR = GIS_DIR
 
+config = load_global_config()
+
+def _get_conf_path(key: str, default: Path) -> Path:
+    val = config.get("data", {}).get(key)
+    if val:
+        p = Path(val)
+        return p if p.is_absolute() else ROOT_DIR / p
+    return default
+
 DATA_FILES = {
-    "poi": CSV_DIR / "Changchun_POI_Real.csv",
-    "traffic": CSV_DIR / "Changchun_Traffic_Real.csv",
-    "nlp": CSV_DIR / "CV_NLP_RawData.csv",
-    "gvi": CSV_DIR / "GVI_Results_Analysis.csv",
-    "points": CSV_DIR / "Changchun_Precise_Points.xlsx",
-    "rag": DATA_DIR / "rag_knowledge.json",
+    "poi": _get_conf_path("poi_data", CSV_DIR / "Changchun_POI_Real.csv"),
+    "poi_secondary": _get_conf_path("poi_secondary_data", CSV_DIR / "Changchun_POI_Baidu_New.csv"),
+    "traffic": _get_conf_path("traffic_data", CSV_DIR / "Changchun_Traffic_Real.csv"),
+    "nlp": _get_conf_path("nlp_raw_data", CSV_DIR / "CV_NLP_RawData.csv"),
+    "gvi": _get_conf_path("gvi_results", CSV_DIR / "GVI_Results_Analysis.csv"),
+    "points": _get_conf_path("precise_points", CSV_DIR / "Changchun_Precise_Points.xlsx"),
+    "rag": _get_conf_path("rag_knowledge_path", DATA_DIR / "rag_knowledge.json"),
 }
 
 GIS_FILES = {
-    "boundary": GIS_DIR / "Boundary_Scope.geojson",
-    "plots": GIS_DIR / "Key_Plots_District.json",
-    "buildings": GIS_DIR / "Building_Footprints.geojson",
-    "roads": GIS_DIR / "road_clipped.geojson",
-    "rails": GIS_DIR / "rail_clipped.geojson",
-    "landuse": GIS_DIR / "landuse_clipped.geojson",
-    "protected": STATIC_DIR / "protected_buildings.geojson",
+    "boundary": _get_conf_path("boundary_scope", GIS_DIR / "Boundary_Scope.geojson"),
+    "plots": _get_conf_path("key_plots", GIS_DIR / "Key_Plots_District.json"),
+    "buildings": _get_conf_path("building_footprints", GIS_DIR / "Building_Footprints.geojson"),
+    "roads": _get_conf_path("roads", GIS_DIR / "road_clipped.geojson"),
+    "rails": _get_conf_path("rails", GIS_DIR / "rail_clipped.geojson"),
+    "landuse": _get_conf_path("landuse", GIS_DIR / "landuse_clipped.geojson"),
+    "protected": _get_conf_path("protected_buildings", STATIC_DIR / "protected_buildings.geojson"),
 }
 
 # Backward-compatible alias

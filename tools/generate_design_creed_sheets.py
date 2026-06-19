@@ -19,11 +19,11 @@ FONT_BOLD_PATH = 'C:/Windows/Fonts/msyhbd.ttc'
 # ---- 原始 ChatGPT 高清图重命名映射 ----
 # 旧文件名 -> 新文件名（根据图片内容命名）
 _RENAME_MAP = {
-    "ChatGPT Image 2026年6月5日 21_19_19.png": "原图_设计依据_AI技术矩阵.png",
-    "ChatGPT Image 2026年6月5日 02_17_59.png": "原图_设计原则_四项递进式.png",
-    "ChatGPT Image 2026年6月5日 02_24_59.png": "原图_设计定位_双重目标.png",
-    "ChatGPT Image 2026年6月5日 02_21_51.png": "原图_设计目标_三项量化.png",
-    "ChatGPT Image 2026年6月5日 02_28_18.png": "原图_设计策略_策略矩阵.png",
+    "ChatGPT Image 2026年6月5日 21_19_19.png": "A设计依据.png",
+    "ChatGPT Image 2026年6月5日 02_17_59.png": "A设计原则.png",
+    "ChatGPT Image 2026年6月5日 02_24_59.png": "A设计定位.png",
+    "ChatGPT Image 2026年6月5日 02_21_51.png": "A设计目标.png",
+    "ChatGPT Image 2026年6月5日 02_28_18.png": "A设计策略.png",
 }
 
 def _ensure_renamed():
@@ -37,11 +37,11 @@ def _ensure_renamed():
 
 # 5 张 A 系列设计图的 源图 -> 目标 映射
 _COPY_MAP = {
-    "原图_设计依据_AI技术矩阵.png": "A设计依据.png",
-    "原图_设计原则_四项递进式.png": "A设计原则.png",
-    "原图_设计定位_双重目标.png": "A设计定位.png",
-    "原图_设计目标_三项量化.png": "A设计目标.png",
-    "原图_设计策略_策略矩阵.png": "A设计策略.png",
+    "A设计依据.png": "A设计依据.png",
+    "A设计原则.png": "A设计原则.png",
+    "A设计定位.png": "A设计定位.png",
+    "A设计目标.png": "A设计目标.png",
+    "A设计策略.png": "A设计策略.png",
 }
 
 def load_fonts():
@@ -71,22 +71,52 @@ def load_fonts():
     return fonts
 
 def wrap_text_by_pixels(text, font, max_width, draw):
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def get_width(t):
+        try:
+            return draw.textlength(t, font=font)
+        except AttributeError:
+            try:
+                left, top, right, bottom = font.getbbox(t)
+                return right - left
+            except AttributeError:
+                return font.getsize(t)[0]
+
     lines = []
     for block in text.split('\n'):
+        if not block:
+            lines.append("")
+            continue
         current_line = ""
-        for char in block:
+        i = 0
+        while i < len(block):
+            char = block[i]
             test_line = current_line + char
-            w = draw.textlength(test_line, font=font)
-            if w <= max_width:
+            if get_width(test_line) <= max_width:
                 current_line = test_line
+                i += 1
             else:
+                if not current_line:
+                    current_line = char
+                    i += 1
+                else:
+                    if block[i] in forbidden_start:
+                        current_line += block[i]
+                        i += 1
+                        while i < len(block) and block[i] in forbidden_start:
+                            current_line += block[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
                 if current_line:
                     lines.append(current_line)
-                current_line = char
+                current_line = ""
         if current_line:
             lines.append(current_line)
     return lines
-
 def draw_grid_and_base(draw):
     grid_spacing = 79.2
     for x in range(1, int(2240 / grid_spacing)):
@@ -121,19 +151,19 @@ def _copy_source(src_name, dst_name):
         print(f"  [ERR] 源文件不存在: {src_name}")
 
 def generate_design_basis():
-    _copy_source("原图_设计依据_AI技术矩阵.png", "A设计依据.png")
+    _copy_source("A设计依据.png", "A设计依据.png")
 
 def generate_design_principles():
-    _copy_source("原图_设计原则_四项递进式.png", "A设计原则.png")
+    _copy_source("A设计原则.png", "A设计原则.png")
 
 def generate_design_positioning():
-    _copy_source("原图_设计定位_双重目标.png", "A设计定位.png")
+    _copy_source("A设计定位.png", "A设计定位.png")
 
 def generate_design_objectives():
-    _copy_source("原图_设计目标_三项量化.png", "A设计目标.png")
+    _copy_source("A设计目标.png", "A设计目标.png")
 
 def generate_design_strategy():
-    _copy_source("原图_设计策略_策略矩阵.png", "A设计策略.png")
+    _copy_source("A设计策略.png", "A设计策略.png")
 
 # -------------------------------------------------------------
 # Drawing A特色专项设计.png (Pillow vector drawing)

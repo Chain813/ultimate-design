@@ -26,24 +26,49 @@ GRID_SIZE = 20  # 20m × 20m grid cells
 
 
 def wrap_text(text, max_len=44):
-    wrapped_lines = []
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def char_width(c):
+        return 2 if ord(c) > 127 else 1
+
+    lines = []
     for part in text.split('\n'):
-        current_line = []
-        current_width = 0
-        for char in part:
-            char_w = 2 if ord(char) > 127 else 1
-            if current_width + char_w > max_len:
-                wrapped_lines.append("".join(current_line))
-                current_line = [char]
-                current_width = char_w
+        if not part:
+            lines.append("")
+            continue
+        current_line = ""
+        current_w = 0
+        i = 0
+        while i < len(part):
+            char = part[i]
+            w = char_width(char)
+            if current_w + w <= 44:
+                current_line += char
+                current_w += w
+                i += 1
             else:
-                current_line.append(char)
-                current_width += char_w
+                if not current_line:
+                    current_line = char
+                    current_w = w
+                    i += 1
+                else:
+                    if part[i] in forbidden_start:
+                        current_line += part[i]
+                        i += 1
+                        while i < len(part) and part[i] in forbidden_start:
+                            current_line += part[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+                current_w = 0
         if current_line:
-            wrapped_lines.append("".join(current_line))
-    return '\n'.join(wrapped_lines)
-
-
+            lines.append(current_line)
+    return '\n'.join(lines)
 def compute_mpi_grid(buildings, boundary, grid_size=20):
     """Compute MPI on a 20m×20m raster grid covering the study boundary.
 

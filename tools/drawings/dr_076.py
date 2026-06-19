@@ -15,23 +15,49 @@ GIS_DIR = ROOT / "data/gis"
 NO_FRAME = True
 
 def wrap_text(text, max_len=44):
-    wrapped_lines = []
-    for part in text.split('\n'):
-        current_line = []
-        current_width = 0
-        for char in part:
-            char_w = 2 if ord(char) > 127 else 1
-            if current_width + char_w > max_len:
-                wrapped_lines.append("".join(current_line))
-                current_line = [char]
-                current_width = char_w
-            else:
-                current_line.append(char)
-                current_width += char_w
-        if current_line:
-            wrapped_lines.append("".join(current_line))
-    return '\n'.join(wrapped_lines)
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def char_width(c):
+        return 2 if ord(c) > 127 else 1
 
+    lines = []
+    for part in text.split('\n'):
+        if not part:
+            lines.append("")
+            continue
+        current_line = ""
+        current_w = 0
+        i = 0
+        while i < len(part):
+            char = part[i]
+            w = char_width(char)
+            if current_w + w <= 44:
+                current_line += char
+                current_w += w
+                i += 1
+            else:
+                if not current_line:
+                    current_line = char
+                    current_w = w
+                    i += 1
+                else:
+                    if part[i] in forbidden_start:
+                        current_line += part[i]
+                        i += 1
+                        while i < len(part) and part[i] in forbidden_start:
+                            current_line += part[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+                current_w = 0
+        if current_line:
+            lines.append(current_line)
+    return '\n'.join(lines)
 def _font(font_prop, size, weight="normal"):
     return fm.FontProperties(family=font_prop["family"], size=size, weight=weight)
 
@@ -105,11 +131,11 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
     # Color 5 key plots with distinct colors and label with indicators from thesis
     plot_info = [
-        ("御花园东巷文创街区", "3.71ha · FAR≤1.3 · 绿地率≥38%", "#F59E0B"),
-        ("全龄共享生活社区", "2.78ha · FAR≤1.3 · 绿地率≥35%", "#22C55E"),
-        ("活态市集·风味院落", "16.83ha · FAR≤1.4 · 绿地率≥35%", "#EF4444"),
-        ("历史界面缝合者", "2.47ha · FAR≤1.3 · 绿地率≥35%", "#8B5CF6"),
-        ("宽城子能量花园", "1.30ha · FAR≤1.2 · 绿地率≥35%", "#3B82F6"),
+        ("御花园东巷文创街区", "3.71ha · FAR≤1.3 · 绿地率≥38%", "#F59E0B"), # Index 0: 老水产
+        ("活态市集·风味院落", "16.83ha · FAR≤1.4 · 绿地率≥35%", "#EF4444"), # Index 1: 食品调料
+        ("全龄共享生活社区", "2.78ha · FAR≤1.3 · 绿地率≥35%", "#22C55E"), # Index 2: 一中北
+        ("历史界面缝合者", "2.47ha · FAR≤1.3 · 绿地率≥35%", "#8B5CF6"), # Index 3: 清禾
+        ("宽城子能量花园", "1.30ha · FAR≤0.2 · 绿地率≥80%", "#3B82F6"), # Index 4: 石油
     ]
 
     if key_plots is not None and not key_plots.empty:
@@ -231,8 +257,8 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     
     desc_data = [
         ("1. 地块概况：5个重点更新地块总面积约27.09公顷，均以《伪满皇宫保护规划》建控地带内容积率≤1.4、建筑密度≤28%、绿地率≥30%及限高18米为刚性约束。", 45.0),
-        ("2. 差异策略：老水产批发市场定位'御花园东巷文创街区'(FAR≤1.3)；食品调料市场采用'一核两带三组团'(FAR≤1.4)；石油公司以'能量花园'概念完全开放(FAR≤1.2)。", 29.0),
-        ("3. 指标管控：各地块绿地率均超过35%，低于保护规划上限值，为高品质开放空间留出余地；建筑高度主动控制在18米以下，确保与历史天际线协调。", 13.0)
+        ("2. 差异策略：老水产批发市场定位'御花园东巷文创街区'(FAR≤1.3)；食品调料市场采用'一核两带三组团'(FAR≤1.4)；石油公司以'能量花园'概念完全开放(FAR≤0.2，绿地率达85%)。", 29.0),
+        ("3. 指标管控：各地块绿地率均超过35%（能量花园达85%），满足且优于保护规划要求；建筑高度主动控制在18米以下，确保与历史天际线协调。", 13.0)
     ]
     for text, y_pos in desc_data:
         wrapped_desc = wrap_text(text, max_len=44)
@@ -241,6 +267,36 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
                     fontproperties=_font(font_prop, 15.0), zorder=4)
             y_text -= 3.2
+
+        # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
+    try:
+        from PIL import Image as _PIL_Image
+        import numpy as _np
+        from pathlib import Path as _Path
+        _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
+        _rose_path = _assets_dir / "长春市风玫瑰.png"
+        if _rose_path.exists():
+            ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
+            ax_rose.set_axis_off()
+            
+            # Draw a soft white radial gradient backdrop
+            _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
+            _r = _np.sqrt(_x_g**2 + _y_g**2)
+            _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
+            _grad_img = _np.ones((100, 100, 4))
+            _grad_img[..., 3] = _alpha
+            ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
+            
+            _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
+            _rose_data = _np.array(_rose_img)
+            _rose_data[..., 0] = 0
+            _rose_data[..., 1] = 0
+            _rose_data[..., 2] = 0
+            _black_rose_img = _PIL_Image.fromarray(_rose_data)
+            
+            ax_rose.imshow(_black_rose_img, zorder=1)
+    except Exception as e:
+        print(f"Error loading wind rose in {__file__}: {e}")
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
@@ -253,6 +309,6 @@ legend_items = [
 
 description_lines = [
     "1. 地块概况：5个重点更新地块总面积约27.09公顷，均以《伪满皇宫保护规划》建控地带内容积率≤1.4、建筑密度≤28%、绿地率≥30%及限高18米为刚性约束。",
-    "2. 差异策略：老水产批发市场定位'御花园东巷文创街区'(FAR≤1.3)；食品调料市场采用'一核两带三组团'(FAR≤1.4)；石油公司以'能量花园'概念完全开放(FAR≤1.2)。",
-    "3. 指标管控：各地块绿地率均超过35%，低于保护规划上限值，为高品质开放空间留出余地；建筑高度主动控制在18米以下，确保与历史天际线协调。"
+    "2. 差异策略：老水产批发市场定位'御花园东巷文创街区'(FAR≤1.3)；食品调料市场采用'一核两带三组团'(FAR≤1.4)；石油公司以'能量花园'概念完全开放(FAR≤0.2，绿地率达85%)。",
+    "3. 指标管控：各地块绿地率均超过35%（能量花园达85%），满足且优于保护规划要求；建筑高度主动控制在18米以下，确保与历史天际线协调。"
 ]

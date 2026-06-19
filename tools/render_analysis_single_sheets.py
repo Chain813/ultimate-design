@@ -35,21 +35,53 @@ def text_width(draw: ImageDraw.ImageDraw, text: str, fnt: ImageFont.ImageFont) -
     return box[2] - box[0]
 
 
-def wrap_text(draw: ImageDraw.ImageDraw, text: str, fnt: ImageFont.ImageFont, max_width: int) -> list[str]:
-    lines: list[str] = []
-    current = ""
-    for char in text:
-        candidate = current + char
-        if current and text_width(draw, candidate, fnt) > max_width:
-            lines.append(current)
-            current = char
-        else:
-            current = candidate
-    if current:
-        lines.append(current)
+def wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def get_width(t):
+        try:
+            return draw.textlength(t, font=font)
+        except AttributeError:
+            try:
+                left, top, right, bottom = font.getbbox(t)
+                return right - left
+            except AttributeError:
+                return font.getsize(t)[0]
+
+    lines = []
+    for block in text.split('\n'):
+        if not block:
+            lines.append("")
+            continue
+        current_line = ""
+        i = 0
+        while i < len(block):
+            char = block[i]
+            test_line = current_line + char
+            if get_width(test_line) <= max_width:
+                current_line = test_line
+                i += 1
+            else:
+                if not current_line:
+                    current_line = char
+                    i += 1
+                else:
+                    if block[i] in forbidden_start:
+                        current_line += block[i]
+                        i += 1
+                        while i < len(block) and block[i] in forbidden_start:
+                            current_line += block[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+        if current_line:
+            lines.append(current_line)
     return lines
-
-
 def draw_grid(draw: ImageDraw.ImageDraw):
     for x in range(0, CANVAS_W, 40):
         draw.line((x, 0, x, CANVAS_H), fill="#E2E8F0", width=1)

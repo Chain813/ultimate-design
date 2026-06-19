@@ -19,6 +19,7 @@ GIS_DIR = ROOT / "data/gis"
 ASSETS_DIR = ROOT / "assets"
 
 MAP_TYPE_TO_MODULE = {
+    "案例借鉴与对标分析图": "dr_009",
     "土地利用现状图": "dr_014",
     "用地现状分析图": "dr_014",
     "道路系统规划图": "dr_051",
@@ -49,7 +50,7 @@ MAP_TYPE_TO_MODULE = {
     "建筑高度控制图": "dr_049",
     "慢行系统规划图": "dr_053",
     "公共空间系统图": "dr_public_space",
-    "历史文化展示系统图": "dr_057",
+    "历史文化展示系统图": "dr_047",
     "AIGC技术推演过程图": "dr_081",
     "实施分期图": "dr_082",
     "图册章节结构导图": "dr_083",
@@ -71,6 +72,13 @@ MAP_TYPE_TO_MODULE = {
     "总体策略图": "dr_039",
     "产业业态规划图": "dr_046",
     "五地块深化设计总图": "dr_076",
+    "投资估算与经济测算图": "dr_074",
+    "公众参与与博弈协商成果图": "dr_057",
+    "老水产市场-改造前后对比图": "dr_075",
+    "食品调料市场-改造前后对比图": "dr_095",
+    "市一中北侧-改造前后对比图": "dr_114",
+    "清禾集贸市场-改造前后对比图": "dr_132",
+    "中国石油-改造前后对比图": "dr_150",
     # 重点地块现状分析图集
     "老水产市场-现状卫星图": "dr_parcel_detail",
     "老水产市场-现状土地利用": "dr_parcel_detail",
@@ -104,10 +112,12 @@ MAP_TYPE_TO_MODULE = {
 }
 
 def get_drawing_module(drawing_type):
-    if any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
+    if drawing_type in MAP_TYPE_TO_MODULE:
+        mod_name = MAP_TYPE_TO_MODULE[drawing_type]
+    elif any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
         mod_name = "dr_parcel_detail"
     else:
-        mod_name = MAP_TYPE_TO_MODULE.get(drawing_type, "dr_004")
+        mod_name = "dr_004"
     try:
         return importlib.import_module(f"tools.drawings.{mod_name}")
     except Exception as e:
@@ -259,14 +269,22 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
     ax.set_axis_off()
     ax.set_aspect("equal")
 
-    # Font setup for matplotlib
-    font_prop = {'family': 'sans-serif', 'weight': 'bold', 'size': 16}
+    # Font setup for matplotlib with robust fallback chain
+    import matplotlib
     import matplotlib.font_manager as fm
+    fallback_fonts = [
+        "Microsoft YaHei", "SimHei", "Heiti TC", "STHeiti",
+        "PingFang SC", "Arial Unicode MS", "SimSun", "DejaVu Sans", "sans-serif"
+    ]
     sys_fonts = [f.name for f in fm.fontManager.ttflist]
-    if "Microsoft YaHei" in sys_fonts:
-        font_prop['family'] = "Microsoft YaHei"
-    elif "SimHei" in sys_fonts:
-        font_prop['family'] = "SimHei"
+    matplotlib.rcParams['font.family'] = 'sans-serif'
+    matplotlib.rcParams['font.sans-serif'] = fallback_fonts + list(matplotlib.rcParams.get('font.sans-serif', []))
+    
+    font_prop = {'family': 'sans-serif', 'weight': 'bold', 'size': 16}
+    for font in fallback_fonts:
+        if font in sys_fonts:
+            font_prop['family'] = font
+            break
 
     # Convert coordinates helper
     def get_xy(lon, lat):
@@ -307,14 +325,11 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
 
     # 4. Add text annotations for key landmarks (if not AIGC flowchart)
     if drawing_type != "AIGC技术推演过程图":
-        labels = [
-            ("伪满皇宫博物院", 125.3422, 43.9036),
-            ("光复路", 125.3475, 43.9017),
-            ("伊通河沿岸公园", 125.3590, 43.9010),
-            ("长春站", 125.3250, 43.9080),
-            ("胜利公园", 125.3260, 43.8960)
-        ]
-        for name, lon, lat in labels:
+        from src.config import get_landmarks
+        labels = get_landmarks()
+        for lm in labels:
+            name = lm["name"]
+            lon, lat = lm["coords"]
             px, py = get_xy(lon, lat)
             ax.plot(px, py, marker='o', markersize=10, color='#FF9500', markeredgecolor='#FFFFFF', markeredgewidth=2.0, zorder=9)
             py_text = py + 70
@@ -329,21 +344,53 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
     return view_w
 
 def wrap_text_by_pixels(text, font, max_width, draw):
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def get_width(t):
+        try:
+            return draw.textlength(t, font=font)
+        except AttributeError:
+            try:
+                left, top, right, bottom = font.getbbox(t)
+                return right - left
+            except AttributeError:
+                return font.getsize(t)[0]
+
     lines = []
     for block in text.split('\n'):
+        if not block:
+            lines.append("")
+            continue
         current_line = ""
-        for char in block:
+        i = 0
+        while i < len(block):
+            char = block[i]
             test_line = current_line + char
-            w = draw.textlength(test_line, font=font)
-            if w <= max_width:
+            if get_width(test_line) <= max_width:
                 current_line = test_line
+                i += 1
             else:
+                if not current_line:
+                    current_line = char
+                    i += 1
+                else:
+                    if block[i] in forbidden_start:
+                        current_line += block[i]
+                        i += 1
+                        while i < len(block) and block[i] in forbidden_start:
+                            current_line += block[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
                 if current_line:
                     lines.append(current_line)
-                current_line = char
+                current_line = ""
         if current_line:
             lines.append(current_line)
     return lines
+
 
 def draw_centered_text(draw, text, cx, cy, fill, font):
     bbox = draw.textbbox((0, 0), text, font=font)
@@ -352,6 +399,8 @@ def draw_centered_text(draw, text, cx, cy, fill, font):
     draw.text((cx - w // 2, cy - h // 2), text, fill=fill, font=font)
 
 def generate_dynamic_description(drawing_type, title):
+    if drawing_type in ["公众参与与博弈协商成果图", "投资估算与经济测算图"]:
+        return None
     try:
         from src.config import SHP_FILES
         import geopandas as gpd
@@ -443,7 +492,12 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
     print("Processing A3 layout template...")
     template = Image.open(STATIC_DIR / 'a3_layout_preview_full.png').convert('RGB')
     map_img = Image.open(map_path).convert('RGB')
-    windrose = Image.open(ASSETS_DIR / '长春市风玫瑰.png')
+    from src.config import get_site_city
+    city_name = get_site_city()
+    windrose_path = ASSETS_DIR / f"{city_name}市风玫瑰.png"
+    if not windrose_path.exists():
+        windrose_path = ASSETS_DIR / "长春市风玫瑰.png"
+    windrose = Image.open(windrose_path)
 
     module = get_drawing_module(drawing_type)
     

@@ -329,13 +329,20 @@ def build_thesis_context() -> Dict[str, str]:
 # LLM Prompt 构建
 # ═══════════════════════════════════════════════════════════════
 
-THESIS_SYSTEM_PROMPT = """你是一个严格的数据到文本转换引擎。你的唯一任务是将提供的项目数据
+def get_thesis_system_prompt() -> str:
+    from src.config import get_site_city, get_site_district, get_site_name, get_site_desc
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
+    desc = get_site_desc()
+
+    return f"""你是一个严格的数据到文本转换引擎。你的唯一任务是将提供的项目数据
 整理成毕业设计答辩稿的正文段落。
 
 项目名称：《基于大模型与多模态AI的城市更新空间设计智能推演系统
-——以长春市宽城区伪满皇宫周边街区为例》
+——以{city}市{district}{site_name}为例》
 
-研究范围：长春市宽城区伪满皇宫周边街区，约160公顷
+研究范围：{city}市{district}{site_name}，{desc}
 
 【核心约束 — 违反任何一条即为失败】
 1. 你只能使用下方提供的源材料中的信息。源材料中出现的数值、地名、事实可以引用；源材料中没有的，一律不得出现。
@@ -473,7 +480,7 @@ def generate_single_section(
     prompt = build_chapter_prompt(sec, ctx)
     result = call_llm_engine(
         prompt=prompt,
-        system_prompt=THESIS_SYSTEM_PROMPT,
+        system_prompt=get_thesis_system_prompt(),
         model=model,
     )
 
@@ -729,7 +736,24 @@ def save_student_info_json(student: StudentInfo) -> None:
 def scan_local_references() -> List[str]:
     """扫描本地参考文献文件夹中的所有 PDF 文件名"""
     import os
-    path = r"C:\Users\23902\Desktop\陈礼冲 毕设\参考文献"
+    from pathlib import Path
+    from src.config.paths import ROOT_DIR, config
+    
+    # Try config first
+    path_val = config.get("data", {}).get("references_dir")
+    if path_val:
+        path = Path(path_val)
+        if not path.is_absolute():
+            path = ROOT_DIR / path
+        path = str(path)
+    else:
+        # Fall back to default location in workspace or the legacy path
+        default_workspace_path = ROOT_DIR / "data" / "references"
+        if default_workspace_path.exists():
+            path = str(default_workspace_path)
+        else:
+            path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "参考文献")
+
     if os.path.exists(path):
         try:
             files = [f for f in os.listdir(path) if f.lower().endswith('.pdf')]

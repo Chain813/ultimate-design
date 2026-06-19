@@ -2537,3 +2537,38 @@ div[data-testid="stStatusWidget"] {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.02) !important;
 }
 
+/* ── Global Mobile Viewport Adjustments (<= 768px) ── */
+@media (max-width: 768px) {
+    .block-container {
+        padding-left: 0.75rem !important;
+        padding-right: 0.75rem !important;
+        padding-top: 68px !important; /* Make room for Apple navbar */
+    }
+    
+    /* Optimize column grids in Streamlit */
+    [data-testid="column"] {
+        width: 100% !important;
+        flex: 1 1 100% !important;
+        margin-left: 0px !important;
+        margin-right: 0px !important;
+        margin-bottom: 12px !important;
+    }
+    
+    /* Allow scrolling on wide elements */
+    .stTable, .stDataFrame, div[role="grid"] {
+        overflow-x: auto !important;
+    }
+    
+    /* Scale down large typography on mobile */
+    h1 {
+        font-size: 1.8rem !important;
+    }
+    h2 {
+        font-size: 1.4rem !important;
+    }
+    h3 {
+        font-size: 1.15rem !important;
+    }
+}
+
+

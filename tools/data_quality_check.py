@@ -25,6 +25,8 @@ sys.path.insert(0, str(ROOT))
 
 import pandas as pd
 
+from src.config import DATA_FILES, GIS_FILES
+
 try:
     from shapely.geometry import Point, shape
 except ImportError:  # pragma: no cover - optional GIS dependency fallback
@@ -32,45 +34,78 @@ except ImportError:  # pragma: no cover - optional GIS dependency fallback
     shape = None
 
 
+def get_boundary_bounds():
+    """Load boundary geojson and extract bounds [min_lng, min_lat, max_lng, max_lat]."""
+    boundary_path = Path(GIS_FILES["boundary"])
+    if not boundary_path.exists():
+        return (125.30, 43.85, 125.40, 43.95)  # Fallback to Changchun bounds if boundary file does not exist
+    try:
+        with open(boundary_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        lats = []
+        lngs = []
+        def recurse_coords(coords):
+            if isinstance(coords, list):
+                if len(coords) == 2 and isinstance(coords[0], (int, float)):
+                    lngs.append(coords[0])
+                    lats.append(coords[1])
+                else:
+                    for item in coords:
+                        recurse_coords(item)
+        for feature in data.get("features", []):
+            geom = feature.get("geometry", {})
+            if geom:
+                recurse_coords(geom.get("coordinates", []))
+        if lats and lngs:
+            # Buffer by 0.05 degrees (about 5km)
+            return (min(lngs) - 0.05, min(lats) - 0.05, max(lngs) + 0.05, max(lats) + 0.05)
+    except Exception:
+        pass
+    return (125.30, 43.85, 125.40, 43.95)
+
+lng_min, lat_min, lng_max, lat_max = get_boundary_bounds()
+lat_range = (lat_min, lat_max)
+lng_range = (lng_min, lng_max)
+
 # ==========================================
 # 📁 数据文件注册表
 # ==========================================
 DATA_REGISTRY = {
     "POI": {
-        "path": ROOT / "data" / "csv" / "Changchun_POI_Real.csv",
+        "path": Path(DATA_FILES["poi"]),
         "required_cols": ["Name", "Lat", "Lng"],
-        "lat_range": (43.85, 43.95),
-        "lng_range": (125.30, 125.40),
+        "lat_range": lat_range,
+        "lng_range": lng_range,
     },
     "交通": {
-        "path": ROOT / "data" / "csv" / "Changchun_Traffic_Real.csv",
+        "path": Path(DATA_FILES["traffic"]),
         "required_cols": ["Name", "Lat", "Lng"],
-        "lat_range": (43.85, 43.95),
-        "lng_range": (125.30, 125.40),
+        "lat_range": lat_range,
+        "lng_range": lng_range,
     },
     "NLP 舆情": {
-        "path": ROOT / "data" / "csv" / "CV_NLP_RawData.csv",
+        "path": Path(DATA_FILES["nlp"]),
         "required_cols": ["Text", "Keyword", "Source"],
     },
     "GVI 环境品质": {
-        "path": ROOT / "data" / "csv" / "GVI_Results_Analysis.csv",
+        "path": Path(DATA_FILES["gvi"]),
         "required_cols": ["GVI", "SVF", "Enclosure", "Clutter"],
     },
     "精确点位": {
-        "path": ROOT / "data" / "csv" / "Changchun_Precise_Points.xlsx",
+        "path": Path(DATA_FILES["points"]),
         "required_cols": ["ID", "Lng", "Lat"],
-        "lat_range": (43.85, 43.95),
-        "lng_range": (125.30, 125.40),
+        "lat_range": lat_range,
+        "lng_range": lng_range,
     },
 }
 
 GEO_REGISTRY = {
-    "研究范围边界": ROOT / "data" / "gis" / "Boundary_Scope.geojson",
-    "重点地块": ROOT / "data" / "gis" / "Key_Plots_District.json",
-    "建筑轮廓": ROOT / "data" / "gis" / "Building_Footprints.geojson",
-    "道路网 (Clipped)": ROOT / "data" / "gis" / "road_clipped.geojson",
-    "铁路网 (Clipped)": ROOT / "data" / "gis" / "rail_clipped.geojson",
-    "用地现状 (Clipped)": ROOT / "data" / "gis" / "landuse_clipped.geojson",
+    "研究范围边界": Path(GIS_FILES["boundary"]),
+    "重点地块": Path(GIS_FILES["plots"]),
+    "建筑轮廓": Path(GIS_FILES["buildings"]),
+    "道路网 (Clipped)": Path(GIS_FILES["roads"]),
+    "铁路网 (Clipped)": Path(GIS_FILES["rails"]),
+    "用地现状 (Clipped)": Path(GIS_FILES["landuse"]),
 }
 ID_FIELDS = ("building_id", "OBJECTID", "id", "name", "Name", "Type")
 

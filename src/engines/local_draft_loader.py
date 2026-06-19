@@ -22,7 +22,7 @@ def load_thesis_from_draft() -> Tuple[Dict[str, str], Dict[str, str]]:
             "references": str
         }
     """
-    path = r"C:\Users\23902\Desktop\陈礼冲 毕设\毕业设计答辩稿_陈礼冲_202111003.docx"
+    path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "毕业设计答辩稿_陈礼冲_202111003.docx")
     chapters = {}
     metadata = {
         "abstract_cn": "",
@@ -225,7 +225,7 @@ def get_combined_references(draft_refs_text: str) -> str:
     # 1. 格式化本地 PDF
     local_pdf_entries = []
     seen_entries = set()
-    path = r"C:\Users\23902\Desktop\陈礼冲 毕设\参考文献"
+    path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "参考文献")
     if os.path.exists(path):
         try:
             files = [f for f in os.listdir(path) if f.lower().endswith('.pdf')]

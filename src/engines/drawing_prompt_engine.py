@@ -36,16 +36,36 @@ class CompletenessReport:
     degraded: bool = False
 
 
-PROJECT_DEFAULTS = {
-    "project_cn": "数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计",
-    "project_en": "To be confirmed",
-    "project_types": "历史街区更新、TOD 综合开发、片区城市设计、老城复兴、城市更新、文旅融合",
-    "location": "中国吉林省长春市宽城区伪满皇宫周边街区",
-    "scope": "由长春大街、长白路、东九条、亚泰快速路围合而成",
-    "area": "约160公顷",
-    "landmarks": "伪满皇宫（研究范围内）、长春站（紧邻北侧）、伊通河（紧邻东侧）",
-    "themes": "数字孪生、AIGC推演、AI辅助设计、历史文化更新、遗产保护、TOD、城市缝合、街区微更新、文旅融合、智慧治理",
-}
+class DynamicProjectDefaults(dict):
+    def __getitem__(self, key):
+        from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent
+        city = get_site_city()
+        district = get_site_district()
+        site_name = get_site_name()
+        desc = get_site_desc()
+        adjacent = get_site_adjacent()
+        
+        defaults = {
+            "project_cn": f"数字孪生·古今共振——AI赋能下的{site_name}更新规划设计",
+            "project_en": "To be confirmed",
+            "project_types": "历史街区更新、TOD 综合开发、片区城市设计、老城复兴、城市更新、文旅融合",
+            "location": f"中国{city}市{district}{site_name}周边街区",
+            "scope": desc,
+            "area": "约160公顷" if "160" in desc else "约100公顷",
+            "landmarks": f"{site_name}（研究范围内）、{adjacent}",
+            "themes": "数字孪生、AIGC推演、AI辅助设计、历史文化更新、遗产保护、TOD、城市缝合、街区微更新、文旅融合、智慧治理",
+        }
+        if key not in defaults:
+            raise KeyError(key)
+        return defaults[key]
+
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+PROJECT_DEFAULTS = DynamicProjectDefaults()
 
 
 BOOK_CHAPTERS = {

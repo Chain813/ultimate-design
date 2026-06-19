@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
 from pathlib import Path
-from src.config import get_static_url
+from src.config import get_static_url, get_map_viewport, DATA_FILES, GIS_FILES
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features, get_merged_poi_data
 
 @st.cache_data(ttl=3600, max_entries=20)
@@ -30,7 +30,7 @@ def _load_traffic_json():
     """缓存交通数据的 JSON 序列化结果。"""
     try:
         # 尝试读取交通数据
-        path = Path("data/csv/Changchun_Traffic_Real.csv")
+        path = Path(DATA_FILES["traffic"])
         if path.exists():
             df_tr = pd.read_csv(path, encoding='utf-8-sig').fillna("")
             return json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
@@ -156,8 +156,8 @@ def render_digital_twin_map(height=650, key_suffix=""):
     # 1. 准备序列化数据
     b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
     shadow_data_json = f"'{get_static_url('building_shadows.geojson')}'" if (show_buildings and show_lighting) else "null"
-    bound_data_json = json.dumps(load_map_data("data/gis/Boundary_Scope.geojson")) if show_boundary else "null"
-    plots_data_json = json.dumps(load_map_data("data/gis/Key_Plots_District.json")) if show_plots else "null"
+    bound_data_json = json.dumps(load_map_data(str(GIS_FILES["boundary"]))) if show_boundary else "null"
+    plots_data_json = json.dumps(load_map_data(str(GIS_FILES["plots"]))) if show_plots else "null"
     poi_data_json = _load_poi_json() if show_poi else "null"
     traffic_data_json = _load_traffic_json() if show_traffic else "null"
     landuse_data_json = f"'{get_static_url('landuse.geojson')}'" if show_landuse else "null"
@@ -242,7 +242,8 @@ def render_digital_twin_map(height=650, key_suffix=""):
     try:
         template_path = Path("assets/map3d_standalone.html")
         _mtime = template_path.stat().st_mtime if template_path.exists() else 0.0
-        html_template = _load_map_html_template(_mtime)
+        map_config_json = json.dumps(get_map_viewport())
+        html_template = html_template.replace('/*__MAP_CONFIG__*/{"center": [125.34064, 43.90095], "zoom": 14.4, "pitch": 73.0, "bearing": 45.0}/*__END_MAP_CONFIG__*/', map_config_json)
         html_template = html_template.replace("/*__BUILDING_DATA__*/null/*__END_BUILDING__*/", b_data_json)
         html_template = html_template.replace("/*__SHADOW_DATA__*/null/*__END_SHADOW__*/", shadow_data_json)
         html_template = html_template.replace("/*__BOUNDARY_DATA__*/null/*__END_BOUNDARY__*/", bound_data_json)

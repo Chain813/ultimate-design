@@ -19,8 +19,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from src.config import resolve_path, DATA_FILES, GIS_FILES
-
+from src.config import resolve_path, DATA_FILES, GIS_FILES, get_site_city, get_site_district, get_site_name
 logger = logging.getLogger("ultimateDESIGN")
 
 
@@ -291,8 +290,11 @@ def generate_spatial_insights() -> str:
     from src.engines.llm_engine import call_llm_engine
     
     spatial_ctx = get_full_spatial_context()
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
     prompt = f"""
-    你是一位资深城市空间数据分析专家。以下是吉林省长春市宽城区伪满皇宫周边街区（约160公顷）的各项现状空间统计数据：
+    你是一位资深城市空间数据分析专家。以下是{city}市{district}{site_name}的各项现状空间统计数据：
     
     {spatial_ctx}
     

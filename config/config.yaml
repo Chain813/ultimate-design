@@ -39,3 +39,34 @@ data:
   nlp_raw_data: "data/csv/CV_NLP_RawData.csv"
   precise_points: "data/csv/Changchun_Precise_Points.xlsx"
   gvi_results: "data/csv/GVI_Results_Analysis.csv"
+
+# ==========================================
+# 🗺️ 地块空间与属性参数化配置
+# ==========================================
+site:
+  site_name: "长春伪满皇宫周边街区"
+  city_name: "长春"
+  local_crs: "EPSG:32650"  # WGS 84 / UTM zone 50N (长春本地投影)
+  
+  # 3D地图及大屏初始视口
+  map:
+    center: [125.34064, 43.90095]  # [经度, 纬度]
+    zoom: 14.4
+    pitch: 65.0
+    bearing: 30.0
+    min_zoom: 10.0
+    max_zoom: 18.0
+
+  # 动态地标名录 (用于2D/3D地图与图纸标注)
+  landmarks:
+    - name: "长春站"
+      coords: [125.3250, 43.9080]
+    - name: "伪满皇宫"
+      coords: [125.3422, 43.9036]
+    - name: "伊通河公园"
+      coords: [125.3590, 43.9010]
+    - name: "胜利公园"
+      coords: [125.3260, 43.8960]
+    - name: "光复路"
+      coords: [125.3395, 43.9016]
+

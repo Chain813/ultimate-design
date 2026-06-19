@@ -5,6 +5,7 @@ import logging
 import streamlit as st
 from src.engines.llm_engine import call_llm_engine
 from src.engines.rag_engine import retrieve_rag_context
+from src.config import get_site_name, get_site_city, get_site_district, get_site_desc
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -42,13 +43,18 @@ def get_copilot_response(user_msg: str) -> str:
         bus_summary.append(f"- {k}: {val_str}")
     bus_ctx = "\n".join(bus_summary) if bus_summary else "暂无已完成的规划阶段数据。"
 
+    site_name = get_site_name()
+    city_name = get_site_city()
+    district_name = get_site_district()
+    site_desc = get_site_desc()
+
     system_prompt = f"""
     你是一个名为 UltimateDESIGN-Copilot 的顶尖 AI 城市规划助手，常驻在用户的规划平台侧边栏。
     你拥有平台的全部知识、当前方案的最新指标、以及本地规划法规数据库。
     
     【项目基础背景】
-    - 项目名称：吉林省长春市宽城区伪满皇宫周边街区城市更新规划设计。
-    - 范围：约160公顷。
+    - 项目名称：{city_name}市{district_name}{site_name}城市更新规划设计。
+    - 范围及特征：{site_desc}
     - 特色：古今共振、数字孪生、多主体协商。
     
     【当前平台运行的指标数据 (Stage Bus)】
@@ -56,6 +62,11 @@ def get_copilot_response(user_msg: str) -> str:
     
     【检索到的关联法规条例与参考资料 (RAG Context)】
     {rag_context_str}
+    
+    【跨城市防错规则】
+    - 当前项目所属城市为：{city_name}市。
+    - 检索到的关联法规可能来自其他城市（例如长春或其他省市）。
+    - 凡是检索到的法规、案例中城市与“{city_name}市”不一致的，你必须在回答中以“【提示】以下条款参考自[某城市]，非本市法定标准”的形式进行标注，避免将外地政策错配为本市法定要求。
     
     回答要求：
     1. 紧密结合项目实际，强引用上方给出的法规或平台指标数据。

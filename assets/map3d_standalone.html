@@ -42,6 +42,10 @@
         const is_3d = /*__IS_3D__*/true/*__END_IS_3D__*/;
         const show_building_style = /*__SHOW_BUILDING_STYLE__*/false/*__END_SHOW_BUILDING_STYLE__*/;
         const syntax_metric = /*__SYNTAX_METRIC__*/'integration_norm'/*__END_SYNTAX_METRIC__*/;
+        
+        // 🗺️ 接收从 Python 后端映射的地块定位配置 (中心点、缩放、视角)
+        const map_config = /*__MAP_CONFIG__*/{"center": [125.34064, 43.90095], "zoom": 14.4, "pitch": 73.0, "bearing": 45.0}/*__END_MAP_CONFIG__*/;
+
 
         // 🔬 高级分析图层数据链路 (Page 2 全息诊断专属)
         const hex_payload = /*__HEX_PAYLOAD__*/null/*__END_HEX_PAY__*/;
@@ -589,11 +593,11 @@
         let rotateRequestId = null;
 
         let currentViewState = {
-            latitude: 43.90095,
-            longitude: 125.34064,
-            zoom: 14.4,
-            pitch: is_3d ? 73 : 0,
-            bearing: is_3d ? 45 : 0
+            latitude: map_config.center[1],
+            longitude: map_config.center[0],
+            zoom: map_config.zoom,
+            pitch: is_3d ? map_config.pitch : 0,
+            bearing: is_3d ? map_config.bearing : 0
         };
 
         function rotateMap() {
@@ -602,8 +606,8 @@
                     ...currentViewState,
                     bearing: (currentViewState.bearing + rotationSpeed) % 360,
                     // 强制锁定研究范围的几何中心点
-                    latitude: 43.90095,
-                    longitude: 125.34064
+                    latitude: map_config.center[1],
+                    longitude: map_config.center[0]
                 };
                 deckInstance.setProps({viewState: currentViewState});
                 rotateRequestId = requestAnimationFrame(rotateMap);
@@ -622,15 +626,16 @@
                 // 1.5s 平滑飞入指定起始视角，再开始自动旋转
                 currentViewState = {
                     ...currentViewState,
-                    latitude: 43.90095,
-                    longitude: 125.34064,
-                    zoom: 14.4,
-                    pitch: is_3d ? 73 : 0,
-                    bearing: is_3d ? 45 : 0,
+                    latitude: map_config.center[1],
+                    longitude: map_config.center[0],
+                    zoom: map_config.zoom,
+                    pitch: is_3d ? map_config.pitch : 0,
+                    bearing: is_3d ? map_config.bearing : 0,
                     transitionDuration: 1500,
                     transitionInterpolator: new deck.FlyToInterpolator()
                 };
                 deckInstance.setProps({viewState: currentViewState});
+
                 
                 setTimeout(() => {
                     if (isRotating) {

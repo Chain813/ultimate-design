@@ -165,3 +165,157 @@ div.stMarkdown:has(.apple-nav-wrapper),
 div[data-testid="stMarkdownContainer"]:has(.apple-nav-wrapper) {
     overflow: visible !important;
 }
+
+/* ── Hamburger button & checkbox styles (hidden on desktop) ── */
+.apple-menu-checkbox {
+    display: none;
+}
+.apple-menu-btn {
+    display: none;
+    cursor: pointer;
+    padding: 10px;
+    z-index: 999995;
+}
+.apple-menu-icon,
+.apple-menu-icon::before,
+.apple-menu-icon::after {
+    display: block;
+    background: #515154;
+    height: 2px;
+    width: 20px;
+    position: relative;
+    transition: background 0.2s ease-out, transform 0.2s ease-out;
+}
+.apple-menu-icon::before,
+.apple-menu-icon::after {
+    content: '';
+    position: absolute;
+}
+.apple-menu-icon::before {
+    top: 6px;
+}
+.apple-menu-icon::after {
+    top: -6px;
+}
+
+/* ── Mobile viewport adaptation (<= 768px) ── */
+@media (max-width: 768px) {
+    .apple-navbar-bar {
+        justify-content: space-between !important;
+        padding: 0 16px !important;
+    }
+    
+    .apple-menu-btn {
+        display: block !important;
+    }
+    
+    .apple-nav-items {
+        display: none;
+        position: absolute;
+        top: 52px;
+        left: 0;
+        right: 0;
+        background: rgba(255, 255, 255, 0.98) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        flex-direction: column;
+        height: calc(100vh - 52px);
+        overflow-y: auto !important;
+        align-items: stretch;
+        padding: 12px 16px 40px !important;
+        gap: 0 !important;
+        z-index: 999993 !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    }
+    
+    /* Toggle action: when checked, show navigation items */
+    .apple-menu-checkbox:checked ~ .apple-nav-items {
+        display: flex !important;
+    }
+    
+    /* Animate hamburger menu to 'X' when checked */
+    .apple-menu-checkbox:checked ~ .apple-menu-btn .apple-menu-icon {
+        background: transparent !important;
+    }
+    .apple-menu-checkbox:checked ~ .apple-menu-btn .apple-menu-icon::before {
+        transform: rotate(-45deg) !important;
+        top: 0 !important;
+    }
+    .apple-menu-checkbox:checked ~ .apple-menu-btn .apple-menu-icon::after {
+        transform: rotate(45deg) !important;
+        top: 0 !important;
+    }
+    
+    /* Mobile-specific navigation items and accordion list layout */
+    .apple-nav-item {
+        height: auto !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 16px 8px !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+        white-space: normal !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+    .apple-nav-item > span {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #1d1d1f !important;
+    }
+    .apple-nav-chevron {
+        display: none !important;
+    }
+    
+    /* Flatten dropdown panel in mobile viewport */
+    .apple-dropdown {
+        position: static !important;
+        max-height: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        width: 100% !important;
+        overflow: visible !important;
+    }
+    .apple-dropdown-inner {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        padding: 8px 0 0 10px !important;
+        max-width: 100% !important;
+    }
+    
+    .apple-dd-group {
+        padding: 0 !important;
+        width: 100% !important;
+    }
+    .apple-dd-group-title {
+        padding: 6px 8px !important;
+        font-size: 13px !important;
+        background: rgba(0, 0, 0, 0.02) !important;
+        border-radius: 6px !important;
+    }
+    .apple-dd-arrow {
+        display: none !important;
+    }
+    
+    .apple-dd-modules {
+        margin-top: 6px !important;
+        gap: 5px !important;
+        padding-left: 8px !important;
+    }
+    .apple-dd-module {
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        background: rgba(0, 0, 0, 0.015) !important;
+        border: 1px solid rgba(0, 0, 0, 0.03) !important;
+    }
+    
+    /* Ensure no hover interference */
+    .apple-nav-item::after {
+        display: none !important;
+    }
+}
+

@@ -21,34 +21,49 @@ if not os.path.exists(FONT_BOLD_PATH):
     FONT_BOLD_PATH = FONT_PATH
 
 def wrap_text_to_lines(text, font, max_width):
-    lines = []
-    try:
-        left, top, right, bottom = font.getbbox(text)
-        w = right - left
-    except AttributeError:
-        w = font.getsize(text)[0]
-    if w <= max_width:
-        return [text]
-        
-    current_line = ""
-    for char in text:
-        test_line = current_line + char
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def get_width(t):
         try:
-            left, top, right, bottom = font.getbbox(test_line)
-            w_test = right - left
+            left, top, right, bottom = font.getbbox(t)
+            return right - left
         except AttributeError:
-            w_test = font.getsize(test_line)[0]
-            
-        if w_test <= max_width:
-            current_line = test_line
-        else:
-            if current_line:
-                lines.append(current_line)
-            current_line = char
-    if current_line:
-        lines.append(current_line)
-    return lines
+            return font.getsize(t)[0]
 
+    lines = []
+    for block in text.split('\n'):
+        if not block:
+            lines.append("")
+            continue
+        current_line = ""
+        i = 0
+        while i < len(block):
+            char = block[i]
+            test_line = current_line + char
+            if get_width(test_line) <= max_width:
+                current_line = test_line
+                i += 1
+            else:
+                if not current_line:
+                    current_line = char
+                    i += 1
+                else:
+                    if block[i] in forbidden_start:
+                        current_line += block[i]
+                        i += 1
+                        while i < len(block) and block[i] in forbidden_start:
+                            current_line += block[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+        if current_line:
+            lines.append(current_line)
+    return lines
 def draw_arrow(draw, start, end, color, width=2, scale=1.0):
     dx = end[0] - start[0]
     dy = end[1] - start[1]

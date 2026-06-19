@@ -29,6 +29,7 @@ from src.workflow.template_assets import (
     load_template_asset_manifest,
     summarize_template_assets_for_prompt,
 )
+from src.config import get_site_name
 
 
 @dataclass
@@ -48,11 +49,20 @@ class DrawingTemplate:
 
 def _get_project_context() -> str:
     """获取项目基础数据上下文。"""
+    from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent, get_site_policies
+    city = get_site_city()
+    district = get_site_district()
+    site_name = get_site_name()
+    desc = get_site_desc()
+    adjacent = get_site_adjacent()
+    policies = "、".join(get_site_policies())
+
     ctx_parts = [
-        "项目：长春市宽城区伪满皇宫周边街区更新规划设计",
-        "研究范围：约160公顷，由长春大街、长白路、东九条、亚泰快速路围合",
-        "核心资源：伪满皇宫（研究范围内）、中车厂区工业遗产、老旧社区",
-        "紧邻要素：长春站（北侧枢纽）、伊通河（东侧生态廊道）",
+        f"项目：{city}市{district}{site_name}更新规划设计",
+        f"研究范围：{desc}",
+        f"核心资源：{site_name}及周边地标、老旧社区",
+        f"紧邻要素：{adjacent}",
+        f"相关政策依据：{policies}",
         "四大核心矛盾：历史保护与城市活力不足、工业低效与功能置换、社区老化与公共空间缺失、交通割裂与慢行体验不足",
     ]
 
@@ -986,7 +996,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
         main_expression=tmpl.description,
         must_include=template_requirements,
         legend_content=_default_legend_content(tmpl.name),
-        key_plots="研究范围红线、五个重点地块、主要道路、伪满皇宫周边核心节点、图例区 and 固定图框。",
+        key_plots=f"研究范围红线、五个重点地块、主要道路、{get_site_name()}周边核心节点、图例区 and 固定图框。",
         design_strategy=dyn_strategy,
         analysis_conclusion=dyn_conclusion,
         avoid_content="不得重绘底图、不得移动边界、不得改写重点地块、不得改变图框、不得虚构道路和用地分类。",

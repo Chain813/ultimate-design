@@ -8,10 +8,10 @@ from pathlib import Path
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-TEMP_IMG_DIR = Path(r"C:\Users\23902\Desktop\城环杯\temp_images")
+TEMP_IMG_DIR = Path(os.path.expanduser("~")) / "Desktop" / "城环杯" / "temp_images"
 STATIC_IMG_DIR = Path(r"e:\AI-based-project\urban-platform\static")
-BRAIN_PREV_DIR = Path(r"C:\Users\23902\.gemini\antigravity\brain\a7a0a585-8fe2-47a0-8b18-0be8b3147e91")
-python_exe = r"E:\anaconda\envs\gis_ai\python.exe"
+BRAIN_PREV_DIR = Path(os.path.expanduser("~")) / ".gemini" / "antigravity" / "brain" / "a7a0a585-8fe2-47a0-8b18-0be8b3147e91"
+python_exe = sys.executable
 
 print("=== 0. 生成技术图表与知识图谱 ===")
 
@@ -88,7 +88,7 @@ for src_name, dest_name in screenshots:
     else:
         print(f" ⚠️ 警告：未找到历史截图 {src_name}")
 
-python_exe = r"E:\anaconda\envs\gis_ai\python.exe"
+python_exe = sys.executable
 
 print("\n=== 2. 编译并输出 附件4 成果演示幻灯.pptx ===")
 res_ppt = subprocess.run([python_exe, "tools/generate_pptx_slides.py"], capture_output=True, text=True, encoding='utf-8')

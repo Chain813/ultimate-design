@@ -34,15 +34,49 @@ def get_fit_extent(img_w, img_h, x1, x2, y1, y2):
     return [box_cx - w/2, box_cx + w/2, box_cy - h/2, box_cy + h/2]
 
 def wrap_text(text, max_len=28):
-    wrapped_lines = []
-    for part in text.split('\n'):
-        while len(part) > max_len:
-            wrapped_lines.append(part[:max_len])
-            part = part[max_len:]
-        if part:
-            wrapped_lines.append(part)
-    return '\n'.join(wrapped_lines)
+    forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
+    forbidden_end = set("（【『「《〈〔“‘（([【")
+    
+    def char_width(c):
+        return 2 if ord(c) > 127 else 1
 
+    lines = []
+    for part in text.split('\n'):
+        if not part:
+            lines.append("")
+            continue
+        current_line = ""
+        current_w = 0
+        i = 0
+        while i < len(part):
+            char = part[i]
+            w = char_width(char)
+            if current_w + w <= max_len:
+                current_line += char
+                current_w += w
+                i += 1
+            else:
+                if not current_line:
+                    current_line = char
+                    current_w = w
+                    i += 1
+                else:
+                    if part[i] in forbidden_start:
+                        current_line += part[i]
+                        i += 1
+                        while i < len(part) and part[i] in forbidden_start:
+                            current_line += part[i]
+                            i += 1
+                    while current_line and current_line[-1] in forbidden_end:
+                        i -= 1
+                        current_line = current_line[:-1]
+                if current_line:
+                    lines.append(current_line)
+                current_line = ""
+                current_w = 0
+        if current_line:
+            lines.append(current_line)
+    return '\n'.join(lines)
 def check_and_crop_image(filename):
     img_path = STATIC_DIR / "extracted_images" / filename
     if img_path.exists():
@@ -199,14 +233,14 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         
         # Write wrapped text inside description box
         ax.text(xs + 2.5, 32.2, col["box_title"], color='#15803D', ha='left', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=12.5), zorder=4)
+                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=14.0), zorder=4)
         
-        wrapped_desc = wrap_text(col["box_desc"], max_len=28)
+        wrapped_desc = wrap_text(col["box_desc"], max_len=56)
         y_text = 29.5
         for line in wrapped_desc.split('\n'):
             ax.text(xs + 2.5, y_text, line, color='#334155', ha='left', va='center',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], size=11.5), zorder=4)
-            y_text -= 2.6
+                    fontproperties=fm.FontProperties(family=font_prop['family'], size=12.5), zorder=4)
+            y_text -= 3.0
 
     # 3. BOTTOM-LEFT: Horizontal Flowchart Card (X: 2.0 to 70.0, Y: 4.0 to 20.0)
     mind_shadow = mpatches.Rectangle((2.3, 3.7), 68.0, 16.0, facecolor='#E2E8F0', edgecolor='none', zorder=1)
@@ -216,7 +250,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(mpatches.Rectangle((2.0, 18.5), 68.0, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
     
     ax.text(3.5, 17.0, "专项规划融合与传导逻辑 / SPECIAL PLANNING TRANSMISSION MINDMAP", color='#D97706', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=14.0), zorder=4)
+            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=16.0), zorder=4)
     
     # Draw flowchart elements horizontally with source-control-response notes.
     nodes = [
@@ -254,12 +288,12 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         ax.add_patch(n_shadow)
         ax.add_patch(n_bg)
         ax.text(nx, 12.6, name, color=text_color, ha='center', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=9.8), zorder=5)
+                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=11.5), zorder=5)
         ax.plot([nx - 7.0, nx + 7.0], [11.2, 11.2], color=border_color, linewidth=0.7, alpha=0.35, zorder=5)
         ax.text(nx, 10.2, constraint, color='#334155', ha='center', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], size=7.4), zorder=5)
+                fontproperties=fm.FontProperties(family=font_prop['family'], size=9.0), zorder=5)
         ax.text(nx, 8.9, response, color='#334155', ha='center', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], size=7.4), zorder=5)
+                fontproperties=fm.FontProperties(family=font_prop['family'], size=9.0), zorder=5)
 
     # Draw horizontal connection arrows
     ax.annotate("", xy=(27.3, 11.0), xytext=(23.2, 11.0),
@@ -275,7 +309,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(mpatches.Rectangle((71.5, 18.5), 67.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
     
     ax.text(73.0, 17.0, "设计说明与分析 / DESIGN BRIEF", color='#D97706', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=14.0), zorder=4)
+            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=16.0), zorder=4)
     
     brief_cards = [
         (
@@ -307,9 +341,9 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         ax.add_patch(b_bg)
         ax.add_patch(mpatches.Rectangle((x0, 5.3), 0.6, 9.8, facecolor=accent_color, edgecolor='none', zorder=5))
         ax.text(x0 + 1.4, 13.2, title, color=accent_color, ha='left', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=10.8), zorder=5)
+                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=12.5), zorder=5)
         ax.text(x0 + 1.4, 10.6, body, color='#334155', ha='left', va='top',
-                fontproperties=fm.FontProperties(family=font_prop['family'], size=9.0), zorder=5)
+                fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0), zorder=5)
 
 legend_items = []
 

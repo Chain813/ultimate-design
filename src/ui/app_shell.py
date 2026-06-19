@@ -29,6 +29,9 @@ def _build_nav_tree():
             {"title": "制图技能规范", "href": "/制图与设计智能体Skill手册"},
             {"title": "多主体博弈沙盘", "href": "/制图与设计智能体Skill手册"},
         ]},
+        {"title": "数据大屏", "href": "/数据大屏", "modules": [
+            {"title": "全屏监控看板", "href": "/数据大屏"},
+        ]},
     ]})
     return tree
 
@@ -140,13 +143,19 @@ def render_top_nav():
         '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>'
         '<polyline points="9 22 9 12 15 12 15 22"></polyline></svg>'
         '<span>主页</span></a>'
+        '<input type="checkbox" id="apple-menu-toggle" class="apple-menu-checkbox" />'
+        '<label for="apple-menu-toggle" class="apple-menu-btn">'
+        '<span class="apple-menu-icon"></span>'
+        '</label>'
         f'<div class="apple-nav-items">{nav_items_html}</div>'
         '</div></div>'
     )
 
+
     st.markdown("<style>" + apple_css + "</style>" + full_html, unsafe_allow_html=True)
     render_persistent_output_bar()
     render_scrolling_control()
+    render_auto_tour()
     render_copilot_sidebar()
 
 
@@ -191,6 +200,232 @@ def render_copilot_sidebar():
 
 
 show_nav_bar = render_top_nav
+
+
+def render_auto_tour():
+    """自动演示导览：录制答辩视频时自动按时间线切换页面，带进度指示器和倒计时。"""
+    tour_js = r"""<script>
+    (function(){
+        if(window.__tourInited)return;window.__tourInited=1;
+
+        const TOUR_STAGES = [
+            {url:"/", label:"🏠 主页 - 项目概览", duration:45,
+             desc:"展示项目名称、研究范围、四大核心能力卡片、算力HUD、3D数字孪生底座、模块入口"},
+            {url:"/数据准备与任务解读?sub=数据上传中心", label:"📦 00 数据准备", duration:30,
+             desc:"展示数据上传中心，说明16类空间/文本/街景数据的接入"},
+            {url:"/资料收集与现场调研?sub=语义萃取引擎", label:"📋 01-02 资料收集", duration:25,
+             desc:"展示语义萃取引擎，PDF/Markdown解析和空间数据资产管理"},
+            {url:"/资料收集与现场调研?sub=现场调研", label:"📷 03 现场调研", duration:25,
+             desc:"展示街景样本库，四方向全景照片和绿视率指标"},
+            {url:"/现状分析与问题诊断?sub=3D现状全息底座", label:"🏗️ 04 现状分析", duration:50,
+             desc:"3D全息底座：建筑图层、POI热力、街景品质柱体、天际线；操作：缓慢旋转/缩放地图"},
+            {url:"/现状分析与问题诊断?sub=MPI更新潜力评估", label:"📊 05 问题诊断", duration:40,
+             desc:"AHP权重滑块、MPI潜力排行、地块雷达图、一键导出诊断报告"},
+            {url:"/目标定位", label:"🎯 06 目标定位", duration:25,
+             desc:"设计理念提炼、愿景目标体系、案例对标借鉴"},
+            {url:"/设计策略?sub=阶段四：问题-策略对应", label:"🤝 07 设计策略", duration:50,
+             desc:"三主体博弈推演：居民/开发商/规划师对话、共识雷达、策略矩阵"},
+            {url:"/总体城市设计", label:"🗺️ 08 总体城市设计", duration:40,
+             desc:"空间结构推演、用地优化沙盘、AIGC总平面图生形"},
+            {url:"/专项系统设计", label:"🔧 09 专项系统设计", duration:35,
+             desc:"交通/TOD/生活圈/天际线/风貌景观四大专项"},
+            {url:"/重点地段深化", label:"🔍 10 重点地段深化", duration:45,
+             desc:"5个重点地块：诊断雷达、控规反推、人群画像、Before/After推演"},
+            {url:"/实施路径", label:"📅 11 实施路径", duration:25,
+             desc:"六种更新模式、三期时序甘特图、留改拆总图"},
+            {url:"/城市设计导则", label:"📐 12 城市设计导则", duration:25,
+             desc:"RAG政策检索、控制图则、Word说明书导出"},
+            {url:"/成果表达", label:"🎁 13 成果表达", duration:30,
+             desc:"A3图册成果画廊、图纸提示词助手、核心指标汇总"},
+            {url:"/AIGC设计推演?sub=概念总平面图生形", label:"🎨 15 AIGC推演", duration:35,
+             desc:"ControlNet空间约束、SD渲染管线、Before/After对比"},
+            {url:"/制图与设计智能体Skill手册", label:"📖 16 智能体手册", duration:20,
+             desc:"规划绘图Skill元指令定义与导出"}
+        ];
+
+        let currentIdx = 0, timerId = null, isRunning = false, remaining = 0;
+        const progressBarW = 300;
+
+        // 注入样式
+        const sty = document.createElement('style');
+        sty.innerHTML = `
+#tour-hud{position:fixed;bottom:100px;right:20px;z-index:999998;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+#tour-hud .tour-panel{width:320px;background:rgba(15,23,42,0.94);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.12);border-radius:14px;box-shadow:0 10px 40px rgba(0,0,0,0.5);overflow:hidden;color:#f1f5f9}
+#tour-hud .tour-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(30,41,59,0.5);border-bottom:1px solid rgba(255,255,255,0.06)}
+#tour-hud .tour-header h4{margin:0;font-size:13px;font-weight:600;color:#f8fafc}
+#tour-hud .tour-body{padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+#tour-hud .tour-info{font-size:12px;color:#94a3b8;line-height:1.5}
+#tour-hud .tour-info strong{color:#f1f5f9;font-size:13px}
+#tour-hud .tour-progress{height:4px;background:rgba(255,255,255,0.08);border-radius:2px;overflow:hidden}
+#tour-hud .tour-progress-bar{height:100%;background:linear-gradient(90deg,#0071e3,#38bdf8);border-radius:2px;transition:width 0.3s linear}
+#tour-hud .tour-timer{font-size:24px;font-weight:700;color:#38bdf8;text-align:center;font-variant-numeric:tabular-nums}
+#tour-hud .tour-controls{display:flex;gap:6px}
+#tour-hud .tour-btn{flex:1;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(30,41,59,0.8);color:#f1f5f9;font-size:12px;cursor:pointer;transition:all 0.15s}
+#tour-hud .tour-btn:hover{background:rgba(56,189,248,0.15);border-color:#38bdf8}
+#tour-hud .tour-btn.primary{background:#0071e3;border-color:#0071e3;color:white}
+#tour-hud .tour-btn.primary:hover{background:#1d93f5}
+#tour-hud .tour-btn.skip{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.3)}
+#tour-hud.closed .tour-panel{display:none}
+#tour-hud.closed .tour-trigger{display:flex}
+#tour-hud:not(.closed) .tour-trigger{display:none}
+.tour-trigger{width:44px;height:44px;border-radius:50%;background:rgba(0,113,227,0.9);backdrop-filter:blur(10px);border:1px solid rgba(56,189,248,0.4);box-shadow:0 0 20px rgba(56,189,248,0.3);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;animation:tour-pulse 2s infinite}
+.tour-trigger:hover{transform:scale(1.1);box-shadow:0 0 30px rgba(56,189,248,0.5)}
+@keyframes tour-pulse{0%,100%{box-shadow:0 0 20px rgba(56,189,248,0.3)}50%{box-shadow:0 0 35px rgba(56,189,248,0.6)}}
+#tour-hud .tour-step-dots{display:flex;gap:3px;flex-wrap:wrap}
+#tour-hud .tour-step-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.15);transition:all 0.2s}
+#tour-hud .tour-step-dot.done{background:#38bdf8}
+#tour-hud .tour-step-dot.current{background:#0071e3;transform:scale(1.4);box-shadow:0 0 6px rgba(0,113,227,0.6)}
+#tour-hud .tour-step-indicator{font-size:10px;color:#64748b;text-align:center}
+`;
+        document.head.appendChild(sty);
+
+        // 构建DOM
+        const container = document.createElement('div');
+        container.id = 'tour-hud';
+        container.className = 'closed';
+
+        const dotsHtml = TOUR_STAGES.map((_,i)=>`<span class="tour-step-dot" id="tour-dot-${i}"></span>`).join('');
+
+        container.innerHTML = `
+<div class="tour-trigger" onclick="toggleTourHud()">🎬</div>
+<div class="tour-panel">
+  <div class="tour-header">
+    <h4>🎬 答辩录屏自动导览</h4>
+    <button style="background:transparent;border:none;color:#94a3b8;font-size:16px;cursor:pointer" onclick="toggleTourHud()">×</button>
+  </div>
+  <div class="tour-body">
+    <div class="tour-info" id="tour-info">
+      <strong>准备就绪</strong><br>
+      共 ${TOUR_STAGES.length} 个阶段 · 总计约 ${Math.round(TOUR_STAGES.reduce((s,x)=>s+x.duration,0)/60)} 分钟
+    </div>
+    <div class="tour-step-indicator" id="tour-step-text">按 ▶ 开始自动导览</div>
+    <div class="tour-step-dots" id="tour-dots">${dotsHtml}</div>
+    <div class="tour-progress"><div class="tour-progress-bar" id="tour-progress-bar" style="width:0%"></div></div>
+    <div class="tour-timer" id="tour-timer">--</div>
+    <div class="tour-controls">
+      <button class="tour-btn primary" id="tour-btn-start" onclick="tourStart()">▶️ 开始导览</button>
+      <button class="tour-btn" id="tour-btn-next" onclick="tourNext()" disabled>⏭ 跳过</button>
+    </div>
+    <div style="font-size:10px;color:#64748b;text-align:center">
+      快捷键: <code style="background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:2px;color:#38bdf8">T</code> 开始/暂停 &nbsp;
+      <code style="background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:2px;color:#38bdf8">N</code> 下一阶段 &nbsp;
+      <code style="background:rgba(255,255,255,0.06);padding:1px 4px;border-radius:2px;color:#38bdf8">H</code> 隐藏面板
+    </div>
+  </div>
+</div>`;
+        document.body.appendChild(container);
+
+        // 全局函数
+        window.toggleTourHud = function(){
+            document.getElementById('tour-hud').classList.toggle('closed');
+        };
+
+        window.tourStart = function(){
+            if(isRunning){ tourPause(); return; }
+            isRunning = true;
+            if(currentIdx >= TOUR_STAGES.length) currentIdx = 0;
+            const btn = document.getElementById('tour-btn-start');
+            btn.innerText = '⏸️ 暂停';
+            btn.className = 'tour-btn';
+            document.getElementById('tour-btn-next').disabled = false;
+            tourGoTo(currentIdx);
+        };
+
+        window.tourPause = function(){
+            isRunning = false;
+            if(timerId){ clearInterval(timerId); timerId = null; }
+            const btn = document.getElementById('tour-btn-start');
+            btn.innerText = '▶️ 继续';
+            btn.className = 'tour-btn primary';
+        };
+
+        window.tourNext = function(){
+            if(currentIdx < TOUR_STAGES.length - 1){
+                currentIdx++;
+                tourGoTo(currentIdx);
+            }
+        };
+
+        window.tourGoTo = function(idx){
+            if(timerId){ clearInterval(timerId); timerId = null; }
+            currentIdx = idx;
+            const stage = TOUR_STAGES[idx];
+            remaining = stage.duration;
+            updateUI();
+
+            // 导航到目标页面
+            window.location.href = stage.url;
+
+            // 更新进度条和计时器
+            timerId = setInterval(function(){
+                remaining--;
+                if(remaining <= 0){
+                    clearInterval(timerId); timerId = null;
+                    if(isRunning && currentIdx < TOUR_STAGES.length - 1){
+                        currentIdx++;
+                        tourGoTo(currentIdx);
+                    } else if(currentIdx >= TOUR_STAGES.length - 1){
+                        tourComplete();
+                    }
+                }
+                updateUI();
+            }, 1000);
+        };
+
+        function updateUI(){
+            const stage = TOUR_STAGES[currentIdx];
+            const totalStages = TOUR_STAGES.length;
+            const progress = ((currentIdx + (stage.duration - remaining) / stage.duration) / totalStages * 100).toFixed(1);
+
+            document.getElementById('tour-info').innerHTML = `<strong>${stage.label}</strong><br>${stage.desc}`;
+            document.getElementById('tour-step-text').innerText = `${currentIdx+1}/${totalStages} · ${stage.label.split(' ')[0]}`;
+            document.getElementById('tour-progress-bar').style.width = progress + '%';
+            document.getElementById('tour-timer').innerText = remaining > 0 ? remaining + 's' : '→';
+
+            // 更新点状指示器
+            for(let i=0; i<totalStages; i++){
+                const dot = document.getElementById('tour-dot-'+i);
+                if(!dot) continue;
+                dot.className = 'tour-step-dot' + (i<currentIdx?' done':'') + (i===currentIdx?' current':'');
+            }
+        }
+
+        function tourComplete(){
+            isRunning = false;
+            if(timerId){ clearInterval(timerId); timerId = null; }
+            const btn = document.getElementById('tour-btn-start');
+            btn.innerText = '✅ 导览完成';
+            btn.className = 'tour-btn primary';
+            btn.disabled = true;
+            document.getElementById('tour-btn-next').disabled = true;
+            document.getElementById('tour-info').innerHTML = '<strong>🎉 导览结束！</strong><br>全部16个阶段已展示完毕';
+            document.getElementById('tour-timer').innerText = '✓';
+            document.getElementById('tour-progress-bar').style.width = '100%';
+            for(let i=0; i<TOUR_STAGES.length; i++){
+                const dot = document.getElementById('tour-dot-'+i);
+                if(dot) dot.className = 'tour-step-dot done';
+            }
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e){
+            if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+            if(e.code === 'KeyT'){
+                e.preventDefault();
+                if(isRunning) tourPause(); else tourStart();
+            } else if(e.code === 'KeyN'){
+                e.preventDefault();
+                if(isRunning || currentIdx < TOUR_STAGES.length - 1) tourNext();
+            } else if(e.code === 'KeyH'){
+                e.preventDefault();
+                const hud = document.getElementById('auto-scroller-hud');
+                if(hud) hud.style.display = (hud.style.display==='none')?'block':'none';
+                toggleTourHud();
+            }
+        });
+    })();
+</script>"""
+    st.markdown(tour_js, unsafe_allow_html=True)
 
 
 def render_engine_status_alert():

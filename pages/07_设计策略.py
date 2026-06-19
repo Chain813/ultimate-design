@@ -314,13 +314,24 @@ if selected_sub == "⚖️ 多主体协同推演":
     elif st.session_state.get("p7_running_negotiation", False):
         run_negotiation = True
     else:
-        st.info("💡 已加载历史推演记录。如果您想重新生成，请点击下方的“重新开启推演”按钮。")
-        current_round = ""
-        for item in saved_dialogues:
-            if item["round_label"] != current_round:
-                current_round = item["round_label"]
-                st.subheader(f"🔄 {current_round}")
-            _render_dialogue_static(item["name"], item.get("thinking", ""), item["formal"], item["round_label"])
+        st.info("💡 已加载历史推演记录。您可以选择以传统卡片时间线查看，或启动交互式动画沙盘播放。")
+        tab_list, tab_replay = st.tabs(["📝 传统卡片视角", "🎭 交互式博弈沙盘 (动画重放)"])
+        
+        with tab_list:
+            current_round = ""
+            for item in saved_dialogues:
+                if item["round_label"] != current_round:
+                    current_round = item["round_label"]
+                    st.subheader(f"🔄 {current_round}")
+                _render_dialogue_static(item["name"], item.get("thinking", ""), item["formal"], item["round_label"])
+            
+        with tab_replay:
+            replay_html_path = Path("static/negotiation_replay.html")
+            if replay_html_path.exists():
+                html_content = replay_html_path.read_text(encoding="utf-8")
+                components.html(html_content, height=750, scrolling=True)
+            else:
+                st.warning("⚠️ 交互式重放文件未找到，请先重新运行推演以进行编译生成。")
             
         if st.button("🔄 重新开启三方协同推演", type="secondary", **stretch_width(st.button)):
             save_stage_output("07", "negotiation_dialogues", [])
@@ -706,6 +717,14 @@ if selected_sub == "⚖️ 多主体协同推演":
                 st.session_state["stage4_output"] = summary
                 save_stage_output("07", SK.STRATEGY_MATRIX, summary)
                 register_report_output(label="策略共识矩阵", content=summary, stage_code="07", key="strategy_matrix")
+                # 自动重新生成重放网页与示意图成果
+                try:
+                    from scripts.generate_negotiation_replay import main as generate_replay
+                    from scripts.generate_negotiation_infographic import main as generate_infographic
+                    generate_replay()
+                    generate_infographic()
+                except Exception as e:
+                    st.warning(f"自动编译成果失败: {e}")
             st.session_state["p7_running_negotiation"] = False
 
     # 总是展示导出本次思考过程的下载按钮
@@ -754,6 +773,22 @@ elif selected_sub == "📊 共识雷达":
             st.warning(f"⚠️ 当前共识满意度较低：{', '.join(under_60_roles)} 的满意度低于 60%，存在主体利益受损，建议在上方重新发起策划协商以盘活良性循环。")
         else:
             st.success("✅ 三方达成高度共识！所有主体的利益满意度均达到 60% 以上，协同性高。")
+        # 展示并下载高分辨率示意图
+        infographic_path = Path("static/negotiation_infographic.png")
+        if infographic_path.exists():
+            st.markdown("---")
+            st.subheader("🎨 规划博弈协商成果示意图 (高分辨率成果板)")
+            st.caption("以下为系统自动渲染生成的 1920x1080 博弈沙盘总结大图。")
+            st.image(str(infographic_path), use_container_width=True)
+            
+            with open(infographic_path, "rb") as file:
+                btn = st.download_button(
+                    label="💾 下载高分辨率示意图 (PNG)",
+                    data=file,
+                    file_name="negotiation_infographic.png",
+                    mime="image/png",
+                    use_container_width=True
+                )
     else:
         st.warning("暂无共识数据，请先完成多主体协同推演。")
 

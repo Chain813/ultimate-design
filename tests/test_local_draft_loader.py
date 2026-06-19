@@ -3,7 +3,7 @@ import os
 from src.engines.local_draft_loader import load_thesis_from_draft, get_combined_references
 
 def test_load_thesis_from_draft():
-    draft_path = r"C:\Users\23902\Desktop\陈礼冲 毕设\毕业设计答辩稿_陈礼冲_202111003.docx"
+    draft_path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "毕业设计答辩稿_陈礼冲_202111003.docx")
     if not os.path.exists(draft_path):
         # Skip if the file doesn't exist on the environment (e.g. CI)
         return
