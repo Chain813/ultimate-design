@@ -1,0 +1,954 @@
+@page {
+  size: A1 portrait;
+  margin: 0;
+}
+
+:root {
+  --paper: #ffffff;
+  --ink: #101827;
+  --muted: #5d6a76;
+  --line: #edf1f4;
+  --line-strong: #aab6bf;
+  --panel: #ffffff;
+  --navy: #172033;
+  --red: #c13a2b;
+  --orange: #d97706;
+  --teal: #007c78;
+  --green: #4f8a45;
+  --gold: #c99a2e;
+  --blue: #315f96;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #cfd7de;
+  color: var(--ink);
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+}
+
+.exhibition-set {
+  display: grid;
+  gap: 34px;
+  padding: 34px;
+}
+
+.print-board {
+  width: 594mm;
+  height: 841mm;
+  min-height: 841mm;
+  padding: 18mm 18mm 16mm;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px),
+    var(--paper);
+  background-size: 12mm 12mm, 12mm 12mm, auto;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 70px rgba(16, 24, 39, 0.24);
+  page-break-after: always;
+}
+
+.print-board::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 7mm;
+  background: linear-gradient(90deg, var(--navy), var(--red) 36%, var(--orange) 62%, var(--teal));
+}
+
+.board-title {
+  height: 74mm;
+  display: grid;
+  grid-template-columns: 1fr 58mm;
+  align-items: end;
+  gap: 12mm;
+  padding: 12mm 0 9mm;
+  border-bottom: 1.4mm solid var(--navy);
+}
+
+.project-label {
+  margin: 0 0 4mm;
+  color: var(--red);
+  font-size: 9.4pt;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+h1 {
+  color: var(--ink);
+  font-size: 34pt;
+  line-height: 1.03;
+  font-weight: 950;
+}
+
+h2 {
+  color: var(--ink);
+  font-size: 15pt;
+  line-height: 1.14;
+  font-weight: 900;
+}
+
+.subtitle {
+  max-width: 430mm;
+  margin-top: 5mm;
+  color: var(--muted);
+  font-size: 11.5pt;
+  line-height: 1.62;
+}
+
+.board-number {
+  justify-self: end;
+  width: 50mm;
+  height: 50mm;
+  display: grid;
+  place-items: center;
+  color: var(--panel);
+  background: var(--navy);
+  border-left: 5mm solid var(--red);
+  font-size: 36pt;
+  font-weight: 950;
+}
+
+figure {
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background: transparent;
+  border: 0;
+}
+
+img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  background: transparent;
+}
+
+figcaption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: 0;
+  padding: 2mm 3mm;
+  border: 0;
+  color: #fff;
+  background: linear-gradient(90deg, rgba(16, 24, 39, 0.90), rgba(16, 24, 39, 0.62));
+  font-size: 7.8pt;
+  line-height: 1.24;
+  font-weight: 800;
+}
+
+.process-chain {
+  height: 34mm;
+  margin: 7mm 0 8mm;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4mm;
+}
+
+.process-chain div {
+  position: relative;
+  padding: 5mm 5mm 4mm;
+  color: #fff;
+  background: var(--navy);
+  border-bottom: 2.5mm solid var(--orange);
+}
+
+.process-chain div:nth-child(2) {
+  border-bottom-color: var(--teal);
+}
+
+.process-chain div:nth-child(3) {
+  border-bottom-color: var(--red);
+}
+
+.process-chain div:nth-child(4) {
+  border-bottom-color: var(--green);
+}
+
+.process-chain div:nth-child(5) {
+  border-bottom-color: var(--gold);
+}
+
+.process-chain b {
+  display: block;
+  margin-bottom: 2mm;
+  font-size: 10.5pt;
+}
+
+.process-chain span {
+  display: block;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 7.4pt;
+  line-height: 1.35;
+}
+
+.board-01-grid {
+  height: 737mm;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-template-rows: 32mm 240mm 104mm 255mm 84mm;
+  gap: 4mm;
+  padding-top: 6mm;
+}
+
+.board-01 .board-title {
+  height: 70mm;
+}
+
+.tech-ribbon {
+  grid-column: 1 / 13;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 3mm;
+}
+
+.tech-ribbon span {
+  display: block;
+  padding: 3.5mm 4mm 3mm;
+  color: #fff;
+  background: var(--navy);
+  border-bottom: 2mm solid var(--teal);
+  font-size: 6.9pt;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.tech-ribbon b {
+  display: block;
+  margin-bottom: 1.4mm;
+  font-size: 10pt;
+  line-height: 1;
+}
+
+.tech-ribbon em {
+  display: block;
+  color: rgba(255, 255, 255, 0.74);
+  font-style: normal;
+  font-weight: 700;
+}
+
+.tech-ribbon span:nth-child(2n) {
+  border-bottom-color: var(--orange);
+}
+
+.tech-ribbon span:nth-child(3n) {
+  border-bottom-color: var(--red);
+}
+
+.knowledge-map {
+  grid-column: 1 / 10;
+  grid-row: 2;
+  border-top: 3mm solid var(--navy);
+  background: #fff;
+  outline: 0.35mm solid var(--line-strong);
+}
+
+.knowledge-map img {
+  object-fit: contain;
+  padding: 0;
+}
+
+.tech-proof-panel {
+  grid-column: 10 / 13;
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: auto auto repeat(3, 1fr) auto;
+  gap: 3mm;
+  padding: 5mm;
+  color: #fff;
+  background: var(--navy);
+  border-left: 4mm solid var(--red);
+}
+
+.tech-proof-panel h2 {
+  color: #fff;
+  font-size: 18pt;
+}
+
+.tech-proof-panel p {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 8.2pt;
+  line-height: 1.45;
+}
+
+.proof-card {
+  padding: 3mm;
+  background: rgba(255, 255, 255, 0.08);
+  border-top: 1.2mm solid var(--orange);
+}
+
+.proof-card b {
+  display: block;
+  margin-bottom: 1mm;
+  color: #fff;
+  font-size: 10.2pt;
+}
+
+.proof-card span {
+  display: block;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 7.4pt;
+  line-height: 1.38;
+}
+
+.proof-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2mm;
+}
+
+.proof-metrics span {
+  padding: 2mm 1mm;
+  color: var(--ink);
+  background: #fff;
+  text-align: center;
+  font-size: 6.8pt;
+  font-weight: 800;
+}
+
+.proof-metrics b {
+  display: block;
+  color: var(--red);
+  font-size: 14pt;
+  line-height: 1;
+}
+
+.major-diagrams {
+  grid-column: 1 / 13;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  min-height: 0;
+}
+
+.mechanism-grid {
+  grid-column: 1 / 13;
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3mm;
+  min-height: 0;
+}
+
+.diagram-tile {
+  background: #fff;
+  border: 0.32mm solid var(--line-strong);
+  border-top: 1.8mm solid var(--blue);
+}
+
+.diagram-tile:nth-child(2n) {
+  border-top-color: var(--teal);
+}
+
+.diagram-tile:nth-child(3n) {
+  border-top-color: var(--red);
+}
+
+.diagram-tile:nth-child(5n) {
+  border-top-color: var(--orange);
+}
+
+.diagram-tile img {
+  object-fit: contain;
+  padding: 1mm;
+}
+
+.project-screenshot-grid {
+  grid-column: 1 / 13;
+  grid-row: 5;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3mm;
+  min-height: 0;
+}
+
+.project-shot {
+  border-top: 1.8mm solid var(--teal);
+  background: #fff;
+}
+
+.project-shot img {
+  object-fit: contain;
+}
+
+.project-shot:nth-child(2n) {
+  border-top-color: var(--orange);
+}
+
+.project-shot:nth-child(3n) {
+  border-top-color: var(--red);
+}
+
+.plan-tile {
+  border-top: 2.2mm solid var(--red);
+}
+
+.effect-tile {
+  border-top: 2.2mm solid var(--teal);
+}
+
+.analysis-tile {
+  min-height: 0;
+}
+
+.board-02-grid {
+  height: 737mm;
+  padding-top: 8mm;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 207mm 92mm 100mm 320mm;
+  gap: 6mm;
+}
+
+.master-hero {
+  grid-column: 1 / 3;
+  grid-row: 1;
+  border-top: 3mm solid var(--red);
+}
+
+.master-secondary {
+  grid-column: 3 / 5;
+  grid-row: 1;
+  border-top: 3mm solid var(--orange);
+}
+
+.strategy-column {
+  grid-column: 1 / 5;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.15fr;
+  grid-template-rows: auto 1fr;
+  gap: 4mm;
+  padding: 4mm;
+  background: var(--panel);
+  border: 0.45mm solid var(--line-strong);
+  border-top: 3mm solid var(--gold);
+}
+
+.strategy-column h2 {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.strategy-column p {
+  grid-column: 1;
+  grid-row: 2;
+  color: var(--muted);
+  font-size: 7.6pt;
+  line-height: 1.45;
+}
+
+.metric-strip {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3mm;
+  align-self: start;
+}
+
+.strategy-column figure {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+
+.metric-strip span {
+  padding: 4mm 2mm;
+  border: 0.35mm solid var(--line);
+  text-align: center;
+  color: var(--muted);
+  font-size: 7.3pt;
+  font-weight: 800;
+}
+
+.metric-strip b {
+  display: block;
+  color: var(--red);
+  font-size: 18pt;
+  line-height: 1;
+}
+
+.diagnosis-band {
+  grid-column: 1 / 5;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6mm;
+}
+
+.atlas-matrix {
+  grid-column: 1 / 5;
+  grid-row: 4;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 5mm;
+}
+
+.board-03 .board-title {
+  height: 70mm;
+}
+
+.parcel-board {
+  height: 740mm;
+  padding-top: 7mm;
+  display: grid;
+  grid-template-rows: 62mm repeat(5, 1fr);
+  gap: 4mm;
+}
+
+.parcel-overview {
+  display: grid;
+  grid-template-columns: 1.55fr repeat(5, 1fr);
+  gap: 4mm;
+  min-height: 0;
+}
+
+.overview-map {
+  border-top: 2.2mm solid var(--red);
+}
+
+.parcel-row {
+  display: grid;
+  grid-template-columns: 36mm 172mm 172mm 1fr;
+  gap: 4mm;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.parcel-name {
+  padding: 3mm;
+  color: #fff;
+  background: var(--navy);
+  border-left: 3mm solid var(--orange);
+}
+
+.parcel-row:nth-child(2) .parcel-name {
+  border-left-color: var(--teal);
+}
+
+.parcel-row:nth-child(3) .parcel-name {
+  border-left-color: var(--red);
+}
+
+.parcel-row:nth-child(4) .parcel-name {
+  border-left-color: var(--green);
+}
+
+.parcel-row:nth-child(5) .parcel-name {
+  border-left-color: var(--gold);
+}
+
+.parcel-name b {
+  display: block;
+  margin-bottom: 4mm;
+  font-size: 24pt;
+  line-height: 1;
+}
+
+.parcel-name h2 {
+  color: #fff;
+  font-size: 13.5pt;
+  line-height: 1.16;
+}
+
+.parcel-name p {
+  margin-top: 4mm;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 7.4pt;
+  line-height: 1.42;
+}
+
+.parcel-plan {
+  border-top: 2.2mm solid var(--red);
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 4mm;
+  min-height: 0;
+}
+
+.support-layout {
+  height: 737mm;
+  padding-top: 8mm;
+  display: grid;
+  grid-template-columns: 1fr 148mm;
+  grid-template-rows: 340mm 391mm;
+  gap: 6mm;
+}
+
+.support-mosaic {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 3.5mm;
+}
+
+.support-mosaic .span-two {
+  grid-column: auto;
+}
+
+.section-stack {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  display: grid;
+  grid-template-rows: auto repeat(5, 1fr);
+  gap: 5mm;
+  padding: 5mm;
+  background: var(--panel);
+  border: 0.45mm solid var(--line-strong);
+  border-top: 3mm solid var(--teal);
+}
+
+.parcel-effect-board {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3.2mm;
+  min-height: 0;
+}
+
+.effect-parcel {
+  display: grid;
+  grid-template-columns: 19mm 62mm repeat(6, 1fr);
+  gap: 2.4mm;
+  min-height: 0;
+}
+
+.effect-parcel-title {
+  display: grid;
+  align-content: center;
+  gap: 1.4mm;
+  padding: 2mm;
+  color: #fff;
+  background: var(--navy);
+  border-left: 2.5mm solid var(--orange);
+}
+
+.effect-parcel:nth-child(2) .effect-parcel-title {
+  border-left-color: var(--red);
+}
+
+.effect-parcel:nth-child(3) .effect-parcel-title {
+  border-left-color: var(--green);
+}
+
+.effect-parcel:nth-child(4) .effect-parcel-title {
+  border-left-color: var(--gold);
+}
+
+.effect-parcel:nth-child(5) .effect-parcel-title {
+  border-left-color: var(--teal);
+}
+
+.effect-parcel-title b {
+  display: block;
+  font-size: 14pt;
+  line-height: 1;
+}
+
+.effect-parcel-title span {
+  display: block;
+  font-size: 6.8pt;
+  line-height: 1.18;
+  font-weight: 900;
+}
+
+.plan-thumb {
+  border-top: 2mm solid var(--red);
+}
+
+.parcel-effect-board figcaption {
+  padding: 1.2mm 1.7mm;
+  font-size: 5.7pt;
+  line-height: 1.08;
+}
+
+.effect-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 4mm;
+}
+
+.effect-strip figcaption {
+  padding: 1.4mm 2mm;
+  font-size: 6.4pt;
+  line-height: 1.12;
+}
+
+.policy-board-layout {
+  height: 737mm;
+  padding-top: 8mm;
+  display: grid;
+  grid-template-columns: 1.12fr 0.88fr;
+  grid-template-rows: 475mm 252mm;
+  gap: 6mm;
+}
+
+.policy-loop-hero {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+  min-height: 0;
+  background: var(--panel);
+  border: 0.45mm solid var(--line-strong);
+  border-top: 3mm solid var(--red);
+  overflow: hidden;
+}
+
+.loop-orbit {
+  position: absolute;
+  inset: 42mm;
+  border: 8mm solid rgba(201, 154, 46, 0.88);
+  border-radius: 50%;
+}
+
+.loop-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 95mm;
+  height: 95mm;
+  transform: translate(-50%, -50%);
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 3mm;
+  color: #fff;
+  background: var(--navy);
+}
+
+.loop-center b {
+  font-size: 21pt;
+  line-height: 1;
+}
+
+.loop-center span {
+  font-size: 8.4pt;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.loop-node {
+  position: absolute;
+  width: 145mm;
+  padding: 7mm;
+  color: #fff;
+  background: var(--navy);
+}
+
+.loop-node b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22mm;
+  height: 12mm;
+  margin-bottom: 4mm;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 10pt;
+}
+
+.loop-node h2 {
+  color: #fff;
+  font-size: 15pt;
+}
+
+.loop-node p {
+  margin-top: 3mm;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 8.2pt;
+  line-height: 1.48;
+}
+
+.loop-government {
+  left: 18mm;
+  top: 24mm;
+  border-left: 4mm solid var(--red);
+}
+
+.loop-market {
+  right: 18mm;
+  top: 180mm;
+  border-left: 4mm solid var(--teal);
+}
+
+.loop-residents {
+  left: 60mm;
+  bottom: 28mm;
+  border-left: 4mm solid var(--orange);
+}
+
+.loop-step {
+  position: absolute;
+  min-width: 74mm;
+  padding: 3mm 4mm;
+  color: var(--ink);
+  background: #fff;
+  border: 0.35mm solid var(--line);
+  font-size: 7.2pt;
+  font-weight: 900;
+  text-align: center;
+}
+
+.step-01 {
+  left: 23mm;
+  bottom: 93mm;
+}
+
+.step-02 {
+  right: 23mm;
+  bottom: 93mm;
+}
+
+.step-03 {
+  left: 23mm;
+  bottom: 58mm;
+}
+
+.step-04 {
+  right: 23mm;
+  bottom: 58mm;
+}
+
+.policy-toolkit {
+  grid-column: 2;
+  grid-row: 1;
+  padding: 8mm;
+  background: var(--panel);
+  border: 0.45mm solid var(--line-strong);
+  border-top: 3mm solid var(--teal);
+}
+
+.policy-toolkit > p {
+  margin-top: 4mm;
+  color: var(--muted);
+  font-size: 9pt;
+  line-height: 1.5;
+}
+
+.policy-tool-list {
+  margin-top: 7mm;
+  display: grid;
+  grid-template-rows: repeat(6, 1fr);
+  gap: 4mm;
+  height: 382mm;
+}
+
+.policy-tool-list div {
+  padding: 5mm;
+  background: #f7f9fa;
+  border-left: 3mm solid var(--blue);
+}
+
+.policy-tool-list div:nth-child(2) {
+  border-left-color: var(--teal);
+}
+
+.policy-tool-list div:nth-child(3) {
+  border-left-color: var(--orange);
+}
+
+.policy-tool-list div:nth-child(4) {
+  border-left-color: var(--gold);
+}
+
+.policy-tool-list div:nth-child(5) {
+  border-left-color: var(--green);
+}
+
+.policy-tool-list div:nth-child(6) {
+  border-left-color: var(--red);
+}
+
+.policy-tool-list b {
+  display: block;
+  margin-bottom: 2mm;
+  font-size: 11.4pt;
+}
+
+.policy-tool-list span {
+  display: block;
+  color: var(--muted);
+  font-size: 7.8pt;
+  line-height: 1.35;
+}
+
+.policy-a3-strip {
+  grid-column: 1 / 3;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4mm;
+  min-height: 0;
+}
+
+.policy-a3-tile {
+  background: var(--panel);
+  border-top: 2.4mm solid var(--red);
+}
+
+.policy-a3-tile:nth-child(2) {
+  border-top-color: var(--blue);
+}
+
+.policy-a3-tile:nth-child(3) {
+  border-top-color: var(--teal);
+}
+
+.policy-a3-tile:nth-child(4) {
+  border-top-color: var(--orange);
+}
+
+.policy-a3-tile figcaption {
+  padding: 1.8mm 2.2mm;
+  font-size: 6.8pt;
+  line-height: 1.15;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .exhibition-set {
+    display: block;
+    padding: 0;
+  }
+
+  .print-board {
+    box-shadow: none;
+    margin: 0;
+  }
+}

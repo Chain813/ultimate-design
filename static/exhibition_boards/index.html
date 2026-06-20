@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>A1 竞赛展板 - 数字孪生驱动下的宽城区城市更新设计</title>
+  <link rel="stylesheet" href="boards.css">
+</head>
+<body>
+  <main class="exhibition-set">
+    <section class="print-board board-01">
+      <header class="board-title">
+        <div>
+          <p class="project-label">TECHNICAL INNOVATION / AI PLANNING WORKFLOW</p>
+          <h1>城市更新微更新决策支持平台技术架构</h1>
+          <p class="subtitle">以多源空间数据、AHP-MPI 可解释诊断、LLM 多主体协商、Zoning RAG 合规审计、GIS-ControlNet 控形生成和自动化成果生产线，解决城市更新中的诊断粗糙、博弈断裂与制图漂移问题。</p>
+        </div>
+        <span class="board-number">01</span>
+      </header>
+
+      <div class="board-01-grid">
+        <section class="tech-ribbon" aria-label="平台技术亮点">
+          <span><b>DATA FUSION</b><em>GeoJSON / CSV / 街景 / 政策文本统一资产化</em></span>
+          <span><b>AHP-MPI</b><em>719 栋建筑更新潜力可解释量化排序</em></span>
+          <span><b>LLM AGENTS</b><em>居民、开发商、规划师多主体协商闭环</em></span>
+          <span><b>ZONING RAG</b><em>法规向量检索与红黄牌合规审计</em></span>
+          <span><b>CONTROLNET</b><em>GIS 红线、道路、深度图约束 AIGC 生成</em></span>
+          <span><b>AUTO ATLAS</b><em>图册、A1、报告与视频自动化交付</em></span>
+        </section>
+
+        <figure class="knowledge-map">
+          <img src="../technology_parameters_knowledge_graph.png" alt="核心技术与全生命周期数据算法知识图谱">
+          <figcaption>核心技术与全生命周期数据算法知识图谱：从原始数据层、S00-S15 阶段、算法流转到图册章节交付的全链路关系</figcaption>
+        </figure>
+
+        <aside class="tech-proof-panel" aria-label="技术突破与项目数据">
+          <h2>技术突破主线</h2>
+          <p>参考竞赛 PPT 的系统叙事，将问题、算法和成果组织为可评审的技术证据链。</p>
+          <div class="proof-card"><b>诊断粗糙 → 量化诊断</b><span>街景语义分割、POI 核密度、空间可达性与 AHP-MPI 模型共同识别更新病灶。</span></div>
+          <div class="proof-card"><b>博弈断裂 → 协商收敛</b><span>LLM 多智能体模拟居民、开发商、规划师诉求，并由 RAG 合规审计介入调停。</span></div>
+          <div class="proof-card"><b>制图漂移 → 空间控形</b><span>将 GIS 红线、道路骨架和深度关系转为 ControlNet 条件，压制 AIGC 空间幻觉。</span></div>
+          <div class="proof-metrics">
+            <span><b>719</b>建筑基底</span>
+            <span><b>1,788</b>街景样本</span>
+            <span><b>248</b>法规向量块</span>
+          </div>
+        </aside>
+
+        <section class="major-diagrams" aria-label="核心机制总图">
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_technical_highlights.png" alt="核心技术亮点总览"><figcaption>核心技术亮点总览：三大痛点与六类技术突破</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_platform_architecture.png" alt="平台总体架构"><figcaption>平台总体架构：界面、工作流、空间计算、AI 推演与成果生产分层协同</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_workflow_s00_s15.png" alt="S00-S15 全流程泳道"><figcaption>S00-S15 全流程泳道：从任务输入到图册、展板、视频的阶段化工作流</figcaption></figure>
+        </section>
+
+        <section class="mechanism-grid" aria-label="算法与流程细图">
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_data_loop.png" alt="数据到成果闭环"><figcaption>数据到成果闭环</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_ai_modules.png" alt="AI 与算法模块协同"><figcaption>AI 与算法模块协同</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_data_matrix.png" alt="多源数据资产矩阵"><figcaption>多源数据资产矩阵</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_data_governance.png" alt="数据治理机制"><figcaption>数据治理机制</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_spatial_diagnosis.png" alt="空间诊断算法链"><figcaption>空间诊断算法链</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_mpi_model.png" alt="AHP-MPI 更新潜力模型"><figcaption>AHP-MPI 更新潜力模型</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_digital_twin_layers.png" alt="数字孪生图层栈"><figcaption>数字孪生图层栈</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_rag_llm_pipeline.png" alt="RAG 与 LLM 文本生成链"><figcaption>RAG + LLM 文本生成链</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_aigc_controlnet_pipeline.png" alt="AIGC 与 ControlNet 生成式设计链"><figcaption>AIGC / ControlNet 生成式设计链</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_atlas_pipeline.png" alt="Atlas 自动制图与装帧链"><figcaption>Atlas 自动制图与装帧链</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_quality_loop.png" alt="质量校核与可追溯机制"><figcaption>质量校核与可追溯机制</figcaption></figure>
+          <figure class="diagram-tile"><img src="tech_diagrams/board01_delivery_media.png" alt="动态汇报与交付媒体链"><figcaption>动态汇报与交付媒体链</figcaption></figure>
+        </section>
+
+        <section class="project-screenshot-grid" aria-label="项目真实界面截图">
+          <figure class="project-shot"><img src="project_shots/app_home.png" alt="平台综合首页截图"><figcaption>综合首页：阶段导航、项目总览与成果入口</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/data_dashboard_page.png" alt="数据大屏页面截图"><figcaption>数据大屏：多源指标与诊断结果监测</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/diagnosis_page.png" alt="现状诊断页面截图"><figcaption>现状诊断：空间潜力、问题识别与多源数据叠合</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/overall_design_page.png" alt="总体城市设计页面截图"><figcaption>总体城市设计：空间结构与概念总平推演</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/key_parcels_page.png" alt="重点地块页面截图"><figcaption>重点地块深化：五个更新样本的设计组织入口</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/aigc_page.png" alt="AIGC 推演页面截图"><figcaption>AIGC 推演：ControlNet、深度图与设计约束参数</figcaption></figure>
+          <figure class="project-shot"><img src="project_shots/results_page.png" alt="成果表达页面截图"><figcaption>成果表达：图册自动组装、图纸生成与导出流程</figcaption></figure>
+        </section>
+      </div>
+    </section>
+
+    <section class="print-board board-02">
+      <header class="board-title">
+        <div>
+          <p class="project-label">MASTER PLAN ATLAS / CITY SCALE</p>
+          <h1>总体规划图册成果</h1>
+          <p class="subtitle">以总体鸟瞰、更新模式、空间结构和专项系统为核心，组织城市更新图册的主干成果。</p>
+        </div>
+        <span class="board-number">02</span>
+      </header>
+
+      <div class="board-02-grid">
+        <figure class="master-hero plan-tile">
+          <img src="../atlas/DR-049_总体鸟瞰白模_彩色总图.png" alt="总体鸟瞰白模彩色总图">
+          <figcaption>总体鸟瞰白模彩色总图：五个重点地块嵌入整体城市更新结构</figcaption>
+        </figure>
+
+        <figure class="master-secondary plan-tile">
+          <img src="../atlas/DR-048_总体鸟瞰白模效果图.png" alt="总体鸟瞰白模效果图">
+          <figcaption>总体鸟瞰白模效果图：完整展示整体空间、河岸界面与重点更新范围</figcaption>
+        </figure>
+
+        <aside class="strategy-column">
+          <h2>图册主线</h2>
+          <p>从现状识别到更新策略，再到用地、交通、公共空间、绿地景观与历史文化系统，形成可追溯的规划决策链。</p>
+          <div class="metric-strip">
+            <span><b>5</b>重点地块</span>
+            <span><b>153</b>派生图纸</span>
+            <span><b>4</b>A1 展板</span>
+          </div>
+          <figure class="plan-tile">
+            <img src="../atlas/DR-058_五地块深化设计总图.png" alt="五地块深化设计总图">
+            <figcaption>五地块深化设计总图</figcaption>
+          </figure>
+        </aside>
+
+        <section class="diagnosis-band">
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-023_综合现状问题诊断图.png" alt="综合现状问题诊断图">
+            <figcaption>综合现状问题诊断</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-020_POI产业活力分析图.png" alt="POI产业活力分析图">
+            <figcaption>POI 产业活力</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-022_空间句法可达性分析图.png" alt="空间句法可达性分析图">
+            <figcaption>空间句法可达性</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-034_总体策略图.png" alt="总体策略图">
+            <figcaption>总体策略</figcaption>
+          </figure>
+        </section>
+
+        <section class="atlas-matrix" aria-label="总体规划图册矩阵">
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-035_更新模式分区图.png" alt="更新模式分区图">
+            <figcaption>更新模式分区</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-036_空间结构规划图.png" alt="空间结构规划图">
+            <figcaption>空间结构规划</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-037_用地规划图.png" alt="用地规划图">
+            <figcaption>用地规划</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-038_用地规划图_带建筑轮廓.png" alt="用地规划图带建筑轮廓">
+            <figcaption>用地规划与建筑轮廓</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-040_产业业态规划图.png" alt="产业业态规划图">
+            <figcaption>产业业态规划</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-041_建筑更新控制图.png" alt="建筑更新控制图">
+            <figcaption>建筑更新控制</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-042_建筑高度控制图.png" alt="建筑高度控制图">
+            <figcaption>建筑高度控制</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-043_道路交通系统规划图.png" alt="道路交通系统规划图">
+            <figcaption>道路交通系统</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-044_慢行系统规划图.png" alt="慢行系统规划图">
+            <figcaption>慢行系统</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-045_公共空间系统图.png" alt="公共空间系统图">
+            <figcaption>公共空间系统</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-046_绿地景观系统图.png" alt="绿地景观系统图">
+            <figcaption>绿地景观系统</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-047_历史文化展示系统图.png" alt="历史文化展示系统图">
+            <figcaption>历史文化展示系统</figcaption>
+          </figure>
+        </section>
+      </div>
+    </section>
+
+    <section class="print-board board-03">
+      <header class="board-title">
+        <div>
+          <p class="project-label">KEY PARCEL DESIGN / FIVE SITES</p>
+          <h1>五个重点地块深化</h1>
+          <p class="subtitle">用现状卫星、改造总平、策划流线、鸟瞰效果与控制指标建立可比较的地块更新样本。</p>
+        </div>
+        <span class="board-number">03</span>
+      </header>
+
+      <div class="parcel-board">
+        <section class="parcel-overview" aria-label="五地块总览">
+          <figure class="overview-map plan-tile">
+            <img src="../atlas/DR-058_五地块深化设计总图.png" alt="五地块深化设计总图">
+            <figcaption>五地块深化设计总图</figcaption>
+          </figure>
+          <figure class="effect-tile"><img src="../atlas/DR-074_老水产市场鸟瞰改造2.png" alt="老水产市场鸟瞰改造2"><figcaption>老水产市场</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-094_食品调料市场-鸟瞰效果图.png" alt="食品调料市场鸟瞰效果图"><figcaption>食品调料市场</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-113_市一中北侧-鸟瞰效果图.png" alt="市一中北侧鸟瞰效果图"><figcaption>市一中北侧</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-131_清禾集贸市场-鸟瞰效果图.png" alt="清禾集贸市场鸟瞰效果图"><figcaption>清禾集贸市场</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-149_中国石油-鸟瞰效果图.png" alt="中国石油鸟瞰效果图"><figcaption>中国石油</figcaption></figure>
+        </section>
+
+        <article class="parcel-row">
+          <div class="parcel-name"><b>01</b><h2>老水产市场</h2><p>文创街区 / 市集更新 / 口袋公共空间</p></div>
+          <figure class="parcel-plan plan-tile"><img src="../atlas/DR-067_老水产市场-改造总平面图.png" alt="老水产市场改造总平面图"><figcaption>改造总平面</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-073_老水产市场-鸟瞰效果图.png" alt="老水产市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+          <div class="analysis-grid">
+            <figure class="analysis-tile"><img src="../atlas/DR-062_老水产市场-现状卫星图.png" alt="老水产市场现状卫星图"><figcaption>现状卫星</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-077_老水产市场-控制性指标表.png" alt="老水产市场控制性指标表"><figcaption>控制指标</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-069_老水产市场-场地功能策划图.png" alt="老水产市场场地功能策划图"><figcaption>功能策划</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-070_老水产市场-交通流线分析图.png" alt="老水产市场交通流线分析图"><figcaption>交通流线</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="parcel-row">
+          <div class="parcel-name"><b>02</b><h2>食品调料市场</h2><p>活态市集 / 风味院落 / 慢行街巷</p></div>
+          <figure class="parcel-plan plan-tile"><img src="../atlas/DR-088_食品调料市场-改造总平面图.png" alt="食品调料市场改造总平面图"><figcaption>改造总平面</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-094_食品调料市场-鸟瞰效果图.png" alt="食品调料市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+          <div class="analysis-grid">
+            <figure class="analysis-tile"><img src="../atlas/DR-083_食品调料市场-现状卫星图.png" alt="食品调料市场现状卫星图"><figcaption>现状卫星</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-097_食品调料市场-控制性指标表.png" alt="食品调料市场控制性指标表"><figcaption>控制指标</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-090_食品调料市场-场地功能策划图.png" alt="食品调料市场场地功能策划图"><figcaption>功能策划</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-091_食品调料市场-交通流线分析图.png" alt="食品调料市场交通流线分析图"><figcaption>交通流线</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="parcel-row">
+          <div class="parcel-name"><b>03</b><h2>市一中北侧</h2><p>全龄社区 / 公共服务 / 校园边界缝合</p></div>
+          <figure class="parcel-plan plan-tile"><img src="../atlas/DR-108_市一中北侧-改造总平面图.png" alt="市一中北侧改造总平面图"><figcaption>改造总平面</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-113_市一中北侧-鸟瞰效果图.png" alt="市一中北侧鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+          <div class="analysis-grid">
+            <figure class="analysis-tile"><img src="../atlas/DR-103_市一中北侧-现状卫星图.png" alt="市一中北侧现状卫星图"><figcaption>现状卫星</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-116_市一中北侧-控制性指标表.png" alt="市一中北侧控制性指标表"><figcaption>控制指标</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-109_市一中北侧-场地功能策划图.png" alt="市一中北侧场地功能策划图"><figcaption>功能策划</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-110_市一中北侧-交通流线分析图.png" alt="市一中北侧交通流线分析图"><figcaption>交通流线</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="parcel-row">
+          <div class="parcel-name"><b>04</b><h2>清禾集贸市场</h2><p>肌理延续 / 商业复合 / 近人尺度界面</p></div>
+          <figure class="parcel-plan plan-tile"><img src="../atlas/DR-127_清禾集贸市场-改造总平面图.png" alt="清禾集贸市场改造总平面图"><figcaption>改造总平面</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-131_清禾集贸市场-鸟瞰效果图.png" alt="清禾集贸市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+          <div class="analysis-grid">
+            <figure class="analysis-tile"><img src="../atlas/DR-122_清禾集贸市场-现状卫星图.png" alt="清禾集贸市场现状卫星图"><figcaption>现状卫星</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-134_清禾集贸市场-控制性指标表.png" alt="清禾集贸市场控制性指标表"><figcaption>控制指标</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-128_清禾集贸市场-场地功能策划图.png" alt="清禾集贸市场场地功能策划图"><figcaption>功能策划</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-129_清禾集贸市场-交通流线分析图.png" alt="清禾集贸市场交通流线分析图"><figcaption>交通流线</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="parcel-row">
+          <div class="parcel-name"><b>05</b><h2>中国石油地块</h2><p>能源记忆 / 开放绿地 / 低强度更新</p></div>
+          <figure class="parcel-plan plan-tile"><img src="../atlas/DR-145_中国石油-改造总平面图.png" alt="中国石油改造总平面图"><figcaption>改造总平面</figcaption></figure>
+          <figure class="effect-tile"><img src="../atlas/DR-149_中国石油-鸟瞰效果图.png" alt="中国石油鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+          <div class="analysis-grid">
+            <figure class="analysis-tile"><img src="../atlas/DR-140_中国石油-现状卫星图.png" alt="中国石油现状卫星图"><figcaption>现状卫星</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-152_中国石油-控制性指标表.png" alt="中国石油控制性指标表"><figcaption>控制指标</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-146_中国石油-场地功能策划图.png" alt="中国石油场地功能策划图"><figcaption>功能策划</figcaption></figure>
+            <figure class="analysis-tile"><img src="../atlas/DR-147_中国石油-交通流线分析图.png" alt="中国石油交通流线分析图"><figcaption>交通流线</figcaption></figure>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="print-board board-04">
+      <header class="board-title">
+        <div>
+          <p class="project-label">SPECIAL ANALYSIS / IMPLEMENTATION TOOLKIT</p>
+          <h1>专项分析与实施支撑</h1>
+          <p class="subtitle">将环境、竖向、智慧基础设施、经济测算、公众协商与地块剖面统一为实施工具箱。</p>
+        </div>
+        <span class="board-number">04</span>
+      </header>
+
+      <div class="support-layout">
+        <section class="support-mosaic" aria-label="专项分析矩阵">
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-050_日照与风环境分析图.png" alt="日照与风环境分析图">
+            <figcaption>日照与风环境</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-051_功能分区与策划定位图.png" alt="功能分区与策划定位图">
+            <figcaption>功能分区与策划定位</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-052_开发强度与容积率分区策略图.png" alt="开发强度与容积率分区策略图">
+            <figcaption>开发强度与容积率</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-053_天际线与视觉通廊控制图.png" alt="天际线与视觉通廊控制图">
+            <figcaption>天际线与视觉通廊</figcaption>
+          </figure>
+          <figure class="span-two analysis-tile">
+            <img src="../atlas/DR-054_竖向规划与排水分析图.png" alt="竖向规划与排水分析图">
+            <figcaption>竖向规划与排水分析</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-055_智慧城市与数字基础设施规划图.png" alt="智慧城市与数字基础设施规划图">
+            <figcaption>智慧城市与数字基础设施</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-056_投资估算与经济测算图.png" alt="投资估算与经济测算图">
+            <figcaption>投资估算与经济测算</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-057_公众参与与博弈协商成果图.png" alt="公众参与与博弈协商成果图">
+            <figcaption>公众参与与博弈协商</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-060_实施分期图.png" alt="实施分期图">
+            <figcaption>实施分期</figcaption>
+          </figure>
+        </section>
+
+        <aside class="section-stack">
+          <h2>剖面解析</h2>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-072_老水产市场-场地剖面解析图.png" alt="老水产市场场地剖面解析图">
+            <figcaption>老水产市场</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-093_食品调料市场-场地剖面解析图.png" alt="食品调料市场场地剖面解析图">
+            <figcaption>食品调料市场</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-112_市一中北侧-场地剖面解析图.png" alt="市一中北侧场地剖面解析图">
+            <figcaption>市一中北侧</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-130_清禾集贸市场-场地剖面解析图.png" alt="清禾集贸市场场地剖面解析图">
+            <figcaption>清禾集贸市场</figcaption>
+          </figure>
+          <figure class="analysis-tile">
+            <img src="../atlas/DR-148_中国石油-场地剖面解析图.png" alt="中国石油场地剖面解析图">
+            <figcaption>中国石油</figcaption>
+          </figure>
+        </aside>
+
+        <section class="parcel-effect-board" aria-label="按地块分组的总平面与效果图">
+          <article class="effect-parcel">
+            <div class="effect-parcel-title"><b>01</b><span>老水产市场</span></div>
+            <figure class="plan-thumb"><img src="../atlas/DR-067_老水产市场-改造总平面图.png" alt="老水产市场改造总平面图"><figcaption>总平面图</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-073_老水产市场-鸟瞰效果图.png" alt="老水产市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-074_老水产市场鸟瞰改造2.png" alt="老水产市场鸟瞰改造2"><figcaption>鸟瞰改造</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-078_老水产市场-AIGC效果图1.png" alt="老水产市场AIGC效果图1"><figcaption>AIGC 1</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-079_老水产市场-AIGC效果图2.png" alt="老水产市场AIGC效果图2"><figcaption>AIGC 2</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-080_老水产市场-AIGC效果图3.png" alt="老水产市场AIGC效果图3"><figcaption>AIGC 3</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-081_老水产市场-AIGC效果图4.png" alt="老水产市场AIGC效果图4"><figcaption>AIGC 4</figcaption></figure>
+          </article>
+
+          <article class="effect-parcel">
+            <div class="effect-parcel-title"><b>02</b><span>食品调料市场</span></div>
+            <figure class="plan-thumb"><img src="../atlas/DR-088_食品调料市场-改造总平面图.png" alt="食品调料市场改造总平面图"><figcaption>总平面图</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-094_食品调料市场-鸟瞰效果图.png" alt="食品调料市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-098_食品调料市场-AIGC效果图1.png" alt="食品调料市场AIGC效果图1"><figcaption>AIGC 1</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-099_食品调料市场-AIGC效果图2.png" alt="食品调料市场AIGC效果图2"><figcaption>AIGC 2</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-100_食品调料市场-AIGC效果图3.png" alt="食品调料市场AIGC效果图3"><figcaption>AIGC 3</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-101_食品调料市场-AIGC效果图4.png" alt="食品调料市场AIGC效果图4"><figcaption>AIGC 4</figcaption></figure>
+          </article>
+
+          <article class="effect-parcel">
+            <div class="effect-parcel-title"><b>03</b><span>市一中北侧</span></div>
+            <figure class="plan-thumb"><img src="../atlas/DR-108_市一中北侧-改造总平面图.png" alt="市一中北侧改造总平面图"><figcaption>总平面图</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-113_市一中北侧-鸟瞰效果图.png" alt="市一中北侧鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-117_市一中北侧-AIGC效果图1.png" alt="市一中北侧AIGC效果图1"><figcaption>AIGC 1</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-118_市一中北侧-AIGC效果图2.png" alt="市一中北侧AIGC效果图2"><figcaption>AIGC 2</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-119_市一中北侧-AIGC效果图3.png" alt="市一中北侧AIGC效果图3"><figcaption>AIGC 3</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-120_市一中北侧-AIGC效果图4.png" alt="市一中北侧AIGC效果图4"><figcaption>AIGC 4</figcaption></figure>
+          </article>
+
+          <article class="effect-parcel">
+            <div class="effect-parcel-title"><b>04</b><span>清禾集贸市场</span></div>
+            <figure class="plan-thumb"><img src="../atlas/DR-127_清禾集贸市场-改造总平面图.png" alt="清禾集贸市场改造总平面图"><figcaption>总平面图</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-131_清禾集贸市场-鸟瞰效果图.png" alt="清禾集贸市场鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-135_清禾集贸市场-AIGC效果图1.png" alt="清禾集贸市场AIGC效果图1"><figcaption>AIGC 1</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-136_清禾集贸市场-AIGC效果图2.png" alt="清禾集贸市场AIGC效果图2"><figcaption>AIGC 2</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-137_清禾集贸市场-AIGC效果图3.png" alt="清禾集贸市场AIGC效果图3"><figcaption>AIGC 3</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-138_清禾集贸市场-AIGC效果图4.png" alt="清禾集贸市场AIGC效果图4"><figcaption>AIGC 4</figcaption></figure>
+          </article>
+
+          <article class="effect-parcel">
+            <div class="effect-parcel-title"><b>05</b><span>中国石油地块</span></div>
+            <figure class="plan-thumb"><img src="../atlas/DR-145_中国石油-改造总平面图.png" alt="中国石油改造总平面图"><figcaption>总平面图</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-149_中国石油-鸟瞰效果图.png" alt="中国石油鸟瞰效果图"><figcaption>鸟瞰效果</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-153_中国石油-AIGC效果图1.png" alt="中国石油AIGC效果图1"><figcaption>AIGC 1</figcaption></figure>
+            <figure class="effect-tile"><img src="../atlas/DR-154_中国石油-AIGC效果图2.png" alt="中国石油AIGC效果图2"><figcaption>AIGC 2</figcaption></figure>
+          </article>
+        </section>
+      </div>
+    </section>
+
+    <section class="print-board board-05">
+      <header class="board-title">
+        <div>
+          <p class="project-label">POLICY & ECONOMIC STRATEGY / IMPLEMENTATION LOOP</p>
+          <h1>政经良性循环与实施政策策划</h1>
+          <p class="subtitle">以政府规则供给、市场运营增值和居民收益反馈构建街区更新的长期自我造血机制。</p>
+        </div>
+        <span class="board-number">05</span>
+      </header>
+
+      <div class="policy-board-layout">
+        <section class="policy-loop-hero" aria-label="政府市场居民良性循环">
+          <div class="loop-orbit"></div>
+          <div class="loop-center">
+            <b>良性循环</b>
+            <span>投入 · 运营 · 收益 · 共治</span>
+          </div>
+          <article class="loop-node loop-government">
+            <b>政府</b>
+            <h2>规则供给与财政引导</h2>
+            <p>控规弹性、财政奖补、公共空间先导投入和绩效监管，降低社会资本进入门槛。</p>
+          </article>
+          <article class="loop-node loop-market">
+            <b>市场</b>
+            <h2>投资导入与运营增值</h2>
+            <p>以轻资产运营、业态导入、租金分成和品牌联营激活街区消费与长期现金流。</p>
+          </article>
+          <article class="loop-node loop-residents">
+            <b>居民</b>
+            <h2>民生改善与社区反馈</h2>
+            <p>居民通过就业增收、服务改善、消费回流和社区基金共治获得直接收益并反馈治理。</p>
+          </article>
+          <div class="loop-step step-01">公共投入提升环境</div>
+          <div class="loop-step step-02">运营收益反哺社区</div>
+          <div class="loop-step step-03">居民参与修正治理</div>
+          <div class="loop-step step-04">治理绩效支持再投入</div>
+        </section>
+
+        <aside class="policy-toolkit">
+          <h2>经济政策工具箱</h2>
+          <p>以公共投入撬动市场运营，以增量收益反哺社区服务，形成可持续更新资金池。</p>
+          <div class="policy-tool-list">
+            <div><b>财政奖补</b><span>首期公共空间、立面整治和基础设施补短板由政府资金撬动。</span></div>
+            <div><b>税费减免</b><span>对社区服务、文旅消费和小微商业运营主体给予阶段性减免。</span></div>
+            <div><b>租金分成</b><span>平台公司、产权方和运营方按增量收益分成，避免高租金挤出。</span></div>
+            <div><b>社区基金</b><span>从经营收益中提取固定比例，用于微更新和困难群体支持。</span></div>
+            <div><b>分期滚动</b><span>以示范节点带动后续地块，形成投入、运营、回收、再投入节奏。</span></div>
+            <div><b>绩效复盘</b><span>以客流、就业、租金稳定性、居民满意度和服务覆盖率复盘。</span></div>
+          </div>
+        </aside>
+
+        <section class="policy-a3-strip" aria-label="政策A3小图纸">
+          <figure class="policy-a3-tile">
+            <img src="../atlas/policy_a3/upscaled/a3_policy_01_loop_x4.png" alt="三方良性循环机制图">
+            <figcaption>三方良性循环机制图</figcaption>
+          </figure>
+          <figure class="policy-a3-tile">
+            <img src="../atlas/policy_a3/upscaled/a3_policy_02_tools_x4.png" alt="政策工具矩阵图">
+            <figcaption>政策工具矩阵图</figcaption>
+          </figure>
+          <figure class="policy-a3-tile">
+            <img src="../atlas/policy_a3/upscaled/a3_policy_03_market_x4.png" alt="市场运营与收益回流图">
+            <figcaption>市场运营与收益回流图</figcaption>
+          </figure>
+          <figure class="policy-a3-tile">
+            <img src="../atlas/policy_a3/upscaled/a3_policy_04_residents_x4.png" alt="居民收益与治理反馈图">
+            <figcaption>居民收益与治理反馈图</figcaption>
+          </figure>
+        </section>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
