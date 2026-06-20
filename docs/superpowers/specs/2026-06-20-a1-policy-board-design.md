@@ -93,10 +93,12 @@
 - 保留原图和超分图，便于回退。
 - A1 拼版只引用超分图。
 
-建议输出目录：
+输出目录：
 
-- 原始生成图：`static/exhibition_boards/policy_a3/generated/`
-- 超分图：`static/exhibition_boards/policy_a3/upscaled/`
+- 原始生成图：`static/atlas/policy_a3/generated/`
+- 超分图：`static/atlas/policy_a3/upscaled/`
+
+第五张 A1 只引用 `static/atlas/policy_a3/upscaled/` 中的超分图，保证新增政策图纸仍归入图册资产体系。
 
 ## A1 集成
 
@@ -137,4 +139,3 @@
 - 本次不替换现有 A3 图册体系。
 - 本次不依赖本地 SD WebUI 或 ControlNet。
 - 本次不把 AI 生成图里的小字作为最终可读正文；可读正文应由 HTML/CSS 文本层承担。
-
