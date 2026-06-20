@@ -10,17 +10,14 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parent.parent
 BOARD_DIR = ROOT / "static" / "exhibition_boards"
 HTML_PATH = BOARD_DIR / "index.html"
-SINGLE_OUTPUTS = [
-    BOARD_DIR / "a1_board_01_preview.png",
-    BOARD_DIR / "a1_board_02_preview.png",
-    BOARD_DIR / "a1_board_03_preview.png",
-    BOARD_DIR / "a1_board_04_preview.png",
-]
 COMBINED_OUTPUT = BOARD_DIR / "a1_boards_competition_preview.png"
 
 
+def build_single_outputs(count: int) -> list[Path]:
+    return [BOARD_DIR / f"a1_board_{index:02d}_preview.png" for index in range(1, count + 1)]
+
+
 def render_previews() -> list[Path]:
-    outputs = [*SINGLE_OUTPUTS, COMBINED_OUTPUT]
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page(viewport={"width": 2400, "height": 3350}, device_scale_factor=1)
@@ -32,9 +29,9 @@ def render_previews() -> list[Path]:
 
         boards = page.locator(".print-board")
         count = boards.count()
-        if count != len(SINGLE_OUTPUTS):
-            raise RuntimeError(f"Expected {len(SINGLE_OUTPUTS)} boards, found {count}")
-        for index, output in enumerate(SINGLE_OUTPUTS):
+        single_outputs = build_single_outputs(count)
+        outputs = [*single_outputs, COMBINED_OUTPUT]
+        for index, output in enumerate(single_outputs):
             boards.nth(index).screenshot(path=output)
 
         page.screenshot(path=COMBINED_OUTPUT, full_page=True)
