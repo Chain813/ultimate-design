@@ -176,6 +176,23 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.set_xlim(0, 141.42)
     ax.set_ylim(0, 100)
     
+    # Recalculate center and view bounds locally for the specific parcel
+    if key_plots is not None and not key_plots.empty:
+        curr_row = key_plots.iloc[p_idx]
+        p_minx, p_miny, p_maxx, p_maxy = curr_row.geometry.bounds
+        cx = (p_minx + p_maxx) / 2
+        cy = (p_miny + p_maxy) / 2
+        local_w = p_maxx - p_minx
+        local_h = p_maxy - p_miny
+        
+        # Add beautiful padding factor
+        padding_factor = 2.2
+        view_h = local_h * padding_factor
+        view_w = view_h * 1.2454
+        if view_w < local_w * 1.3:
+            view_w = local_w * 1.3
+            view_h = view_w / 1.2454
+    
     # Draw background architectural grid
     for x in range(5, 140, 5):
         ax.plot([x, x], [0, 100], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)

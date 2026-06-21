@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# tools/drawings/dr_083.py
+# tools/drawings/dr_155.py
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
@@ -52,6 +52,9 @@ def wrap_text_by_pixels(text, font, max_width, draw):
         if current_line:
             lines.append(current_line)
     return lines
+
+
+
 def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     print("Drawing DR-083 custom vector map...")
     # Create canvas 2240x1584
@@ -62,13 +65,13 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     font_path = 'C:/Windows/Fonts/msyh.ttc'
     font_bold_path = 'C:/Windows/Fonts/msyhbd.ttc'
     try:
-        font_large_title = ImageFont.truetype(font_bold_path, 36)
-        font_card_title = ImageFont.truetype(font_bold_path, 20)
-        font_box_header = ImageFont.truetype(font_bold_path, 16)
-        font_box_sub = ImageFont.truetype(font_bold_path, 12)
-        font_body = ImageFont.truetype(font_path, 14)
-        font_body_bold = ImageFont.truetype(font_bold_path, 14)
-        font_desc = ImageFont.truetype(font_path, 15)
+        font_large_title = ImageFont.truetype(font_bold_path, 40)
+        font_card_title = ImageFont.truetype(font_bold_path, 28)
+        font_box_header = ImageFont.truetype(font_bold_path, 22)
+        font_box_sub = ImageFont.truetype(font_bold_path, 16)
+        font_body = ImageFont.truetype(font_path, 18)
+        font_body_bold = ImageFont.truetype(font_bold_path, 18)
+        font_desc = ImageFont.truetype(font_path, 18)
     except IOError:
         font_large_title = ImageFont.load_default()
         font_card_title = ImageFont.load_default()
@@ -105,7 +108,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     draw.line([(60, 280), (1556, 280)], fill=(226, 232, 240), width=2)
 
     # Root Node
-    rx0, rx1, ry0, ry1 = 60, 310, 800, 920
+    rx0, rx1, ry0, ry1 = 60, 310, 800, 930
     draw.rectangle([rx0+4, ry0+4, rx1+4, ry1+4], fill=(241, 245, 249))
     draw.rectangle([rx0, ry0, rx1, ry1], fill=(255, 255, 255), outline=(217, 119, 6), width=2)
     draw.rectangle([rx0, ry0, rx1, ry0+8], fill=(217, 119, 6))
@@ -116,29 +119,34 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     # Chapters
     chapters = [
         {
-            "id": 1, "y0": 320, "y1": 420, "color": (37, 99, 235), # Blue
-            "title": "第1章 项目背景与概况", "sub": "PROJECT BACKGROUND",
-            "sheets": "DR-003_项目背景与政策解读图、DR-004_现状区位图、DR-005_研究范围图"
+            "id": 1, "y0": 280, "y1": 430, "color": (37, 99, 235), # Blue
+            "title": "第1章 项目认知篇", "sub": "PROJECT COGNITION",
+            "sheets": "DR-003_项目背景与政策解读图、DR-004_现状区位图、DR-005_研究范围图、DR-006_原始数据清单、DR-007_上位规划解读图、DR-008_上位专项规划解读图、DR-009_案例借鉴与对标分析图",
+            "max_lines": 3
         },
         {
-            "id": 2, "y0": 550, "y1": 650, "color": (220, 38, 38), # Red
-            "title": "第2章 现状调查与分析", "sub": "SITE INVESTIGATION",
-            "sheets": "DR-013_遥感底图、DR-014_用地现状、DR-017_建筑高度、DR-018_风貌识别、DR-020_道路现状、DR-028_街区品质、DR-029_人群需求、DR-032_遗产价值评估"
+            "id": 2, "y0": 460, "y1": 645, "color": (220, 38, 38), # Red
+            "title": "第2章 数据诊断篇", "sub": "DATA DIAGNOSIS",
+            "sheets": "DR-010_数据来源与遥感现状图、DR-011_用地现状分析图、DR-012_道路交通现状图、DR-013_建筑高度现状图、DR-014_建筑风貌识别图, DR-015_环境品质问题地图、DR-016_街区景观品质分析图、DR-017_历史建筑与工业遗产分布图、DR-018_文化资源分析图、DR-019_遗产价值评估热力图、DR-020_POI产业活力分析图、DR-021_人群需求与老龄化分布图、DR-022_空间句法可达性分析图、DR-023_综合现状问题诊断图、DR-024_MPI更新潜力评估图",
+            "max_lines": 4
         },
         {
-            "id": 3, "y0": 780, "y1": 880, "color": (124, 58, 237), # Purple
-            "title": "第3章 设计理念与构思", "sub": "CONCEPT & STRATEGY",
-            "sheets": "DR-007_上位规划解读、DR-037_设计原则理念、DR-038_设计目标体系、DR-039_总体策略图"
+            "id": 3, "y0": 675, "y1": 860, "color": (124, 58, 237), # Purple
+            "title": "第3章 设计理念与构思篇", "sub": "CONCEPT & VISION",
+            "sheets": "DR-025_核心算法与数学公式、DR-026_平台核心代码清单、DR-027_规划设计依据、DR-028_规划设计原则、DR-029_规划设计目标、DR-030_规划设计定位、DR-031_规划设计策略、DR-032_设计原则与理念图、DR-033_设计目标体系图、DR-034_总体策略图",
+            "max_lines": 4
         },
         {
-            "id": 4, "y0": 1010, "y1": 1110, "color": (5, 150, 105), # Emerald
-            "title": "第4章 总体方案设计", "sub": "MASTER PLAN DESIGN",
-            "sheets": "DR-044_用地规划、DR-049_高度控制、DR-051_道路系统规划、DR-053_慢行系统规划、DR-055_公共空间系统、DR-046_产业业态规划、DR-056_绿地景观、DR-057_历史文化展示"
+            "id": 4, "y0": 890, "y1": 1105, "color": (5, 150, 105), # Emerald
+            "title": "第4章 总体规划篇", "sub": "MASTER PLANNING",
+            "sheets": "DR-035_更新模式分区图、DR-036_空间结构规划图、DR-037_用地规划图、DR-038_用地规划图_带建筑轮廓、DR-039_用地规划指标表、DR-040_产业业态规划图、DR-041_建筑更新控制图、DR-042_建筑高度控制图、DR-043_道路交通系统规划图、DR-044_慢行系统规划图、DR-045_公共空间系统图、DR-046_绿地景观系统图、DR-047_历史文化展示系统图、DR-048_总体鸟瞰白模效果图、DR-049_总体鸟瞰白模_彩色总图、DR-050_日照与风环境分析图、DR-051_功能分区与策划定位图、DR-052_开发强度与容积率分区策略图、DR-053_天际线与视觉通廊控制图、DR-054_竖向规划与排水分析图、DR-055_智慧城市与数字基础设施规划图、DR-056_投资估算与经济测算图、DR-057_公众参与与博弈协商成果图",
+            "max_lines": 5
         },
         {
-            "id": 5, "y0": 1240, "y1": 1340, "color": (217, 119, 6), # Amber
+            "id": 5, "y0": 1135, "y1": 1450, "color": (217, 119, 6), # Amber
             "title": "第5章 重点地块设计", "sub": "KEY PLOT DESIGN",
-            "sheets": "DR-081_AIGC技术推演、DR-082_近期实施分期、DR-076_五地块深化设计总图"
+            "sheets": "DR-058_五地块深化设计总图、DR-059_AIGC技术推演过程图、DR-060_实施分期图、DR-061~081_老水产市场更新方案图集、DR-082~101_食品调料市场更新方案图集、DR-102~120_市一中北侧地块更新方案图集、DR-121~138_清禾集贸市场更新方案图集、DR-139~154_中国石油地块更新方案图集",
+            "max_lines": 8
         }
     ]
 
@@ -148,8 +156,8 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     for ch in chapters:
         # Draw connection from root to chapter
         mid_cy = (ch["y0"] + ch["y1"]) // 2
-        draw.line([(rx1, 860), (rx1 + 30, 860)], fill=(203, 213, 225), width=2)
-        draw.line([(rx1 + 30, 860), (rx1 + 30, mid_cy)], fill=(203, 213, 225), width=2)
+        draw.line([(rx1, 865), (rx1 + 30, 865)], fill=(203, 213, 225), width=2)
+        draw.line([(rx1 + 30, 865), (rx1 + 30, mid_cy)], fill=(203, 213, 225), width=2)
         draw.line([(rx1 + 30, mid_cy), (cx0, mid_cy)], fill=(203, 213, 225), width=2)
 
         # Draw chapter box
@@ -171,9 +179,12 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         draw.text((sx0 + 20, ch["y0"] + 15), "包含核心图纸：", fill=(100, 116, 139), font=font_body_bold)
         wrapped_sheets = wrap_text_by_pixels(ch["sheets"], font_body, sx1 - sx0 - 40, draw)
         y_text = ch["y0"] + 40
-        for ws in wrapped_sheets[:2]: # Show max 2 lines
+        max_l = ch.get("max_lines", 2)
+        if len(wrapped_sheets) > max_l:
+            wrapped_sheets = wrapped_sheets[:max_l - 1] + [wrapped_sheets[max_l - 1] + "...等"]
+        for ws in wrapped_sheets:
             draw.text((sx0 + 20, y_text), ws, fill=(71, 85, 105), font=font_body)
-            y_text += 24
+            y_text += 32
 
     # 3. Right Top Card (X: 1608 to 2198, Y: 206 to 602)
     draw.rectangle([1612, 210, 2202, 606], fill=(226, 232, 240))
@@ -194,7 +205,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_desc), wl, fill=(71, 85, 105), font=font_desc)
-            y_desc += 26
+            y_desc += 32
         y_desc += 10
 
     # 4. Right Bottom Card (X: 1608 to 2198, Y: 634 to 1520)
@@ -218,7 +229,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_spec), wl, fill=(71, 85, 105), font=font_desc)
-            y_spec += 26
+            y_spec += 32
         y_spec += 8
 
     img.save(output_path)

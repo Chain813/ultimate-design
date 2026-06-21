@@ -86,6 +86,7 @@ def main():
         "pages/11_实施路径.py",
         "pages/12_城市设计导则.py",
         "pages/13_成果表达.py",
+        "pages/14_数据大屏.py",
         "pages/15_AIGC设计推演.py",
         "pages/16_制图与设计智能体Skill手册.py",
         "src/utils/geo_transform.py",

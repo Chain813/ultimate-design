@@ -6,11 +6,11 @@
 
 **数字孪生 · 古今共振 —— AI 赋能下的城市微更新规划设计决策支持平台**
 
-*长春伪满皇宫周边街区 · 170.2 公顷 · 14 页面 · 26 张专业图纸 · 端到端循证工作流*
+*长春伪满皇宫周边街区 · 170.2 公顷 · 15 页面 · 26 张专业图纸 · 端到端循证工作流*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-173%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-238%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -27,8 +27,8 @@ UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 *
 
 | 能力 | 说明 |
 |---|---|
-| **14 页面精简工作流** | 3 组页面合并（00+01、02+03、04+05），去除冗余提示词模板，聚焦核心设计流程 |
-| **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范的 A3 图册 |
+| **15 页面精简工作流** | 包含主入口 app.py 及 14 个功能页面（其中 3 组页面合并），聚焦核心设计流程 |
+| **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范 of A3 图册 |
 | **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
 | **DesignContext 设计纲要** | 统一提取 19 个阶段 AI 文本输出，LLM 合成结构化设计纲要，驱动图纸生产 |
 | **策略驱动 AIGC 渲染** | 6 种设计策略风格（历史保护/微更新/功能置换/TOD/生态/文创）自动匹配渲染参数 |
@@ -37,7 +37,7 @@ UltimateDESIGN 是面向城乡规划专业毕业设计与城市设计课程的 *
 | **后台缓存预加载** | daemon 线程静默预热 37MB GeoJSON、RAG 模型等，页面切换秒开 |
 | **引擎懒加载** | `__getattr__` 模式延迟加载 pandas/numpy/PIL，启动速度提升 |
 | **录屏自动滑动组件** | 页面右下角常驻防穿帮录屏控制器，支持帧率级平滑像素滚动与快捷键交互 |
-| **173 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **238 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
 
 ---
 
@@ -87,12 +87,12 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按前期/中期/后期三大板块浏览 14 个页面。
+平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按前期/中期/后期及大屏展示浏览 15 个页面（包含主入口 app.py 及 14 个功能页面）。
 
 ### 🩺 3. 健康自检
 
 ```powershell
-python -m pytest                    # 173 项单元测试
+python -m pytest                    # 238 项单元测试
 python tools/check_env.py           # 15 页面完整性校验
 python tools/data_quality_check.py  # 数据质量评级
 python tools/secret_scan.py         # 敏感信息扫描
@@ -202,6 +202,7 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 | 11 | 实施路径 | 六种更新模式、三期时序甘特图 |
 | 12 | 城市设计导则 | 两步法导则生成、RAG 政策检索、控制图则 |
 | 13 | 成果表达 | Python 空间底图渲染、Web LLM 重绘提示词、PIL 自动红头图框封装 |
+| 14 | 数据大屏 | 三维宏观决策大屏、规划指标统计看板、时空演化动态可视化 |
 
 ### 🟣 深化与集成：AIGC 与智能体技能（Stage 15-16）
 
@@ -216,8 +217,8 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 
 ```text
 ultimateDESIGN/
-├── app.py                              # 平台入口 / 首页 / 全局地图基底
-├── pages/                              # 17 个阶段页面 (00 ~ 16)
+├── app.py                              # 平台入口 / 首页 / 全局地图基底 (1 个页面)
+├── pages/                              # 14 个功能页面 (00 ~ 16)
 ├── src/                                # 核心领域代码
 │   ├── config/                         # 配置加载 / 路径注册 / 运行时常量
 │   │   ├── loader.py                   #   YAML 配置解析
@@ -274,7 +275,7 @@ ultimateDESIGN/
 │   ├── secret_scan.py                 #   敏感信息扫描
 │   ├── startup_smoke.py              #   启动冒烟测试
 │   └── video_generator/              #   HyperFrames 视频工具 (Node.js)
-├── tests/                              # 26 个测试模块 / 173 项用例
+├── tests/                              # 40 个测试模块 / 238 项用例
 ├── data/                               # 数据资产 (数据与逻辑解耦)
 ├── static/                             # Streamlit 静态资源代理
 ├── assets/                             # CSS 样式 / WebGL 模板

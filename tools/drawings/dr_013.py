@@ -1,21 +1,16 @@
-import os
-from shapely.geometry import Point
+# -*- coding: utf-8 -*-
+from pathlib import Path
+import geopandas as gpd
 import pandas as pd
 import numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
 import matplotlib.patches as mpatches
-import geopandas as gpd
-from PIL import Image
+import matplotlib.patheffects as path_effects
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
-GIS_DIR = ROOT / "data/gis"
-ASSETS_DIR = ROOT / "assets"
 
-# Bypasses the default A3 title frame
+# Use the DR-013/DR-004 style full-page layout instead of the standard A3 title frame.
 NO_FRAME = True
 
 def wrap_text(text, max_len=44):
@@ -36,7 +31,7 @@ def wrap_text(text, max_len=44):
         while i < len(part):
             char = part[i]
             w = char_width(char)
-            if current_w + w <= 44:
+            if current_w + w <= max_len:
                 current_line += char
                 current_w += w
                 i += 1
@@ -62,250 +57,204 @@ def wrap_text(text, max_len=44):
         if current_line:
             lines.append(current_line)
     return '\n'.join(lines)
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
+def _font(font_prop, size, weight="normal"):
+    return fm.FontProperties(family=font_prop["family"], size=size, weight=weight)
+
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, *args, **kwargs):
     fig = ax.get_figure()
-    
-    # 1. Setup A3 Main Canvas Coordinates
+
     ax.set_facecolor("#F8FAFC")
     ax.set_xlim(0, 141.42)
     ax.set_ylim(0, 100)
-    
-    # Draw background architectural grid
-    for x in range(5, 140, 5):
-        ax.plot([x, x], [0, 100], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
-    for y in range(5, 100, 5):
-        ax.plot([0, 141.42], [y, y], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
-        
-    # 2. Main Title & Top Header Card (X: 2.0 to 139.4, Y: 89.0 to 96.3)
-    header_shadow = mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    header_bg = mpatches.Rectangle((2, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(header_shadow)
-    ax.add_patch(header_bg)
-    
-    # Teal top accent bar on the header card
-    accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#0D9488', edgecolor='none', zorder=3)
-    ax.add_patch(accent_bar)
-    
-    ax.text(3.5, 93.6, "数据来源与遥感现状图", 
-            color='#0F172A', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=26), zorder=4)
-    
-    ax.text(3.5, 90.7, "展示研究区域的多源遥感底图数据，以获取真实的地表覆盖、建筑现状密度及周边生态廊道肌理。", 
-            color='#334155', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=15.0), zorder=4)
+    ax.set_axis_off()
 
-    # 3. Giant Satellite Map Card Container (X: 2.0 to 100.0, Y: 4.0 to 87.0)
-    map_shadow = mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    map_bg = mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(map_shadow)
-    ax.add_patch(map_bg)
+    # Draw grid
+    for x in range(5, 140, 5):
+        ax.plot([x, x], [0, 100], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+    for y in range(5, 100, 5):
+        ax.plot([0, 141.42], [y, y], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+
+    # Header Panel
+    ax.add_patch(mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor="#D97706", edgecolor="none", zorder=3))
     
-    # Sub-axes for spatial GIS map (Centered inside the container)
+    ax.text(3.5, 93.6, "建筑高度现状图", color="#0F172A", ha="left", va="center",
+            fontproperties=_font(font_prop, 26, "bold"), zorder=4)
+    ax.text(3.5, 90.7, "展示项目在长春市宽城区伪满皇宫周边现状建筑高度分布，为高度分类管控和天际线引导提供基础支撑。",
+            color="#334155", ha="left", va="center", fontproperties=_font(font_prop, 15.0), zorder=4)
+
+    # Main map on the left
+    ax.add_patch(mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    
+    # Exact sub-axes of DR-004
     ax_map = fig.add_axes([3.0 / 141.42, 5.0 / 100.0, 96.0 / 141.42, 81.0 / 100.0], facecolor="#F8FAFC", zorder=3)
     ax_map.set_xlim(cx - view_w / 2, cx + view_w / 2)
     ax_map.set_ylim(cy - view_h / 2, cy + view_h / 2)
     ax_map.set_axis_off()
     ax_map.set_aspect("equal")
 
-    # Load and display satellite image on sub-axes (with high-res TIFF dynamic loading)
-    tif_path = None
-    graduate_dir = Path("E:/graduate")
-    if graduate_dir.exists():
-        for root, dirs, files in os.walk(graduate_dir):
-            for file in files:
-                if "2604161335" in file and file.lower().endswith(".tif"):
-                    tif_path = Path(root) / file
-                    break
-    
-    if not tif_path:
-        album_dir = Path("E:/画册/影像")
-        if album_dir.exists():
-            for root, dirs, files in os.walk(album_dir):
-                for file in files:
-                    if "2503142036" in file and file.lower().endswith(".tif"):
-                        tif_path = Path(root) / file
-                        break
-
-    loaded_high_res = False
-    if tif_path and tif_path.exists():
-        try:
-            import rasterio
-            from rasterio.windows import from_bounds
-            with rasterio.open(tif_path) as src:
-                xmin = cx - view_w / 2
-                xmax = cx + view_w / 2
-                ymin = cy - view_h / 2
-                ymax = cy + view_h / 2
-                
-                # Crop with 5% safety padding to prevent boundary gaps
-                pad_w = view_w * 0.05
-                pad_h = view_h * 0.05
-                window = from_bounds(xmin - pad_w, ymin - pad_h, xmax + pad_w, ymax + pad_h, src.transform)
-                
-                # Read RGB (bands 1, 2, 3)
-                data = src.read([1, 2, 3], window=window)
-                rgb = np.transpose(data, (1, 2, 0))
-                sat_img = Image.fromarray(rgb)
-                
-                extent = [xmin - pad_w, xmax + pad_w, ymin - pad_h, ymax + pad_h]
-                ax_map.imshow(sat_img, extent=extent, zorder=0)
-                loaded_high_res = True
-        except Exception as e:
-            print(f"Error loading high-res TIFF: {e}. Falling back to default satellite PNG.")
-
-    if not loaded_high_res:
-        sat_path = STATIC_DIR / "assets/generated_base/satellite_cropped.png"
-        if sat_path.exists():
-            try:
-                sat_img = Image.open(sat_path)
-                extent = [cx - view_w / 2, cx + view_w / 2, cy - view_h / 2, cy + view_h / 2]
-                ax_map.imshow(sat_img, extent=extent, zorder=0)
-            except Exception as e:
-                print(f"Error loading satellite image: {e}")
-                ax_map.text(cx, cy, "卫星遥感底图加载失败", ha='center', va='center', fontsize=20, color='#FF3B30', fontproperties=fm.FontProperties(family=font_prop['family']))
-        else:
-            ax_map.text(cx, cy, "卫星遥感底图未找到", ha='center', va='center', fontsize=20, color='#8E8E93', fontproperties=fm.FontProperties(family=font_prop['family']))
-
-    # Plot water body
     if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#0066CC", edgecolor="none", alpha=0.35, zorder=1)
+        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
         
-    # Plot study boundary (Red line)
+    if buildings is not None and not buildings.empty:
+        buildings_copy = buildings.copy()
+        buildings_copy["Floor_num"] = pd.to_numeric(buildings_copy["Floor"], errors="coerce").fillna(1)
+        conditions = [
+            (buildings_copy["Floor_num"] <= 3),
+            (buildings_copy["Floor_num"] >= 4) & (buildings_copy["Floor_num"] <= 7),
+            (buildings_copy["Floor_num"] >= 8) & (buildings_copy["Floor_num"] <= 14),
+            (buildings_copy["Floor_num"] >= 15) & (buildings_copy["Floor_num"] <= 20),
+            (buildings_copy["Floor_num"] >= 21)
+        ]
+        choices = [
+            "#FDE68A", # 1-3层: 黄
+            "#F97316", # 4-7层: 橙
+            "#EF4444", # 8-14层: 红
+            "#B91C1C", # 15-20层: 深红
+            "#7F1D1D"  # 21+层: 褐红
+        ]
+        buildings_copy["color"] = np.select(conditions, choices, default="#FDE68A")
+        buildings_copy.plot(ax=ax_map, color=buildings_copy["color"], edgecolor="#475569", linewidth=0.15, zorder=2)
+        
+    if roads is not None and not roads.empty:
+        for lvl, lw in [(1, 3.8), (2, 3.0), (3, 2.2), (4, 1.6)]:
+            sub_gdf = roads[roads["level"] == lvl]
+            if not sub_gdf.empty:
+                sub_gdf.plot(ax=ax_map, color="#94A3B8", linewidth=lw, capstyle="round", joinstyle="round", zorder=3)
+        for lvl, lw in [(1, 2.6), (2, 2.0), (3, 1.2), (4, 0.8)]:
+            sub_gdf = roads[roads["level"] == lvl]
+            if not sub_gdf.empty:
+                sub_gdf.plot(ax=ax_map, color="#E2E8F0", linewidth=lw, capstyle="round", joinstyle="round", zorder=4)
+                
+    if rails is not None and not rails.empty:
+        rails.plot(ax=ax_map, color="#475569", linewidth=1.8, linestyle=(0, (6, 6)), zorder=5)
+        
     if boundary is not None and not boundary.empty:
-        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=2)
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=7)
 
-    # Plot key landmarks on satellite map
-    labels = [
-        ("伪满皇宫博物院", 125.3422, 43.9036),
-        ("光复路", 125.3475, 43.9017),
-        ("伊通河沿岸公园", 125.3590, 43.9010),
-        ("长春站", 125.3250, 43.9080),
-        ("胜利公园", 125.3260, 43.8960)
+    # Right legend card
+    ax.add_patch(mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 82.8, "图例 / LEGEND", color="#D97706", ha="left", va="center",
+            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
+
+    legend_rows = [
+        ("规划研究范围", "outline_red"),
+        ("城市道路", "road"),
+        ("低层 (1-3层)", "rect_h1"),
+        ("多层 (4-7层)", "rect_h2"),
+        ("中高层 (8-14层)", "rect_h3"),
+        ("高层 (15-20层)", "rect_h4"),
+        ("超高层 (21+层)", "rect_h5"),
+        ("城市水系", "water"),
     ]
-    for name, lon, lat in labels:
-        x_pt, y_pt = get_xy(lon, lat)
-        ax_map.text(x_pt, y_pt, name, color='#FFFFFF', ha='center', va='center',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=11),
-                    path_effects=[path_effects.withStroke(linewidth=3, foreground='#000000')], zorder=5)
+    for i, (label, style) in enumerate(legend_rows):
+        x = 103.5 + (i % 2) * 18.0
+        y = 80.0 - (i // 2) * 3.3
+        if style == "outline_red":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="none", edgecolor="#FF3B30", linewidth=1.8, zorder=4))
+        elif style == "rect_h1":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#FDE68A", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "rect_h2":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#F97316", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "rect_h3":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#EF4444", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "rect_h4":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#B91C1C", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "rect_h5":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#7F1D1D", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "water":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#D0E6F7", edgecolor="none", zorder=4))
+        elif style == "road":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.55), 2.7, 1.1, facecolor="#E2E8F0", edgecolor="none", zorder=4))
+        ax.text(x + 3.6, y, label, color="#334155", ha="left", va="center",
+                fontproperties=_font(font_prop, 13.5), zorder=4)
 
-    # Floating Windrose (Pure White, Enlarged to 12.0 x 12.0, Shifted slightly down)
-    rose_path = ASSETS_DIR / "长春市风玫瑰.png"
-    if rose_path.exists():
-        try:
-            # Create ax_rose at the top right of the satellite map (zorder=4, overlapping ax_map)
-            # Aligned with the right boundary (X: 99.0) but shifted down slightly (Y: 72.5 to 84.5) to avoid touching the top border
+    # Scale Bar
+    scale_len = 500 / (view_w / 96.0)
+    x_start = 120.45 - scale_len / 2
+    x_end = x_start + scale_len
+    y_bar = 68.7
+    ax.plot([x_start, x_end], [y_bar, y_bar], color="#0F172A", linewidth=1.5, zorder=4)
+    for x_tick in [x_start, x_start + scale_len / 2, x_end]:
+        ax.plot([x_tick, x_tick], [y_bar - 0.8, y_bar + 0.8], color="#0F172A", linewidth=1.5, zorder=4)
+    ax.text(x_start, 70.5, "0", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    ax.text(x_start + scale_len / 2, 70.5, "250m", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    ax.text(x_end, 70.5, "500m", color="#334155", ha="center", va="center", fontproperties=_font(font_prop, 11), zorder=4)
+    scale_ratio = view_w / 0.31968
+    scale_rounded = int(round(scale_ratio / 500)) * 500
+    ax.text((x_start + x_end) / 2, 67.4, f"比例尺 1:{scale_rounded}", color="#334155", ha="center", va="center",
+            fontproperties=_font(font_prop, 11, "bold"), zorder=4)
+
+    # Right explanation card
+    ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 61.0, "高度说明 / HEIGHT ANALYSIS", color="#D97706", ha="left", va="center",
+            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
+
+    rows = [
+        ("1. 高度特征", "区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。"),
+        ("2. 高层分布", "中高层与高层住宅主要零散分布在区位外围，对历史街区核心区及伪满皇宫周边产生了一定的视线廊道压力。"),
+        ("3. 管控思路", "规划提出结合视线敏感度分析，严格控制核心区新建建筑高度，禁止插建高层，保留历史空间原有的舒缓天际线。"),
+    ]
+    y = 56.0
+    for title, body in rows:
+        ax.text(103.5, y, title, color="#0F172A", ha="left", va="top",
+                fontproperties=_font(font_prop, 15.0, "bold"), zorder=4)
+        y -= 2.5
+        for line in wrap_text(body, 44).split("\n"):
+            ax.text(103.5, y, line, color="#334155", ha="left", va="top",
+                    fontproperties=_font(font_prop, 15.0), zorder=4)
+            y -= 2.85
+        y -= 2.2
+
+        # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
+    try:
+        from PIL import Image as _PIL_Image
+        import numpy as _np
+        from pathlib import Path as _Path
+        _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
+        _rose_path = _assets_dir / "长春市风玫瑰.png"
+        if _rose_path.exists():
             ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
             ax_rose.set_axis_off()
             
-            # Generate a beautiful soft dark radial gradient background (from black center to transparent edge)
-            y, x = np.ogrid[-1:1:100j, -1:1:100j]
-            r = np.sqrt(x**2 + y**2)
-            # Alpha goes from 0.45 at center to 0.0 at the edges
-            alpha = np.clip(1.0 - r, 0, 1) * 0.45
-            grad_img = np.zeros((100, 100, 4)) # Black base
-            grad_img[..., 3] = alpha
+            # Draw a soft white radial gradient backdrop
+            _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
+            _r = _np.sqrt(_x_g**2 + _y_g**2)
+            _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
+            _grad_img = _np.ones((100, 100, 4))
+            _grad_img[..., 3] = _alpha
+            ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
             
-            # Display dark radial gradient shadow (zorder=0)
-            ax_rose.imshow(grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
+            _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
+            _rose_data = _np.array(_rose_img)
+            _rose_data[..., 0] = 0
+            _rose_data[..., 1] = 0
+            _rose_data[..., 2] = 0
+            _black_rose_img = _PIL_Image.fromarray(_rose_data)
             
-            # Load wind rose image and convert RGB channels to pure white (255)
-            rose_img = Image.open(rose_path).convert("RGBA")
-            rose_data = np.array(rose_img)
-            rose_data[..., 0] = 255
-            rose_data[..., 1] = 255
-            rose_data[..., 2] = 255
-            white_rose_img = Image.fromarray(rose_data)
-            
-            # Display pure white wind rose image (zorder=1)
-            ax_rose.imshow(white_rose_img, zorder=1)
-        except Exception as e:
-            print(f"Error loading wind rose: {e}")
-
-    # 4. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0) — Compressed vertically!
-    legend_shadow = mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    legend_bg = mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(legend_shadow)
-    ax.add_patch(legend_bg)
-    ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
-    
-    ax.text(103.5, 82.5, "图例 / LEGEND", color='#D97706', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=13.5), zorder=4)
-    
-    # Legend Items — Arranged horizontally, spacing compressed, text size 13.5 (matching DR-003/007 body text exactly)
-    y_leg = 78.5
-    legend_items_data = [
-        ("研究范围", '#FF3B30', 'outline', 102.2, 105.7),
-        ("更新地块", '#F59E0B', 'outline', 111.2, 114.7),
-        ("伊通河", '#0066CC', 'fill', 120.2, 123.7),
-        ("影像底图", '#64748B', 'sat', 128.0, 131.5)
-    ]
-    for label, color_code, style, x_sym, x_txt in legend_items_data:
-        if style == 'outline':
-            rect = mpatches.Rectangle((x_sym, y_leg - 0.8), 3.0, 1.8, facecolor='none', edgecolor=color_code, linewidth=1.8, zorder=4)
-        elif style == 'fill':
-            rect = mpatches.Rectangle((x_sym, y_leg - 0.8), 3.0, 1.8, facecolor=color_code, edgecolor='none', alpha=0.6, zorder=4)
-        else:
-            rect = mpatches.Rectangle((x_sym, y_leg - 0.8), 3.0, 1.8, facecolor=color_code, edgecolor='#CBD5E1', alpha=0.8, zorder=4)
-        ax.add_patch(rect)
-        ax.text(x_txt, y_leg, label, color='#334155', ha='left', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], size=13.5), zorder=4)
-
-    # 4b. Draw line-shaped scale bar centered inside the bottom row of the Legend Card
-    scale_len = 500 / (view_w / 96.0) # Length in main axes units
-    x_start = 120.45 - scale_len / 2
-    x_end = x_start + scale_len
-    y_bar = 70.0
-    ax.plot([x_start, x_end], [y_bar, y_bar], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_start, x_start], [69.2, 70.8], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_start + scale_len/2, x_start + scale_len/2], [69.2, 70.8], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_end, x_end], [69.2, 70.8], color='#0F172A', linewidth=1.5, zorder=4)
-    
-    # Scale text labels (size 11.0)
-    ax.text(x_start, 72.0, "0", color='#334155', ha='center', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0), zorder=4)
-    ax.text(x_start + scale_len/2, 72.0, "250m", color='#334155', ha='center', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0), zorder=4)
-    ax.text(x_end, 72.0, "500m", color='#334155', ha='center', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0), zorder=4)
-    
-    scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
-    ax.text((x_start + x_end)/2, 68.0, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0, weight='bold'), zorder=4)
-
-    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0) — Extended vertically!
-    desc_shadow = mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    desc_bg = mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(desc_shadow)
-    ax.add_patch(desc_bg)
-    ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
-    
-    ax.text(103.5, 61.0, "数据来源与诊断说明 / DATA SOURCES", color='#D97706', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=13.5), zorder=4)
-    
-    # 3 Bullet description items wrapped at 44 visual-width units, font size 15.0 (matching DR-003/007 body text exactly)
-    desc_data = [
-        ("1. 遥感影像：本图底图采用高分辨率 Google Earth 卫星遥感影像（2024年最新数据），直观反映项目所在长春市宽城区伪满皇宫周边区域的真实地表覆盖与建筑空间密度。", 55.0),
-        ("2. 蓝绿肌理：东侧伊通河生态廊道水体形态完整，但街区内部绿色开敞空间较少，植被覆盖主要呈线性分布在铁路线及道路两侧，亟需引入更多社区口袋公园。", 39.0),
-        ("3. 建设状况：街区内现状以中低层高密度建筑群为主，东北侧存在大面积中车低效工业遗存与厂房，南侧及西侧以商旧住宅为主，空间肌理较为拥挤。", 23.0)
-    ]
-    for text, y_pos in desc_data:
-        wrapped_desc = wrap_text(text, max_len=44)
-        y_text = y_pos
-        for line in wrapped_desc.split('\n'):
-            ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], size=15.0), zorder=4)
-            y_text -= 3.2
+            ax_rose.imshow(_black_rose_img, zorder=1)
+    except Exception as e:
+        print(f"Error loading wind rose in {__file__}: {e}")
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
-    ("重点更新地块", "rect_orange_border"),
-    ("伊通河水系", "rect_water"),
-    ("卫星遥感影像", "rect_sat_base")
+    ("低层建筑 (1-3 层)", "rect_h1"),
+    ("多层建筑 (4-7 层)", "rect_h2"),
+    ("中高层建筑 (8-14 层)", "rect_h3"),
+    ("高层建筑 (15-20 层)", "rect_h4"),
+    ("超高层建筑 (21层以上)", "rect_h5"),
+    ("城市水系", "rect_water"),
+    ("城市道路", "rect_road"),
 ]
 
 description_lines = [
-    "1. 遥感影像：本图底图采用高分辨率 Google Earth 卫星遥感影像（2024年最新数据），直观反映项目所在长春市宽城区伪满皇宫周边区域的真实地表覆盖与建筑空间密度。",
-    "2. 蓝绿肌理：东侧伊通河生态廊道水体形态完整，但街区内部绿色开敞空间较少，植被覆盖主要呈线性分布在铁路线及道路两侧，亟需引入更多社区口袋公园。",
-    "3. 建设状况：街区内现状以中低层高密度建筑群为主，东北侧存在大面积中车低效工业遗存与厂房，南侧及西侧以商旧住宅为主，空间肌理较为拥挤。"
+    "1. 高度特征：区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。",
+    "2. 高层分布：中高层与高层住宅主要零散分布在区位外围，对历史街区核心区及伪满皇宫周边产生了一定的视线廊道压力。",
+    "3. 管控思路：规划提出结合视线敏感度分析，严格控制核心区新建建筑高度，禁止插建高层，保留历史空间原有的舒缓天际线。"
 ]

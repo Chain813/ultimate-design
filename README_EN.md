@@ -6,11 +6,11 @@
 
 **Digital Twin · Temporal Resonance — AI-Powered Urban Micro-Renewal Planning & Design Platform**
 
-*Changchun Puppet Emperor's Palace District · 170.2 ha · 17 Modules · 26 Professional Drawings · End-to-End Evidence-Based Workflow*
+*Changchun Puppet Emperor's Palace District · 170.2 ha · 15 Pages · 26 Professional Drawings · End-to-End Evidence-Based Workflow*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-173%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-238%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -27,7 +27,7 @@ UltimateDESIGN is a **full-stack Streamlit decision support platform** built for
 
 | Capability | Description |
 |---|---|
-| **17-Stage Workflow** | Each stage encapsulates independent data panels, AI reasoning, and defense charts |
+| **15-Page Streamlined Workflow** | 15 pages in total (app.py + 14 pages in pages/ with 3 merged stage-groups), focusing on core design flow |
 | **26 Drawing Templates** | High-precision vector maps generated via Python and automatically assembled with standard A3 title blocks via PIL |
 | **GIS → AIGC Alignment** | Novel Vector→Raster→ControlNet pipeline eliminates spatial hallucination |
 | **Tri-Stakeholder Simulation** | LLM-driven Resident / Developer / Planner role-play with consensus radar output |
@@ -36,7 +36,7 @@ UltimateDESIGN is a **full-stack Streamlit decision support platform** built for
 | **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
 | **Auto-Scrolling Controller** | Resident screen-recording HUD widget at the bottom right corner supporting frame-level smooth pixel-scrolling and shortcuts |
 | **Auto Stage Summary Archiving**| Automatically extracts stage findings/methodologies and incrementally saves them in `output/stage_generation_report.md` sorted by stage order |
-| **173 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **238 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
 
 ---
 
@@ -68,7 +68,7 @@ Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
 ### 🩺 3. Health Check
 
 ```powershell
-python -m pytest                    # 173 unit tests
+python -m pytest                    # 238 unit tests
 python tools/check_env.py           # 15-page integrity check
 python tools/secret_scan.py         # Credential leak scan
 ```
@@ -130,6 +130,7 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 11 | Implementation Path | 6 renewal modes, 3-phase timeline Gantt chart |
 | 12 | Design Guidelines | Two-step guideline generation + RAG policy retrieval |
 | 13 | Output & Presentation | Python map rendering, Web LLM redraw prompts, Auto PIL title block |
+| 14 | Data Dashboard | WebGL 3D macro-decision screen, planning indicator dashboard, spatiotemporal dynamic visualization |
 
 ### 🟣 AIGC & Agent Skills (Stage 15–16)
 
@@ -144,8 +145,8 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 
 ```text
 ultimateDESIGN/
-├── app.py                              # Entry point / Home / Global map base
-├── pages/                              # 17 stage pages (00–16)
+├── app.py                              # Entry point / Home / Global map base (1 page)
+├── pages/                              # 14 functional pages (00–16)
 ├── src/
 │   ├── config/                         # YAML config / paths / runtime flags
 │   ├── engines/                        # AI & computation (NO UI code)
@@ -160,11 +161,11 @@ ultimateDESIGN/
 │   │   └── ...                        #   (20 engine modules total)
 │   ├── ui/                             # Streamlit components & theming
 │   ├── utils/                          # I/O, geo transform, service checks
-│   └── workflow/                       # 17-stage state machine & data bus
+│   └── workflow/                       # 17-stage state machine (00-16) & data bus
 ├── scripts/                            # Automation (data fetch / GIS render)
 ├── tools/                              # DevOps (env check / secret scan / QA)
 │   ├── drawings/                      #   A3 layout rendering modules (dr_004.py ~ dr_slow_traffic.py)
-├── tests/                              # 26 modules / 173 test cases
+├── tests/                              # 40 modules / 238 test cases
 ├── data/                               # Spatial & tabular assets (decoupled)
 └── .github/workflows/ci.yml           # CI pipeline
 ```

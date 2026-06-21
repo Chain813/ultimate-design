@@ -389,33 +389,60 @@ def generate_formulas_sheet():
         f_h = 118
         draw.rounded_rectangle([x0 + 21, f_y, x0 + card_w - 21, f_y + f_h], radius=9, fill=(248, 250, 252), outline=(226, 232, 240), width=1)
         f_lines = formula.split("\n")
-        f_font = fonts["badge"]
+        
+        # Dynamically scale font size to fit the box width
+        max_f_size = 30
+        min_f_size = 12
+        best_f_size = max_f_size
+        for f_size in range(max_f_size, min_f_size - 1, -1):
+            try:
+                temp_font = ImageFont.truetype(FONT_BOLD_PATH, f_size)
+            except Exception:
+                temp_font = fonts["badge"]
+            
+            fits = True
+            for fl in f_lines:
+                try:
+                    left, top, right, bottom = temp_font.getbbox(fl)
+                    w = right - left
+                except AttributeError:
+                    w = temp_font.getsize(fl)[0]
+                if w > (card_w - 60):
+                    fits = False
+                    break
+            if fits:
+                best_f_size = f_size
+                break
+        else:
+            best_f_size = min_f_size
+
         try:
-            f_font = ImageFont.truetype(FONT_BOLD_PATH, 30)
+            f_font = ImageFont.truetype(FONT_BOLD_PATH, best_f_size)
         except Exception:
-            pass
-        line_h = 36
+            f_font = fonts["badge"]
+
+        line_h = int(best_f_size * 1.2)
         fy_start = f_y + (f_h - len(f_lines) * line_h) // 2
         for li, fl in enumerate(f_lines):
             draw.text((x0 + card_w // 2, fy_start + li * line_h + 12), fl, fill=(15, 23, 42), font=f_font, anchor="mm")
 
         # Parameters
-        y_cursor = f_y + f_h + 18
+        y_cursor = f_y + f_h + 15
         try:
-            font_param_name = ImageFont.truetype(FONT_BOLD_PATH, 24)
-            font_param_desc = ImageFont.truetype(FONT_PATH, 22)
+            font_param_name = ImageFont.truetype(FONT_BOLD_PATH, 20)
+            font_param_desc = ImageFont.truetype(FONT_PATH, 18)
         except Exception:
             font_param_name = fonts["badge"]
             font_param_desc = fonts["badge"]
 
         for pname, pdesc in params:
             draw.text((x0 + 27, y_cursor), f"· {pname}", fill=text_c, font=font_param_name)
-            y_cursor += 30
+            y_cursor += 26
             wrapped = wrap_text_by_pixels(pdesc, font_param_desc, card_w - 63, draw)
             for wl in wrapped:
                 draw.text((x0 + 39, y_cursor), wl, fill=(100, 116, 139), font=font_param_desc)
-                y_cursor += 28
-            y_cursor += 8
+                y_cursor += 24
+            y_cursor += 6
 
         # Application note at bottom
         draw.line([(x0 + 21, y0 + card_h - 76), (x0 + card_w - 21, y0 + card_h - 76)], fill=(226, 232, 240), width=1)

@@ -83,9 +83,9 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2))
     ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor='#D97706', edgecolor='none', zorder=3))
 
-    ax.text(3.5, 93.6, "建筑高度控制图", 
+    ax.text(3.5, 93.6, "总体空间结构规划图", 
             color='#0F172A', ha='left', va='center', fontproperties=_font(font_prop, 26, "bold"), zorder=4)
-    ax.text(3.5, 90.7, "展示伪满皇宫核心保护区及周边的视线走廊与高度管控引导分区，保障历史风貌环境完整性。", 
+    ax.text(3.5, 90.7, "构建“一核、一廊、多点”的针灸式规划更新空间骨架，打通站城文脉主轴，激活五大活力触媒节点。", 
             color='#334155', ha='left', va='center', fontproperties=_font(font_prop, 15.0), zorder=4)
 
     # 3. Main Map Card Container (X: 2.0 to 100.0, Y: 4.0 to 87.0)
@@ -101,124 +101,139 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
     # Plot GIS Base Layers
     if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
+        water.plot(ax=ax_map, facecolor="#E2F0FD", edgecolor="none", zorder=1)
 
-    # Draw Height limit overlay buffer circles around Palace
-    px_palace, py_palace = get_xy(125.3422, 43.9036)
-    palace_pt = Point(px_palace, py_palace)
-    r1 = 450
-    r2 = 900
-    if params and "buffer_radii" in params:
-        r1 = params["buffer_radii"].get("heritage", 450)
-        r2 = params["buffer_radii"].get("transition", 900)
-
-    buf_450 = palace_pt.buffer(r1)
-    buf_900 = palace_pt.buffer(r2)
-
-    # Overlay circles are clipped to the study boundary
-    if boundary is not None and not boundary.empty:
-        bnd_geom = boundary.unary_union
-        overlay_450 = buf_450.intersection(bnd_geom)
-        overlay_900 = buf_900.intersection(bnd_geom)
-
-        gpd.GeoDataFrame(geometry=[overlay_450], crs="EPSG:3857").plot(
-            ax=ax_map, facecolor="#EF4444", edgecolor="#EF4444", alpha=0.08, linewidth=1.2, linestyle='--', zorder=1.5
-        )
-        gpd.GeoDataFrame(geometry=[overlay_900.difference(overlay_450)], crs="EPSG:3857").plot(
-            ax=ax_map, facecolor="#F59E0B", edgecolor="#F59E0B", alpha=0.06, linewidth=1.2, linestyle='--', zorder=1.4
-        )
-
-    # Draw Building Footprints Color-coded by height regulation
     if buildings is not None and not buildings.empty:
-        buildings_copy = buildings.copy()
-        dists = buildings_copy.geometry.distance(palace_pt)
-        centroids = buildings_copy.geometry.centroid
-        is_inside = centroids.within(bnd_geom)
-
-        # Existing height coloring for outside buildings
-        buildings_copy["Floor_num"] = pd.to_numeric(buildings_copy["Floor"], errors="coerce").fillna(1)
-        exist_conds = [
-            (buildings_copy["Floor_num"] <= 3),
-            (buildings_copy["Floor_num"] >= 4) & (buildings_copy["Floor_num"] <= 7),
-            (buildings_copy["Floor_num"] >= 8) & (buildings_copy["Floor_num"] <= 14),
-            (buildings_copy["Floor_num"] >= 15) & (buildings_copy["Floor_num"] <= 20),
-            (buildings_copy["Floor_num"] >= 21)
-        ]
-        exist_choices = [
-            "#FEF3C7", # 1-3层: 淡黄
-            "#FDBA74", # 4-7层: 淡橙
-            "#FCA5A5", # 8-14层: 淡红
-            "#EF4444", # 15-20层: 红
-            "#991B1B"  # 21+层: 深红
-        ]
-        exist_color = np.select(exist_conds, exist_choices, default="#FEF3C7")
-
-        # Control height coloring for inside buildings
-        control_conds = [
-            (dists <= r1),
-            (dists > r1) & (dists <= r2),
-            (dists > r2)
-        ]
-        control_choices = [
-            "#EF4444", # 限高 9m (红)
-            "#F59E0B", # 限高 18m (黄)
-            "#3B82F6"  # 限高 24m (蓝)
-        ]
-        control_color = np.select(control_conds, control_choices, default="#3B82F6")
-
-        buildings_copy["color"] = np.where(is_inside, control_color, exist_color)
-        buildings_copy.plot(ax=ax_map, color=buildings_copy["color"], edgecolor="#64748B", linewidth=0.2, zorder=2.2)
+        buildings.plot(ax=ax_map, facecolor="#F1F5F9", edgecolor="#CBD5E1", linewidth=0.2, zorder=0.8)
 
     if roads is not None and not roads.empty:
-        for lvl, lw, color in [(1, 1.8, "#94A3B8"), (2, 1.2, "#CBD5E1"), (3, 0.7, "#E2E8F0"), (4, 0.5, "#F1F5F9")]:
-            sub_gdf = roads[roads['level'] == lvl]
-            if not sub_gdf.empty:
-                sub_gdf.plot(ax=ax_map, color=color, linewidth=lw, capstyle="round", joinstyle="round", zorder=1.2)
+        roads.plot(ax=ax_map, color="#CBD5E1", linewidth=0.8, zorder=1.1)
 
     if rails is not None and not rails.empty:
-        rails.plot(ax=ax_map, color="#64748B", linewidth=1.2, linestyle=(0, (5, 5)), zorder=1.3)
+        rails.plot(ax=ax_map, color="#64748B", linewidth=1.2, linestyle=(0, (4, 4)), zorder=1.2)
 
     if boundary is not None and not boundary.empty:
-        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=5)
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=2.5, zorder=5)
 
-    # Plot landmark labels
-    for name, lon, lat in [("伪满皇宫博物院", 125.3422, 43.9036),
-                            ("光复路", 125.3395, 43.9016),
-                            ("长春站", 125.3250, 43.9080),
-                            ("胜利公园", 125.3260, 43.8960)]:
-        x_pt, y_pt = get_xy(lon, lat)
-        ax_map.text(x_pt, y_pt, name, color='#475569', ha='center', va='bottom',
-                    fontproperties=_font(font_prop, 9.0, 'bold'),
-                    path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5)
+    # Coordinates for landmarks and nodes
+    px_palace, py_palace = get_xy(125.3422, 43.9036)
+    px_station, py_station = get_xy(125.3250, 43.9080)
+    px_river, py_river = get_xy(125.3590, 43.9010)
+    px_park, py_park = get_xy(125.3260, 43.8960)
+    px_guangfu, py_guangfu = get_xy(125.3435, 43.9015)
 
-    # 4. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0)
+    # 4. Draw Core and Axes
+    # 4a. 站城文脉联动主轴 (Station to Palace)
+    # Glow effect
+    ax_map.plot([px_station, px_palace], [py_station, py_palace], color='#F97316', linewidth=9.0, alpha=0.28, zorder=3.8)
+    # Solid line
+    ax_map.plot([px_station, px_palace], [py_station, py_palace], color='#F97316', linewidth=4.0, zorder=3.9)
+
+    # 4b. 生态文旅向心带 (Palace to River Park)
+    # Glow effect
+    ax_map.plot([px_palace, px_river], [py_palace, py_river], color='#06B6D4', linewidth=8.0, alpha=0.28, zorder=3.8)
+    # Dashed line
+    ax_map.plot([px_palace, px_river], [py_palace, py_river], color='#06B6D4', linewidth=3.5, linestyle='--', zorder=3.9)
+
+    # 4c. Star for Palace Core
+    ax_map.plot(px_palace, py_palace, marker='*', markersize=18, color='#EAB308', 
+                markeredgecolor='#FFFFFF', markeredgewidth=1.8, zorder=4.8)
+
+    # 5. Draw 5 key nodes (snapped exactly from Key_Plots_District.json centroids)
+    node_coords = [
+        (125.333536, 43.907389, "活力商办节点", 55),
+        (125.341750, 43.906706, "活力节点 2", 55),
+        (125.333542, 43.904235, "活力节点 3", -65),
+        (125.346951, 43.899892, "活力节点 4", -65),
+        (125.336475, 43.898121, "活力节点 5", -65)
+    ]
+
+    for idx, (lon, lat, label, offset_y) in enumerate(node_coords):
+        nx, ny = get_xy(lon, lat)
+        # Glow outer ring
+        ax_map.plot(nx, ny, marker='o', markersize=20, color='#EF4444', alpha=0.2, zorder=4.3)
+        # Main red marker
+        ax_map.plot(nx, ny, marker='o', markersize=10, color='#EF4444', 
+                    markeredgecolor='#FFFFFF', markeredgewidth=1.5, zorder=4.5)
+        # Node text label
+        ax_map.text(nx, ny + offset_y, label, color='#DC2626', ha='center', va='center',
+                    fontproperties=_font(font_prop, 8.5, 'bold'),
+                    path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5.0)
+
+    # 6. Text Labels for Axes and Core
+    # Axis 1 Text (Station to Palace)
+    mid_x1, mid_y1 = (px_station + px_palace)/2, (py_station + py_palace)/2
+    ax_map.text(mid_x1, mid_y1 + 110, "站城文脉联动主轴", color='#EA580C', ha='center', va='center',
+                rotation=-7, fontproperties=_font(font_prop, 9.5, 'bold'),
+                path_effects=[path_effects.withStroke(linewidth=2.5, foreground='#FFFFFF')], zorder=5.0)
+
+    # Axis 2 Text (Palace to River)
+    mid_x2, mid_y2 = (px_palace + px_river)/2, (py_palace + py_river)/2
+    ax_map.text(mid_x2, mid_y2 + 95, "生态文旅向心带", color='#0891B2', ha='center', va='center',
+                rotation=-3, fontproperties=_font(font_prop, 8.5, 'bold'),
+                path_effects=[path_effects.withStroke(linewidth=2.5, foreground='#FFFFFF')], zorder=5.0)
+
+    # Core Label
+    ax_map.text(px_palace, py_palace + 85, "历史文化共振核心", color='#D97706', ha='center', va='center',
+                fontproperties=_font(font_prop, 10.0, 'bold'),
+                path_effects=[path_effects.withStroke(linewidth=2.5, foreground='#FFFFFF')], zorder=5.0)
+
+    # 7. Landmarks (Orange Dots & Black Labels)
+    landmarks = [
+        ("长春站", px_station, py_station),
+        ("胜利公园", px_park, py_park),
+        ("光复路", px_guangfu, py_guangfu),
+        ("伪满皇宫博物院", px_palace, py_palace),
+        ("伊通河沿岸公园", px_river, py_river)
+    ]
+    for name, lx, ly in landmarks:
+        # Avoid drawing dot exactly over Palace star or other main markers
+        if name != "伪满皇宫博物院":
+            ax_map.plot(lx, ly, marker='o', markersize=6, color='#F97316', zorder=4.6)
+        
+        # Label offset
+        offset_y = 60 if name in ["长春站", "伊通河沿岸公园"] else -60
+        ha_align = 'center'
+        if name == "长春站": ha_align = 'left'
+        if name == "伊通河沿岸公园": ha_align = 'right'
+        
+        ax_map.text(lx, ly + offset_y, name, color='#1E293B', ha=ha_align, va='center',
+                    fontproperties=_font(font_prop, 8.5, 'bold'),
+                    path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=4.9)
+
+    # 8. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0)
     legend_shadow = mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     legend_bg = mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(legend_shadow)
     ax.add_patch(legend_bg)
     ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
-    
+
     ax.text(103.5, 82.8, "图例 / LEGEND", color='#D97706', ha='left', va='center',
             fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
 
     legend_items_data = [
         ("规划研究范围", '#FF3B30', 'outline_boundary', 102.2, 106.2, 79.5),
-        ("城市道路", '#94A3B8', 'line_road', 120.7, 124.7, 79.5),
-        ("核心视线保护区(≤9m)", '#EF4444', 'rect_color', 102.2, 106.2, 75.0),
-        ("风貌过渡协调区(≤18m)", '#F59E0B', 'rect_color', 120.7, 124.7, 75.0),
-        ("外围活力开发区(≤24m)", '#3B82F6', 'rect_color', 102.2, 106.2, 70.5),
-        ("现状普通建筑", '#FEF3C7', 'rect_existing', 120.7, 124.7, 70.5)
+        ("历史文化共振核心", '#EAB308', 'star', 120.7, 124.7, 79.5),
+        ("站城文脉联动主轴", '#F97316', 'line_solid', 102.2, 106.2, 75.0),
+        ("生态文旅向心带", '#06B6D4', 'line_dashed', 120.7, 124.7, 75.0),
+        ("更新活力触媒节点", '#EF4444', 'circle_node', 102.2, 106.2, 70.5),
+        ("现状基础设施", '#94A3B8', 'line_thin', 120.7, 124.7, 70.5)
     ]
 
     for label, color_code, style, x_sym, x_txt, y_val in legend_items_data:
         if style == 'outline_boundary':
             ax.add_patch(mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor='none', edgecolor=color_code, linewidth=1.8, zorder=4))
-        elif style == 'line_road':
-            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=1.5, zorder=4)
-        elif style == 'rect_color':
-            ax.add_patch(mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor=color_code, edgecolor='none', alpha=0.9, zorder=4))
-        elif style == 'rect_existing':
-            ax.add_patch(mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor=color_code, edgecolor='#64748B', linewidth=0.3, zorder=4))
+        elif style == 'line_solid':
+            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=2.5, zorder=4)
+        elif style == 'line_dashed':
+            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=2.0, linestyle='--', zorder=4)
+        elif style == 'star':
+            ax.plot(x_sym + 1.5, y_val, marker='*', markersize=8, color=color_code, markeredgecolor='#FFFFFF', markeredgewidth=0.8, zorder=4)
+        elif style == 'circle_node':
+            ax.plot(x_sym + 1.5, y_val, marker='o', markersize=6, color=color_code, markeredgecolor='#FFFFFF', markeredgewidth=0.8, zorder=4)
+        elif style == 'line_thin':
+            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=1.0, zorder=4)
+        
         ax.text(x_txt, y_val, label, color='#334155', ha='left', va='center',
                 fontproperties=_font(font_prop, 10.0), zorder=4)
 
@@ -239,23 +254,25 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text((x_start + x_end)/2, y_bar - 1.6, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=_font(font_prop, 10.5, 'bold'), zorder=4)
 
-    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0)
+    # 9. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0)
     ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor='#E2E8F0', edgecolor='none', zorder=1))
     ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2))
     ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
 
-    ax.text(103.5, 61.0, "高度控制分区说明 / HEIGHT CONTROL", color='#D97706', ha='left', va='center',
+    ax.text(103.5, 61.0, "空间结构设计说明 / SPATIAL STRUCTURE", color='#D97706', ha='left', va='center',
             fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
 
     desc_data = [
-        ("1. 核心保护：伪满皇宫博物院周边 300 米核心保护带内建筑高度限制为 9 米（红色），杜绝一切插建高层，严格守护历史建筑风貌本底与视线通廊。", 53.0),
-        ("2. 风貌过渡：300-600 米建设控制地带内限高 18 米（黄色），规划建议以 3-5 层坡屋顶中式现代建筑为主，与皇宫历史尺度形成平缓过渡。", 36.0),
-        ("3. 外围开发：600 米外站城融合区及主要干道沿线，高度限值放宽至 24 米（蓝色），并可结合具体地块局部开发高层，平衡历史保护与活力开发的需求。", 19.0)
+        # Bullet 1 manually broken
+        ("1. 规划结构：提出“一核一廊多点”的针灸式规划\n   更新结构，一核为伪满皇宫文旅体验核，一廊为\n   光复路历史风貌轴，多点为五大更新活力触媒。", 53.0),
+        # Bullet 2 manually broken
+        ("2. 廊道缝合：打通站城文脉联动主轴，缝合被京\n   哈铁路割裂的南北空间联系，引导城市人流从\n   火车站进入皇宫风貌区，修复风貌廊道天际线。", 37.0),
+        # Bullet 3 manually broken
+        ("3. 针灸触媒：重点规划活力商办节点（节点1）、\n   工业遗产文化体验区（节点2）、历史街区（节\n   点3）、滨水生态公园（节点4）及生活服务盒\n   （节点5）等5处触媒，激活街区活力。", 21.0)
     ]
     for text, y_pos in desc_data:
-        wrapped_desc = wrap_text(text, max_len=44)
         y_text = y_pos
-        for line in wrapped_desc.split('\n'):
+        for line in text.split('\n'):
             ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
                     fontproperties=_font(font_prop, 14.0), zorder=4)
             y_text -= 3.2
@@ -292,13 +309,14 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
-    ("核心视线保护区 (≤9m)", "rect_height_red"),
-    ("风貌过渡协调区 (≤18m)", "rect_height_yellow"),
-    ("外围活力开发区 (≤24m)", "rect_height_blue")
+    ("历史文化共振核心", "star_core"),
+    ("站城文脉联动主轴", "line_orange"),
+    ("生态文旅向心带", "line_dashed_cyan"),
+    ("更新活力触媒节点", "marker_node_red")
 ]
 
 description_lines = [
-    "1. 核心保护：伪满皇宫博物院周边300米核心保护带内建筑高度限制为9米（红色），杜绝一切插建高层，严格守护历史建筑环境本底。",
-    "2. 风貌过渡：300-600米建设控制地带内限高18米（黄色），建议以3-5层坡屋顶中式现代风貌为主，与皇宫尺度形成缓和过渡天际线。",
-    "3. 外围开发：600米外站城融合区及主要干道沿线，高度限值放宽至24-50米（蓝色），支持局部复合开发，实现空间高效率与历史风貌的平衡。"
+    "1. 规划结构：提出“一核一廊多点”的针灸式规划更新结构，一核为伪满皇宫文旅体验核，一廊为光复路历史风貌轴，多点为五大更新活力触媒。",
+    "2. 廊道缝合：打通站城文脉联动主轴，缝合被京哈铁路割裂的南北空间联系，引导城市人流从火车站进入皇宫风貌区，修复风貌廊道天际线。",
+    "3. 针灸触媒：重点规划活力商办节点（节点1）、工业遗产文化体验区（节点2）、历史街区（节点3）、滨水生态公园（节点4）及生活服务盒（节点5）等5处触媒，激活街区活力。"
 ]

@@ -61,14 +61,15 @@ def draw_toc(output_path, author="陈礼冲", author_id="202111003", organizatio
     try:
         font_large_title = ImageFont.truetype(font_bold_path, 36)
         font_card_title = ImageFont.truetype(font_bold_path, 20)
-        font_table_header = ImageFont.truetype(font_bold_path, 14)
-        font_body_bold = ImageFont.truetype(font_bold_path, 14)
-        font_body = ImageFont.truetype(font_path, 14)
+        font_table_header = ImageFont.truetype(font_bold_path, 12)
+        font_body_bold = ImageFont.truetype(font_bold_path, 12)
+        font_body = ImageFont.truetype(font_path, 12)
         font_desc = ImageFont.truetype(font_path, 14)
+        font_tbl_desc = ImageFont.truetype(font_path, 11)
         font_meta = ImageFont.truetype(font_path, 11)
     except IOError:
         font_large_title = font_card_title = font_table_header = ImageFont.load_default()
-        font_body_bold = font_body = font_desc = font_meta = ImageFont.load_default()
+        font_body_bold = font_body = font_desc = font_tbl_desc = font_meta = ImageFont.load_default()
 
     # Background grid
     for x in range(1, int(2240 / 79.2)):
@@ -87,133 +88,205 @@ def draw_toc(output_path, author="陈礼冲", author_id="202111003", organizatio
     draw.text((1380, 86), f"制 作 人：{author} ({author_id})   指导教师：崔诚慧", fill=(100, 116, 139), font=font_meta)
     draw.text((1380, 104), "图幅：A3 (420\u00d7297mm)   坐标：WGS-84   日期：2026年6月", fill=(100, 116, 139), font=font_meta)
 
-    # ── Two-Column Table Card ──
+    # ── Three-Column Table Card ──
     card_top, card_bottom = 158, 1540
     card_left, card_right = 32, 2198
-    col_div = 1115
 
     draw.rectangle([card_left+4, card_top+4, card_right+4, card_bottom+4], fill=(226, 232, 240))
     draw.rectangle([card_left, card_top, card_right, card_bottom], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
     draw.rectangle([card_left, card_top, card_right, card_top+6], fill=(217, 119, 6))
-    draw.line([(col_div, card_top+6), (col_div, card_bottom)], fill=(226, 232, 240), width=2)
-
-    # Column headers
-    hy = card_top + 18
-    for bx in [50, col_div + 15]:
-        draw.text((bx + 5, hy), "编号", fill=(100, 116, 139), font=font_table_header)
-        draw.text((bx + 125, hy), "图纸名称", fill=(100, 116, 139), font=font_table_header)
-        draw.text((bx + 395, hy), "说明", fill=(100, 116, 139), font=font_table_header)
-    draw.line([(50, hy+20), (col_div-15, hy+20)], fill=(203, 213, 225), width=2)
-    draw.line([(col_div+15, hy+20), (card_right-15, hy+20)], fill=(203, 213, 225), width=2)
 
     sheets = [
         ("DR-001", "规划设计图册封面", "图册主标题与设计团队信息"),
         ("DR-002", "图册目录", "本图册的图纸索引与主要编制说明"),
-        ("第1章 项目认知篇", "PROJECT BACKGROUND", ""),
-        ("DR-003", "项目背景与政策解读图", "国家城市更新·数字中国·历史名城三级政策框架"),
-        ("DR-004", "现状区位图", "包含国家、省、市、区四级区位关系展示"),
-        ("DR-005", "研究范围图", "约170公顷范围及5大重点地块设计边界"),
-        ("DR-006", "原始数据清单", "遥感影像、GVI等14项核心现状底数"),
-        ("DR-007", "上位规划解读图", "总体格局、历史保护与空间结构解译"),
-        ("DR-008", "上位专项规划解读图", "土地利用、综合交通与绿地系统专项解译"),
-        ("DR-009", "案例借鉴与对标分析图", "国内外类似片区更新案例参照"),
-        ("第2章 数据诊断篇", "DATA DIAGNOSIS & ANALYSIS", ""),
-        ("DR-010", "数据来源与遥感现状图", "2024高分辨率遥感影像底图及GIS数据源"),
-        ("DR-011", "用地现状分析图", "居住56.6%、商服约20%等非均衡现状结构"),
-        ("DR-012", "道路交通现状图", "宽马路表征与现状铁路割裂带分布诊断"),
-        ("DR-013", "建筑高度现状图", "平均层高11.9米，低层及老旧住宅为主"),
-        ("DR-014", "建筑风貌识别图", "历史保护、中车工业遗存与现代风貌分布"),
-        ("DR-015", "环境品质问题地图", "绿视率仅8.7%硬质化区域与噪声污染源空间"),
-        ("DR-016", "街区景观品质分析图", "绿视率8.7%，78.3%采样点低于15%宜居阈值"),
-        ("DR-017", "历史建筑与工业遗产分布图", "伪满皇宫核心区及中车老厂房遗存定位"),
-        ("DR-018", "文化资源分析图", "伪满皇宫与中车厂区双核集聚及轴线割裂"),
-        ("DR-019", "遗产价值评估热力图", "多准则分析的历史文化遗产价值衰减"),
-        ("DR-020", "POI产业活力分析图", "生活服务餐饮占40%、购物占4.9%业态分布"),
-        ("DR-021", "人群需求与老龄化分布图", "30%老龄化社区适老化设施500米供需缺口"),
-        ("DR-022", "空间句法可达性分析图", "路网拓扑分析步行整合度与车行选择度"),
-        ("DR-023", "综合现状问题诊断图", "四大问题汇总诊断与问题热点标注"),
-        ("DR-024", "MPI更新潜力评估图", "AHP-MPI指数空间分布热力图"),
-        ("第3章 设计理念与构思篇", "DESIGN CONCEPT & STRATEGY", ""),
-        ("DR-025", "核心算法与数学公式", "三维度综合加权评估等13项公式"),
-        ("DR-026", "平台核心代码清单", "空间统计引擎、多智能体协同等14项核心代码"),
-        ("DR-027", "规划设计依据", "规划设计依据、法律法规及技术标准"),
-        ("DR-028", "规划设计原则", "微创织补与全龄友好为核心四项设计原则"),
-        ("DR-029", "规划设计目标", "生态韧性、全龄服务与风貌管控量化目标"),
-        ("DR-030", "规划设计定位", "数字孪生与古今共振历史活力街区定位"),
-        ("DR-031", "规划设计策略", "微创修缮、细胞微更新与慢行系统搭建"),
-        ("DR-032", "设计原则与理念图", "微创织补与全龄友好为核心四项设计原则"),
-        ("DR-033", "设计目标体系图", "生态韧性、全龄服务与风貌管控量化目标"),
-        ("DR-034", "总体策略图", "微创修缮、细胞微更新与慢行系统搭桥"),
-        ("第4章 总体规划篇", "MASTER PLAN DESIGN", ""),
-        ("DR-035", "更新模式分区图", "保护修缮、整治提升、拆改更新控制分区"),
-        ("DR-036", "空间结构规划图", "规划'一核、一廊、多点'的总体空间结构"),
-        ("DR-037", "用地规划图", "商业与文创混合区布局、结构优化"),
-        ("DR-038", "用地规划图_带建筑轮廓", "结合现状与规划建筑形态的总平面示意"),
-        ("DR-039", "用地规划指标表", "规划用地构成与平衡指标表"),
-        ("DR-040", "产业业态规划图", "'三区一带'数字文创与全龄服务业态规划"),
-        ("DR-041", "建筑更新控制图", "建筑分类更新控制、修缮整治置换引导"),
-        ("DR-042", "建筑高度控制图", "核心9米、过渡18米、外围24米三级管控"),
-        ("DR-043", "道路交通系统规划图", "加密支路网，提升微循环与交通整合度"),
-        ("DR-044", "慢行系统规划图", "无障碍适老化慢跑道与景观漫步双环系统"),
-        ("DR-045", "公共空间系统图", "500米半径5个邻里细胞生活盒子精准补缺"),
-        ("DR-046", "绿地景观系统图", "伊通河滨水生态廊道及绿地率35%补绿规划"),
-        ("DR-047", "历史文化展示系统图", "核心区文化游线路径与视觉通廊控制规划"),
-        ("DR-048", "总体鸟瞰白模效果图", "整体空间形态、建筑体量、景观系统白模展示"),
-        ("DR-049", "总体鸟瞰白模_彩色总图", "结合总平面着色的白模渲染鸟瞰"),
-        ("DR-050", "日照与风环境分析图", "规划区内日照时数与CFD风环境模拟分析"),
-        ("DR-051", "功能分区与策划定位图", "片区规划主导功能与核心板块划分"),
-        ("DR-052", "开发强度与容积率分区策略图", "FAR分级控制策略与容积率空间分布"),
-        ("DR-053", "天际线与视觉通廊控制图", "关键视廊保护、视线开敞度控制策略"),
-        ("DR-054", "竖向规划与排水分析图", "道路设计高程、场地排水方向与径流模拟"),
-        ("DR-055", "智慧城市与数字基础设施规划图", "数字底座、5G基站与智慧杆件布局"),
-        ("DR-056", "投资估算与经济测算图", "更新项目动态投资与资金平衡静态分析"),
-        ("DR-057", "公众参与与博弈协商成果图", "多主体博弈协同算法推荐的规划均衡方案"),
-        ("第5章 重点地块深化篇", "KEY PLOT DESIGN", ""),
-        ("DR-058", "五地块深化设计总图", "老水产、调料市场等5大深化地块核心指标"),
-        ("DR-059", "AIGC技术推演过程图", "数字孪生—AIGC推演—MPI评估全流程"),
-        ("DR-060", "实施分期图", "近期、中期、远期实施地块与分期节奏"),
-        ("DR-061~081", "老水产市场更新方案图集", "包含现状诊断、总图设计、分析图、效果图及AIGC"),
-        ("DR-082~101", "食品调料市场更新方案图集", "包含现状诊断、总图设计、分析图、效果图及AIGC"),
-        ("DR-102~120", "市一中北侧地块更新方案图集", "包含现状诊断、总图设计、分析图、效果图及AIGC"),
-        ("DR-121~138", "清禾集贸市场更新方案图集", "包含现状诊断、总图设计、分析图、效果图及AIGC"),
-        ("DR-139~154", "中国石油地块更新方案图集", "包含现状诊断、总图设计、分析图、效果图及AIGC"),
-        ("附录 技术说明", "TECHNICAL APPENDIX", ""),
-        ("DR-155", "图册章节结构导图", "五大章节与核心规划图纸树状组织结构"),
-        ("DR-156", "数据处理管线导图", "多源异构数据至空间计算与GIS库流向管线"),
-        ("DR-157", "规划协同工作流程图", "多利益智能体LLM博弈与指标刚性校验"),
-        ("DR-158", "城乡规划知识体系导图", "上位法理、规划层级至图册成果金字塔树"),
     ]
+    
+    # Import CHAPTERS dynamically from gen_ppt
+    try:
+        import sys
+        from pathlib import Path
+        ROOT_DIR = Path(__file__).resolve().parent.parent
+        if str(ROOT_DIR) not in sys.path:
+            sys.path.insert(0, str(ROOT_DIR))
+        if str(ROOT_DIR / "scratch") not in sys.path:
+            sys.path.insert(0, str(ROOT_DIR / "scratch"))
+        from gen_ppt import CHAPTERS
+    except ImportError:
+        CHAPTERS = []
 
-    spacing = 22
-    start_y = hy + 30
-    max_y = card_bottom - 10  # bottom margin
-    max_per_col = int((max_y - start_y) / spacing)
-    left_sheets = sheets[:max_per_col]
-    right_sheets = sheets[max_per_col:]
+    # Build the sheets list dynamically from CHAPTERS
+    for ch_name, ch_en, ch_sheets in CHAPTERS:
+        sheets.append((ch_name, ch_en, ""))
+        for fn, title in ch_sheets:
+            code = fn.split("_")[0]
+            
+            # Map descriptions based on keywords
+            desc = ""
+            if "地块导引" in fn:
+                desc = "地块范围与现状问题指引"
+            elif "现状卫星" in fn:
+                desc = "高清航空遥感卫星图底图"
+            elif "现状土地" in fn:
+                desc = "现状用地分类与权属构成"
+            elif "现状肌理" in fn:
+                desc = "现状建筑外部空间轮廓肌理"
+            elif "现状建筑高度" in fn:
+                desc = "现状建筑层数及垂直特征"
+            elif "现状业态" in fn:
+                desc = "现状商户网点及产业分布"
+            elif "改造总平面" in fn:
+                desc = "地块改造总平面设计方案"
+            elif "平面改造" in fn:
+                desc = "地块平面改造方案与图例"
+            elif "场地功能" in fn:
+                desc = "地块功能策划与空间布局"
+            elif "交通流线" in fn:
+                desc = "车行、步行及消防流线分析"
+            elif "绿化分析" in fn:
+                desc = "绿化景观与步行活动空间"
+            elif "场地剖面" in fn:
+                desc = "地块竖向标高与剖面分析"
+            elif "鸟瞰效果" in fn:
+                desc = "地块改造更新后鸟瞰效果图"
+            elif "鸟瞰改造" in fn:
+                desc = "地块鸟瞰更新效果图（方案二）"
+            elif "对比" in fn:
+                desc = "改造前现状与改造后对比"
+            elif "指标" in fn:
+                desc = "规划控制指标与强度要求"
+            elif "AIGC效果" in fn:
+                desc = "AI辅助立面设计与意向推演"
+            elif "节点景观" in fn:
+                desc = "重点节点景观深化设计方案"
+            else:
+                desc_map = {
+                    "DR-003": "国家城市更新与历史保护政策框架",
+                    "DR-004": "区域级、市级、区位关系展示",
+                    "DR-005": "规划研究范围与核心更新边界",
+                    "DR-006": "数据源底数及多维数据清单表",
+                    "DR-007": "上位国土空间及控制规划解译",
+                    "DR-008": "上位道路、绿地等专项规划解译",
+                    "DR-009": "国内外历史街区更新借鉴案例",
+                    "DR-010": "数据来源底图与遥感影像现状",
+                    "DR-011": "规划范围用地现状构成统计",
+                    "DR-012": "现状路网密度与交通痛点识别",
+                    "DR-013": "现状建筑层数与层高分级统计",
+                    "DR-014": "现状街区建筑风貌质量识别",
+                    "DR-015": "微气候、硬质化等环境问题",
+                    "DR-016": "绿视率空间插值与环境诊断",
+                    "DR-017": "伪满与中车工业遗产定位分布",
+                    "DR-018": "街区文化旅游资源整合分析",
+                    "DR-019": "历史文化建筑评估价值分级",
+                    "DR-020": "现状POI产业网点活力评估",
+                    "DR-021": "老龄化人口空间集聚与需求",
+                    "DR-022": "空间句法集成度与可达性计算",
+                    "DR-023": "街区四大现状瓶颈综合诊断",
+                    "DR-024": "街区单元更新优先级潜力评估",
+                    "DR-025": "潜力评估与可达性计算等公式",
+                    "DR-026": "空间计算引擎与指标校验代码",
+                    "DR-027": "相关法律法规及行业技术标准",
+                    "DR-028": "微创织补与人本主义设计原则",
+                    "DR-029": "生态、交通及指标等量化目标",
+                    "DR-030": "古今共振与数字孪生定位策划",
+                    "DR-031": "微更新与织补等核心设计策略",
+                    "DR-032": "微创织补与人本主义理念图",
+                    "DR-033": "规划设计目标体系及指标分解",
+                    "DR-034": "规划设计三大维度总体策略",
+                    "DR-035": "保护修缮、整治提升等分区控制",
+                    "DR-036": "一核一廊多点总体结构规划",
+                    "DR-037": "规划用地平衡与各类性质调整",
+                    "DR-038": "带建筑形态的规划总平面图",
+                    "DR-039": "用地指标增减平衡与控制要求",
+                    "DR-040": "三区一带数字文创产业引导",
+                    "DR-041": "建筑立面、结构分类更新控制",
+                    "DR-042": "高度分级控制与风貌视线管控",
+                    "DR-043": "路网加密、微循环及停车规划",
+                    "DR-044": "慢跑道与漫步道无障碍双环",
+                    "DR-045": "邻里中心与适老生活盒子补缺",
+                    "DR-046": "滨水绿廊与口袋公园布点规划",
+                    "DR-047": "文化游线路径与视廊景观控制",
+                    "DR-048": "规划总体白模鸟瞰效果图",
+                    "DR-049": "带规划用地着色的白模渲染",
+                    "DR-050": "日照时数与CFD风环境模拟",
+                    "DR-051": "三大主导功能板块划分设计",
+                    "DR-052": "FAR强度分级控制空间分布",
+                    "DR-053": "视线通廊空间开敞度控制",
+                    "DR-054": "规划场地高程、排水及径流",
+                    "DR-055": "5G基站、智慧杆件等新基建",
+                    "DR-056": "更新投资估算与资金平衡分析",
+                    "DR-057": "多主体博弈决策推荐均衡解",
+                    "DR-058": "五大重点深化地块设计总图",
+                    "DR-059": "数字孪生驱动的AIGC推演",
+                    "DR-060": "近期、中期、远期分期开发节奏",
+                    "DR-155": "规划图册结构层级树状导图",
+                    "DR-156": "异构数据处理及GIS计算流程",
+                    "DR-157": "多智能体协同博弈更新流线",
+                    "DR-158": "城乡规划学科与数字技术体系",
+                }
+                desc = desc_map.get(code, "规划设计深化与效果表达")
+                
+            sheets.append((code, title, desc))
 
+    spacing = 23
+    start_y = card_top + 42
+    
+    num_cols = 3
+    max_per_col = (len(sheets) + num_cols - 1) // num_cols # e.g. 164/3 -> 55
+    
+    # Calculate column boundaries
+    card_width = card_right - card_left # 2166
+    col_gap = 20
+    col_w = (card_width - (num_cols - 1) * col_gap) // num_cols # (2166 - 40)//3 = 708
+    
+    # Draw two vertical column divider lines in the gaps
+    draw.line([(750, card_top+6), (750, card_bottom)], fill=(226, 232, 240), width=2)
+    draw.line([(1478, card_top+6), (1478, card_bottom)], fill=(226, 232, 240), width=2)
+
+    # Column headers
+    hy = card_top + 18
+    for col_idx in range(num_cols):
+        bx = card_left + col_idx * (col_w + col_gap)
+        draw.text((bx + 5, hy), "编号", fill=(100, 116, 139), font=font_table_header)
+        draw.text((bx + 80, hy), "图纸名称", fill=(100, 116, 139), font=font_table_header)
+        draw.text((bx + 380, hy), "说明", fill=(100, 116, 139), font=font_table_header)
+        draw.line([(bx + 2, hy+20), (bx + col_w - 2, hy+20)], fill=(203, 213, 225), width=2)
+
+    # Function to draw a single entry
     def draw_entry(code, name, desc, x_base, y_pos, col_w):
         is_ch = ("第" in code and "章" in code) or "附录" in code
-        xc, xn, xd = x_base + 10, x_base + 130, x_base + 400
+        xc = x_base + 5
+        xn = x_base + 80
+        xd = x_base + 380
+        
+        # Truncate title and description if too long
+        max_title_len = 16
+        max_desc_len = 16
+        if len(name) > max_title_len:
+            name = name[:max_title_len] + "..."
+        if len(desc) > max_desc_len:
+            desc = desc[:max_desc_len] + "..."
+            
         if is_ch:
-            draw.rectangle([x_base+5, y_pos-1, x_base+col_w-5, y_pos+18], fill=(230, 235, 245))
+            # Chapter header styling
+            draw.rectangle([x_base + 2, y_pos - 1, x_base + col_w - 2, y_pos + 18], fill=(230, 235, 245))
             draw.text((xc, y_pos), code, fill=(15, 23, 42), font=font_body_bold)
             draw.text((xn, y_pos), name, fill=(100, 116, 139), font=font_body_bold)
         else:
+            # Regular sheet styling
             draw.text((xc, y_pos), code, fill=(15, 23, 42), font=font_body_bold)
             draw.text((xn, y_pos), name, fill=(15, 23, 42), font=font_body)
-            draw.text((xd, y_pos), desc, fill=(100, 116, 139), font=font_body)
-            draw.line([(x_base+5, y_pos+19), (x_base+col_w-5, y_pos+19)], fill=(241, 245, 249), width=1)
+            draw.text((xd, y_pos), desc, fill=(100, 116, 139), font=font_tbl_desc)
+            # Add thin separator line
+            draw.line([(x_base + 2, y_pos + 19), (x_base + col_w - 2, y_pos + 19)], fill=(241, 245, 249), width=1)
 
-    col_w_left = col_div - card_left
-    col_w_right = card_right - col_div
-    y = start_y
-    for code, name, desc in left_sheets:
-        draw_entry(code, name, desc, card_left, y, col_w_left)
-        y += spacing
-    y = start_y
-    for code, name, desc in right_sheets:
-        draw_entry(code, name, desc, col_div, y, col_w_right)
-        y += spacing
+    # Draw columns
+    for col_idx in range(num_cols):
+        col_sheets = sheets[col_idx * max_per_col : (col_idx + 1) * max_per_col]
+        x_base = card_left + col_idx * (col_w + col_gap)
+        y = start_y
+        for code, name, desc in col_sheets:
+            draw_entry(code, name, desc, x_base, y, col_w)
+            y += spacing
 
     toc_img.save(output_path)
     print(f"Table of Contents generated and saved to {output_path}")
@@ -474,6 +547,9 @@ def generate_all_atlas_drawings(targets=None):
         ("数据处理管线导图", "DR-156_数据处理管线导图.png", "DR-156"),
         ("规划协同工作流程图", "DR-157_规划协同工作流程图.png", "DR-157"),
         ("城乡规划知识体系导图", "DR-158_城乡规划知识体系导图.png", "DR-158"),
+        ("智能体协同规划平台功能架构图", "DR-159_智能体协同规划平台功能架构图.png", "DR-159"),
+        ("规划智能体核心决策与工具调用图", "DR-160_规划智能体核心决策与工具调用图.png", "DR-160"),
+        ("空间数据库实体关系设计图", "DR-161_空间数据库实体关系设计图.png", "DR-161"),
     ]
     
     if targets:

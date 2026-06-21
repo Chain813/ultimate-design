@@ -82,6 +82,7 @@ static/atlas/
 
 # 录屏与汇报视频指南
 obs_recording_guide.md
+image_preview.md
 
 # 排除大型附件与交付包（含潜在隐私与超大文件）
 static/附件/
@@ -92,5 +93,31 @@ tools/template.doc
 tools/template_large.doc
 tools/template_extracted.txt
 
+# 本地生成的展板预览与大块切图
+static/exhibition_boards/a1_board_*.png
+static/exhibition_boards/a1_boards_*_preview.png
+static/exhibition_boards/atlas_crops/
+static/exhibition_boards/atlas_crops_contact_sheet.png
+static/exhibition_boards/board_tiles/
+static/exhibition_boards/board_tiles_fitted/
+static/exhibition_boards/project_shots/
+static/exhibition_boards/psd_editable/
+static/exhibition_boards/tech_diagrams/
 
+# 提取的本地大媒体与视频
+static/extracted_images/
+static/extracted_pptx_images/
+static/project_video/
 
+# 本地中间文档
+static/图册结构.docx
+static/演讲稿.docx
+static/atlas_structure.*
+*.docx
+*.xlsx
+*.csv
+*.zip
+*.rar
+
+# 本地 Real-ESRGAN 二进制可执行文件目录
+tools/realesrgan-ncnn-vulkan/

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# tools/drawings/dr_038.py
+# tools/drawings/dr_033.py
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
@@ -52,6 +52,9 @@ def wrap_text_by_pixels(text, font, max_width, draw):
         if current_line:
             lines.append(current_line)
     return lines
+
+
+
 def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     print("Drawing DR-038 custom vector map...")
     # Create canvas 2240x1584
@@ -62,13 +65,13 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     font_path = 'C:/Windows/Fonts/msyh.ttc'
     font_bold_path = 'C:/Windows/Fonts/msyhbd.ttc'
     try:
-        font_large_title = ImageFont.truetype(font_bold_path, 36)
-        font_card_title = ImageFont.truetype(font_bold_path, 20)
-        font_box_header = ImageFont.truetype(font_bold_path, 18)
-        font_box_sub = ImageFont.truetype(font_bold_path, 13)
-        font_body = ImageFont.truetype(font_path, 14)
-        font_body_bold = ImageFont.truetype(font_bold_path, 14)
-        font_desc = ImageFont.truetype(font_path, 15)
+        font_large_title = ImageFont.truetype(font_bold_path, 40)
+        font_card_title = ImageFont.truetype(font_bold_path, 28)
+        font_box_header = ImageFont.truetype(font_bold_path, 22)
+        font_box_sub = ImageFont.truetype(font_bold_path, 16)
+        font_body = ImageFont.truetype(font_path, 18)
+        font_body_bold = ImageFont.truetype(font_bold_path, 18)
+        font_desc = ImageFont.truetype(font_path, 18)
     except IOError:
         font_large_title = ImageFont.load_default()
         font_card_title = ImageFont.load_default()
@@ -128,7 +131,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 715
     for line in wrapped_t1:
         draw.text((105, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Target 2: 全龄服务目标
     draw.rectangle([594, 604, 994, 924], fill=(241, 245, 249))
@@ -141,7 +144,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 715
     for line in wrapped_t2:
         draw.text((615, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Target 3: 风貌管控目标
     draw.rectangle([1104, 604, 1504, 924], fill=(241, 245, 249))
@@ -154,7 +157,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 715
     for line in wrapped_t3:
         draw.text((1125, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Connectors from Top Center to Targets
     draw.line([(800, 470), (800, 535)], fill=(203, 213, 225), width=3)
@@ -187,7 +190,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 1170
     for line in wrapped_b1:
         draw.text((175, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Bottom 2: 空间形象
     draw.rectangle([854, 1084, 1454, 1384], fill=(241, 245, 249))
@@ -199,7 +202,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 1170
     for line in wrapped_b2:
         draw.text((875, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Connectors from Target Cards to Bottom Cards:
     # Target 1 (280, 920) -> (280, 1000) -> (450, 1000) -> (450, 1080 - 15) with arrow
@@ -236,7 +239,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_desc), wl, fill=(71, 85, 105), font=font_desc)
-            y_desc += 26
+            y_desc += 32
         y_desc += 10
 
     # 4. Right Bottom Card (X: 1608 to 2198, Y: 634 to 1520)
@@ -256,7 +259,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_spec), wl, fill=(71, 85, 105), font=font_desc)
-            y_spec += 26
+            y_spec += 32
         y_spec += 10
 
     img.save(output_path)

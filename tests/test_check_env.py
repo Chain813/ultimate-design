@@ -34,6 +34,7 @@ def test_critical_files_includes_all_pages():
     assert "pages/15_AIGC设计推演.py" in source
     assert "pages/02_资料收集与现场调研.py" in source
     assert "pages/13_成果表达.py" in source
+    assert "pages/14_数据大屏.py" in source
 
 
 def test_main_returns_exit_code():

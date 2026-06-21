@@ -220,7 +220,14 @@ def _should_crop_to_main_drawing(source_name: str, size: tuple[int, int]) -> boo
 def prepare_board_tile_image(source_image: Image.Image, source_name: str) -> Image.Image:
     image = source_image.convert("RGB")
     if _should_crop_to_main_drawing(source_name, image.size):
-        image = image.crop(scaled_standard_boxes(image.size)["main"])
+        box = scaled_standard_boxes(image.size)["main"]
+        if "剖面解析" in source_name or "场地剖面" in source_name:
+            width, height = image.size
+            sy = height / 1584
+            x1, y1, x2, y2 = box
+            y2 = min(height, round(1536 * sy))
+            box = (x1, y1, x2, y2)
+        image = image.crop(box)
     return trim_white_margins(image, max_detection_side=900)
 
 
@@ -268,7 +275,8 @@ def generate_fitted_tile(
 
     with Image.open(source_path) as source_image:
         source_size = source_image.size
-        fitted = compose_fitted_tile_image(source_image, target_ratio=target_ratio, long_side=long_side)
+        tile = prepare_board_tile_image(source_image, source_path.name)
+        fitted = compose_fitted_tile_image(tile, target_ratio=target_ratio, long_side=long_side)
         output_size = fitted.size
 
     tmp_output = output_path.with_suffix(output_path.suffix + ".tmp")
@@ -278,17 +286,57 @@ def generate_fitted_tile(
 
 
 def _resolve_board_image_source(ref: str) -> Path:
+    # 1. Handle special direct output path
+    if ref == "../../output/homepage_for_picsart.png":
+        return HOMEPAGE_IMAGE_PATH
+
+    # 2. Extract base name if it is already a fitted path
     if ref.startswith("board_tiles_fitted/"):
         fitted_name = Path(ref).name
         if fitted_name.startswith("homepage_for_picsart__fit"):
             return HOMEPAGE_IMAGE_PATH
-        source_name = re.sub(r"__fit(?:_[^.]*)?\.png$", "__tile.png", fitted_name)
-        return BOARD_TILE_DIR / source_name
-    if ref.startswith("board_tiles/"):
-        return (BOARD_DIR / ref).resolve()
-    if ref == "../../output/homepage_for_picsart.png":
-        return HOMEPAGE_IMAGE_PATH
-    return (BOARD_DIR / ref).resolve()
+
+        # Remove the fit suffix to get the raw name
+        base_name = re.sub(r"__fit(?:_[^.]*)?\.png$", ".png", fitted_name)
+        
+        # Candidate A: tech_diagrams (e.g. board01_technical_highlights.png)
+        candidate_tech = BOARD_DIR / "tech_diagrams" / base_name
+        if candidate_tech.exists():
+            return candidate_tech
+
+        # Candidate B: project_shots (e.g. app_home.png)
+        candidate_shot = BOARD_DIR / "project_shots" / base_name
+        if candidate_shot.exists():
+            return candidate_shot
+
+        # Candidate C: static root (e.g. technology_parameters_knowledge_graph.png)
+        candidate_static = ROOT / "static" / base_name
+        if candidate_static.exists():
+            return candidate_static
+
+        # Candidate D: board_tiles with __tile.png (for standard atlas crops)
+        tile_name = re.sub(r"__fit(?:_[^.]*)?\.png$", "__tile.png", fitted_name)
+        candidate_tile = BOARD_TILE_DIR / tile_name
+        if candidate_tile.exists():
+            return candidate_tile
+
+        # Candidate E: atlas_crops with __crop.png
+        crop_name = re.sub(r"__fit(?:_[^.]*)?\.png$", "__crop.png", fitted_name)
+        candidate_crop = ATLAS_CROP_DIR / crop_name
+        if candidate_crop.exists():
+            return candidate_crop
+
+    # 3. Handle relative refs
+    resolved = (BOARD_DIR / ref).resolve()
+    if not resolved.exists():
+        ref_name = Path(ref).name
+        base_name = re.sub(r"__tile\.png$", ".png", ref_name)
+        base_name = re.sub(r"__crop\.png$", ".png", base_name)
+        for parent in [BOARD_DIR / "tech_diagrams", BOARD_DIR / "project_shots", ROOT / "static"]:
+            alt_path = parent / base_name
+            if alt_path.exists():
+                return alt_path
+    return resolved
 
 
 def collect_board_fitted_tile_requests(

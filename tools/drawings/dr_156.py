@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# tools/drawings/dr_084.py
+# tools/drawings/dr_156.py
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
@@ -52,6 +52,9 @@ def wrap_text_by_pixels(text, font, max_width, draw):
         if current_line:
             lines.append(current_line)
     return lines
+
+
+
 def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     print("Drawing DR-084 custom vector map...")
     # Create canvas 2240x1584
@@ -62,13 +65,13 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     font_path = 'C:/Windows/Fonts/msyh.ttc'
     font_bold_path = 'C:/Windows/Fonts/msyhbd.ttc'
     try:
-        font_large_title = ImageFont.truetype(font_bold_path, 36)
-        font_card_title = ImageFont.truetype(font_bold_path, 20)
-        font_box_header = ImageFont.truetype(font_bold_path, 18)
-        font_box_sub = ImageFont.truetype(font_bold_path, 13)
-        font_body = ImageFont.truetype(font_path, 14)
-        font_body_bold = ImageFont.truetype(font_bold_path, 14)
-        font_desc = ImageFont.truetype(font_path, 15)
+        font_large_title = ImageFont.truetype(font_bold_path, 40)
+        font_card_title = ImageFont.truetype(font_bold_path, 28)
+        font_box_header = ImageFont.truetype(font_bold_path, 22)
+        font_box_sub = ImageFont.truetype(font_bold_path, 16)
+        font_body = ImageFont.truetype(font_path, 18)
+        font_body_bold = ImageFont.truetype(font_bold_path, 18)
+        font_desc = ImageFont.truetype(font_path, 18)
     except IOError:
         font_large_title = ImageFont.load_default()
         font_card_title = ImageFont.load_default()
@@ -133,7 +136,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         y_text = y_center - 10
         for line in wrapped:
             draw.text((85, y_text), line, fill=(71, 85, 105), font=font_body)
-            y_text += 24
+            y_text += 32
 
     # Draw Middle Boxes
     m_boxes = [
@@ -150,7 +153,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         y_text = y_center - 20
         for line in wrapped:
             draw.text((645, y_text), line, fill=(71, 85, 105), font=font_body)
-            y_text += 24
+            y_text += 32
 
     # Draw Right Box
     draw.rectangle([1194, 734, 1494, 984], fill=(241, 245, 249))
@@ -162,7 +165,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     y_text = 820
     for line in wrapped_db:
         draw.text((1205, y_text), line, fill=(71, 85, 105), font=font_body)
-        y_text += 24
+        y_text += 32
 
     # Draw horizontal arrows Left -> Middle
     for y_arr in [480, 830, 1180]:
@@ -206,7 +209,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_desc), wl, fill=(71, 85, 105), font=font_desc)
-            y_desc += 26
+            y_desc += 32
         y_desc += 10
 
     # 4. Right Bottom Card (X: 1608 to 2198, Y: 634 to 1520)
@@ -228,7 +231,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
         for wl in wrapped:
             draw.text((1630, y_spec), wl, fill=(71, 85, 105), font=font_desc)
-            y_spec += 26
+            y_spec += 32
         y_spec += 10
 
     img.save(output_path)

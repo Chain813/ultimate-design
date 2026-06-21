@@ -33,6 +33,19 @@ try:
 except ImportError:
     CHAPTERS = []
 
+# Filter CHAPTERS to only contain existing files
+_filtered = []
+for ch_name, ch_en, sheets in CHAPTERS:
+    _existing = []
+    for fn, title in sheets:
+        if (ATLAS_DIR / fn).exists():
+            _existing.append((fn, title))
+        else:
+            print(f"  [OMIT FROM PPT OUTLINE] {fn}")
+    _filtered.append((ch_name, ch_en, _existing))
+CHAPTERS = _filtered
+
+
 # ── Design tokens ──────────────────────────────────────────────
 SLIDE_W = Mm(420)
 SLIDE_H = Mm(297)
@@ -79,6 +92,17 @@ def _add_textbox(slide, left, top, width, height, text, font_size=14,
     run.font.bold = bold
     run.font.color.rgb = color
     run.font.name = font_name
+    
+    # Enable East Asian / Complex Script fonts in XML for PowerPoint rendering
+    from pptx.oxml.ns import qn
+    from lxml import etree
+    rPr = run._r.get_or_add_rPr()
+    for tag in ['latin', 'ea', 'cs']:
+        el = rPr.find(qn(f'a:{tag}'))
+        if el is None:
+            el = etree.SubElement(rPr, qn(f'a:{tag}'))
+        el.set('typeface', font_name)
+        
     return txBox
 
 
@@ -183,20 +207,35 @@ def add_chapter_nav_slide(prs, blank_layout, active_chapter_idx):
                  f"本章共 {len(sheets)} 张图纸:",
                  font_size=13, bold=False, color=DARK_TEXT)
 
-    # List sheets (two columns if > 12)
-    col_width = Mm(120)
-    items_per_col = max(12, (len(sheets) + 1) // 2)
+    # Dynamically scale font size and column widths for chapters with many sheets
+    if len(sheets) > 30:
+        col_cap = 23
+        font_size = 8
+        dy = 9
+        col_w = 62
+    elif len(sheets) > 15:
+        col_cap = 15
+        font_size = 10
+        dy = 13
+        col_w = 85
+    else:
+        col_cap = 13
+        font_size = 12
+        dy = 16
+        col_w = 125
+
+    col_width = Mm(col_w)
     y_base = Mm(74)
 
     for si, (fn, title) in enumerate(sheets):
-        col = si // items_per_col
-        row = si % items_per_col
+        col = si // col_cap
+        row = si % col_cap
         x_pos = Mm(148) + col * col_width
-        y_pos = y_base + row * Mm(16)
+        y_pos = y_base + row * Mm(dy)
 
         label = f"{si+1:02d}.  {title}"
-        _add_textbox(slide, x_pos, y_pos, col_width, Mm(14),
-                     label, font_size=12, bold=False, color=DARK_TEXT)
+        _add_textbox(slide, x_pos, y_pos, col_width, Mm(dy - 2),
+                     label, font_size=font_size, bold=False, color=DARK_TEXT)
 
     print(f"  + Chapter nav slide: {ch_name}")
     return slide

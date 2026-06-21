@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" style="background-color: #F8FAFC; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  <!-- Definitions for Gradients, Shadows and Markers -->
+  <defs>
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.08" />
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="grad-issue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F1F5F9" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <linearGradient id="grad-resident" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="100%" stop-color="#FDE68A" />
+    </linearGradient>
+    <linearGradient id="grad-operator" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DCFCE7" />
+      <stop offset="100%" stop-color="#BBF7D0" />
+    </linearGradient>
+    <linearGradient id="grad-planner" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="100%" stop-color="#BAE6FD" />
+    </linearGradient>
+    <linearGradient id="grad-rag" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3E8FF" />
+      <stop offset="100%" stop-color="#E9D5FF" />
+    </linearGradient>
+    <linearGradient id="grad-consensus" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE4E6" />
+      <stop offset="100%" stop-color="#FECDD3" />
+    </linearGradient>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B" />
+    </marker>
+    <marker id="arrow-loop" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10B981" />
+    </marker>
+  </defs>
+
+  <!-- Title Section -->
+  <g transform="translate(40, 50)">
+    <text x="0" y="0" font-size="22" font-weight="800" fill="#0F172A">多主体决策博弈推演与 RAG 合规合议流程图</text>
+    <text x="0" y="24" font-size="14" fill="#64748B">模拟城市微更新三角色循环协商，并融合 RAG 政策合规审计，收敛输出社会学规划共识</text>
+    <line x1="0" y1="36" x2="920" y2="36" stroke="#E2E8F0" stroke-width="2" />
+  </g>
+
+  <!-- ==================== TOP: ISSUES ==================== -->
+  <g transform="translate(390, 110)" filter="url(#shadow)">
+    <rect x="0" y="0" width="220" height="60" rx="8" fill="url(#grad-issue)" stroke="#94A3B8" stroke-width="1.5" />
+    <text x="110" y="26" font-size="13" font-weight="800" fill="#334155" text-anchor="middle">更新策划议题</text>
+    <text x="110" y="44" font-size="11" fill="#475569" text-anchor="middle">例如：食品调料大市场活化与改造</text>
+  </g>
+
+  <!-- ==================== CENTRAL TRIANGLE LOOP ==================== -->
+  <!-- 1. Resident Node (Top Left) -->
+  <g transform="translate(180, 220)" filter="url(#shadow)">
+    <rect x="0" y="0" width="220" height="90" rx="8" fill="url(#grad-resident)" stroke="#F59E0B" stroke-width="1.5" />
+    <text x="15" y="28" font-size="14" font-weight="800" fill="#92400E">🏠 居民代表（老王）</text>
+    <text x="15" y="50" font-size="11" font-weight="700" fill="#B45309">诉求：生活品质与公益摊位</text>
+    <text x="15" y="68" font-size="10" fill="#D97706">底线：保留40%低租摊位/配建健康驿站</text>
+  </g>
+
+  <!-- 2. Operator Node (Top Right) -->
+  <g transform="translate(600, 220)" filter="url(#shadow)">
+    <rect x="0" y="0" width="220" height="90" rx="8" fill="url(#grad-operator)" stroke="#10B981" stroke-width="1.5" />
+    <text x="15" y="28" font-size="14" font-weight="800" fill="#166534">💰 文旅运营商（赵总）</text>
+    <text x="15" y="50" font-size="11" font-weight="700" fill="#15803D">诉求：商业投资回报与经营弹性</text>
+    <text x="15" y="68" font-size="10" fill="#047857">策略：轻资产运营/容积率弹性转移</text>
+  </g>
+
+  <!-- 3. Planner Node (Bottom Central) -->
+  <g transform="translate(390, 380)" filter="url(#shadow)">
+    <rect x="0" y="0" width="220" height="90" rx="8" fill="url(#grad-planner)" stroke="#38BDF8" stroke-width="1.5" />
+    <text x="15" y="28" font-size="14" font-weight="800" fill="#0369A1">📐 规划设计协调人（李工）</text>
+    <text x="15" y="50" font-size="11" font-weight="700" fill="#0284C7">角色：三约联动与刚性底线对齐</text>
+    <text x="15" y="68" font-size="10" fill="#0369A1">工具：法定图则限制/开发时序并轨</text>
+  </g>
+
+  <!-- ==================== RAG ENGINE (Right Side) ==================== -->
+  <g transform="translate(600, 380)" filter="url(#shadow)">
+    <rect x="0" y="0" width="220" height="90" rx="8" fill="url(#grad-rag)" stroke="#A855F7" stroke-width="1.5" />
+    <text x="15" y="28" font-size="14" font-weight="800" fill="#6B21A8">🧠 RAG 政策法规库</text>
+    <text x="15" y="50" font-size="11" font-weight="700" fill="#7E22CE">审计：合规性实时过滤与监督</text>
+    <text x="15" y="68" font-size="10" fill="#7E22CE">条款：历史风貌限高/海绵城市标准</text>
+  </g>
+
+  <!-- ==================== BOTTOM: CONSENSUS OUTPUT ==================== -->
+  <g transform="translate(180, 380)" filter="url(#shadow)">
+    <rect x="0" y="0" width="180" height="90" rx="8" fill="url(#grad-consensus)" stroke="#F43F5E" stroke-width="1.5" />
+    <text x="15" y="28" font-size="14" font-weight="800" fill="#BE123C">🤝 三方共识成果</text>
+    <text x="15" y="50" font-size="11" font-weight="700" fill="#E11D48">输出：满意度雷达图</text>
+    <text x="15" y="68" font-size="10" fill="#9F1239">落地：设计策略与控规矩阵</text>
+  </g>
+
+  <!-- ==================== PATHS, FLOWS, AND ARROWS ==================== -->
+  <g fill="none" stroke-linecap="round">
+    <!-- Issue -> Triangle Loop -->
+    <path d="M 390,140 C 290,140 290,200 290,220" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+    <path d="M 610,140 C 710,140 710,200 710,220" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Three-Party Negotiation Loop (Clockwise arrows) -->
+    <!-- Resident -> Operator -->
+    <path d="M 400,240 L 600,240" stroke="#F59E0B" stroke-width="2.5" marker-end="url(#arrow)" />
+    <!-- Loop Label -->
+    <rect x="450" y="215" width="100" height="18" rx="4" fill="#FEF3C7" stroke="#FDE68A" stroke-width="0.5" />
+    <text x="500" y="228" font-size="10" font-weight="700" fill="#92400E" text-anchor="middle">Round 1: 方案陈述</text>
+
+    <!-- Operator -> Planner -->
+    <path d="M 710,310 C 710,350 630,390 610,390" stroke="#10B981" stroke-width="2.5" marker-end="url(#arrow)" />
+    <!-- Loop Label -->
+    <rect x="650" y="325" width="100" height="18" rx="4" fill="#DCFCE7" stroke="#BBF7D0" stroke-width="0.5" />
+    <text x="700" y="338" font-size="10" font-weight="700" fill="#166534" text-anchor="middle">Round 2: 利益交锋</text>
+
+    <!-- Planner -> Resident -->
+    <path d="M 390,440 C 290,440 290,340 290,310" stroke="#38BDF8" stroke-width="2.5" marker-end="url(#arrow)" />
+    <!-- Loop Label -->
+    <rect x="250" y="355" width="100" height="18" rx="4" fill="#E0F2FE" stroke="#BAE6FD" stroke-width="0.5" />
+    <text x="300" y="368" font-size="10" font-weight="700" fill="#0369A1" text-anchor="middle">Round 3: 妥协共识</text>
+
+    <!-- Planner <=> RAG Checks -->
+    <path d="M 600,410 L 610,410" stroke="#A855F7" stroke-width="2.5" stroke-dasharray="3,3" />
+    <path d="M 610,425 L 600,425" stroke="#A855F7" stroke-width="2.5" stroke-dasharray="3,3" />
+    <text x="605" y="402" font-size="9" font-weight="700" fill="#7E22CE" text-anchor="middle">合规审计与拦截</text>
+
+    <!-- Planner -> Consensus Output -->
+    <path d="M 390,425 L 360,425" stroke="#F43F5E" stroke-width="2.5" marker-end="url(#arrow-loop)" />
+  </g>
+</svg>

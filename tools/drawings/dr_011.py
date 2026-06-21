@@ -15,6 +15,7 @@ STATIC_DIR = ROOT / "static"
 GIS_DIR = ROOT / "data/gis"
 ASSETS_DIR = ROOT / "assets"
 
+# Bypasses the default A3 title frame
 NO_FRAME = True
 
 def wrap_text(text, max_len=44):
@@ -81,15 +82,15 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(header_shadow)
     ax.add_patch(header_bg)
     
-    # Gold top accent bar on the header card
-    accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#D97706', edgecolor='none', zorder=3)
+    # Teal top accent bar on the header card
+    accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#0D9488', edgecolor='none', zorder=3)
     ax.add_patch(accent_bar)
     
-    ax.text(3.5, 93.6, "人群需求与老龄化分布图", 
+    ax.text(3.5, 93.6, "用地现状分析图", 
             color='#0F172A', ha='left', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=26), zorder=4)
     
-    ax.text(3.5, 90.7, "测算老旧住宅分布以解析高老龄化人口集聚区，叠合500m公共服务设施覆盖分析以识别适老服务缺口。", 
+    ax.text(3.5, 90.7, "展示研究区域现状多类别城市土地利用的空间分布，剖析功能构成特征及用地配比结构关系。", 
             color='#334155', ha='left', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=15.0), zorder=4)
 
@@ -106,66 +107,27 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax_map.set_axis_off()
     ax_map.set_aspect("equal")
 
-    # 3b. Plot GIS Base Layers on sub-axes (drawn light to highlight aging overlay and green circles)
+    # 3b. Plot GIS Layers on sub-axes
+    if landuse is not None and not landuse.empty:
+        for color_hex, sub_df in landuse.groupby('Color'):
+            sub_df.plot(ax=ax_map, facecolor=color_hex, edgecolor="#CBD5E1", linewidth=0.25, zorder=1)
+            
+    if buildings is not None and not buildings.empty:
+        buildings.plot(ax=ax_map, facecolor="none", edgecolor="#475569", linewidth=0.15, alpha=0.3, zorder=2)
+        
     if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#E2F0FD", edgecolor="none", zorder=1)
+        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=2.5)
         
     if roads is not None and not roads.empty:
-        roads.plot(ax=ax_map, color="#CBD5E1", linewidth=0.6, alpha=0.8, zorder=1.5)
+        roads.plot(ax=ax_map, color="#E2E8F0", linewidth=0.8, alpha=0.8, zorder=3)
         
     if rails is not None and not rails.empty:
-        rails.plot(ax=ax_map, color="#94A3B8", linewidth=1.0, linestyle=(0, (5, 5)), zorder=1.2)
-
-    # 3c. Color buildings by floor proxy representing aging population density
-    # Low-rise (floor <= 3): High Aging Density -> Vibrant Coral Red (#EF4444)
-    # Mid-rise (floor 4-7): Medium Aging Density -> Vibrant Yellow (#FBBF24)
-    # High-rise (floor >= 8): Low Aging Density -> Vibrant Blue (#60A5FA)
-    if buildings is not None and not buildings.empty:
-        bc = buildings.copy()
-        bc["Floor_num"] = pd.to_numeric(bc["Floor"], errors="coerce").fillna(3)
+        rails.plot(ax=ax_map, color="#64748B", linewidth=1.0, linestyle=(0, (5, 5)), zorder=4)
         
-        conds = [
-            (bc["Floor_num"] <= 3),
-            (bc["Floor_num"] <= 7),
-            (bc["Floor_num"] > 7)
-        ]
-        colors = [
-            "#EF4444", # High contrast Coral Red (high age)
-            "#FBBF24", # High contrast Yellow (medium)
-            "#60A5FA"  # High contrast Light Blue (low)
-        ]
-        bc["age_color"] = np.select(conds, colors, default="#E2E8F0")
-        bc.plot(ax=ax_map, color=bc["age_color"], edgecolor="#64748B", linewidth=0.18, alpha=0.9, zorder=1.8)
-    
     if boundary is not None and not boundary.empty:
-        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=5)
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=4)
 
-    # 3d. 500m Service Radius Circles for key community service gaps (High contrast Green)
-    # Map elements are changed to green to perfectly match the legend and stand out
-    service_pts = [
-        (125.3340, 43.9060, "适老服务缺口·日间照料"),
-        (125.3450, 43.9020, "社区食堂服务盲区"),
-        (125.3380, 43.9000, "幼托设施覆盖缺口"),
-    ]
-    for lon, lat, label in service_pts:
-        px, py = get_xy(lon, lat)
-        buf = Point(px, py).buffer(500)
-        
-        # High visibility vibrant green facecolor, bold green dashed outline, with hatching overlay
-        gpd.GeoDataFrame(geometry=[buf], crs="EPSG:3857").plot(
-            ax=ax_map, facecolor="#4ADE80", edgecolor="#16A34A", linewidth=2.2, linestyle="--", alpha=0.40, hatch="///", zorder=2.0)
-        
-        # White background glow to contrast the marker on colored building areas
-        ax_map.plot(px, py, marker='s', markersize=15.0, color='#FFFFFF', alpha=0.9, zorder=4.8)
-        # Bold green square marker at the center
-        ax_map.plot(px, py, marker='s', markersize=9.5, color='#15803D', markeredgecolor='#FFFFFF', markeredgewidth=1.2, zorder=5.0)
-        
-        # High contrast dark-green text label with thicker white stroke outline
-        txt = ax_map.text(px, py + 70, label, color='#064E3B', ha='center', va='bottom',
-                          fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=11.5), zorder=5.5)
-        txt.set_path_effects([path_effects.withStroke(linewidth=3.5, foreground='#FFFFFF')])
-
-    # Plot general landmarks for consistent location context
+    # Plot key landmarks on spatial map (High contrast dark text with white outline)
     labels = [
         ("伪满皇宫博物院", 125.3422, 43.9036),
         ("光复路", 125.3475, 43.9017),
@@ -175,17 +137,18 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ]
     for name, lon, lat in labels:
         x_pt, y_pt = get_xy(lon, lat)
-        ax_map.text(x_pt, y_pt, name, color='#475569', ha='center', va='bottom',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=9.5),
-                    path_effects=[path_effects.withStroke(linewidth=2.5, foreground='#FFFFFF')], zorder=5.8)
+        ax_map.text(x_pt, y_pt, name, color='#0F172A', ha='center', va='center',
+                    fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=11),
+                    path_effects=[path_effects.withStroke(linewidth=3, foreground='#FFFFFF')], zorder=5)
 
-    # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
+    # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop (Shifted slightly down)
     rose_path = ASSETS_DIR / "长春市风玫瑰.png"
     if rose_path.exists():
         try:
             ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
             ax_rose.set_axis_off()
             
+            # Generate a beautiful soft white radial gradient background
             y_g, x_g = np.ogrid[-1:1:100j, -1:1:100j]
             r = np.sqrt(x_g**2 + y_g**2)
             alpha = np.clip(1.0 - r, 0, 1) * 0.50
@@ -193,6 +156,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             grad_img[..., 3] = alpha
             ax_rose.imshow(grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
             
+            # Convert wind rose to pure black in memory
             rose_img = Image.open(rose_path).convert("RGBA")
             rose_data = np.array(rose_img)
             rose_data[..., 0] = 0
@@ -204,7 +168,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         except Exception as e:
             print(f"Error loading wind rose: {e}")
 
-    # 4. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0)
+    # 4. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0) — Compressed layout
     legend_shadow = mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     legend_bg = mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(legend_shadow)
@@ -214,37 +178,36 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text(103.5, 83.8, "图例 / LEGEND", color='#D97706', ha='left', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=13.5), zorder=4)
     
-    # 6 Legend Items in a 2 columns x 3 rows grid
-    # Column 0: X_sym = 102.2, X_txt = 106.2
-    # Column 1: X_sym = 120.7, X_txt = 124.7
-    # Rows: 80.5, 76.5, 72.5
+    # 12 Legend Items arranged in a compact 3 columns x 4 rows grid
+    # Column 0: X_sym = 102.2, X_txt = 105.7
+    # Column 1: X_sym = 114.7, X_txt = 118.2
+    # Column 2: X_sym = 127.2, X_txt = 130.7
+    # Row Y: 81.2, 78.2, 75.2, 72.2
     legend_items_data = [
         # Row 0
-        ("规划研究范围", '#FF3B30', 'outline_boundary', 102.2, 106.2, 80.5),
-        ("新建高层 (≥8层)", '#60A5FA', 'rect_fill', 120.7, 124.7, 80.5),
+        ("研究范围", '#FF3B30', 'outline', 102.2, 105.7, 81.2),
+        ("居住用地 (R)", '#FFFF00', 'fill', 114.7, 118.2, 81.2),
+        ("商业办公 (B)", '#E60000', 'fill', 127.2, 130.7, 81.2),
         # Row 1
-        ("老旧住宅 (≤3层)", '#EF4444', 'rect_fill', 102.2, 106.2, 76.5),
-        ("适老服务缺口圈", '#16A34A', 'green_buffer', 120.7, 124.7, 76.5),
+        ("商业服务 (B)", '#FF7F00', 'fill', 102.2, 105.7, 78.2),
+        ("工业用地 (M)", '#AA7855', 'fill', 114.7, 118.2, 78.2),
+        ("交通场站 (S)", '#9C9C9C', 'fill', 127.2, 130.7, 78.2),
         # Row 2
-        ("中层住宅 (4-7层)", '#FBBF24', 'rect_fill', 102.2, 106.2, 72.5),
-        ("服务缺口设施点", '#15803D', 'green_square', 120.7, 124.7, 72.5)
+        ("机场设施 (S)", '#686868', 'fill', 102.2, 105.7, 75.2),
+        ("行政办公 (A)", '#FF7F7F', 'fill', 114.7, 118.2, 75.2),
+        ("教育科研 (A)", '#FF7FFF', 'fill', 127.2, 130.7, 75.2),
+        # Row 3
+        ("医疗卫生 (A)", '#FF7FBF', 'fill', 102.2, 105.7, 72.2),
+        ("体育文化 (A)", '#7FFFFF', 'fill', 114.7, 118.2, 72.2),
+        ("公园绿地 (G)", '#38A800', 'fill', 127.2, 130.7, 72.2)
     ]
     
     for label, color_code, style, x_sym, x_txt, y_val in legend_items_data:
-        if style == 'outline_boundary':
-            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor='none', edgecolor=color_code, linewidth=1.8, zorder=4)
-            ax.add_patch(rect)
-        elif style == 'rect_fill':
-            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor=color_code, edgecolor='none', zorder=4)
-            ax.add_patch(rect)
-        elif style == 'green_buffer':
-            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor='#4ADE80', edgecolor=color_code, linewidth=1.5, linestyle='--', alpha=0.6, hatch='///', zorder=4)
-            ax.add_patch(rect)
-        elif style == 'green_square':
-            # Background white glow
-            ax.plot(x_sym + 1.5, y_val, marker='s', markersize=9.0, color='#FFFFFF', alpha=0.9, zorder=4)
-            ax.plot(x_sym + 1.5, y_val, marker='s', markersize=6.0, color=color_code, markeredgecolor='#FFFFFF', markeredgewidth=0.5, zorder=5)
-            
+        if style == 'outline':
+            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.8, facecolor='none', edgecolor=color_code, linewidth=1.8, zorder=4)
+        else:
+            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.8, facecolor=color_code, edgecolor='#CBD5E1', linewidth=0.5, zorder=4)
+        ax.add_patch(rect)
         ax.text(x_txt, y_val, label, color='#334155', ha='left', va='center',
                 fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5), zorder=4)
 
@@ -258,7 +221,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.plot([x_start + scale_len/2, x_start + scale_len/2], [68.4, 70.0], color='#0F172A', linewidth=1.5, zorder=4)
     ax.plot([x_end, x_end], [68.4, 70.0], color='#0F172A', linewidth=1.5, zorder=4)
     
-    # Scale text labels (size 10.0)
+    # Scale text labels (size 10.5)
     ax.text(x_start, 71.0, "0", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
     ax.text(x_start + scale_len/2, 71.0, "250m", color='#334155', ha='center', va='center',
@@ -271,7 +234,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text((x_start + x_end)/2, 67.8, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 
-    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0)
+    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0) — Extended vertically!
     desc_shadow = mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     desc_bg = mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(desc_shadow)
@@ -281,11 +244,11 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text(103.5, 61.0, "数据来源与诊断说明 / DATA SOURCES", color='#D97706', ha='left', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=13.5), zorder=4)
     
-    # 3 Bullet description items wrapped at 44 visual-width units, font size 15.0
+    # 3 Bullet description items wrapped at 44 visual-width units, font size 15.0 (matching DR-003/007 body text exactly)
     desc_data = [
-        ("1. 测算方法：以建筑层数作为老龄化分布的代理指标（≤3层为高老龄化住宅）。重合分析显示，低层老旧住宅与高老龄化人口高度重合。", 55.0),
-        ("2. 诊断依据：依据国标GB50180-2018生活圈规范，对日间照料、社区食堂等设施建立500米缓冲区。分析揭示多处服务盲区。", 39.0),
-        ("3. 绿化关联：叠合景观品质测算，78.3%的采样点绿视率低于15%宜居阈值。老龄化集聚区与绿色空间匮乏重叠，限制了日常社交。", 23.0)
+        ("1. 用地构成：现状以居住（R）和商业服务（B）用地为主，集中于亚泰大街两侧，工业与仓储用地占比较低，多属中车工业遗存及待更新厂房设施。", 55.0),
+        ("2. 功能分布：商业商务功能呈轴向分布，西部及南部以老旧居住街区为主，整体用地结构较为割裂，缺乏大尺度开敞公共绿地和社区公园。", 39.0),
+        ("3. 结构特征：公共管理与公共服务（A）及绿地（G）配置零散，现状建设用地开发强度高、但混合度较低，未能形成完善的15分钟社区服务圈。", 23.0)
     ]
     for text, y_pos in desc_data:
         wrapped_desc = wrap_text(text, max_len=44)
@@ -297,14 +260,21 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
-    ("老旧低层住宅 (≤3层·高老龄化)", "rect_height_red"),
-    ("中层建筑 (4-7层)", "rect_height_yellow"),
-    ("新建高层 (≥8层)", "rect_height_blue"),
-    ("500m适老服务缺口圈", "rect_green_buffer"),
+    ("居住用地 (R)", "rect_euluc_0"),
+    ("商业办公 (B)", "rect_euluc_1"),
+    ("商业服务业 (B)", "rect_euluc_2"),
+    ("工业用地 (M)", "rect_euluc_3"),
+    ("交通场站 (S)", "rect_euluc_4"),
+    ("机场设施 (S)", "rect_euluc_5"),
+    ("行政办公 (A)", "rect_euluc_6"),
+    ("教育科研 (A)", "rect_euluc_7"),
+    ("医疗卫生 (A)", "rect_euluc_8"),
+    ("体育文化 (A)", "rect_euluc_9"),
+    ("公园与绿地 (G)", "rect_euluc_10")
 ]
 
 description_lines = [
-    "1. 测算方法：以建筑层数作为老龄化分布的代理指标（≤3层为高老龄化住宅）。重合分析显示，低层老旧住宅与高老龄化人口高度重合。",
-    "2. 诊断依据：依据国标GB50180-2018生活圈规范，对日间照料、社区食堂等设施建立500米缓冲区。分析揭示多处服务盲区。",
-    "3. 绿化关联：叠合景观品质测算，78.3%的采样点绿视率低于15%宜居阈值。老龄化集聚区与绿色空间匮乏重叠，限制了日常社交。"
+    "1. 用地构成：现状以居住（R）和商业服务（B）用地为主，集中于亚泰大街两侧，工业与仓储用地占比较低，多属中车工业遗存及待更新厂房设施。",
+    "2. 功能分布：商业商务功能呈轴向分布，西部及南部以老旧居住街区为主，整体用地结构较为割裂，缺乏大尺度开敞公共绿地和社区公园。",
+    "3. 结构特征：公共管理与公共服务（A）及绿地（G）配置零散，现状建设用地开发强度高、但混合度较低，未能形成完善的15分钟社区服务圈。"
 ]

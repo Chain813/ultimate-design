@@ -1,54 +1,47 @@
 # -*- coding: utf-8 -*-
-"""DR-059: 综合现状问题诊断图 — 四大问题汇总诊断与问题热点标注"""
+# tools/drawings/dr_059.py
+from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
-import geopandas as gpd
-from PIL import Image
-
-ROOT = Path(__file__).resolve().parent.parent.parent
-STATIC_DIR = ROOT / "static"
-GIS_DIR = ROOT / "data/gis"
-ASSETS_DIR = ROOT / "assets"
 
 NO_FRAME = True
 
-def wrap_text(text, max_len=44):
+def wrap_text_by_pixels(text, font, max_width, draw):
     forbidden_start = set("，。、；：？！）】』」》〉〕”’）,.?!;:)】")
     forbidden_end = set("（【『「《〈〔“‘（([【")
     
-    def char_width(c):
-        return 2 if ord(c) > 127 else 1
+    def get_width(t):
+        try:
+            return draw.textlength(t, font=font)
+        except AttributeError:
+            try:
+                left, top, right, bottom = font.getbbox(t)
+                return right - left
+            except AttributeError:
+                return font.getsize(t)[0]
 
     lines = []
-    for part in text.split('\n'):
-        if not part:
+    for block in text.split('\n'):
+        if not block:
             lines.append("")
             continue
         current_line = ""
-        current_w = 0
         i = 0
-        while i < len(part):
-            char = part[i]
-            w = char_width(char)
-            if current_w + w <= 44:
-                current_line += char
-                current_w += w
+        while i < len(block):
+            char = block[i]
+            test_line = current_line + char
+            if get_width(test_line) <= max_width:
+                current_line = test_line
                 i += 1
             else:
                 if not current_line:
                     current_line = char
-                    current_w = w
                     i += 1
                 else:
-                    if part[i] in forbidden_start:
-                        current_line += part[i]
+                    if block[i] in forbidden_start:
+                        current_line += block[i]
                         i += 1
-                        while i < len(part) and part[i] in forbidden_start:
-                            current_line += part[i]
+                        while i < len(block) and block[i] in forbidden_start:
+                            current_line += block[i]
                             i += 1
                     while current_line and current_line[-1] in forbidden_end:
                         i -= 1
@@ -56,190 +49,195 @@ def wrap_text(text, max_len=44):
                 if current_line:
                     lines.append(current_line)
                 current_line = ""
-                current_w = 0
         if current_line:
             lines.append(current_line)
-    return '\n'.join(lines)
-FOUR_ISSUES = [
-    {
-        "id": "01",
-        "title": "功能混杂与低效用地",
-        "color": "#EF4444",
-        "icon": "▮",
-        "desc": "研究区现状以低效批发仓储、零散工业为主，用地混合度高但产出能级低，与城市核心区位价值严重错配。",
-        "hotspots": [
-            ("农贸水产市场", 125.3335, 43.9074),
-            ("食品调料大市场", 125.3418, 43.9067),
-        ]
-    },
-    {
-        "id": "02",
-        "title": "交通割裂与可达性不足",
-        "color": "#F59E0B",
-        "icon": "▬",
-        "desc": "京哈铁路与亚泰快速路形成双重物理割裂，内部路网整合度低，步行系统断点多达12处。",
-        "hotspots": [
-            ("铁路割裂带", 125.3380, 43.9080),
-            ("亚泰快速路屏障", 125.3505, 43.8985),
-        ]
-    },
-    {
-        "id": "03",
-        "title": "社区老化与配套缺失",
-        "color": "#8B5CF6",
-        "icon": "●",
-        "desc": "片区老龄化率超30%，适老化设施500米服务半径覆盖不足，社区级绿地与公共空间严重匮乏。",
-        "hotspots": [
-            ("市一中北侧老旧社区", 125.3335, 43.9042),
-            ("清禾集贸市场周边", 125.3470, 43.8999),
-        ]
-    },
-    {
-        "id": "04",
-        "title": "环境品质与风貌失序",
-        "color": "#0EA5E9",
-        "icon": "◆",
-        "desc": "全域平均绿视率仅8.7%，78.3%采样点低于15%宜居阈值；历史建筑与杂乱搭建混杂，风貌管控失位。",
-        "hotspots": [
-            ("中国石油周边硬质化", 125.3365, 43.8981),
-            ("长春大街沿线", 125.3406, 43.8925),
-        ]
-    }
-]
+    return lines
 
 
-def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, *args, **kwargs):
-    fig = ax.get_figure()
 
-    # 1. Setup A3 Main Canvas
-    ax.set_facecolor("#F8FAFC")
-    ax.set_xlim(0, 141.42)
-    ax.set_ylim(0, 100)
+def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
+    print("Drawing DR-081 custom vector map...")
+    # Create canvas 2240x1584
+    img = Image.new("RGB", (2240, 1584), color=(248, 250, 252)) # slate-50
+    draw = ImageDraw.Draw(img)
 
-    # Background grid
-    for x in range(5, 140, 5):
-        ax.plot([x, x], [0, 100], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
-    for y in range(5, 100, 5):
-        ax.plot([0, 141.42], [y, y], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
+    # Fonts
+    font_path = 'C:/Windows/Fonts/msyh.ttc'
+    font_bold_path = 'C:/Windows/Fonts/msyhbd.ttc'
+    try:
+        font_large_title = ImageFont.truetype(font_bold_path, 40)
+        font_card_title = ImageFont.truetype(font_bold_path, 28)
+        font_box_header = ImageFont.truetype(font_bold_path, 22)
+        font_box_sub = ImageFont.truetype(font_bold_path, 16)
+        font_body = ImageFont.truetype(font_path, 18)
+        font_body_bold = ImageFont.truetype(font_bold_path, 18)
+        font_desc = ImageFont.truetype(font_path, 18)
+    except IOError:
+        font_large_title = ImageFont.load_default()
+        font_card_title = ImageFont.load_default()
+        font_box_header = ImageFont.load_default()
+        font_box_sub = ImageFont.load_default()
+        font_body = ImageFont.load_default()
+        font_body_bold = ImageFont.load_default()
+        font_desc = ImageFont.load_default()
 
-    # 2. Header Card
-    header_shadow = mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    header_bg = mpatches.Rectangle((2, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(header_shadow)
-    ax.add_patch(header_bg)
-    accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#DC2626', edgecolor='none', zorder=3)
-    ax.add_patch(accent_bar)
+    # Draw grid
+    grid_spacing = 79.2
+    for x in range(1, int(2240 / grid_spacing)):
+        lx = int(x * grid_spacing)
+        draw.line([(lx, 0), (lx, 1584)], fill=(226, 232, 240), width=1)
+    for y in range(1, int(1584 / grid_spacing)):
+        ly = int(y * grid_spacing)
+        draw.line([(0, ly), (2240, ly)], fill=(226, 232, 240), width=1)
 
-    ax.text(3.5, 93.6, "综合现状问题诊断图",
-            color='#0F172A', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=26), zorder=4)
-    ax.text(3.5, 90.7, "汇总功能混杂、交通割裂、社区老化、环境失序四大核心问题，标注空间热点分布，形成更新策略的直接依据。",
-            color='#334155', ha='left', va='center',
-            fontproperties=fm.FontProperties(family=font_prop['family'], size=15.0), zorder=4)
+    # 1. Header Card (X: 32 to 2198, Y: 60 to 174)
+    draw.rectangle([36, 64, 2202, 178], fill=(226, 232, 240))
+    draw.rectangle([32, 60, 2198, 174], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([32, 60, 2198, 66], fill=(217, 119, 6))
+    
+    draw.text((55, 117), "AIGC 技术推演过程图", fill=(15, 23, 42), font=font_large_title, anchor="lm")
+    draw.text((450, 117), "基于大语言模型协同协商与Stable Diffusion+ControlNet的街区天际线风貌与平面图推演生成工作流。", 
+              fill=(100, 116, 139), font=font_desc, anchor="lm")
 
-    # 3. Map Container
-    map_shadow = mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    map_bg = mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(map_shadow)
-    ax.add_patch(map_bg)
+    # 2. Left giant Map Card (X: 32 to 1584, Y: 206 to 1520)
+    draw.rectangle([36, 210, 1588, 1524], fill=(226, 232, 240))
+    draw.rectangle([32, 206, 1584, 1520], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([32, 206, 1584, 212], fill=(217, 119, 6))
 
-    ax_map = fig.add_axes([3.0 / 141.42, 5.0 / 100.0, 96.0 / 141.42, 81.0 / 100.0], facecolor="#F8FAFC", zorder=3)
-    ax_map.set_xlim(cx - view_w / 2, cx + view_w / 2)
-    ax_map.set_ylim(cy - view_h / 2, cy + view_h / 2)
-    ax_map.set_axis_off()
-    ax_map.set_aspect("equal")
+    draw.text((60, 250), "智能推演工作流管线 / DESIGN PIPELINE WORKFLOW", fill=(217, 119, 6), font=font_card_title)
+    draw.line([(60, 280), (1556, 280)], fill=(226, 232, 240), width=2)
 
-    # 3b. Base Layers
-    if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#E2F0FD", edgecolor="none", zorder=1)
-    if buildings is not None and not buildings.empty:
-        buildings.plot(ax=ax_map, facecolor="#F1F5F9", edgecolor="#CBD5E1", linewidth=0.2, alpha=0.7, zorder=0.8)
-    if roads is not None and not roads.empty:
-        for lvl, lw, color in [(1, 2.2, "#475569"), (2, 1.6, "#64748B"), (3, 1.1, "#94A3B8"), (4, 0.7, "#CBD5E1")]:
-            sub = roads[roads['level'] == lvl]
-            if not sub.empty:
-                sub.plot(ax=ax_map, color=color, linewidth=lw, zorder=2.0)
-    if rails is not None and not rails.empty:
-        rails.plot(ax=ax_map, color="#1E293B", linewidth=1.5, linestyle=(0, (5, 5)), zorder=2.5)
-    if boundary is not None and not boundary.empty:
-        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=5.0)
+    # Draw Flowchart Pipeline Boxes
+    boxes = [
+        {
+            "x0": 80, "x1": 380, "color": (37, 99, 235), # Blue
+            "title": "1. 数据底座", "sub": "多源数据采集与诊断",
+            "items": [
+                "• GIS矢量图层数据导入",
+                "  - 伪满皇宫周边路网",
+                "  - 现状建筑层高与轮廓",
+                "• 百度街景API自动爬取",
+                "  - 图像深度语义分割(GVI)",
+                "• 社交媒体打卡文本爬取",
+                "  - 情感分析情绪痛点定位"
+            ]
+        },
+        {
+            "x0": 450, "x1": 750, "color": (124, 58, 237), # Purple
+            "title": "2. 协同博弈", "sub": "多智能体模拟与协商",
+            "items": [
+                "• 居民智能体 (老王)",
+                "  - 适老设施、生活便利",
+                "• 开发商智能体 (赵总)",
+                "  - 商业活力、投资收益",
+                "• 规划师智能体 (李工)",
+                "  - 天际线高度限制指标",
+                "• LLM多智能体冲突协商"
+            ]
+        },
+        {
+            "x0": 820, "x1": 1120, "color": (5, 150, 105), # Emerald
+            "title": "3. 智能生成", "sub": "AIGC 规划方案推演",
+            "items": [
+                "• ControlNet 空间语义约束",
+                "  - 手绘总规草图输入",
+                "• SD大模型风貌推演",
+                "  - 建筑立面协调性控制",
+                "  - 节点天际线风貌生成",
+                "• 100+意向方案迭代生成",
+                "• 多维视觉方案评选"
+            ]
+        },
+        {
+            "x0": 1190, "x1": 1490, "color": (217, 119, 6), # Amber
+            "title": "4. 指标核验", "sub": "数字孪生刚性指标验算",
+            "items": [
+                "• 方案矢量化导回GIS库",
+                "• 用地性质/绿地率核算",
+                "  - 绿地率35%刚性核验",
+                "• 建筑限高与天际线核算",
+                "  - 伪满皇宫周边视廊审查",
+                "• 自动排版图册与规划导则"
+            ]
+        }
+    ]
 
-    # 3c. Plot Four Issue Hotspots
-    for issue in FOUR_ISSUES:
-        for name, lon, lat in issue["hotspots"]:
-            px, py = get_xy(lon, lat)
-            # Glow effect
-            ax_map.plot(px, py, marker='o', markersize=28.0, color=issue["color"], alpha=0.15, zorder=5.5)
-            ax_map.plot(px, py, marker='o', markersize=18.0, color=issue["color"], alpha=0.25, zorder=5.6)
-            # Core marker
-            ax_map.plot(px, py, marker='o', markersize=12.0, color='#FFFFFF', alpha=0.9, zorder=5.7)
-            ax_map.plot(px, py, marker='s', markersize=7.0, color=issue["color"],
-                        markeredgecolor='#FFFFFF', markeredgewidth=1.0, zorder=6.0)
-            # Label
-            txt = ax_map.text(px, py + 55, name, color=issue["color"], ha='center', va='bottom',
-                              fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=10.0), zorder=6.5)
-            txt.set_path_effects([path_effects.withStroke(linewidth=3.0, foreground='#FFFFFF')])
+    for b in boxes:
+        # shadow
+        draw.rectangle([b["x0"]+4, 354, b["x1"]+4, 1374], fill=(241, 245, 249))
+        # main
+        draw.rectangle([b["x0"], 350, b["x1"], 1370], fill=(255, 255, 255), outline=(226, 232, 240), width=2)
+        # header strip
+        draw.rectangle([b["x0"], 350, b["x1"], 420], fill=b["color"])
+        # title inside header
+        draw.text((b["x0"] + 15, 370), b["title"], fill=(255, 255, 255), font=font_box_header)
+        draw.text((b["x0"] + 15, 395), b["sub"], fill=(230, 242, 255), font=font_box_sub)
 
-    # Windrose
-    rose_path = ASSETS_DIR / "长春市风玫瑰.png"
-    if rose_path.exists():
-        try:
-            ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
-            ax_rose.set_axis_off()
-            y_g, x_g = np.ogrid[-1:1:100j, -1:1:100j]
-            r = np.sqrt(x_g**2 + y_g**2)
-            alpha = np.clip(1.0 - r, 0, 1) * 0.50
-            grad_img = np.ones((100, 100, 4))
-            grad_img[..., 3] = alpha
-            ax_rose.imshow(grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
-            rose_img = Image.open(rose_path).convert("RGBA")
-            rose_data = np.array(rose_img)
-            rose_data[..., 0] = 0
-            rose_data[..., 1] = 0
-            rose_data[..., 2] = 0
-            ax_rose.imshow(Image.fromarray(rose_data), zorder=1)
-        except Exception:
-            pass
+        # list items
+        y_item = 450
+        for item in b["items"]:
+            # Highlight bullet points or bold lines
+            if item.startswith("•"):
+                draw.text((b["x0"] + 15, y_item), item, fill=(15, 23, 42), font=font_body_bold)
+            else:
+                draw.text((b["x0"] + 15, y_item), item, fill=(71, 85, 105), font=font_body)
+            y_item += 38
 
-    # 4. Four Issue Cards (Right side, X: 101.5 to 139.4)
-    card_h = 18.5
-    gap = 1.5
-    y_start = 85.5
+    # Draw connection arrows between boxes
+    arrows = [(380, 450, 750), (750, 820, 750), (1120, 1190, 750)]
+    for x_start, x_end, y_arr in arrows:
+        # Line
+        draw.line([(x_start + 10, y_arr), (x_end - 15, y_arr)], fill=(203, 213, 225), width=3)
+        # Arrowhead
+        draw.polygon([(x_end - 15, y_arr - 6), (x_end - 15, y_arr + 6), (x_end - 5, y_arr)], fill=(203, 213, 225))
 
-    for i, issue in enumerate(FOUR_ISSUES):
-        y_top = y_start - i * (card_h + gap)
-        # Card background
-        card_shadow = mpatches.Rectangle((101.8, y_top - card_h + 0.3), 37.9, card_h, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-        card_bg = mpatches.Rectangle((101.5, y_top - card_h + 0.0), 37.9, card_h, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-        ax.add_patch(card_shadow)
-        ax.add_patch(card_bg)
-        # Left color bar
-        color_bar = mpatches.Rectangle((101.5, y_top - card_h + 0.0), 0.8, card_h, facecolor=issue["color"], edgecolor='none', zorder=3)
-        ax.add_patch(color_bar)
+    # 3. Right Top Card (X: 1608 to 2198, Y: 206 to 602)
+    draw.rectangle([1612, 210, 2202, 606], fill=(226, 232, 240))
+    draw.rectangle([1608, 206, 2198, 602], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([1608, 206, 2198, 212], fill=(217, 119, 6))
 
-        # Issue number badge
-        ax.text(104.0, y_top - 2.0, issue["id"], color='#FFFFFF', ha='center', va='center',
-                fontproperties=fm.FontProperties(family='Arial', weight='bold', size=16), zorder=5,
-                bbox=dict(boxstyle="round,pad=0.3", facecolor=issue["color"], edgecolor='none'))
+    draw.text((1630, 240), "技术板块解析 / SYSTEM ANALYSIS", fill=(217, 119, 6), font=font_card_title)
+    draw.line([(1630, 270), (2176, 270)], fill=(203, 213, 225), width=1)
 
-        # Title
-        ax.text(107.0, y_top - 2.0, issue["title"], color='#0F172A', ha='left', va='center',
-                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=14), zorder=4)
+    desc_lines = [
+        "1. 数据底盘：整合多源城市空间矢量与非结构化社交文本，提供精准的空间病征和痛点坐标定位。",
+        "2. 定量诊断：运行空间句法与街景分割算法，实现步行可达性与街道绿视率的自动化精准度量。",
+        "3. 方案生成：结合Stable Diffusion与ControlNet深度学习模型，输入意向草图自动生成设计效果。"
+    ]
+    
+    y_desc = 295
+    for line in desc_lines:
+        wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
+        for wl in wrapped:
+            draw.text((1630, y_desc), wl, fill=(71, 85, 105), font=font_desc)
+            y_desc += 32
+        y_desc += 10
 
-        # Description
-        wrapped = wrap_text(issue["desc"], max_len=42)
-        y_desc = y_top - 5.5
-        for line in wrapped.split('\n'):
-            ax.text(104.0, y_desc, line, color='#475569', ha='left', va='center',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], size=12.0), zorder=4)
-            y_desc -= 2.8
+    # 4. Right Bottom Card (X: 1608 to 2198, Y: 634 to 1520)
+    draw.rectangle([1612, 638, 2202, 1524], fill=(226, 232, 240))
+    draw.rectangle([1608, 634, 2198, 1520], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([1608, 634, 2198, 640], fill=(217, 119, 6))
 
-        # Hotspot labels
-        for name, lon, lat in issue["hotspots"]:
-            ax.text(104.0, y_desc, f"📍 {name}", color=issue["color"], ha='left', va='center',
-                    fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5), zorder=4)
-            y_desc -= 2.5
+    draw.text((1630, 668), "规划指标说明 / SPECIFICATIONS", fill=(217, 119, 6), font=font_card_title)
+    draw.line([(1630, 698), (2176, 698)], fill=(203, 213, 225), width=1)
 
+    spec_lines = [
+        "1. 技术框架：融合GIS底盘、Space Syntax可达性分析、以及MPI综合品质诊断，对170公顷历史风貌区进行全域数字孪生本底诊断建模。",
+        "2. AIGC推演：以规划手绘草图或意向图作为ControlNet约束输入，通过SD大模型自动推演建筑立面风貌、开放空间效果，生成100+意向方案。",
+        "3. 协同优化：构建包含“政府-居民-开发商-规划师”的LLM多智能体（Multi-Agent）协同博弈机制，对设计方案指标进行多目标评估与优化闭环。"
+    ]
+    
+    y_spec = 720
+    for line in spec_lines:
+        wrapped = wrap_text_by_pixels(line, font_desc, 510, draw)
+        for wl in wrapped:
+            draw.text((1630, y_spec), wl, fill=(71, 85, 105), font=font_desc)
+            y_spec += 32
+        y_spec += 10
 
-legend_items = []
-description_lines = []
+    img.save(output_path)
+    print(f"Directly generated vector flow image and saved to {output_path}")
+    return view_w
+
+def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
+    pass

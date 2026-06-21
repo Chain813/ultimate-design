@@ -1,0 +1,170 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="100%" height="100%" style="background-color: #F8FAFC; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  <!-- Definitions for Gradients, Shadows and Markers -->
+  <defs>
+    <!-- Drop Shadow -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0F172A" flood-opacity="0.08" />
+    </filter>
+
+    <!-- Gradients -->
+    <linearGradient id="grad-data" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E0F2FE" />
+      <stop offset="100%" stop-color="#BAE6FD" />
+    </linearGradient>
+    <linearGradient id="grad-process" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F3E8FF" />
+      <stop offset="100%" stop-color="#E9D5FF" />
+    </linearGradient>
+    <linearGradient id="grad-ai" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE7F3" />
+      <stop offset="100%" stop-color="#FBCFE8" />
+    </linearGradient>
+    <linearGradient id="grad-loop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FEF3C7" />
+      <stop offset="100%" stop-color="#FDE68A" />
+    </linearGradient>
+    <linearGradient id="grad-success" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#DCFCE7" />
+      <stop offset="100%" stop-color="#BBF7D0" />
+    </linearGradient>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B" />
+    </marker>
+    <marker id="arrow-loop" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#EF4444" />
+    </marker>
+  </defs>
+
+  <!-- Title Section -->
+  <g transform="translate(40, 50)">
+    <text x="0" y="0" font-size="22" font-weight="800" fill="#0F172A">GIS-to-AIGC 空间对齐与制图管线流程图</text>
+    <text x="0" y="24" font-size="14" fill="#64748B">首创「矢量→光栅→ControlNet」管线，基于 Gemma + DeepSeek 双重质量评估闭环消除空间幻觉</text>
+    <line x1="0" y1="36" x2="920" y2="36" stroke="#E2E8F0" stroke-width="2" />
+  </g>
+
+  <!-- ==================== STAGE 1: INPUT DATA ==================== -->
+  <g transform="translate(40, 140)" filter="url(#shadow)">
+    <!-- Section Border -->
+    <rect x="-10" y="-10" width="220" height="390" rx="12" fill="none" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4,4" />
+    <text x="10" y="15" font-size="12" font-weight="700" fill="#94A3B8" letter-spacing="1">STAGE 01: 原始输入</text>
+    
+    <!-- GeoJSON Input -->
+    <g transform="translate(0, 40)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-data)" stroke="#38BDF8" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#0369A1">GeoJSON 空间矢量</text>
+      <text x="15" y="48" font-size="11" fill="#0284C7">建筑基底、道路网、用地红线</text>
+    </g>
+
+    <!-- Context Text Input -->
+    <g transform="translate(0, 240)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-data)" stroke="#38BDF8" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#0369A1">DesignContext 设计纲要</text>
+      <text x="15" y="48" font-size="11" fill="#0284C7">前序19个阶段文本设计意图</text>
+    </g>
+  </g>
+
+  <!-- ==================== STAGE 2: PROCESSING ==================== -->
+  <g transform="translate(300, 140)" filter="url(#shadow)">
+    <rect x="-10" y="-10" width="220" height="390" rx="12" fill="none" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4,4" />
+    <text x="10" y="15" font-size="12" font-weight="700" fill="#94A3B8" letter-spacing="1">STAGE 02: 预处理转换</text>
+
+    <!-- Rasterization -->
+    <g transform="translate(0, 40)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-process)" stroke="#A855F7" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#6B21A8">GIS 资产预渲染</text>
+      <text x="15" y="48" font-size="11" fill="#7E22CE">矢量光栅化：生成三张引导底图</text>
+    </g>
+
+    <!-- Prompt Generation -->
+    <g transform="translate(0, 240)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-process)" stroke="#A855F7" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#6B21A8">LLM 提示词重组</text>
+      <text x="15" y="48" font-size="11" fill="#7E22CE">翻译并生成制图 Prompt 模板</text>
+    </g>
+  </g>
+
+  <!-- ==================== STAGE 3: SD ENGINE ==================== -->
+  <g transform="translate(560, 140)" filter="url(#shadow)">
+    <rect x="-10" y="-10" width="220" height="390" rx="12" fill="none" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4,4" />
+    <text x="10" y="15" font-size="12" font-weight="700" fill="#94A3B8" letter-spacing="1">STAGE 03: 空间约束渲染</text>
+
+    <!-- ControlNet Guidance -->
+    <g transform="translate(0, 40)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-ai)" stroke="#EC4899" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#9D174D">ControlNet 约束图</text>
+      <text x="15" y="48" font-size="11" fill="#BE185D">Canny (路网)/Seg (用地)/Depth</text>
+    </g>
+
+    <!-- Optimized Prompts -->
+    <g transform="translate(0, 240)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="url(#grad-ai)" stroke="#EC4899" stroke-width="1.5" />
+      <text x="15" y="28" font-size="14" font-weight="700" fill="#9D174D">专业制图提示词</text>
+      <text x="15" y="48" font-size="11" fill="#BE185D">融合风格参数的英文 Prompt</text>
+    </g>
+
+    <!-- Stable Diffusion WebUI API -->
+    <g transform="translate(0, 140)">
+      <rect x="0" y="0" width="200" height="70" rx="8" fill="#F8FAFC" stroke="#64748B" stroke-dasharray="2,2" stroke-width="1.5" />
+      <rect x="2" y="2" width="196" height="66" rx="6" fill="url(#grad-ai)" opacity="0.15" />
+      <text x="15" y="28" font-size="13" font-weight="800" fill="#0F172A">Stable Diffusion WebUI</text>
+      <text x="15" y="48" font-size="11" fill="#475569">空间对齐生图渲染网络 (API)</text>
+    </g>
+  </g>
+
+  <!-- ==================== STAGE 4: DOUBLE-LOOP ASSESS ==================== -->
+  <g transform="translate(820, 220)" filter="url(#shadow)">
+    <rect x="-10" y="-10" width="160" height="240" rx="12" fill="none" stroke="#E2E8F0" stroke-width="1.5" stroke-dasharray="4,4" />
+    <text x="10" y="15" font-size="11" font-weight="700" fill="#94A3B8" letter-spacing="1">STAGE 04: 评估</text>
+
+    <!-- Double-loop Quality Checker -->
+    <g transform="translate(0, 30)">
+      <rect x="0" y="0" width="140" height="90" rx="8" fill="url(#grad-loop)" stroke="#F59E0B" stroke-width="1.5" />
+      <text x="12" y="25" font-size="13" font-weight="700" fill="#92400E">Gemma + DeepSeek</text>
+      <text x="12" y="45" font-size="13" font-weight="700" fill="#92400E">双重质量闭环校验</text>
+      <text x="12" y="65" font-size="10" fill="#B45309">视觉分级 + 规划文本审计</text>
+      <text x="12" y="78" font-size="10" font-weight="700" fill="#EF4444">评级 C/D 时触发拦截重绘</text>
+    </g>
+
+    <!-- Success Output -->
+    <g transform="translate(0, 150)">
+      <rect x="0" y="0" width="140" height="70" rx="8" fill="url(#grad-success)" stroke="#10B981" stroke-width="1.5" />
+      <text x="12" y="28" font-size="13" font-weight="700" fill="#166534">高精度 A3 图册</text>
+      <text x="12" y="48" font-size="10" fill="#15803D">PDF/PNG 图册批量输出</text>
+    </g>
+  </g>
+
+  <!-- ==================== FLOW LINES & ARROWS ==================== -->
+  <g fill="none" stroke-linecap="round">
+    <!-- STAGE 1 to STAGE 2 -->
+    <!-- GeoJSON -> Rasterization -->
+    <path d="M 240,215 L 300,215" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+    <!-- Context -> Prompt Gen -->
+    <path d="M 240,415 L 300,415" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- STAGE 2 to STAGE 3 -->
+    <!-- Rasterization -> ControlNet -->
+    <path d="M 500,215 L 560,215" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+    <!-- Prompt Gen -> Prompts -->
+    <path d="M 500,415 L 560,415" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- ControlNet -> SD WebUI -->
+    <path d="M 660,250 L 660,280" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+    <!-- Prompts -> SD WebUI -->
+    <path d="M 660,380 L 660,350" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- SD WebUI -> Quality Checker -->
+    <line x1="760" y1="315" x2="820" y2="315" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- Checker -> Success Output -->
+    <path d="M 890,340 L 890,370" stroke="#10B981" stroke-width="2" marker-end="url(#arrow)" />
+
+    <!-- REDO LOOP (Quality Checker -> LLM Prompt Gen) -->
+    <!-- From Checker Top to Prompt Gen -->
+    <path d="M 890,250 C 890,120 400,120 400,230" stroke="#EF4444" stroke-width="2.5" stroke-dasharray="4,4" marker-end="url(#arrow-loop)" />
+    <!-- Loop text -->
+    <rect x="580" y="118" width="130" height="20" rx="4" fill="#FEE2E2" stroke="#FCA5A5" stroke-width="0.5" />
+    <text x="645" y="132" font-size="10" font-weight="700" fill="#EF4444" text-anchor="middle">重构提示词重新生成 (C/D级)</text>
+  </g>
+</svg>

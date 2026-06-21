@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-"""DR-046 产业业态规划图 — 对应答辩稿 4.6 产业业态规划"""
+"""DR-056 绿地景观系统图"""
 from pathlib import Path
 import numpy as np
-from shapely.geometry import Point, LineString
+from shapely.geometry import Point
 import matplotlib.font_manager as fm
 import matplotlib.patheffects as path_effects
 import matplotlib.patches as mpatches
@@ -77,30 +77,29 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     for y in range(5, 100, 5):
         ax.plot([0, 141.42], [y, y], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
 
-    # 2. Main Title & Top Header Card (X: 2.0 to 139.4, Y: 89.0 to 96.3)
+    # 2. Main Title & Top Header Card
     header_shadow = mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     header_bg = mpatches.Rectangle((2, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(header_shadow)
     ax.add_patch(header_bg)
-    
-    # Gold top accent bar on the header card
+
     accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#D97706', edgecolor='none', zorder=3)
     ax.add_patch(accent_bar)
-    
-    ax.text(3.5, 93.6, "产业业态规划图", 
+
+    ax.text(3.5, 93.6, "绿地景观系统图", 
             color='#0F172A', ha='left', va='center',
             fontproperties=_font(font_prop, 26, "bold"), zorder=4)
     
-    ax.text(3.5, 90.7, "确立“三区一带”数字文创与全龄服务业态规划，实施低效存量空间功能置换，激活街区活力。", 
+    ax.text(3.5, 90.7, "构建“一廊、多点、蓝绿交织”的开敞空间系统，提升绿地率至35%以上，降低街区热岛效应。", 
             color='#334155', ha='left', va='center',
             fontproperties=_font(font_prop, 15.0), zorder=4)
 
-    # 3. Giant Map Card Container (X: 2.0 to 100.0, Y: 4.0 to 87.0)
+    # 3. Giant Map Card Container
     map_shadow = mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     map_bg = mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(map_shadow)
     ax.add_patch(map_bg)
-    
+
     # 3b. Setup Map Sub-Axes (X: 4.0 to 98.0, Y: 6.0 to 85.0)
     ax_map = fig.add_axes([4.0/141.42, 6.0/100.0, 94.0/141.42, 79.0/100.0])
     ax_map.set_facecolor('#F1F5F9')
@@ -109,63 +108,28 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax_map.set_aspect('equal')
     ax_map.set_axis_off()
 
-    # Draw water, buildings, roads, rails, and boundary on ax_map
+    # Draw layers on ax_map
     if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
+        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1.5)
     if buildings is not None and not buildings.empty:
-        buildings.plot(ax=ax_map, facecolor="#F8FAFC", edgecolor="#E2E8F0", linewidth=0.15, zorder=0.8)
+        buildings.plot(ax=ax_map, facecolor="#F8FAFC", edgecolor="#E2E8F0", linewidth=0.2, zorder=1)
+    if landuse is not None and not landuse.empty:
+        green_gdf = landuse[landuse['GB_Code'] == 'G']
+        other_gdf = landuse[landuse['GB_Code'] != 'G']
+        if not other_gdf.empty:
+            other_gdf.plot(ax=ax_map, facecolor="#F1F5F9", edgecolor="#E2E8F0", linewidth=0.2, zorder=0.8)
+        if not green_gdf.empty:
+            green_gdf.plot(ax=ax_map, facecolor="#A7F3D0", edgecolor="#047857", linewidth=0.5, zorder=2)
+    if key_plots is not None and not key_plots.empty:
+        key_plots.plot(ax=ax_map, facecolor="#10B981", edgecolor="#047857", linewidth=1.5, alpha=0.9, zorder=2.5)
     if roads is not None and not roads.empty:
-        roads.plot(ax=ax_map, color="#CBD5E1", linewidth=0.8, zorder=2)
+        roads.plot(ax=ax_map, color="#E2E8F0", linewidth=0.8, zorder=3)
     if rails is not None and not rails.empty:
-        rails.plot(ax=ax_map, color="#64748B", linewidth=1.2, linestyle=(0, (4, 4)), zorder=2.1)
+        rails.plot(ax=ax_map, color="#64748B", linewidth=1.0, linestyle=(0, (5, 5)), zorder=4)
     if boundary is not None and not boundary.empty:
         boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=5.0)
 
-    px_palace, py_palace = get_xy(125.3422, 43.9036)
-    px_station, py_station = get_xy(125.3250, 43.9080)
-
-    # Zone 1: 历史风貌核心体验区 (around palace)
-    buf_palace = Point(px_palace, py_palace).buffer(350)
-    gpd.GeoDataFrame(geometry=[buf_palace], crs="EPSG:3857").plot(
-        ax=ax_map, facecolor="#FEF3C7", edgecolor="#B45309", linewidth=2.0, alpha=0.3, zorder=1.5)
-    txt1 = ax_map.text(px_palace, py_palace-80, "历史风貌核心体验区", color='#78350F', ha='center', va='top',
-            zorder=6, fontproperties=_font(font_prop, 12, 'bold'))
-    txt1.set_path_effects([path_effects.withStroke(linewidth=2, foreground='#FFFFFF')])
-    ax_map.text(px_palace, py_palace-140, "AIGC文创实验室·风貌认证零售", color='#92400E', ha='center', va='top',
-            zorder=6, fontproperties=_font(font_prop, 9))
-
-    # Zone 2: 站城融合门户区 (near station)
-    buf_station = Point(px_station, py_station).buffer(280)
-    gpd.GeoDataFrame(geometry=[buf_station], crs="EPSG:3857").plot(
-        ax=ax_map, facecolor="#DBEAFE", edgecolor="#1D4ED8", linewidth=2.0, alpha=0.3, zorder=1.5)
-    txt2 = ax_map.text(px_station, py_station+80, "站城融合门户区", color='#1E3A8A', ha='center', va='bottom',
-            zorder=6, fontproperties=_font(font_prop, 12, 'bold'))
-    txt2.set_path_effects([path_effects.withStroke(linewidth=2, foreground='#FFFFFF')])
-    ax_map.text(px_station, py_station-30, "青年创业公社·文化市集", color='#1E40AF', ha='center', va='top',
-            zorder=6, fontproperties=_font(font_prop, 9))
-
-    # Zone 3: 全龄友好生活区 (south residential)
-    px_life, py_life = get_xy(125.3380, 43.8980)
-    buf_life = Point(px_life, py_life).buffer(350)
-    gpd.GeoDataFrame(geometry=[buf_life], crs="EPSG:3857").plot(
-        ax=ax_map, facecolor="#D1FAE5", edgecolor="#047857", linewidth=2.0, alpha=0.3, zorder=1.5)
-    txt3 = ax_map.text(px_life, py_life, "全龄友好生活区", color='#064E3B', ha='center', va='center',
-            zorder=6, fontproperties=_font(font_prop, 12, 'bold'))
-    txt3.set_path_effects([path_effects.withStroke(linewidth=2, foreground='#FFFFFF')])
-    ax_map.text(px_life, py_life-60, "社区食堂·日间照料·生活盒子", color='#065F46', ha='center', va='top',
-            zorder=6, fontproperties=_font(font_prop, 9))
-
-    # Belt: 文旅消费闭环带 (station → palace)
-    belt_pts = [(125.325, 43.908), (125.335, 43.906), (125.342, 43.904)]
-    belt_geom = LineString([get_xy(lon, lat) for lon, lat in belt_pts])
-    gpd.GeoDataFrame(geometry=[belt_geom], crs="EPSG:3857").plot(
-        ax=ax_map, color="#F43F5E", linewidth=5.0, alpha=0.7, zorder=4)
-    mid = get_xy(125.335, 43.907)
-    txt_belt = ax_map.text(mid[0], mid[1]+60, "文旅消费闭环带", color='#881337', ha='center', va='bottom',
-            zorder=6, fontproperties=_font(font_prop, 11, 'bold'))
-    txt_belt.set_path_effects([path_effects.withStroke(linewidth=2, foreground='#FFFFFF')])
-
-    # Map Labels with corrected coordinates (with white text stroke shadows)
+    # Landmark labels
     labels = [
         ("伪满皇宫博物院", 125.3422, 43.9036),
         ("光复路", 125.3395, 43.9016),
@@ -180,7 +144,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
                           fontproperties=_font(font_prop, 11, 'bold'), zorder=10)
         txt.set_path_effects([path_effects.withStroke(linewidth=3, foreground='#FFFFFF')])
 
-    # 3c. Draw wind rose on map (HUD)
+    # 3c. Draw wind rose on map
         # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
     try:
         from PIL import Image as _PIL_Image
@@ -211,25 +175,25 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     except Exception as e:
         print(f"Error loading wind rose in {__file__}: {e}")
 
-    # 4. Legend Card (X: 101.5 to 139.4, Y: 62.0 to 87.0)
+    # 4. Legend Card
     legend_shadow = mpatches.Rectangle((101.8, 61.7), 37.9, 25.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     legend_bg = mpatches.Rectangle((101.5, 62.0), 37.9, 25.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(legend_shadow)
     ax.add_patch(legend_bg)
     ax.add_patch(mpatches.Rectangle((101.5, 86.1), 37.9, 1.2, facecolor='#D97706', edgecolor='none', zorder=3))
-    
+
     ax.text(103.5, 83.8, "图例 / LEGEND", color='#D97706', ha='left', va='center',
             fontproperties=_font(font_prop, 13.5, 'bold'), zorder=4)
-    
-    # Legend Items
+
     legend_items_data = [
         ("规划研究范围", '#FF3B30', 'outline_boundary', 102.2, 106.2, 79.5),
-        ("历史风貌核心体验区", '#FEF3C7', 'rect_fill_border', 120.7, 124.7, 79.5, '#B45309'),
-        ("站城融合门户区", '#DBEAFE', 'rect_fill_border', 102.2, 106.2, 75.0, '#1D4ED8'),
-        ("全龄友好生活区", '#D1FAE5', 'rect_fill_border', 120.7, 124.7, 75.0, '#047857'),
-        ("文旅消费闭环带", '#F43F5E', 'line_thick', 102.2, 106.2, 70.5)
+        ("规划新增绿地/广场", '#10B981', 'rect_fill_border', 120.7, 124.7, 79.5, '#047857'),
+        ("现状公园绿地", '#A7F3D0', 'rect_fill_border', 102.2, 106.2, 75.0, '#047857'),
+        ("城市水系", '#D0E6F7', 'rect_fill_border', 120.7, 124.7, 75.0, 'none'),
+        ("城市道路", '#E2E8F0', 'rect_fill_border', 102.2, 106.2, 70.5, 'none'),
+        ("现状建筑", '#F8FAFC', 'rect_fill_border', 120.7, 124.7, 70.5, '#E2E8F0')
     ]
-    
+
     for item in legend_items_data:
         label = item[0]
         color_code = item[1]
@@ -245,20 +209,18 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         elif style == 'rect_fill_border':
             rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor=color_code, edgecolor=edge_color, linewidth=1.2, zorder=4)
             ax.add_patch(rect)
-        elif style == 'line_thick':
-            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=4.0, zorder=4)
-            
+
         ax.text(x_txt, y_val, label, color='#334155', ha='left', va='center',
                 fontproperties=_font(font_prop, 10.5), zorder=4)
 
-    # Scale Bar (centered under Legend Card)
+    # Scale Bar
     y_bar = 64.6
     y_tick_min = y_bar - 0.6
     y_tick_max = y_bar + 0.6
     y_text_val = y_bar + 0.8
     y_ratio_val = y_bar - 0.8
 
-    scale_len = 500 / (view_w / 96.0) # Length in main axes units
+    scale_len = 500 / (view_w / 96.0)
     x_start = 120.45 - scale_len / 2
     x_end = x_start + scale_len
     ax.plot([x_start, x_end], [y_bar, y_bar], color='#0F172A', linewidth=1.5, zorder=4)
@@ -266,7 +228,6 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.plot([x_start + scale_len/2, x_start + scale_len/2], [y_tick_min, y_tick_max], color='#0F172A', linewidth=1.5, zorder=4)
     ax.plot([x_end, x_end], [y_tick_min, y_tick_max], color='#0F172A', linewidth=1.5, zorder=4)
     
-    # Scale labels
     ax.text(x_start, y_text_val, "0", color='#334155', ha='center', va='center',
             fontproperties=_font(font_prop, 10.0), zorder=4)
     ax.text(x_start + scale_len/2, y_text_val, "250m", color='#334155', ha='center', va='center',
@@ -279,7 +240,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text((x_start + x_end)/2, y_ratio_val, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=_font(font_prop, 10.5, 'bold'), zorder=4)
 
-    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 60.0)
+    # 5. Description Card
     desc_shadow = mpatches.Rectangle((101.8, 3.7), 37.9, 56.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
     desc_bg = mpatches.Rectangle((101.5, 4.0), 37.9, 56.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
     ax.add_patch(desc_shadow)
@@ -289,11 +250,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text(103.5, 56.2, "设计说明与规划指标 / DESCRIPTION", color='#D97706', ha='left', va='center',
             fontproperties=_font(font_prop, 13.5, 'bold'), zorder=4)
     
-    # 3 Bullet description items wrapped at 44 visual-width units, font size 15.0
     desc_data = [
-        ("1. 三区定位：“古今共振·数智共生”产业布局，历史风貌核心区植入AIGC文创实验室，站城门户区布局青年创业公社，全龄友好区精准植入“生活盒子”。", 50.0),
-        ("2. 一带串联：打造站城文旅消费闭环带，依托长春站东广场客流势能，串联文化市集与数字消费场景，形成数实融合创新孵化节点。", 34.0),
-        ("3. 业态升级：摒弃单一文旅路径，确立“数字文创+全龄服务+遗产活化”三元动力结构，实施功能置换，激活MPI值48.3的失能存量空间。", 18.0)
+        ("1. 增量提质：针对现状公共绿地匮乏（仅占11.1%）与硬质化高污染弊端，通过存量地块置换与微更新拆建，将绿地及开敞空间占比提升至15.5%以上，使人均绿地面积翻番。", 50.0),
+        ("2. 指标达标：规划在老社区、中车遗存外围增设6处雨水花园，使绿地率达到35%的国家健康宜居街区目标，将全街区平均绿视率（GVI）由8.7%大幅提升至28%以上。", 34.0),
+        ("3. 蓝绿渗透：将伊通河滨水生态廊道引入街区内部，构建生态防洪堤坝与微型海绵渗水绿带，形成连贯的水绿开敞景观系统，解决街区内热岛效应。", 18.0)
     ]
     for text, y_pos in desc_data:
         wrapped_desc = wrap_text(text, max_len=44)
@@ -305,14 +265,15 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
-    ("历史风貌核心体验区", "rect_style_orange"),
-    ("站城融合门户区", "rect_style_blue"),
-    ("全龄友好生活区", "rect_style_green"),
-    ("文旅消费闭环带", "line_trail_red"),
+    ("规划新增绿地/广场", "rect_green_planned"),
+    ("现状公园绿地", "rect_green"),
+    ("城市水系", "rect_water"),
+    ("城市道路", "rect_road"),
+    ("现状建筑", "rect_building")
 ]
 
 description_lines = [
-    "1. 三区定位：“古今共振·数智共生”产业布局，历史风貌核心区植入AIGC文创实验室，站城门户区布局青年创业公社，全龄友好区精准植入“生活盒子”。",
-    "2. 一带串联：打造站城文旅消费闭环带，依托长春站东广场客流势能，串联文化市集与数字消费场景，形成数实融合创新孵化节点。",
-    "3. 业态升级：摒弃单一文旅路径，确立“数字文创+全龄服务+遗产活化”三元动力结构，实施功能置换，激活MPI值48.3的失能存量空间。"
+    "1. 增量提质：针对现状公共绿地匮乏（仅占11.1%）与硬质化高污染弊端，通过存量地块置换与微更新拆建，将绿地及开敞空间占比提升至15.5%以上，使人均绿地面积翻番。",
+    "2. 指标达标：规划在老社区、中车遗存外围增设6处雨水花园，使绿地率达到35%的国家健康宜居街区目标，将全街区平均绿视率（GVI）由8.7%大幅提升至28%以上。",
+    "3. 蓝绿渗透：将伊通河滨水生态廊道引入街区内部，构建生态防洪堤坝与微型海绵渗水绿带，形成连贯的水绿开敞景观系统，解决街区内热岛效应。"
 ]

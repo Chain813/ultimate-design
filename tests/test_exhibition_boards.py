@@ -23,6 +23,11 @@ def _board_html(board_class: str) -> str:
     return html[start:next_start]
 
 
+def _board_image_refs(board_class: str) -> list[str]:
+    board = _board_html(board_class)
+    return [token.split('"', 1)[0] for token in board.split('src="')[1:]]
+
+
 def test_exhibition_board_html_defines_five_a1_portrait_boards():
     html = (BOARD_DIR / "index.html").read_text(encoding="utf-8")
 
@@ -78,10 +83,13 @@ def test_exhibition_board_protected_drawings_use_full_atlas_sources():
     board_02 = _board_html("board-02")
     board_03 = _board_html("board-03")
     board_04 = _board_html("board-04")
+    board_05 = _board_html("board-05")
 
     assert "../atlas/DR-048_总体鸟瞰白模效果图.png" in html
     assert "../atlas/DR-049_总体鸟瞰白模_彩色总图.png" in html
     assert "board_tiles_fitted/DR-049_" not in html
+    for code in ["DR-035_", "DR-036_", "DR-037_", "DR-038_", "DR-040_", "DR-041_", "DR-042_", "DR-043_", "DR-044_", "DR-045_", "DR-046_", "DR-047_"]:
+        assert f'img src="../atlas/{code}' in board_02
 
     board_02_refs = [token.split('"', 1)[0] for token in board_02.split('src="')[1:]]
     assert board_02_refs
@@ -96,29 +104,46 @@ def test_exhibition_board_protected_drawings_use_full_atlas_sources():
     assert all(ref.startswith("../atlas/") for ref in board_04_refs)
 
     for prefix in ["DR-072_", "DR-093_", "DR-112_", "DR-130_", "DR-148_"]:
-        assert f'img src="../atlas/{prefix}' in board_04
-        assert f"board_tiles_fitted/{prefix}" not in board_04
+        assert f'img src="../atlas/{prefix}' in board_05
+        assert f"board_tiles_fitted/{prefix}" not in board_05
 
 
-def test_exhibition_board_uses_corrected_dr56_dr57_sources():
-    atlas_56 = (ROOT / "static" / "atlas" / "DR-056_投资估算与经济测算图.png").read_bytes()
-    atlas_57 = (ROOT / "static" / "atlas" / "DR-057_公众参与与博弈协商成果图.png").read_bytes()
-    backup_56 = (ROOT / "static" / "atlas_backup" / "DR-074_投资估算与经济测算图.png").read_bytes()
-    backup_57 = (ROOT / "static" / "atlas_backup" / "DR-075_公众参与与博弈协商成果图.png").read_bytes()
+def test_exhibition_board_uses_dr56_dr57_policy_reference_sources():
+    from PIL import Image
 
-    assert atlas_56 == backup_56
-    assert atlas_57 == backup_57
+    board_05 = _board_html("board-05")
+    for filename in ["DR-056_投资估算与经济测算图.png", "DR-057_公众参与与博弈协商成果图.png"]:
+        source = ROOT / "static" / "atlas" / filename
+
+        assert source.exists()
+        with Image.open(source) as image:
+            assert image.width >= 1400
+            assert image.height >= 900
+    for phrase in ["投资估算", "经济测算", "公众参与", "博弈协商", "7,600 万元", "91.5%"]:
+        assert phrase in board_05
+
+
+def test_exhibition_board_02_uses_x4plus_enhanced_traffic_system_sheet():
+    from PIL import Image
+
+    traffic_sheet = ROOT / "static" / "atlas" / "DR-043_道路交通系统规划图.png"
+
+    assert '../atlas/DR-043_道路交通系统规划图.png' in _board_html("board-02")
+    with Image.open(traffic_sheet) as image:
+        assert image.width == 5964
+        assert image.height == 4220
 
 
 def test_exhibition_board_04_groups_effects_by_parcel_with_plan_reference():
-    html = _board_html("board-04")
+    html_04 = _board_html("board-04")
+    html_05 = _board_html("board-05")
 
-    assert html.count('<section class="support-mosaic"') == 1
-    assert html.count('<section class="parcel-effect-board"') == 1
-    assert html.split('<section class="support-mosaic"', 1)[1].split("</section>", 1)[0].count("<figure") == 9
+    assert html_05.count('<section class="support-mosaic"') == 1
+    assert html_05.split('<section class="support-mosaic"', 1)[1].split("</section>", 1)[0].count("<figure") == 9
 
-    effect_board = html.split('<section class="parcel-effect-board"', 1)[1].split("</section>", 1)[0]
-    assert effect_board.count('<article class="effect-parcel') == 5
+    assert html_04.count('<section class="effect-rows-container"') == 1
+    effect_board = html_04.split('<section class="effect-rows-container"', 1)[1].split("</section>", 1)[0]
+    assert effect_board.count('<article class="effect-parcel-row') == 5
     for plan_code in ["DR-067_", "DR-088_", "DR-108_", "DR-127_", "DR-145_"]:
         assert f'src="../atlas/{plan_code}' in effect_board
     for code in ["DR-073_", "DR-074_", "DR-078_", "DR-079_", "DR-080_", "DR-081_"]:
@@ -131,6 +156,74 @@ def test_exhibition_board_04_groups_effects_by_parcel_with_plan_reference():
         assert f'src="../atlas/{code}' in effect_board
     for code in ["DR-149_", "DR-153_", "DR-154_"]:
         assert f'src="../atlas/{code}' in effect_board
+
+
+def test_exhibition_board_04_makes_analysis_tiles_smaller_than_effect_gallery():
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport={"width": 2300, "height": 3300}, device_scale_factor=1)
+        page.goto((BOARD_DIR / "index.html").as_uri())
+        page.wait_for_load_state("networkidle")
+        sizes = page.evaluate(
+            """
+            () => {
+              const board_04 = document.querySelector('.board-04').getBoundingClientRect();
+              const board_05 = document.querySelector('.board-05').getBoundingClientRect();
+              const analysis = document.querySelector('.board-05 .support-mosaic').getBoundingClientRect();
+              const effects = document.querySelector('.board-04 .effect-rows-container').getBoundingClientRect();
+              return {board_04, board_05, analysis, effects};
+            }
+            """
+        )
+        browser.close()
+
+    assert sizes["analysis"]["height"] < sizes["effects"]["height"] * 0.70
+    assert sizes["effects"]["height"] > sizes["board_04"]["height"] * 0.50
+
+
+def test_exhibition_board_04_analysis_frames_fit_drawings_and_sections_are_prominent():
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport={"width": 2300, "height": 3300}, device_scale_factor=1)
+        page.goto((BOARD_DIR / "index.html").as_uri())
+        page.wait_for_load_state("networkidle")
+        sizes = page.evaluate(
+            """
+            () => {
+              const board = document.querySelector('.board-05').getBoundingClientRect();
+              const analysisItems = Array.from(document.querySelectorAll('.board-05 .support-mosaic figure')).map((figure) => {
+                const figureRect = figure.getBoundingClientRect();
+                const imgRect = figure.querySelector('img').getBoundingClientRect();
+                return {
+                  fillX: imgRect.width / figureRect.width,
+                  fillY: imgRect.height / figureRect.height,
+                };
+              });
+              const sectionStack = document.querySelector('.board-05 .section-stack').getBoundingClientRect();
+              const sectionItems = Array.from(document.querySelectorAll('.board-05 .section-stack figure')).map((figure) => {
+                const figureRect = figure.getBoundingClientRect();
+                const imgRect = figure.querySelector('img').getBoundingClientRect();
+                return {
+                  fillX: imgRect.width / figureRect.width,
+                  fillY: imgRect.height / figureRect.height,
+                };
+              });
+              return {board, analysisItems, sectionStack, sectionItems};
+            }
+            """
+        )
+        browser.close()
+
+    assert all(item["fillX"] > 0.92 for item in sizes["analysisItems"])
+    assert all(item["fillY"] > 0.76 for item in sizes["analysisItems"])
+    assert sizes["sectionStack"]["width"] > sizes["board"]["width"] * 0.32
+    assert sizes["sectionStack"]["height"] > sizes["board"]["height"] * 0.26
+    assert all(item["fillX"] > 0.95 for item in sizes["sectionItems"])
+    assert all(item["fillY"] > 0.95 for item in sizes["sectionItems"])
 
 
 def test_exhibition_board_01_uses_dense_real_project_screenshot_wall():
@@ -155,28 +248,92 @@ def test_exhibition_board_competition_layout_is_dense_and_structured():
 
     assert html.count('class="print-board') == 5
     assert html.count('class="board-number"') == 5
-    assert html.count('class="parcel-row"') == 5
+    assert html.count('class="parcel-row"') == 5 or html.count('class="effect-parcel-row"') == 5
     assert html.count('src="') >= 60
-    assert "class=\"tech-ribbon\"" in html
-    assert "class=\"atlas-matrix\"" in html
-    assert "class=\"support-mosaic\"" in html
-    assert "class=\"policy-board-layout\"" in html
+    assert 'class="tech-ribbon"' in html
+    assert 'class="atlas-matrix"' in html
+    assert 'class="support-mosaic"' in html
+    assert 'class="policy-board-layout"' in html or 'class="policy-section-container"' in html
 
 
-def test_exhibition_board_05_uses_policy_a3_upscaled_atlas_sources():
+def test_exhibition_board_02_and_05_split_strategy_sheets_without_repetition():
+    board_02_refs = _board_image_refs("board-02")
+    board_05_refs = _board_image_refs("board-05")
+    uploaded_strategy_codes = {f"DR-{index:03d}_" for index in range(27, 34)}
+
+    board_02_strategy = {code for code in uploaded_strategy_codes if any(code in ref for ref in board_02_refs)}
+    board_05_strategy = {code for code in uploaded_strategy_codes if any(code in ref for ref in board_05_refs)}
+
+    assert board_02_strategy == {"DR-027_", "DR-028_", "DR-029_", "DR-030_", "DR-031_"}
+    assert board_05_strategy == {"DR-032_", "DR-033_"}
+    assert board_02_strategy.isdisjoint(board_05_strategy)
+
+
+def test_exhibition_board_02_keeps_strategy_mainline_without_dropping_atlas_matrix():
+    board_02 = _board_html("board-02")
+
+    assert 'class="strategy-mainline"' in board_02
+    for code in ["DR-027_", "DR-028_", "DR-029_", "DR-030_", "DR-031_"]:
+        assert f'img src="../atlas/{code}' in board_02
+    for code in ["DR-035_", "DR-036_", "DR-037_", "DR-038_", "DR-040_", "DR-041_", "DR-042_", "DR-043_", "DR-044_", "DR-045_", "DR-046_", "DR-047_"]:
+        assert f'img src="../atlas/{code}' in board_02
+
+
+def test_exhibition_board_05_uses_strategy_policy_sheets_instead_of_generated_a3_strip():
     board_05 = _board_html("board-05")
 
-    assert "政经良性循环与实施政策策划" in board_05
-    assert board_05.count("../atlas/policy_a3/upscaled/") == 4
+    assert "三方政经闭环循环" in board_05 or "政经良性循环与实施政策策划" in board_05
+    assert "../atlas/DR-032_设计原则与理念图.png" in board_05
+    assert "../atlas/DR-033_设计目标体系图.png" in board_05
+    assert "../atlas/policy_a3/" not in board_05
     assert "真实地图" not in board_05
     assert "卫星图" not in board_05
-    for name in [
-        "a3_policy_01_loop_x4.png",
-        "a3_policy_02_tools_x4.png",
-        "a3_policy_03_market_x4.png",
-        "a3_policy_04_residents_x4.png",
+
+
+def test_exhibition_board_05_has_policy_basis_and_visual_policy_diagrams():
+    board_05 = _board_html("board-05")
+
+    for phrase in ["政策依据", "投资估算与经济测算", "公众参与与博弈协商", "7,600 万元", "91.5%", "共识达成"]:
+        assert phrase in board_05
+    for visual_class in [
+        "policy-basis-panel",
+        "policy-mindmap",
+        "policy-fund-flow",
+        "policy-kpi-loop",
+        "policy-roadmap",
+        "policy-program-matrix",
+        "policy-agent-map",
+        "policy-risk-grid",
     ]:
-        assert f'../atlas/policy_a3/upscaled/{name}' in board_05
+        assert visual_class in board_05
+    assert board_05.count('class="mind-node') >= 12
+    assert board_05.count('class="policy-chip') >= 18
+    assert board_05.count('class="policy-lane') >= 5
+    assert board_05.count('class="policy-risk') >= 4
+
+
+def test_exhibition_board_05_keeps_policy_reference_and_risk_bands_compact():
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        page = browser.new_page(viewport={"width": 2300, "height": 3300}, device_scale_factor=1)
+        page.goto((BOARD_DIR / "index.html").as_uri())
+        page.wait_for_load_state("networkidle")
+        sizes = page.evaluate(
+            """
+            () => {
+              const board = document.querySelector('.board-05').getBoundingClientRect();
+              const basis = document.querySelector('.board-05 .policy-basis-panel').getBoundingClientRect();
+              const risk = document.querySelector('.board-05 .policy-risk-grid').getBoundingClientRect();
+              return {board, basis, risk};
+            }
+            """
+        )
+        browser.close()
+
+    assert sizes["basis"]["height"] < sizes["board"]["height"] * 0.12
+    assert sizes["risk"]["height"] < sizes["board"]["height"] * 0.085
 
 
 def test_exhibition_board_does_not_reference_deleted_plan_legend_sheets():
@@ -267,3 +424,32 @@ def test_exhibition_board_02_master_images_are_prominent():
     assert sizes["secondary"]["width"] > sizes["board"]["width"] * 0.42
     assert sizes["hero"]["height"] > sizes["board"]["height"] * 0.20
     assert sizes["secondary"]["height"] > sizes["board"]["height"] * 0.20
+
+
+def test_exhibition_board_01_uses_light_main_tone_outside_title():
+    css = (BOARD_DIR / "boards.css").read_text(encoding="utf-8")
+
+    assert ".board-01 .tech-ribbon span" in css
+    assert ".board-01 .tech-proof-panel" in css
+    assert ".board-01 .tech-ribbon span {\n  background: #f7f9fa;" in css
+    assert ".board-01 .tech-proof-panel {\n  background: #ffffff;" in css
+    assert ".board-01 .proof-card {\n  background: #f7f9fa;" in css
+    assert ".board-01 figcaption {\n  background: #f7f9fa;" in css
+
+
+def test_board01_tech_diagram_assets_are_light_and_dense():
+    from PIL import Image
+
+    diagram_dir = BOARD_DIR / "tech_diagrams"
+    paths = sorted(diagram_dir.glob("board01_*.png"))
+    assert len(paths) >= 15
+
+    for path in paths:
+        with Image.open(path).convert("RGB") as image:
+            pixels = image.resize((120, 72)).getdata()
+            total = len(pixels)
+            dark_ratio = sum(1 for r, g, b in pixels if (r + g + b) / 3 < 65) / total
+            nonwhite_ratio = sum(1 for r, g, b in pixels if (r + g + b) / 3 < 238) / total
+
+        assert dark_ratio < 0.05, path.name
+        assert nonwhite_ratio > 0.10, path.name

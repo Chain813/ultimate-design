@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
+"""DR-059: 综合现状问题诊断图 — 四大问题汇总诊断与问题热点标注"""
 from pathlib import Path
-import geopandas as gpd
-import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import matplotlib.patches as mpatches
 import matplotlib.patheffects as path_effects
+import matplotlib.patches as mpatches
+import geopandas as gpd
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
+GIS_DIR = ROOT / "data/gis"
+ASSETS_DIR = ROOT / "assets"
 
 NO_FRAME = True
 
@@ -56,255 +60,186 @@ def wrap_text(text, max_len=44):
         if current_line:
             lines.append(current_line)
     return '\n'.join(lines)
-def _font(font_prop, size, weight="normal"):
-    return fm.FontProperties(family=font_prop["family"], size=size, weight=weight)
+FOUR_ISSUES = [
+    {
+        "id": "01",
+        "title": "功能混杂与低效用地",
+        "color": "#EF4444",
+        "icon": "▮",
+        "desc": "研究区现状以低效批发仓储、零散工业为主，用地混合度高但产出能级低，与城市核心区位价值严重错配。",
+        "hotspots": [
+            ("农贸水产市场", 125.3335, 43.9074),
+            ("食品调料大市场", 125.3418, 43.9067),
+        ]
+    },
+    {
+        "id": "02",
+        "title": "交通割裂与可达性不足",
+        "color": "#F59E0B",
+        "icon": "▬",
+        "desc": "京哈铁路与亚泰快速路形成双重物理割裂，内部路网整合度低，步行系统断点多达12处。",
+        "hotspots": [
+            ("铁路割裂带", 125.3380, 43.9080),
+            ("亚泰快速路屏障", 125.3505, 43.8985),
+        ]
+    },
+    {
+        "id": "03",
+        "title": "社区老化与配套缺失",
+        "color": "#8B5CF6",
+        "icon": "●",
+        "desc": "片区老龄化率超30%，适老化设施500米服务半径覆盖不足，社区级绿地与公共空间严重匮乏。",
+        "hotspots": [
+            ("市一中北侧老旧社区", 125.3335, 43.9042),
+            ("清禾集贸市场周边", 125.3470, 43.8999),
+        ]
+    },
+    {
+        "id": "04",
+        "title": "环境品质与风貌失序",
+        "color": "#0EA5E9",
+        "icon": "◆",
+        "desc": "全域平均绿视率仅8.7%，78.3%采样点低于15%宜居阈值；历史建筑与杂乱搭建混杂，风貌管控失位。",
+        "hotspots": [
+            ("中国石油周边硬质化", 125.3365, 43.8981),
+            ("长春大街沿线", 125.3406, 43.8925),
+        ]
+    }
+]
+
 
 def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop, *args, **kwargs):
     fig = ax.get_figure()
-    
-    # 1. Setup A3 Canvas Coordinates
+
+    # 1. Setup A3 Main Canvas
     ax.set_facecolor("#F8FAFC")
     ax.set_xlim(0, 141.42)
     ax.set_ylim(0, 100)
-    ax.set_axis_off()
-    
-    # Draw background grid
+
+    # Background grid
     for x in range(5, 140, 5):
         ax.plot([x, x], [0, 100], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
     for y in range(5, 100, 5):
         ax.plot([0, 141.42], [y, y], color='#E2E8F0', linestyle='-', linewidth=0.6, zorder=0, alpha=0.5)
 
-    # 2. Header Panel
-    ax.add_patch(mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor='#E2E8F0', edgecolor='none', zorder=1))
-    ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2))
-    ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor='#D97706', edgecolor='none', zorder=3))
-    
-    ax.text(3.5, 93.6, "文化资源分析图", 
-            color='#0F172A', ha='left', va='center', fontproperties=_font(font_prop, 26, "bold"), zorder=4)
-    ax.text(3.5, 90.7, "分析伪满皇宫与旧工业遗产的“双核集聚、轴线割裂”空间格局，识别文化空间叙事断裂痛点。", 
-            color='#334155', ha='left', va='center', fontproperties=_font(font_prop, 15.0), zorder=4)
+    # 2. Header Card
+    header_shadow = mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
+    header_bg = mpatches.Rectangle((2, 89.0), 136.8, 7.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
+    ax.add_patch(header_shadow)
+    ax.add_patch(header_bg)
+    accent_bar = mpatches.Rectangle((2, 95.7), 136.8, 0.6, facecolor='#DC2626', edgecolor='none', zorder=3)
+    ax.add_patch(accent_bar)
 
-    # 3. Main Map Card Container (X: 2.0 to 100.0, Y: 4.0 to 87.0)
-    ax.add_patch(mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor='#E2E8F0', edgecolor='none', zorder=1))
-    ax.add_patch(mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2))
+    ax.text(3.5, 93.6, "综合现状问题诊断图",
+            color='#0F172A', ha='left', va='center',
+            fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=26), zorder=4)
+    ax.text(3.5, 90.7, "汇总功能混杂、交通割裂、社区老化、环境失序四大核心问题，标注空间热点分布，形成更新策略的直接依据。",
+            color='#334155', ha='left', va='center',
+            fontproperties=fm.FontProperties(family=font_prop['family'], size=15.0), zorder=4)
 
-    # Sub-axes for GIS map
+    # 3. Map Container
+    map_shadow = mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor='#E2E8F0', edgecolor='none', zorder=1)
+    map_bg = mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
+    ax.add_patch(map_shadow)
+    ax.add_patch(map_bg)
+
     ax_map = fig.add_axes([3.0 / 141.42, 5.0 / 100.0, 96.0 / 141.42, 81.0 / 100.0], facecolor="#F8FAFC", zorder=3)
     ax_map.set_xlim(cx - view_w / 2, cx + view_w / 2)
     ax_map.set_ylim(cy - view_h / 2, cy + view_h / 2)
     ax_map.set_axis_off()
     ax_map.set_aspect("equal")
 
-    # Plot GIS Base Layers
+    # 3b. Base Layers
     if water is not None and not water.empty:
-        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
-        
+        water.plot(ax=ax_map, facecolor="#E2F0FD", edgecolor="none", zorder=1)
     if buildings is not None and not buildings.empty:
-        buildings.plot(ax=ax_map, facecolor="#F1F5F9", edgecolor="#E2E8F0", linewidth=0.2, zorder=0.8)
-
-    # Highlight Existing Heritage (protected buildings)
-    prot_path = STATIC_DIR / "protected_buildings.geojson"
-    if prot_path.exists():
-        try:
-            protected = gpd.read_file(prot_path).to_crs(epsg=3857)
-            protected.plot(ax=ax_map, facecolor="#D97706", edgecolor="#B45309", linewidth=0.5, alpha=1.0, zorder=2.5)
-        except Exception as e:
-            print(f"Error loading protected buildings: {e}")
-
+        buildings.plot(ax=ax_map, facecolor="#F1F5F9", edgecolor="#CBD5E1", linewidth=0.2, alpha=0.7, zorder=0.8)
     if roads is not None and not roads.empty:
-        for lvl, lw, color in [(1, 1.8, "#94A3B8"), (2, 1.2, "#CBD5E1"), (3, 0.7, "#E2E8F0"), (4, 0.5, "#F1F5F9")]:
-            sub_gdf = roads[roads['level'] == lvl]
-            if not sub_gdf.empty:
-                sub_gdf.plot(ax=ax_map, color=color, linewidth=lw, capstyle="round", joinstyle="round", zorder=1.2)
-
+        for lvl, lw, color in [(1, 2.2, "#475569"), (2, 1.6, "#64748B"), (3, 1.1, "#94A3B8"), (4, 0.7, "#CBD5E1")]:
+            sub = roads[roads['level'] == lvl]
+            if not sub.empty:
+                sub.plot(ax=ax_map, color=color, linewidth=lw, zorder=2.0)
     if rails is not None and not rails.empty:
-        rails.plot(ax=ax_map, color="#64748B", linewidth=1.2, linestyle=(0, (5, 5)), zorder=1.3)
-
+        rails.plot(ax=ax_map, color="#1E293B", linewidth=1.5, linestyle=(0, (5, 5)), zorder=2.5)
     if boundary is not None and not boundary.empty:
-        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=5)
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=3.0, zorder=5.0)
 
-    # Draw Cultural Elements: "双核集聚、轴线割裂"
-    # Core 1: 伪满皇宫历史核 (125.3422, 43.9036)
-    pt1_x, pt1_y = get_xy(125.3422, 43.9036)
-    
-    # Outer glowing buffer (400m radius in EPSG:3857 ≈ 400 projection units)
-    core1_outer = mpatches.Circle((pt1_x, pt1_y), 450, facecolor='#F59E0B', edgecolor='#D97706', linewidth=1.0, linestyle='--', alpha=0.15, zorder=2.1)
-    core1_inner = mpatches.Circle((pt1_x, pt1_y), 250, facecolor='#F59E0B', edgecolor='#D97706', linewidth=1.5, alpha=0.3, zorder=2.2)
-    ax_map.add_patch(core1_outer)
-    ax_map.add_patch(core1_inner)
-    
-    # Core 2: 中车工业遗产核 (125.3401, 43.9079)
-    pt2_x, pt2_y = get_xy(125.3401, 43.9079)
-    core2_outer = mpatches.Circle((pt2_x, pt2_y), 450, facecolor='#8B5CF6', edgecolor='#7C3AED', linewidth=1.0, linestyle='--', alpha=0.15, zorder=2.1)
-    core2_inner = mpatches.Circle((pt2_x, pt2_y), 250, facecolor='#8B5CF6', edgecolor='#7C3AED', linewidth=1.5, alpha=0.3, zorder=2.2)
-    ax_map.add_patch(core2_outer)
-    ax_map.add_patch(core2_inner)
+    # 3c. Plot Four Issue Hotspots
+    for issue in FOUR_ISSUES:
+        for name, lon, lat in issue["hotspots"]:
+            px, py = get_xy(lon, lat)
+            # Glow effect
+            ax_map.plot(px, py, marker='o', markersize=28.0, color=issue["color"], alpha=0.15, zorder=5.5)
+            ax_map.plot(px, py, marker='o', markersize=18.0, color=issue["color"], alpha=0.25, zorder=5.6)
+            # Core marker
+            ax_map.plot(px, py, marker='o', markersize=12.0, color='#FFFFFF', alpha=0.9, zorder=5.7)
+            ax_map.plot(px, py, marker='s', markersize=7.0, color=issue["color"],
+                        markeredgecolor='#FFFFFF', markeredgewidth=1.0, zorder=6.0)
+            # Label
+            txt = ax_map.text(px, py + 55, name, color=issue["color"], ha='center', va='bottom',
+                              fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=10.0), zorder=6.5)
+            txt.set_path_effects([path_effects.withStroke(linewidth=3.0, foreground='#FFFFFF')])
 
-    # Draw Railway axis barrier (轴线割裂)
-    barrier_pts = [get_xy(125.325, 43.909), get_xy(125.335, 43.907), get_xy(125.347, 43.904), get_xy(125.359, 43.899)]
-    bx, by = zip(*barrier_pts)
-    ax_map.plot(bx, by, color='#EF4444', linewidth=7.0, alpha=0.25, zorder=1.4)
-    ax_map.plot(bx, by, color='#EF4444', linewidth=1.8, linestyle='--', zorder=1.5)
-
-    # Core 1 to Core 2 connection gap (叙事断裂)
-    ax_map.plot([pt1_x, pt2_x], [pt1_y, pt2_y], color='#EF4444', linewidth=1.8, linestyle=':', zorder=4)
-    mid_x, mid_y = (pt1_x + pt2_x) / 2, (pt1_y + pt2_y) / 2
-    ax_map.plot(mid_x, mid_y, marker='X', color='#EF4444', markersize=10, markeredgecolor='#FFFFFF', markeredgewidth=1.0, zorder=4.5)
-
-    # Text Annotations in Map
-    ax_map.text(pt1_x, pt1_y - 260, "伪满皇宫历史核\n占地 13.55公顷\n周边绿视率仅 8.7%", color='#B45309', ha='center', va='top',
-                fontproperties=_font(font_prop, 8.5, 'bold'),
-                path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5)
-
-    ax_map.text(pt2_x, pt2_y + 160, "中车工业遗产核\n仓储区空置率达 40%", color='#6D28D9', ha='center', va='bottom',
-                fontproperties=_font(font_prop, 8.5, 'bold'),
-                path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5)
-
-    ax_map.text(mid_x + 60, mid_y + 60, "文化叙事轴断裂", color='#DC2626', ha='left', va='bottom',
-                fontproperties=_font(font_prop, 8.5, 'bold'),
-                path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5)
-
-    # Label the railway barrier
-    ax_map.text(get_xy(125.334, 43.907)[0], get_xy(125.334, 43.907)[1] - 80, "铁路割裂轴线", color='#DC2626', ha='right', va='top',
-                fontproperties=_font(font_prop, 9.0, 'bold'),
-                path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=5)
-
-    # Plot landmark labels
-    labels = [
-        ("伪满皇宫博物院", 125.3422, 43.9036),
-        ("光复路", 125.3395, 43.9016),
-        ("伊通河沿岸公园", 125.3590, 43.9010),
-        ("长春站", 125.3250, 43.9080),
-        ("胜利公园", 125.3260, 43.8960)
-    ]
-    for name, lon, lat in labels:
-        x_pt, y_pt = get_xy(lon, lat)
-        # Avoid overriding our cultural labels
-        if name != "伪满皇宫博物院":
-            ax_map.text(x_pt, y_pt, name, color='#475569', ha='center', va='bottom',
-                        fontproperties=_font(font_prop, 9.0, 'bold'),
-                        path_effects=[path_effects.withStroke(linewidth=2.0, foreground='#FFFFFF')], zorder=4.8)
-
-    # 4. Legend Card (X: 101.5 to 139.4, Y: 67.0 to 87.0)
-    legend_shadow = mpatches.Rectangle((101.8, 66.7), 37.9, 20.3, facecolor='#E2E8F0', edgecolor='none', zorder=1)
-    legend_bg = mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
-    ax.add_patch(legend_shadow)
-    ax.add_patch(legend_bg)
-    ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
-    
-    ax.text(103.5, 82.8, "图例 / LEGEND", color='#D97706', ha='left', va='center',
-            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
-    
-    legend_items_data = [
-        ("规划研究范围", '#FF3B30', 'outline_boundary', 102.2, 106.2, 79.5),
-        ("历史/工业遗产建筑", '#D97706', 'rect_heritage_solid', 120.7, 124.7, 79.5),
-        ("伪满皇宫历史核", '#F59E0B', 'circle_orange', 102.2, 106.2, 75.0),
-        ("中车工业遗产核", '#8B5CF6', 'circle_purple', 120.7, 124.7, 75.0),
-        ("铁路割裂轴线", '#EF4444', 'line_dashed_red', 102.2, 106.2, 70.5),
-        ("文化叙事断裂", '#EF4444', 'marker_x', 120.7, 124.7, 70.5)
-    ]
-    
-    for label, color_code, style, x_sym, x_txt, y_val in legend_items_data:
-        if style == 'outline_boundary':
-            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor='none', edgecolor=color_code, linewidth=1.8, zorder=4)
-            ax.add_patch(rect)
-        elif style == 'rect_heritage_solid':
-            rect = mpatches.Rectangle((x_sym, y_val - 0.8), 3.0, 1.6, facecolor=color_code, edgecolor='#B45309', linewidth=0.5, zorder=4)
-            ax.add_patch(rect)
-        elif style == 'circle_orange':
-            # Draw semi-transparent circle symbolic legend
-            circle = mpatches.Circle((x_sym + 1.5, y_val), 1.0, facecolor=color_code, edgecolor='#D97706', linewidth=0.5, alpha=0.5, zorder=4)
-            ax.add_patch(circle)
-        elif style == 'circle_purple':
-            circle = mpatches.Circle((x_sym + 1.5, y_val), 1.0, facecolor=color_code, edgecolor='#7C3AED', linewidth=0.5, alpha=0.5, zorder=4)
-            ax.add_patch(circle)
-        elif style == 'line_dashed_red':
-            ax.plot([x_sym, x_sym + 3.0], [y_val, y_val], color=color_code, linewidth=2.0, linestyle='--', zorder=4)
-        elif style == 'marker_x':
-            ax.plot(x_sym + 1.5, y_val, marker='X', color=color_code, markersize=6.0, markeredgecolor='#FFFFFF', markeredgewidth=0.3, zorder=4)
-            
-        ax.text(x_txt, y_val, label, color='#334155', ha='left', va='center',
-                fontproperties=_font(font_prop, 10.5), zorder=4)
-
-    # Scale Bar
-    scale_len = 500 / (view_w / 96.0)
-    x_start = 120.45 - scale_len / 2
-    x_end = x_start + scale_len
-    y_bar = 67.4
-    ax.plot([x_start, x_end], [y_bar, y_bar], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_start, x_start], [y_bar - 0.8, y_bar + 0.8], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_start + scale_len/2, x_start + scale_len/2], [y_bar - 0.8, y_bar + 0.8], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.plot([x_end, x_end], [y_bar - 0.8, y_bar + 0.8], color='#0F172A', linewidth=1.5, zorder=4)
-    ax.text(x_start, y_bar + 1.5, "0", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
-    ax.text(x_start + scale_len/2, y_bar + 1.5, "250m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
-    ax.text(x_end, y_bar + 1.5, "500m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
-    scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
-    ax.text((x_start + x_end)/2, y_bar - 1.6, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
-            fontproperties=_font(font_prop, 10.5, 'bold'), zorder=4)
-
-    # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0)
-    ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor='#E2E8F0', edgecolor='none', zorder=1))
-    ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2))
-    ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor='#D97706', edgecolor='none', zorder=3))
-    
-    ax.text(103.5, 61.0, "文化空间诊断说明 / DIAGNOSIS", color='#D97706', ha='left', va='center',
-            fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
-    
-    desc_data = [
-        ("1. 双核集聚：研究范围内文化资源主要富集于两大核心——伪满皇宫近代历史风貌保护区（占地 13.55 公顷）与西北侧中车旧厂区与工业遗产核。两者是宽城近代变迁的关键缩影。", 55.0),
-        ("2. 轴线割裂：伪满皇宫与中车旧厂区之间受到现状繁忙的铁路线（长图铁路等）以及高宽交通干道等物理轴线的严厉割裂，造成了片区交通盲区与空间不可达。", 39.0),
-        ("3. 叙事缺失：两大核心内部及周边品质消极（如皇宫周边绿视率仅 8.7%，旧厂区仓储空置率高达 40%）。两大文化核与南部城市生活板块之间严重缺乏连续的文化空间叙事与游线连接。", 23.0)
-    ]
-    for text, y_pos in desc_data:
-        wrapped_desc = wrap_text(text, max_len=44)
-        y_text = y_pos
-        for line in wrapped_desc.split('\n'):
-            ax.text(103.5, y_text, line, color='#334155', ha='left', va='center',
-                    fontproperties=_font(font_prop, 15.0), zorder=4)
-            y_text -= 3.2
-
-        # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
-    try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
-        from pathlib import Path as _Path
-        _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
-        _rose_path = _assets_dir / "长春市风玫瑰.png"
-        if _rose_path.exists():
+    # Windrose
+    rose_path = ASSETS_DIR / "长春市风玫瑰.png"
+    if rose_path.exists():
+        try:
             ax_rose = fig.add_axes([87.0 / 141.42, 72.5 / 100.0, 12.0 / 141.42, 12.0 / 100.0], facecolor='none', zorder=4)
             ax_rose.set_axis_off()
-            
-            # Draw a soft white radial gradient backdrop
-            _y_g, _x_g = _np.ogrid[-1:1:100j, -1:1:100j]
-            _r = _np.sqrt(_x_g**2 + _y_g**2)
-            _alpha = _np.clip(1.0 - _r, 0, 1) * 0.50
-            _grad_img = _np.ones((100, 100, 4))
-            _grad_img[..., 3] = _alpha
-            ax_rose.imshow(_grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
-            
-            _rose_img = _PIL_Image.open(_rose_path).convert("RGBA")
-            _rose_data = _np.array(_rose_img)
-            _rose_data[..., 0] = 0
-            _rose_data[..., 1] = 0
-            _rose_data[..., 2] = 0
-            _black_rose_img = _PIL_Image.fromarray(_rose_data)
-            
-            ax_rose.imshow(_black_rose_img, zorder=1)
-    except Exception as e:
-        print(f"Error loading wind rose in {__file__}: {e}")
+            y_g, x_g = np.ogrid[-1:1:100j, -1:1:100j]
+            r = np.sqrt(x_g**2 + y_g**2)
+            alpha = np.clip(1.0 - r, 0, 1) * 0.50
+            grad_img = np.ones((100, 100, 4))
+            grad_img[..., 3] = alpha
+            ax_rose.imshow(grad_img, zorder=0, extent=[0, 1, 0, 1], origin='lower')
+            rose_img = Image.open(rose_path).convert("RGBA")
+            rose_data = np.array(rose_img)
+            rose_data[..., 0] = 0
+            rose_data[..., 1] = 0
+            rose_data[..., 2] = 0
+            ax_rose.imshow(Image.fromarray(rose_data), zorder=1)
+        except Exception:
+            pass
 
-legend_items = [
-    ("规划研究范围", "rect_red_border"),
-    ("重点历史/工业遗产建筑", "rect_heritage"),
-    ("伪满皇宫历史核", "rect_orange_alpha"),
-    ("中车工业遗产核", "rect_purple_alpha"),
-    ("铁路割裂轴线", "line_dashed_red"),
-    ("文化叙事断裂", "marker_x")
-]
+    # 4. Four Issue Cards (Right side, X: 101.5 to 139.4)
+    card_h = 18.5
+    gap = 1.5
+    y_start = 85.5
 
-description_lines = [
-    "1. 双核集聚：研究范围内文化资源主要富集于两大核心——伪满皇宫近代历史风貌保护区（占地 13.55 公顷）与西北侧中车旧厂区与工业遗产核。两者是宽城近代变迁的关键缩影。",
-    "2. 轴线割裂：伪满皇宫与中车旧厂区之间受到现状繁忙的铁路线（长图铁路等）以及高宽交通干道等物理轴线的严厉割裂，造成了片区交通盲区与空间不可达。",
-    "3. 叙事缺失：两大核心内部及周边品质消极（如皇宫周边绿视率仅 8.7%，旧厂区仓储空置率高达 40%）。两大文化核与南部城市生活板块之间严重缺乏连续的文化空间叙事与游线连接。"
-]
+    for i, issue in enumerate(FOUR_ISSUES):
+        y_top = y_start - i * (card_h + gap)
+        # Card background
+        card_shadow = mpatches.Rectangle((101.8, y_top - card_h + 0.3), 37.9, card_h, facecolor='#E2E8F0', edgecolor='none', zorder=1)
+        card_bg = mpatches.Rectangle((101.5, y_top - card_h + 0.0), 37.9, card_h, facecolor='#FFFFFF', edgecolor='#CBD5E1', linewidth=1.2, zorder=2)
+        ax.add_patch(card_shadow)
+        ax.add_patch(card_bg)
+        # Left color bar
+        color_bar = mpatches.Rectangle((101.5, y_top - card_h + 0.0), 0.8, card_h, facecolor=issue["color"], edgecolor='none', zorder=3)
+        ax.add_patch(color_bar)
+
+        # Issue number badge
+        ax.text(104.0, y_top - 2.0, issue["id"], color='#FFFFFF', ha='center', va='center',
+                fontproperties=fm.FontProperties(family='Arial', weight='bold', size=16), zorder=5,
+                bbox=dict(boxstyle="round,pad=0.3", facecolor=issue["color"], edgecolor='none'))
+
+        # Title
+        ax.text(107.0, y_top - 2.0, issue["title"], color='#0F172A', ha='left', va='center',
+                fontproperties=fm.FontProperties(family=font_prop['family'], weight='bold', size=14), zorder=4)
+
+        # Description
+        wrapped = wrap_text(issue["desc"], max_len=42)
+        y_desc = y_top - 5.5
+        for line in wrapped.split('\n'):
+            ax.text(104.0, y_desc, line, color='#475569', ha='left', va='center',
+                    fontproperties=fm.FontProperties(family=font_prop['family'], size=12.0), zorder=4)
+            y_desc -= 2.8
+
+        # Hotspot labels
+        for name, lon, lat in issue["hotspots"]:
+            ax.text(104.0, y_desc, f"📍 {name}", color=issue["color"], ha='left', va='center',
+                    fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5), zorder=4)
+            y_desc -= 2.5
+
+
+legend_items = []
+description_lines = []

@@ -79,9 +79,9 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
     ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor="#D97706", edgecolor="none", zorder=3))
     
-    ax.text(3.5, 93.6, "建筑高度现状图", color="#0F172A", ha="left", va="center",
+    ax.text(3.5, 93.6, "历史建筑与工业遗产分布图", color="#0F172A", ha="left", va="center",
             fontproperties=_font(font_prop, 26, "bold"), zorder=4)
-    ax.text(3.5, 90.7, "展示项目在长春市宽城区伪满皇宫周边现状建筑高度分布，为高度分类管控和天际线引导提供基础支撑。",
+    ax.text(3.5, 90.7, "展示项目在长春市宽城区伪满皇宫及周边中车长客厂区近代历史保护建筑与工业遗产分布现状。",
             color="#334155", ha="left", va="center", fontproperties=_font(font_prop, 15.0), zorder=4)
 
     # Main map on the left
@@ -99,25 +99,16 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
         
     if buildings is not None and not buildings.empty:
-        buildings_copy = buildings.copy()
-        buildings_copy["Floor_num"] = pd.to_numeric(buildings_copy["Floor"], errors="coerce").fillna(1)
-        conditions = [
-            (buildings_copy["Floor_num"] <= 3),
-            (buildings_copy["Floor_num"] >= 4) & (buildings_copy["Floor_num"] <= 7),
-            (buildings_copy["Floor_num"] >= 8) & (buildings_copy["Floor_num"] <= 14),
-            (buildings_copy["Floor_num"] >= 15) & (buildings_copy["Floor_num"] <= 20),
-            (buildings_copy["Floor_num"] >= 21)
-        ]
-        choices = [
-            "#FDE68A", # 1-3层: 黄
-            "#F97316", # 4-7层: 橙
-            "#EF4444", # 8-14层: 红
-            "#B91C1C", # 15-20层: 深红
-            "#7F1D1D"  # 21+层: 褐红
-        ]
-        buildings_copy["color"] = np.select(conditions, choices, default="#FDE68A")
-        buildings_copy.plot(ax=ax_map, color=buildings_copy["color"], edgecolor="#475569", linewidth=0.15, zorder=2)
+        buildings.plot(ax=ax_map, facecolor="#E2E8F0", edgecolor="#CBD5E1", linewidth=0.2, zorder=2)
         
+    prot_path = STATIC_DIR / "protected_buildings.geojson"
+    if prot_path.exists():
+        try:
+            protected = gpd.read_file(prot_path).to_crs(epsg=3857)
+            protected.plot(ax=ax_map, facecolor="#D97706", edgecolor="#B45309", linewidth=0.5, alpha=1.0, zorder=2.5)
+        except Exception as e:
+            print(f"Error loading protected buildings: {e}")
+            
     if roads is not None and not roads.empty:
         for lvl, lw in [(1, 3.8), (2, 3.0), (3, 2.2), (4, 1.6)]:
             sub_gdf = roads[roads["level"] == lvl]
@@ -144,32 +135,26 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     legend_rows = [
         ("规划研究范围", "outline_red"),
         ("城市道路", "road"),
-        ("低层 (1-3层)", "rect_h1"),
-        ("多层 (4-7层)", "rect_h2"),
-        ("中高层 (8-14层)", "rect_h3"),
-        ("高层 (15-20层)", "rect_h4"),
-        ("超高层 (21+层)", "rect_h5"),
+        ("重点历史/工业遗产", "rect_heritage"),
+        ("现状普通建筑", "building"),
         ("城市水系", "water"),
+        ("现状铁路线", "rail"),
     ]
     for i, (label, style) in enumerate(legend_rows):
         x = 103.5 + (i % 2) * 18.0
         y = 80.0 - (i // 2) * 3.3
         if style == "outline_red":
             ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="none", edgecolor="#FF3B30", linewidth=1.8, zorder=4))
-        elif style == "rect_h1":
-            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#FDE68A", edgecolor="#475569", linewidth=0.5, zorder=4))
-        elif style == "rect_h2":
-            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#F97316", edgecolor="#475569", linewidth=0.5, zorder=4))
-        elif style == "rect_h3":
-            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#EF4444", edgecolor="#475569", linewidth=0.5, zorder=4))
-        elif style == "rect_h4":
-            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#B91C1C", edgecolor="#475569", linewidth=0.5, zorder=4))
-        elif style == "rect_h5":
-            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#7F1D1D", edgecolor="#475569", linewidth=0.5, zorder=4))
+        elif style == "rect_heritage":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#D97706", edgecolor="#B45309", linewidth=0.5, zorder=4))
+        elif style == "building":
+            ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#E2E8F0", edgecolor="#CBD5E1", linewidth=0.5, zorder=4))
         elif style == "water":
             ax.add_patch(mpatches.Rectangle((x, y - 0.8), 2.7, 1.7, facecolor="#D0E6F7", edgecolor="none", zorder=4))
         elif style == "road":
             ax.add_patch(mpatches.Rectangle((x, y - 0.55), 2.7, 1.1, facecolor="#E2E8F0", edgecolor="none", zorder=4))
+        elif style == "rail":
+            ax.plot([x, x + 2.7], [y, y], color="#475569", linewidth=1.8, linestyle=(0, (5, 4)), zorder=4)
         ax.text(x + 3.6, y, label, color="#334155", ha="left", va="center",
                 fontproperties=_font(font_prop, 13.5), zorder=4)
 
@@ -193,13 +178,13 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
     ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
     ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
-    ax.text(103.5, 61.0, "高度说明 / HEIGHT ANALYSIS", color="#D97706", ha="left", va="center",
+    ax.text(103.5, 61.0, "遗产说明 / HERITAGE ANALYSIS", color="#D97706", ha="left", va="center",
             fontproperties=_font(font_prop, 13.5, "bold"), zorder=4)
 
     rows = [
-        ("1. 高度特征", "区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。"),
-        ("2. 高层分布", "中高层与高层住宅主要零散分布在区位外围，对历史街区核心区及伪满皇宫周边产生了一定的视线廊道压力。"),
-        ("3. 管控思路", "规划提出结合视线敏感度分析，严格控制核心区新建建筑高度，禁止插建高层，保留历史空间原有的舒缓天际线。"),
+        ("1. 遗产识别", "片区内包含以伪满皇宫为核心的近代历史建筑群，以及东北侧中车长客厂区的大跨度工业厂房与铁轨遗存，是复合型城市遗产的关键载体。"),
+        ("2. 价值评估", "历史风貌核心保护区与中车厂区具有极高的建筑质量和空间识别度，是本次更新设计中严格执行“保留与修缮”的刚性管控区域。"),
+        ("3. 活化思路", "保护传统街区肌理与风貌界面的连续性，打通历史文化展示游线，将工业遗存置换为文创、博览和青年双创等活力复合功能。"),
     ]
     y = 56.0
     for title, body in rows:
@@ -244,17 +229,15 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
 legend_items = [
     ("规划研究范围", "rect_red_border"),
-    ("低层建筑 (1-3 层)", "rect_h1"),
-    ("多层建筑 (4-7 层)", "rect_h2"),
-    ("中高层建筑 (8-14 层)", "rect_h3"),
-    ("高层建筑 (15-20 层)", "rect_h4"),
-    ("超高层建筑 (21层以上)", "rect_h5"),
+    ("重点历史/工业遗产建筑", "rect_heritage"),
+    ("现状普通建筑", "rect_building_light"),
     ("城市水系", "rect_water"),
     ("城市道路", "rect_road"),
+    ("现状铁路线", "line_rail")
 ]
 
 description_lines = [
-    "1. 高度特征：区内建筑以低层（1-3层）和多层（4-7层）为主，集中分布在历史街区内部和老旧社区，空间肌理紧凑，尺度宜人。",
-    "2. 高层分布：中高层与高层住宅主要零散分布在区位外围，对历史街区核心区及伪满皇宫周边产生了一定的视线廊道压力。",
-    "3. 管控思路：规划提出结合视线敏感度分析，严格控制核心区新建建筑高度，禁止插建高层，保留历史空间原有的舒缓天际线。"
+    "1. 遗产识别：片区内包含以伪满皇宫为核心的近代历史建筑群，以及东北侧中车长客厂区的大跨度工业厂房与铁轨遗存，是复合型城市遗产的关键载体。",
+    "2. 价值评估：历史风貌核心保护区与中车厂区具有极高的建筑质量和空间识别度，是本次更新设计中严格执行“保留与修缮”的刚性管控区域。",
+    "3. 活化思路：保护传统街区肌理与风貌界面的连续性，打通历史文化展示游线，将工业遗存置换为文创、博览和青年双创等活力复合功能。"
 ]
