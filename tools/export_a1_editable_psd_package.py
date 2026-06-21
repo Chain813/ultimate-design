@@ -21,8 +21,6 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from PIL import Image, ImageDraw, ImageFont
-from psd_tools import PSDImage
-from psd_tools.api.layers import PixelLayer
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -328,6 +326,9 @@ def _text_to_image(item: dict) -> Image.Image:
 
 
 def _write_raster_psd(manifest: dict) -> None:
+    from psd_tools import PSDImage
+    from psd_tools.api.layers import PixelLayer
+
     for board in manifest["boards"]:
         psd = PSDImage.new(mode="RGB", size=(board["width"], board["height"]), color=(255, 255, 255))
         background = Image.open(board["background"]).convert("RGBA")
