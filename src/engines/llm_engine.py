@@ -80,13 +80,14 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
+    from src.config.user_settings import get_effective_setting
     llm_cfg = config.get("engines", {}).get("llm", {})
-    url = llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions")
+    url = get_effective_setting("LLM_API_URL", llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions"))
     timeout_val = llm_cfg.get("timeout", 120)
-    api_key = os.getenv("DEEPSEEK_API_KEY")
+    api_key = get_effective_setting("DEEPSEEK_API_KEY")
 
     if not api_key:
-        return "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
+        return "错误：未配置 DEEPSEEK_API_KEY，请在“系统设置”页面或环境变量中配置。"
 
     headers = {
         "Content-Type": "application/json",
@@ -150,14 +151,15 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
     system_prompt = _augment_with_rag(prompt, system_prompt)
     config = load_global_config()
 
+    from src.config.user_settings import get_effective_setting
     llm_cfg = config.get("engines", {}).get("llm", {})
-    url = llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions")
+    url = get_effective_setting("LLM_API_URL", llm_cfg.get("api_url", "https://api.deepseek.com/chat/completions"))
     timeout_val = llm_cfg.get("timeout", 120)
-    api_key = os.getenv("DEEPSEEK_API_KEY")
+    api_key = get_effective_setting("DEEPSEEK_API_KEY")
 
     if not api_key:
         def _err_gen():
-            yield "错误：未在 .env 中找到 DEEPSEEK_API_KEY 配置。"
+            yield "错误：未配置 DEEPSEEK_API_KEY，请在“系统设置”页面或环境变量中配置。"
         return _err_gen()
 
     headers = {

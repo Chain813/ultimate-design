@@ -156,6 +156,8 @@ def render_top_nav():
     render_persistent_output_bar()
     render_scrolling_control()
     render_auto_tour()
+    render_presentation_toggle()
+    render_settings_panel()
     render_copilot_sidebar()
 
 
@@ -448,6 +450,44 @@ def render_presentation_toggle():
         with st.expander("🎬 演示控制", expanded=False):
             st.session_state["presentation_mode"] = st.toggle("演示模式", value=st.session_state.get("presentation_mode", False), key="pres_toggle")
             st.session_state["demo_mode"] = st.toggle("离线演示", value=st.session_state.get("demo_mode", False), key="demo_toggle_sidebar")
+
+
+def render_settings_panel():
+    from src.config.user_settings import load_user_settings, save_user_settings
+    with st.sidebar:
+        with st.expander("⚙️ 系统设置", expanded=False):
+            settings = load_user_settings()
+            
+            # Form for settings editing
+            new_settings = {}
+            new_settings["DEEPSEEK_API_KEY"] = st.text_input(
+                "DeepSeek API 密钥",
+                value=settings.get("DEEPSEEK_API_KEY", ""),
+                type="password",
+                help="用于连接 DeepSeek API，输入后点击保存生效。"
+            )
+            new_settings["LLM_API_URL"] = st.text_input(
+                "大模型接口地址",
+                value=settings.get("LLM_API_URL", ""),
+                help="如果使用中转或自定义 API 接口，请在此修改。"
+            )
+            new_settings["SD_WEBUI_URL"] = st.text_input(
+                "SD WebUI 地址",
+                value=settings.get("SD_WEBUI_URL", ""),
+                help="Stable Diffusion WebUI 本地服务端口 (默认 7860)"
+            )
+            new_settings["OLLAMA_URL"] = st.text_input(
+                "Ollama 地址",
+                value=settings.get("OLLAMA_URL", ""),
+                help="Ollama 本地大模型接口地址 (默认 11434)"
+            )
+            
+            if st.button("💾 保存配置", key="save_settings_btn", use_container_width=True):
+                if save_user_settings(new_settings):
+                    st.success("配置已保存，已自动应用于系统环境变量！")
+                    st.rerun()
+                else:
+                    st.error("配置保存失败，请检查写入权限。")
 
 
 from src.ui.chart_theme import CHART_PALETTE, apply_plotly_polar_theme, apply_plotly_theme, get_chart_palette, rgba_from_hex  # noqa: E402,F401

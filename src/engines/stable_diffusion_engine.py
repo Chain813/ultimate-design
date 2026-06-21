@@ -128,7 +128,8 @@ class SDPipeline:
         aigc = _load_config_aigc()
         self._aigc = aigc
         self._explicit_base_url = bool(base_url)
-        self.base_url = base_url or aigc.get("sd_webui_url", "http://127.0.0.1:7860")
+        from src.config.user_settings import get_effective_setting
+        self.base_url = base_url or get_effective_setting("SD_WEBUI_URL", aigc.get("sd_webui_url", "http://127.0.0.1:7860"))
         self.timeout = timeout or aigc.get("timeout", 180)
         self._steps: List[PipelineStep] = []
         self._current_step: Optional[PipelineStep] = None
