@@ -4,9 +4,9 @@
 
 # UltimateDESIGN
 
-**Digital Twin · Temporal Resonance — AI-Powered Urban Micro-Renewal Planning & Design Platform**
+**AI-Powered Decision Support Platform for Urban Design & Micro-Renewal**
 
-*Changchun Puppet Emperor's Palace District · 170.2 ha · 15 Pages · 26 Professional Drawings · End-to-End Evidence-Based Workflow*
+*Streamlit Full-Stack Engine · Decoupled Data & Logic · 15 Pages · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
@@ -19,7 +19,7 @@
 
 ## 🌟 Overview
 
-UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning graduate design and studio coursework. Using a 170.2-hectare district surrounding Changchun's Puppet Emperor's Palace as its case study, the platform decomposes urban design into 16 standardized stages — from data preparation through site diagnostics, conceptual strategy, overall/specialized systems, design detailing, to AIGC inference and agent manual — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → Python/PIL A3 drawing generation → AIGC design inference → regulatory guidelines**.
+UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning and urban design. Benefiting from a **fully decoupled data-and-logic architecture**, the platform supports importing any city/district data assets (and bundles a 170.2-hectare area surrounding Changchun's Puppet Emperor's Palace as its default verification case study). The platform decomposes urban renewal design into 16 standardized stages — spanning data preparation, site survey, evidence-based diagnostics, multi-agent game-theoretic strategy derivation, overall and specialized system planning, guideline generation, to AIGC inference and agent skill manual export — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → vector/raster map generation → AIGC design inference → regulatory guideline delivery**.
 
 ---
 
