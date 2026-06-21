@@ -9,8 +9,13 @@ from pathlib import Path
 from urllib.parse import quote
 
 from PIL import Image, ImageStat
-from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
-from playwright.sync_api import sync_playwright
+try:
+    from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    class PlaywrightTimeoutError(Exception):
+        pass
+    sync_playwright = None
 
 
 ROOT = Path(__file__).resolve().parents[1]

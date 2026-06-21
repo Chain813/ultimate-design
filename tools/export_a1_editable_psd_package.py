@@ -21,7 +21,6 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from PIL import Image, ImageDraw, ImageFont
-from playwright.sync_api import sync_playwright
 from psd_tools import PSDImage
 from psd_tools.api.layers import PixelLayer
 
@@ -141,6 +140,8 @@ def _collect_layout() -> dict:
 
     for old in ASSET_DIR.glob("*"):
         old.unlink()
+
+    from playwright.sync_api import sync_playwright
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()

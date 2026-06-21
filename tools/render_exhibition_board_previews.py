@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright
-
 
 ROOT = Path(__file__).resolve().parent.parent
 BOARD_DIR = ROOT / "static" / "exhibition_boards"
@@ -18,6 +16,8 @@ def build_single_outputs(count: int) -> list[Path]:
 
 
 def render_previews() -> list[Path]:
+    from playwright.sync_api import sync_playwright
+
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page(viewport={"width": 2400, "height": 3350}, device_scale_factor=1)
