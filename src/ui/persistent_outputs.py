@@ -406,3 +406,21 @@ def register_report_output(
         key=report_key,
         metadata={"stage": stage_code},
     )
+
+    if stage_code:
+        try:
+            from src.workflow.artifact_registry import register_artifact
+
+            register_artifact(
+                stage_code=stage_code,
+                key=report_key,
+                label=label,
+                category="report",
+                location=safe_filename,
+                mime="text/markdown; charset=utf-8",
+                metadata={"persistent_output_key": report_key},
+            )
+        except Exception as e:
+            import logging
+
+            logging.error(f"Error registering report artifact: {e}")

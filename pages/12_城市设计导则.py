@@ -18,6 +18,7 @@ from src.workflow.stage_data_bus import (
 )
 from src.workflow import resolve_subpage_value
 from src.workflow.approval_state import StageDependency, render_dependency_gate
+from src.workflow.artifact_registry import register_artifact
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -261,6 +262,15 @@ if selected_sub == "📜 分板块导则生成":
                 full_guideline += f"\n\n{'='*50}\n# 第{sec['id']}章 {sec['title']}\n{'='*50}\n\n{content}"
             save_stage_output("12", SK.DESIGN_GUIDELINE, full_guideline)
             total_chars = len(full_guideline)
+            register_artifact(
+                stage_code="12",
+                key=SK.DESIGN_GUIDELINE,
+                label="城市设计导则",
+                category="guideline",
+                location="stage_bus",
+                mime="text/markdown; charset=utf-8",
+                metadata={"sections": str(total), "total_chars": str(total_chars)},
+            )
             st.success(f"导则汇总完成！总计 {total_chars} 字")
 
             # 导出
