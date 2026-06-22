@@ -13,3 +13,9 @@ def test_stage07_strategy_matrix_output_key_is_preserved():
 
     assert negotiation.output_key == "strategy_matrix"
     assert negotiation.artifact_category == "report"
+
+
+def test_stage07_page_renderer_is_importable():
+    from src.stages.stage07_strategy.page import render_page
+
+    assert callable(render_page)
