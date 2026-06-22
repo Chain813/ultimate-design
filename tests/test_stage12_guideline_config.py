@@ -34,3 +34,9 @@ def test_register_guideline_artifact_records_stage12_output():
     assert artifact["label"] == "城市设计导则"
     assert artifact["category"] == "guideline"
     assert artifact["metadata"] == {"sections": "9", "total_chars": "1234"}
+
+
+def test_stage12_page_renderer_is_importable():
+    from src.stages.stage12_guideline.page import render_page
+
+    assert callable(render_page)
