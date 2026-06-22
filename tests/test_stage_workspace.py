@@ -51,3 +51,11 @@ def test_build_stage_workspace_html_contains_subpage_links_and_output_key():
     assert "共识雷达" in html
     assert "stage_bus: 07_strategy_matrix" in html
     assert "artifact: report" in html
+
+
+def test_workspace_css_is_scoped_to_stage_workspace_classes():
+    css = open("assets/style.css", encoding="utf-8").read()
+
+    assert ".stage-workspace-shell" in css
+    assert ".stage-workspace-tab.is-active" in css
+    assert "h1 {" not in css[css.index(".stage-workspace-shell") :]
