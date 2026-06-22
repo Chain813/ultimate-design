@@ -154,8 +154,9 @@ def render_top_nav():
 
     st.markdown("<style>" + apple_css + "</style>" + full_html, unsafe_allow_html=True)
     render_persistent_output_bar()
-    render_scrolling_control()
-    render_auto_tour()
+    if st.session_state.get("presentation_mode", False):
+        render_scrolling_control()
+        render_auto_tour()
     render_presentation_toggle()
     render_settings_panel()
     render_copilot_sidebar()

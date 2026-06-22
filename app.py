@@ -15,7 +15,7 @@ from src.ui.app_shell import (
     render_engine_status_alert,
     render_top_nav,
 )
-from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
+from src.engines.spatial_engine import get_hud_statistics
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
 from src.ui.asset_prefetch import render_static_asset_prefetch
@@ -41,7 +41,6 @@ render_engine_status_alert()
 # 启动后台缓存预热（静默加载其他页面数据）
 from src.utils.preloader import start_preloading
 start_preloading()
-top_stats = get_hud_statistics()
 
 # 🎬 演示模式：最大化显示区域 (使用 style.css 中的 .presentation-active 类)
 if st.session_state.get("presentation_mode", False):
@@ -319,36 +318,6 @@ def render_status_hud(engine_status=None):
 </section>
 """, unsafe_allow_html=True)
 
-def render_skyline_hud():
-    """在地图下方渲染横向天际线指标面板"""
-    skyline_stats = get_skyline_features()
-    st.markdown(f"""
-    <div class="skyline-panel">
-        <div class="row">
-            <div class="metric">
-                <div class="metric-label" style="color: #818cf8;">🏙️ 区域天际线地标高度</div>
-                <div class="metric-value">{skyline_stats['max_height']}<span class="metric-unit">m</span></div>
-            </div>
-            <div class="metric">
-                <div class="metric-label" style="color: #10b981;">🏢 平均建筑高度</div>
-                <div class="metric-value">{skyline_stats['avg_height']}<span class="metric-unit">m</span></div>
-            </div>
-            <div class="metric">
-                <div class="metric-label" style="color: #f59e0b;">📈 高层建筑占比</div>
-                <div class="metric-value">{skyline_stats['high_rise_ratio']}<span class="metric-unit">%</span></div>
-            </div>
-            <div class="metric" style="border-right: none;">
-                <div class="metric-label" style="color: #ec4899;">🏗️ 测区建筑总数</div>
-                <div class="metric-value">{skyline_stats['building_count']}<span class="metric-unit">栋</span></div>
-            </div>
-        </div>
-        <div class="footnote">
-            * 注：天际线高度数据基于建筑基底 Floor 字段按标准层高 3.5m 换算所得
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-
 # ==========================================
 # 🚀 渲染执行
 # ==========================================
@@ -410,6 +379,10 @@ st.markdown("<br>", unsafe_allow_html=True)
 def render_ai_monitoring_dashboard():
     """在主页底部渲染 AI 参与度监控面板。"""
     from src.utils.llm_monitor import get_llm_metrics
+
+    metrics = get_llm_metrics()
+    if not metrics:
+        return False
     
     st.markdown("---")
     render_section_intro(
@@ -417,11 +390,6 @@ def render_ai_monitoring_dashboard():
         "实时监控全平台大语言模型 API 的调用频次、响应时长、Token 吞吐量和性能表现。", 
         eyebrow="AI Performance Dashboard"
     )
-    
-    metrics = get_llm_metrics()
-    if not metrics:
-        st.info("💡 目前尚无 LLM API 调用记录，AI 助手正处于待命状态。在各阶段使用 AI 分析或侧边栏 Copilot 后，此处将显示实时监控数据。")
-        return
         
     total_calls = len(metrics)
     total_tokens = sum(m.get("total_tokens", 0) for m in metrics)
@@ -446,6 +414,7 @@ def render_ai_monitoring_dashboard():
         "total_tokens": "总Tokens"
     })
     st.dataframe(df_display, use_container_width=True)
+    return True
 
 render_ai_monitoring_dashboard()
 st.markdown("<br>", unsafe_allow_html=True)
