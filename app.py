@@ -18,6 +18,7 @@ from src.ui.app_shell import (
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
+from src.ui.asset_prefetch import render_static_asset_prefetch
 from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 import pandas as pd
 import streamlit.components.v1 as components
@@ -116,6 +117,7 @@ render_page_banner(
     ],
     image_url=f"{get_static_url('research_scope_2d_cropped.png')}?v=22"
 )
+render_static_asset_prefetch()
 
 render_summary_cards(
     [

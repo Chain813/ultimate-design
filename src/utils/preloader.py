@@ -8,6 +8,7 @@ Usage:
 """
 
 import logging
+import os
 import threading
 import streamlit as st
 
@@ -23,6 +24,20 @@ def _warm(name: str, fn, *args, **kwargs):
         logger.debug("Preloaded: %s", name)
     except Exception:
         logger.debug("Preload failed (non-fatal): %s", name, exc_info=True)
+
+
+def is_heavy_preload_enabled() -> bool:
+    """Return True only when local/demo runs explicitly opt into heavy warming."""
+    return os.getenv("UP_ENABLE_HEAVY_PRELOAD", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _preload_light():
+    """Lightweight startup warming safe for Streamlit Cloud cold starts."""
+    from src.config.loader import load_global_config
+    from src.engines.spatial_engine import get_hud_statistics
+
+    _warm("load_global_config", load_global_config)
+    _warm("get_hud_statistics", get_hud_statistics)
 
 
 def _preload_tier1():
@@ -66,7 +81,12 @@ def _preload_tier3():
 
 
 def _run_preload():
-    """按优先级顺序执行预热。"""
+    """Run lightweight preloading by default; heavy tiers are opt-in."""
+    _preload_light()
+    if not is_heavy_preload_enabled():
+        logger.info("Heavy cache preloading skipped. Set UP_ENABLE_HEAVY_PRELOAD=1 to enable it.")
+        return
+
     _preload_tier1()
     _preload_tier2()
     _preload_tier3()
