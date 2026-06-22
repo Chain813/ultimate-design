@@ -68,6 +68,8 @@ output/
 
 # IDE, 工具与索引目录
 .codegraph/
+.worktrees
+.worktrees/
 
 # 本地数据格式转换与预计算静态指标缓存
 *.parquet
