@@ -27,6 +27,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -163,6 +164,11 @@ SUB_OPTIONS = ["🗺️ 空间结构推演", "🎛️ 用地结构优化沙盘"]
 selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
+stage08_ready = render_dependency_gate(
+    [StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True)],
+    title="Stage 08 生成前置条件",
+)
+
 # ═══════════════════════════════════════════
 # 空间数据面板 —— 始终显示
 # ═══════════════════════════════════════════
@@ -228,7 +234,13 @@ if selected_sub == "🗺️ 空间结构推演":
         with st.expander("🗺️ 高精度语义底稿图（矢量渲染 300DPI）", expanded=False):
             st.image(str(master_img), caption="总体语义底稿图 — 研究范围及周边1km", use_container_width=True)
 
-    if st.button("🗺️ 生成空间结构推演报告", type="primary", key="s8_structure", **stretch_width(st.button)):
+    if st.button(
+        "🗺️ 生成空间结构推演报告",
+        type="primary",
+        key="s8_structure",
+        disabled=not stage08_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深城市设计总师，精通空间结构分析与功能分区策划。
 
@@ -511,7 +523,13 @@ elif selected_sub == "🎛️ 用地结构优化沙盘":
             st.error(f"空间落位图渲染失败：{e}")
 
 
-    if total <= 100 and st.button("🔍 评估此方案的影响", type="primary", key="s8_sandbox", **stretch_width(st.button)):
+    if total <= 100 and st.button(
+        "🔍 评估此方案的影响",
+        type="primary",
+        key="s8_sandbox",
+        disabled=not stage08_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         scenario = (
             f"居住 {res_pct}%, 商业 {com_pct}%, 办公 {off_pct}%, "

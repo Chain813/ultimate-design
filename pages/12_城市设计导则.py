@@ -17,6 +17,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -126,6 +127,14 @@ if selected_sub == "📜 分板块导则生成":
         "注入真实空间数据作为量化依据。每板块不限字数，只要求详实、精准、有据。",
         eyebrow="Multi-Dispatch Generation",
     )
+    stage12_ready = render_dependency_gate(
+        [
+            StageDependency("05", SK.DIAGNOSIS_REPORT, "前期诊断报告"),
+            StageDependency("06", SK.DESIGN_CONCEPT, "设计目标定位"),
+            StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True),
+        ],
+        title="Stage 12 导则生成前置条件",
+    )
 
     # 加载前序数据
     s1 = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
@@ -177,6 +186,7 @@ if selected_sub == "📜 分板块导则生成":
                     f"📝 生成第{sec['id']}章：{sec['title']}",
                     type="primary",
                     key=f"gen_{sec['id']}",
+                    disabled=not stage12_ready,
                 ):
                     # 清除强制重新生成标记
                     st.session_state.pop(f"force_regen_{sec['id']}", None)
@@ -238,7 +248,12 @@ if selected_sub == "📜 分板块导则生成":
     st.markdown("---")
     if done == total:
         st.success(f"🎉 全部 {total} 个板块已生成完成！")
-        if st.button("📄 汇总为完整导则", type="primary", **stretch_width(st.button)):
+        if st.button(
+            "📄 汇总为完整导则",
+            type="primary",
+            disabled=not stage12_ready,
+            **stretch_width(st.button),
+        ):
             full_guideline = ""
             for sec in GUIDELINE_SECTIONS:
                 key = f"guideline_section_{sec['id']}"

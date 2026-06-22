@@ -27,6 +27,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -374,6 +375,16 @@ elif selected_sub == "🏗️ 空间深化设计方案":
         "综合控规指标、人群需求和上游所有专项策略，生成完整的地块改造设计方案。",
         eyebrow="Plot Design Scheme",
     )
+    stage10_design_ready = render_dependency_gate(
+        [
+            StageDependency("08", SK.SPATIAL_STRUCTURE, "空间结构推演"),
+            StageDependency("09", SK.TRAFFIC_SYSTEM, "交通系统设计"),
+            StageDependency("09", SK.PUBLIC_SPACE, "公共空间系统设计"),
+            StageDependency("09", SK.BUILDING_FORM, "建筑形态风貌控制"),
+            StageDependency("09", SK.LANDSCAPE_STYLE, "风貌景观设计"),
+        ],
+        title="Stage 10 深化设计前置条件",
+    )
 
     # 加载所有前置数据
     spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
@@ -400,7 +411,13 @@ elif selected_sub == "🏗️ 空间深化设计方案":
         if "❌" in data_status.values():
             st.warning("部分前序数据尚未生成，设计方案将基于已有数据进行策划。")
 
-    if st.button(f"🏗️ 生成 {selected_plot} 深化设计方案", type="primary", key="s10_design", **stretch_width(st.button)):
+    if st.button(
+        f"🏗️ 生成 {selected_plot} 深化设计方案",
+        type="primary",
+        key="s10_design",
+        disabled=not stage10_design_ready,
+        **stretch_width(st.button),
+    ):
         # 组装上下文（截取以控制 token 用量）
         upstream = f"""
 【地块诊断】：{plot_ctx}
@@ -522,11 +539,24 @@ elif selected_sub == "🔬 特色专项研究":
         "提炼本项目的特色研究方向与技术方法（如数字孪生、AIGC推演、多主体协商等）。",
         eyebrow="Specialized Study",
     )
+    stage10_special_ready = render_dependency_gate(
+        [
+            StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True),
+            StageDependency("08", SK.SPATIAL_STRUCTURE, "空间结构推演"),
+        ],
+        title="Stage 10 特色研究前置条件",
+    )
 
     from src.workflow.design_context import build_design_context
     ctx = build_design_context()
 
-    if st.button("🔬 生成特色专项研究", type="primary", key="s10_specialized", **stretch_width(st.button)):
+    if st.button(
+        "🔬 生成特色专项研究",
+        type="primary",
+        key="s10_specialized",
+        disabled=not stage10_special_ready,
+        **stretch_width(st.button),
+    ):
         prompt = f"""你是一位城市设计方法研究专家。请撰写一份项目特色专项研究文本（不限字数）。
 
 本项目特色在于将大模型、多模态AI、数字孪生等技术应用于城市更新规划设计，

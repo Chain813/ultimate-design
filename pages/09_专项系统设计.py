@@ -28,6 +28,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_keys import SK
 from src.ui.persistent_outputs import register_report_output
 from src.ui.streamlit_compat import stretch_width
@@ -118,6 +119,11 @@ SUB_OPTIONS = ["🚗 交通网络与TOD", "🌳 公共空间与15分钟圈", "�
 selected_sub = resolve_subpage_value(SUB_OPTIONS)
 st.markdown("---")
 
+stage09_ready = render_dependency_gate(
+    [StageDependency("08", SK.SPATIAL_STRUCTURE, "空间结构推演")],
+    title="Stage 09 生成前置条件",
+)
+
 # 加载 Stage 08 空间结构
 spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
 
@@ -167,7 +173,13 @@ if selected_sub == "🚗 交通网络与TOD":
         {"value": str(stats.get("poi_count", "N/A")), "title": "POI 总量", "desc": "活力基线"},
     ])
 
-    if st.button("🚗 生成交通系统设计方案", type="primary", key="s9_traffic", **stretch_width(st.button)):
+    if st.button(
+        "🚗 生成交通系统设计方案",
+        type="primary",
+        key="s9_traffic",
+        disabled=not stage09_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深交通规划师，精通城市更新中的交通网络优化与 TOD 开发模式。
 
@@ -236,7 +248,13 @@ elif selected_sub == "🌳 公共空间与15分钟圈":
         {"value": str(stats.get("poi_count", "N/A")), "title": "POI 总量", "desc": "设施基线（数据可能不全）"},
     ])
 
-    if st.button("🌳 生成公共空间系统设计方案", type="primary", key="s9_public", **stretch_width(st.button)):
+    if st.button(
+        "🌳 生成公共空间系统设计方案",
+        type="primary",
+        key="s9_public",
+        disabled=not stage09_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深景观与公共空间规划师，精通 15 分钟社区生活圈理论。
 
@@ -313,7 +331,13 @@ elif selected_sub == "🏛️ 建筑形态、风貌与立面":
         {"value": f"{sky.get('high_rise_ratio', 0)}%", "title": "高层占比", "desc": ">24m"},
     ])
 
-    if st.button("🏛️ 生成建筑形态、风貌与立面控制方案", type="primary", key="s9_building", **stretch_width(st.button)):
+    if st.button(
+        "🏛️ 生成建筑形态、风貌与立面控制方案",
+        type="primary",
+        key="s9_building",
+        disabled=not stage09_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深城市设计师，精通建筑形态控制、历史风貌塑造与建筑立面设计。
 
@@ -384,7 +408,13 @@ elif selected_sub == "🎨 风貌景观与文保":
         eyebrow="Landscape & Heritage",
     )
 
-    if st.button("🎨 生成风貌景观设计方案", type="primary", key="s9_landscape", **stretch_width(st.button)):
+    if st.button(
+        "🎨 生成风貌景观设计方案",
+        type="primary",
+        key="s9_landscape",
+        disabled=not stage09_ready,
+        **stretch_width(st.button),
+    ):
         spatial_ctx = get_full_spatial_context()
         prompt = f"""你是一位资深风貌景观设计师，精通历史街区保护与风貌修复。
 
@@ -456,7 +486,13 @@ elif selected_sub == "🏭 产业业态规划":
     landuse_sandbox = load_stage_output("08", SK.LANDUSE_SANDBOX, "")
     strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
 
-    if st.button("🏭 生成产业业态规划方案", type="primary", key="s9_industry", **stretch_width(st.button)):
+    if st.button(
+        "🏭 生成产业业态规划方案",
+        type="primary",
+        key="s9_industry",
+        disabled=not stage09_ready,
+        **stretch_width(st.button),
+    ):
         prompt = f"""你是一位资深城市产业规划师，精通历史街区更新中的产业业态策划。
 
 基于以下数据，为研究范围制定产业业态规划方案。

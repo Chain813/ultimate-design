@@ -20,6 +20,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
 
@@ -148,6 +149,10 @@ if selected_sub == "🌐 第一层：全域实施路径":
         "文化旅游线路贯通工程等宏观层面的实施计划。",
         eyebrow="Region-wide Phasing",
     )
+    stage11_region_ready = render_dependency_gate(
+        [StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True)],
+        title="Stage 11 全域实施前置条件",
+    )
 
     # 加载前序数据
     strategy = load_stage_output("07", SK.STRATEGY_MATRIX, "")
@@ -160,7 +165,13 @@ if selected_sub == "🌐 第一层：全域实施路径":
             st.info("暂无策略矩阵数据（来自 Stage 07）。")
         st.text(get_key_plots_summary())
 
-    if st.button("🌐 生成全域实施路径", type="primary", key="s11_region", **stretch_width(st.button)):
+    if st.button(
+        "🌐 生成全域实施路径",
+        type="primary",
+        key="s11_region",
+        disabled=not stage11_region_ready,
+        **stretch_width(st.button),
+    ):
         prompt = f"""你是一位资深城市更新实施策划专家。
 
 基于以下前期分析数据，制定覆盖**整个研究范围（伪满皇宫周边约160公顷）**的全域实施路径。
@@ -231,6 +242,13 @@ elif selected_sub == "📍 第二层：重点地块实施路径":
         [d["name"] for d in diags_sorted],
         format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})",
     )
+    stage11_plot_ready = render_dependency_gate(
+        [
+            StageDependency("11", "region_phasing", "全域实施路径"),
+            StageDependency("10", f"{SK.PLOT_DESIGN}_{selected_plot}", f"{selected_plot} 深化设计方案"),
+        ],
+        title="Stage 11 重点地块实施前置条件",
+    )
 
     d = next(dd for dd in diags_sorted if dd["name"] == selected_plot)
     c1, c2, c3, c4 = st.columns(4)
@@ -242,7 +260,13 @@ elif selected_sub == "📍 第二层：重点地块实施路径":
     region_plan = load_stage_output("11", "region_phasing", "")
     btn_key = f"s11_plot_{selected_plot.replace(' ', '_')}"
 
-    if st.button(f"📍 生成 {selected_plot} 实施路径", type="primary", key=btn_key, **stretch_width(st.button)):
+    if st.button(
+        f"📍 生成 {selected_plot} 实施路径",
+        type="primary",
+        key=btn_key,
+        disabled=not stage11_plot_ready,
+        **stretch_width(st.button),
+    ):
         prompt = f"""你是一位城市更新实施策划专家。
 
 请为重点地块【{selected_plot}】制定详细的实施路径。

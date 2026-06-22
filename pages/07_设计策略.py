@@ -27,6 +27,7 @@ from src.workflow.stage_data_bus import (
     save_stage_output, load_stage_output, render_evidence_chain_bar,
 )
 from src.workflow import resolve_subpage_value
+from src.workflow.approval_state import record_policy_review
 from src.workflow.stage_keys import SK
 from src.ui.persistent_outputs import register_report_output
 from src.ui.streamlit_compat import stretch_width
@@ -287,6 +288,7 @@ if selected_sub == "⚖️ 多主体协同推演":
                 if st.button("🔍 开始进行政策合规研判", key="btn_run_policy_check", use_container_width=True):
                     with st.spinner("AI 正在检索法规并进行合规研判..."):
                         matrix = generate_policy_matrix(proposal)
+                        record_policy_review("07", SK.STRATEGY_MATRIX, matrix if matrix else [])
                         st.session_state[_cache_key] = matrix if matrix else []
                         st.rerun()
             else:
