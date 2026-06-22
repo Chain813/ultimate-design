@@ -1,3 +1,5 @@
+import subprocess
+
 from src.config import ROOT_DIR
 from src.ui import asset_prefetch
 from src.ui.asset_prefetch import (
@@ -17,6 +19,17 @@ def test_deployment_assets_exclude_static_atlas():
     all_assets = [asset for assets in DEPLOYMENT_ASSETS.values() for asset in assets]
     assert all(not asset.startswith("static/atlas/") for asset in all_assets)
     assert all(not asset.startswith("static/atlas_enhanced/") for asset in all_assets)
+
+
+def test_heavy_atlas_assets_are_not_tracked_for_deployment():
+    result = subprocess.run(
+        ["git", "ls-files", "static/atlas", "static/atlas_enhanced"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert result.stdout.strip() == ""
 
 
 def test_prefetch_assets_include_default_3d_map_assets_only():

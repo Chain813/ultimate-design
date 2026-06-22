@@ -19,6 +19,7 @@ from src.engines.spatial_engine import get_hud_statistics
 from src.config import get_static_url
 from src.utils.service_check import check_engine_status
 from src.ui.asset_prefetch import render_static_asset_prefetch
+from src.ui.critical_images import get_inline_static_image_src
 from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 import pandas as pd
 import streamlit.components.v1 as components
@@ -114,7 +115,7 @@ render_page_banner(
         {"value": "AIGC+CNet", "label": "生成式风貌设计", "meta": "基于空间骨架控制的意向渲染技术"},
         {"value": "13 阶段", "label": "全链路工作流", "meta": "覆盖数据准备、前、中、后期全套规划"},
     ],
-    image_url=f"{get_static_url('research_scope_2d_cropped.png')}?v=22"
+    image_url=get_inline_static_image_src("research_scope_2d_cropped.png")
 )
 render_static_asset_prefetch()
 

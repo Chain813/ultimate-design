@@ -81,6 +81,7 @@ start_cc.bat
 # 本地生成的超大底图与图册输出
 static/assets/generated_base/satellite_cropped.png
 static/atlas/
+static/atlas_enhanced/
 
 # 录屏与汇报视频指南
 obs_recording_guide.md
