@@ -10,7 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONTENT_PATH = ROOT / "static" / "atlas" / "policy_a3" / "policy_board_content.json"
+CONTENT_PATH = ROOT / "data" / "policy_board_content.json"
 GENERATED_DIR = ROOT / "static" / "atlas" / "policy_a3" / "generated"
 
 FORBIDDEN_REAL_MAP_TERMS = (
