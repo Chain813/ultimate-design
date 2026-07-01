@@ -5,8 +5,12 @@ it refuses or downgrades prompts when the selected drawing lacks required
 spatial/data references.
 """
 
+from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Sequence
+from typing import Dict, Iterable, List, Sequence, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.engines.key_plot_engine import KeyPlot
 
 
 # ---- Exceptions ----
@@ -68,7 +72,20 @@ class DynamicProjectDefaults(dict):
 PROJECT_DEFAULTS = DynamicProjectDefaults()
 
 
-BOOK_CHAPTERS = {
+LEGACY_KEY_PLOT_DRAWING_SUFFIXES = [
+    "现状问题图",
+    "更新定位图",
+    "平面深化图",
+    "AIGC推演效果图",
+    "人视效果图",
+    "建筑更新图",
+    "街道断面图",
+    "改造前后对比图",
+    "运营场景图",
+]
+
+
+BASE_BOOK_CHAPTERS = {
     "01 项目认知篇": [
         "封面",
         "目录",
@@ -117,7 +134,7 @@ BOOK_CHAPTERS = {
         "更新模式分区图",
         "功能策划图",
         "空间结构规划图",
-        "5个重点地块定位图",
+        "重点地块定位图",
     ],
     "05 整体概念设计和更新": [
         "总平面图",
@@ -137,53 +154,7 @@ BOOK_CHAPTERS = {
         "夜景照明与导视系统图",
         "规划指标表",
     ],
-    "06 重点地段更新改造设计": [
-        "地块1现状问题图",
-        "地块1更新定位图",
-        "地块1平面深化图",
-        "地块1AIGC推演效果图",
-        "地块1人视效果图",
-        "地块1建筑更新图",
-        "地块1街道断面图",
-        "地块1改造前后对比图",
-        "地块1运营场景图",
-        "地块2现状问题图",
-        "地块2更新定位图",
-        "地块2平面深化图",
-        "地块2AIGC推演效果图",
-        "地块2人视效果图",
-        "地块2建筑更新图",
-        "地块2街道断面图",
-        "地块2改造前后对比图",
-        "地块2运营场景图",
-        "地块3现状问题图",
-        "地块3更新定位图",
-        "地块3平面深化图",
-        "地块3AIGC推演效果图",
-        "地块3人视效果图",
-        "地块3建筑更新图",
-        "地块3街道断面图",
-        "地块3改造前后对比图",
-        "地块3运营场景图",
-        "地块4现状问题图",
-        "地块4更新定位图",
-        "地块4平面深化图",
-        "地块4AIGC推演效果图",
-        "地块4人视效果图",
-        "地块4建筑更新图",
-        "地块4街道断面图",
-        "地块4改造前后对比图",
-        "地块4运营场景图",
-        "地块5现状问题图",
-        "地块5更新定位图",
-        "地块5平面深化图",
-        "地块5AIGC推演效果图",
-        "地块5人视效果图",
-        "地块5建筑更新图",
-        "地块5街道断面图",
-        "地块5改造前后对比图",
-        "地块5运营场景图",
-    ],
+    "06 重点地段更新改造设计": [],
     "07 技术推演与实施篇": [
         "AIGC技术推演过程图",
         "实施分期图",
@@ -191,6 +162,30 @@ BOOK_CHAPTERS = {
         "更新成效评估图",
     ],
 }
+
+
+def get_book_chapters(key_plots: Sequence["KeyPlot"] | None = None) -> dict[str, list[str]]:
+    from src.engines.key_plot_engine import build_key_plot_drawing_names, get_configured_key_plots
+
+    chapters = deepcopy(BASE_BOOK_CHAPTERS)
+    active_plots = list(get_configured_key_plots() if key_plots is None else key_plots)
+    chapters["06 重点地段更新改造设计"] = build_key_plot_drawing_names(active_plots)
+    return chapters
+
+
+def _legacy_static_book_chapters() -> dict[str, list[str]]:
+    chapters = deepcopy(BASE_BOOK_CHAPTERS)
+    chapters["06 重点地段更新改造设计"] = [
+        f"地块{index}{suffix}"
+        for index in range(1, 6)
+        for suffix in LEGACY_KEY_PLOT_DRAWING_SUFFIXES
+    ]
+    return chapters
+
+
+# Legacy static snapshot kept for backward-compatible imports. New or dynamic
+# code must call get_book_chapters(...) or flatten_chapter_drawings(...).
+BOOK_CHAPTERS = _legacy_static_book_chapters()
 
 
 UPLOAD_CHANNELS = [
@@ -210,7 +205,7 @@ UPLOAD_CHANNELS = [
 
 UPLOAD_REFERENCE_TEXT = {
     "卫星底图": "请严格参考上传的卫星底图作为空间基础，不得改变研究范围的空间关系、道路走向和主要建筑肌理。",
-    "红线边界图": "请严格保持上传红线图中的研究范围边界和五个重点地块边界，不得扩大、缩小、旋转、偏移或重新解释边界。",
+    "红线边界图": "请严格保持上传红线图中的研究范围边界和重点更新单元边界，不得扩大、缩小、旋转、偏移或重新解释边界。",
     "GIS专题图": "请严格依据上传 GIS 专题图中的分类、范围和图例逻辑进行视觉表达，不得自行新增不存在的数据分区。",
     "道路矢量图": "请严格保持上传道路矢量图中的道路等级、走向、交叉口和街区路网结构，不得自行增删主要道路。",
     "建筑肌理图": "请严格参考上传建筑肌理图中的建筑轮廓、建筑密度和街区肌理，建筑轮廓需基本一致。",
@@ -225,7 +220,7 @@ UPLOAD_REFERENCE_TEXT = {
 
 PRECISION_ONE = {
     "研究范围图",
-    "研究范围与5个重点地块图",
+    "研究范围与重点地块图",
     "用地现状分析图",
     "AI诊断用地现状图",
     "建筑现状分析图",
@@ -263,7 +258,7 @@ PRECISION_TWO = {
     "更新模式分区图",
     "功能策划图",
     "空间结构规划图",
-    "5个重点地块定位图",
+    "重点地块定位图",
     "建筑风貌识别图",
     "历史建筑与工业遗产分布图",
     "社交媒体情感分析图",
@@ -298,7 +293,7 @@ PRECISION_THREE = {
 NEGATIVE_COMMON = (
     "不要卡通风，不要漫画风，不要儿童插画风，不要过度赛博朋克，不要旅游宣传海报风，"
     "不要房地产广告风，不要虚构城市天际线，不要虚构道路，不要虚构地名，不要改变研究范围边界，"
-    "不要改变五个重点地块边界，不要改变道路走向，不要改变建筑肌理，不要错误比例尺，不要错误指北针，"
+    "不要改变重点地块边界，不要改变道路走向，不要改变建筑肌理，不要错误比例尺，不要错误指北针，"
     "不要乱码中文，不要大段难以阅读的文字，不要杂乱排版，不要低清晰度，不要无关人物占据画面。"
 )
 NEGATIVE_BY_PRECISION = {
@@ -497,7 +492,7 @@ def revise_prompt_by_rating(prompt: str, rating: str, issue_types: Iterable[str]
         additions.append("废弃当前图面结果，回到完整性检查；重新确认图纸类型、底图、精度等级、图例和核心内容后再生成。")
 
     if "边界不准" in issue_types:
-        additions.append("必须严格保持上传红线图边界；不得改变研究范围形状，不得改变五个重点地块位置，不得对边界进行艺术化处理。")
+        additions.append("必须严格保持上传红线图边界；不得改变研究范围形状，不得改变重点地块位置，不得对边界进行艺术化处理。")
     if "图面太杂" in issue_types or "信息太密" in issue_types:
         additions.append("减少装饰元素，保留主要模块和核心图面；文字以短标签为主，增加留白，降低背景纹理透明度。")
     if "文字不准" in issue_types or "文字乱码" in issue_types:
@@ -516,9 +511,9 @@ def revise_prompt_by_rating(prompt: str, rating: str, issue_types: Iterable[str]
     return prompt.rstrip() + "\n\n【根据成图评级追加修正】\n" + "\n".join(f"- {item}" for item in additions)
 
 
-def flatten_chapter_drawings() -> List[str]:
+def flatten_chapter_drawings(key_plots: Sequence["KeyPlot"] | None = None) -> List[str]:
     drawings = []
-    for names in BOOK_CHAPTERS.values():
+    for names in get_book_chapters(key_plots=key_plots).values():
         drawings.extend(names)
     return drawings
 
@@ -552,7 +547,7 @@ def _compose_prompt(request: ImagePromptRequest, profile: DrawingProfile, negati
 版式采用{request.layout_structure}。图面需形成清晰的信息层级：主图优先，策略标签次之，图例和说明辅助。避免让装饰性元素压过真实数据和空间关系。
 
 【图例与标注】
-图例内容包括：{request.legend_content or '使用占位符标注图例分类，等待用户后期替换。'}。必须出现的重点地块或空间对象：{request.key_plots or '五个重点地块、研究范围边界、主要道路和伪满皇宫周边核心节点。'}。{schematic_text}
+图例内容包括：{request.legend_content or '使用占位符标注图例分类，等待用户后期替换。'}。必须出现的重点地块或空间对象：{request.key_plots or '重点地块、研究范围边界、主要道路和伪满皇宫周边核心节点。'}。{schematic_text}
 
 【风格与图框】
 {request.style_system or UNIFIED_STYLE}
@@ -598,7 +593,7 @@ def _format_evidence(evidence_blocks: Dict[str, str], enabled: bool = True) -> s
 
 def _precision_rule_text(profile: DrawingProfile) -> str:
     if profile.precision == "一级精度":
-        return "必须严格依据上传底图，不允许 AI 改变边界、道路、地块形状和空间关系；不得改变研究范围边界、五个重点地块边界、道路关系、建筑轮廓和用地分类。"
+        return "必须严格依据上传底图，不允许 AI 改变边界、道路、地块形状和空间关系；不得改变研究范围边界、重点地块边界、道路关系、建筑轮廓和用地分类。"
     if profile.precision == "二级精度":
         return "必须基于真实数据或已上传专题图，但允许在图面表达、色彩、符号和版式上进行视觉美化；缺少数据时只能生成视觉表达模板。"
     return "以概念表达、风格表达和图册视觉为主，允许 AI 适度发挥，但不能虚构真实地理位置、道路、地块和数据。"
@@ -670,9 +665,10 @@ def _requires_legend(name: str) -> bool:
 
 
 def _normalize_plot_detail_name(name: str) -> str:
-    for idx in range(1, 6):
-        name = name.replace(f"地块{idx}", "重点地块")
-    return name
+    from src.engines.key_plot_engine import normalize_key_plot_name
+
+    name = name.replace("5个重点地块", "重点地块")
+    return normalize_key_plot_name(name)
 
 
 def _has_text(value) -> bool:

@@ -1,9 +1,17 @@
+import subprocess
+import sys
+from pathlib import Path
+
 from src.engines.drawing_prompt_engine import (
+    BOOK_CHAPTERS,
     ImagePromptRequest,
     build_image_prompt,
+    flatten_chapter_drawings,
+    get_book_chapters,
     get_drawing_profile,
     revise_prompt_by_rating,
 )
+from src.engines.key_plot_engine import KeyPlot
 
 
 def _base_request(**overrides):
@@ -20,6 +28,77 @@ def _base_request(**overrides):
     }
     data.update(overrides)
     return ImagePromptRequest(**data)
+
+
+def _plot(index: int) -> KeyPlot:
+    return KeyPlot(index=index, plot_id=str(index), name=f"测试地块{index}")
+
+
+def test_book_chapters_expand_dynamic_key_plots():
+    plots = [_plot(1), _plot(2), _plot(3)]
+
+    chapters = get_book_chapters(key_plots=plots)
+    detail = chapters.get("06 重点地段更新改造设计", [])
+
+    assert len(detail) == 27
+    assert detail[0] == "地块1现状问题图"
+    assert detail[-1] == "地块3运营场景图"
+    assert "地块4现状问题图" not in detail
+
+
+def test_flatten_chapter_drawings_accepts_dynamic_key_plots():
+    names = flatten_chapter_drawings(key_plots=[_plot(1)])
+
+    assert "地块1街道断面图" in names
+    assert "地块2街道断面图" not in names
+
+
+def test_legacy_book_chapters_snapshot_stays_static_while_flatten_is_dynamic():
+    static_detail = BOOK_CHAPTERS["06 重点地段更新改造设计"]
+    dynamic_names = flatten_chapter_drawings(key_plots=[_plot(1)])
+
+    assert len(static_detail) == 45
+    assert "地块5街道断面图" in static_detail
+    assert "地块2街道断面图" not in dynamic_names
+
+
+def test_arbitrary_plot_index_profile_is_level_one():
+    profile = get_drawing_profile("地块12平面深化图")
+
+    assert profile.precision == "一级精度"
+    assert "红线边界图" in profile.required_uploads
+
+
+def test_static_strategy_chapter_uses_dynamic_key_plot_label():
+    assert "重点地块定位图" in BOOK_CHAPTERS["04 策略生成篇"]
+    assert "5个重点地块定位图" not in BOOK_CHAPTERS["04 策略生成篇"]
+
+
+def test_legacy_key_plot_locator_name_matches_current_profile():
+    legacy = get_drawing_profile("5个重点地块定位图")
+    current = get_drawing_profile("重点地块定位图")
+
+    assert legacy.precision == current.precision
+    assert legacy.drawing_type == current.drawing_type
+    assert legacy.required_uploads == current.required_uploads
+
+
+def test_module_import_does_not_load_key_plot_engine_at_top_level():
+    code = (
+        "import sys; "
+        "import src.engines.drawing_prompt_engine; "
+        "print('src.engines.key_plot_engine' in sys.modules)"
+    )
+
+    completed = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=Path(__file__).resolve().parents[1],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert completed.stdout.strip() == "False"
 
 
 def test_level_one_research_scope_requires_redline():
