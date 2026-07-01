@@ -4,7 +4,6 @@ Usage:
     from src.engines.site_diagnostic_engine import get_plot_diagnostics, generate_policy_matrix
 """
 
-import json
 import logging
 
 import numpy as np
@@ -13,6 +12,7 @@ import streamlit as st
 
 from src.config import SHP_FILES, DATA_FILES
 from src.config.runtime import resolve_path
+from src.engines.key_plot_engine import load_key_plot_geometries_from_geojson
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -57,48 +57,45 @@ def get_plot_diagnostics() -> list:
     if not plots_path.exists():
         return []
 
-    with plots_path.open("r", encoding="utf-8") as f:
-        geo = json.load(f)
+    plot_geometries = load_key_plot_geometries_from_geojson(plots_path)
+    if not plot_geometries:
+        return []
 
     try:
         from src.engines.spatial_engine import get_merged_poi_data
         df_poi = get_merged_poi_data()
     except Exception:
+        logger.warning("POI data unavailable for plot diagnostics", exc_info=True)
         df_poi = pd.DataFrame()
 
     # Use cached loaders instead of re-reading files every call
     df_spatial = _load_spatial_merge()
     df_nlp = _load_nlp_data()
 
-    # Pre-extract coordinate arrays for vectorized bbox filtering
-    poi_coords = None
-    if not df_poi.empty and "Lng" in df_poi.columns:
-        poi_coords = (df_poi["Lng"].values, df_poi["Lat"].values)
+    # Pre-extract coordinate arrays for vectorized polygon filtering
+    poi_coords = _coordinate_arrays(df_poi)
 
     sp_coords = None
     sp_cols = {}
-    if not df_spatial.empty and "Lng" in df_spatial.columns:
-        sp_coords = (df_spatial["Lng"].values, df_spatial["Lat"].values)
+    if not df_spatial.empty and "Lng" in df_spatial.columns and "Lat" in df_spatial.columns:
+        sp_coords = _coordinate_arrays(df_spatial)
         for col in ("GVI", "SVF", "Enclosure", "Clutter"):
             if col in df_spatial.columns:
-                sp_cols[col] = df_spatial[col].values
+                sp_cols[col] = pd.to_numeric(df_spatial[col], errors="coerce").to_numpy(dtype=float)
 
     global_sentiment = 0.0
     if not df_nlp.empty and "Score" in df_nlp.columns:
         global_sentiment = round(float(df_nlp["Score"].mean()), 3)
 
     results = []
-    for feat in geo.get("features", []):
-        props = feat.get("properties", {})
+    for plot_geometry in plot_geometries:
+        plot = plot_geometry.plot
+        geometry = plot_geometry.geometry
+        props = {"name": plot.name}
         name = props.get("name", f"地块_{props.get('OBJECTID', '?')}")
-        area_sqm = props.get("Shape_Area", 0)
-        coords = feat["geometry"]["coordinates"][0]
-        bbox = (min(c[0] for c in coords), max(c[0] for c in coords),
-                min(c[1] for c in coords), max(c[1] for c in coords))
-
-        # Vectorized bbox filtering
-        poi_count = _count_in_bbox_vec(poi_coords, bbox)
-        gvi_mean, svf_mean, enc_mean, clu_mean = _spatial_means_in_bbox_vec(sp_coords, sp_cols, bbox)
+        area_sqm = float(plot.area_ha) * 10000.0
+        poi_count = _count_in_geometry_vec(poi_coords, geometry)
+        gvi_mean, svf_mean, enc_mean, clu_mean = _spatial_means_in_geometry_vec(sp_coords, sp_cols, geometry)
 
         s_i = min(1.0, area_sqm / 150000)
         d_i = min(1.0, poi_count / 20) if poi_count > 0 else 0.3
@@ -120,28 +117,66 @@ def get_plot_diagnostics() -> list:
     return results
 
 
-def _count_in_bbox_vec(coords_tuple, bbox):
-    """Vectorized point-in-bbox count using pre-extracted numpy arrays."""
-    if coords_tuple is None:
-        return 0
-    lngs, lats = coords_tuple
-    mask = (lngs >= bbox[0]) & (lngs <= bbox[1]) & (lats >= bbox[2]) & (lats <= bbox[3])
+def _coordinate_arrays(df):
+    """Return numeric longitude/latitude arrays, or None when unavailable."""
+    if df.empty or "Lng" not in df.columns or "Lat" not in df.columns:
+        return None
+    lngs = pd.to_numeric(df["Lng"], errors="coerce").to_numpy(dtype=float)
+    lats = pd.to_numeric(df["Lat"], errors="coerce").to_numpy(dtype=float)
+    return lngs, lats
+
+
+def _count_in_geometry_vec(coords_tuple, geometry):
+    """Count coordinate pairs covered by a polygon geometry."""
+    mask = _point_mask_in_geometry(coords_tuple, geometry)
     return int(np.count_nonzero(mask))
 
 
-def _spatial_means_in_bbox_vec(coords_tuple, col_arrays, bbox):
-    """Vectorized spatial metric means using pre-extracted numpy arrays."""
-    if coords_tuple is None:
-        return 0.0, 0.0, 0.0, 0.0
-    lngs, lats = coords_tuple
-    mask = (lngs >= bbox[0]) & (lngs <= bbox[1]) & (lats >= bbox[2]) & (lats <= bbox[3])
+def _spatial_means_in_geometry_vec(coords_tuple, col_arrays, geometry):
+    """Mean spatial metrics for coordinate pairs covered by a polygon geometry."""
+    mask = _point_mask_in_geometry(coords_tuple, geometry)
     if not np.any(mask):
         return 0.0, 0.0, 0.0, 0.0
-    gvi = round(float(col_arrays["GVI"][mask].mean()), 2) if "GVI" in col_arrays else 0.0
-    svf = round(float(col_arrays["SVF"][mask].mean()), 2) if "SVF" in col_arrays else 0.0
-    enc = round(float(col_arrays["Enclosure"][mask].mean()), 2) if "Enclosure" in col_arrays else 0.0
-    clu = round(float(col_arrays["Clutter"][mask].mean()), 2) if "Clutter" in col_arrays else 0.0
+    gvi = _masked_mean(col_arrays.get("GVI"), mask)
+    svf = _masked_mean(col_arrays.get("SVF"), mask)
+    enc = _masked_mean(col_arrays.get("Enclosure"), mask)
+    clu = _masked_mean(col_arrays.get("Clutter"), mask)
     return gvi, svf, enc, clu
+
+
+def _point_mask_in_geometry(coords_tuple, geometry):
+    """Return a bool mask for points covered by geometry, with bbox prefiltering."""
+    if coords_tuple is None or geometry is None or geometry.is_empty:
+        return np.array([], dtype=bool)
+
+    from shapely.geometry import Point
+
+    lngs, lats = coords_tuple
+    if len(lngs) != len(lats):
+        return np.array([], dtype=bool)
+
+    minx, miny, maxx, maxy = geometry.bounds
+    finite = np.isfinite(lngs) & np.isfinite(lats)
+    bbox_mask = finite & (lngs >= minx) & (lngs <= maxx) & (lats >= miny) & (lats <= maxy)
+    mask = np.zeros(len(lngs), dtype=bool)
+    for idx in np.nonzero(bbox_mask)[0]:
+        mask[idx] = bool(geometry.covers(Point(float(lngs[idx]), float(lats[idx]))))
+    return mask
+
+
+def _masked_mean(values, mask):
+    """Return a rounded mean for masked numeric values, or 0 for missing data."""
+    if values is None:
+        return 0.0
+    values = np.asarray(values, dtype=float)
+    mask = np.asarray(mask, dtype=bool)
+    if len(values) != len(mask):
+        return 0.0
+    selected = values[mask]
+    selected = selected[np.isfinite(selected)]
+    if selected.size == 0:
+        return 0.0
+    return round(float(selected.mean()), 2)
 
 
 # ═══════════════════════════════════════════

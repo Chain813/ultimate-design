@@ -42,6 +42,12 @@ class KeyPlot:
     centroid: tuple[float, float] | None = None
 
 
+@dataclass(frozen=True)
+class KeyPlotGeometry:
+    plot: KeyPlot
+    geometry: object
+
+
 def normalize_key_plot_name(name: str) -> str:
     """Normalize numbered plot drawing names to the canonical key-plot label."""
     return re.sub(r"地块\d+", "重点地块", name)
@@ -75,6 +81,11 @@ def format_key_plot_context(plots: Iterable[KeyPlot]) -> str:
 
 def load_key_plots_from_geojson(path: str | Path) -> list[KeyPlot]:
     """Load configured key plots from a GeoJSON-compatible file."""
+    return [item.plot for item in load_key_plot_geometries_from_geojson(path)]
+
+
+def load_key_plot_geometries_from_geojson(path: str | Path) -> list[KeyPlotGeometry]:
+    """Load configured key plots paired with their WGS84 geometries."""
     resolved = resolve_path(str(path))
     if not resolved.exists():
         return []
@@ -100,25 +111,18 @@ def load_key_plots_from_geojson(path: str | Path) -> list[KeyPlot]:
 
         areas_ha = _calculate_areas_ha(gdf)
         centroids = _centroids_wgs84(gdf)
+        wgs84_geometries = list(_to_wgs84(gdf).geometry)
 
-        plots = []
+        paired = []
         for position, (_, row) in enumerate(gdf.iterrows(), start=1):
-            plot_id = _first_value(row, ("id", "OBJECTID", "index")) or str(position)
-            name = _first_value(row, ("name", "Name", "plot_name", "PlotName", "地块名称")) or f"地块{position}"
-            role = _first_value(row, ("role", "type", "category")) or ""
-            centroid = centroids[position - 1]
-
-            plots.append(
-                KeyPlot(
-                    index=position,
-                    plot_id=str(plot_id),
-                    name=str(name),
-                    role=str(role),
-                    area_ha=round(float(areas_ha[position - 1]), 2),
-                    centroid=centroid,
-                )
+            plot = _key_plot_from_row(
+                row,
+                position=position,
+                area_ha=areas_ha[position - 1],
+                centroid=centroids[position - 1],
             )
-        return plots
+            paired.append(KeyPlotGeometry(plot=plot, geometry=wgs84_geometries[position - 1]))
+        return paired
     except KeyPlotLoadError:
         raise
     except Exception as exc:
@@ -132,6 +136,21 @@ def get_configured_key_plots() -> list[KeyPlot]:
 
 def plot_names(plots: Iterable[KeyPlot]) -> list[str]:
     return [plot.name for plot in plots]
+
+
+def _key_plot_from_row(row, *, position: int, area_ha: float, centroid: tuple[float, float]) -> KeyPlot:
+    plot_id = _first_value(row, ("id", "OBJECTID", "index")) or str(position)
+    name = _first_value(row, ("name", "Name", "plot_name", "PlotName", "地块名称")) or f"地块{position}"
+    role = _first_value(row, ("role", "type", "category")) or ""
+
+    return KeyPlot(
+        index=position,
+        plot_id=str(plot_id),
+        name=str(name),
+        role=str(role),
+        area_ha=round(float(area_ha), 2),
+        centroid=centroid,
+    )
 
 
 def _read_geojson(path: Path):

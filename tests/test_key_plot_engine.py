@@ -127,6 +127,40 @@ def test_load_key_plots_from_geojson_returns_ordered_plot_metadata(tmp_path):
     assert all(plot.centroid is not None for plot in plots)
 
 
+def test_load_key_plot_geometries_from_geojson_returns_paired_metadata_and_wgs84_geometry(tmp_path):
+    engine = _engine()
+    from shapely.geometry import Point
+
+    geojson_path = tmp_path / "paired-plots.geojson"
+    features = [
+        {
+            "type": "Feature",
+            "properties": {"id": "west", "name": "West Plot"},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[0.0, 0.0], [0.01, 0.0], [0.01, 0.01], [0.0, 0.01], [0.0, 0.0]]],
+            },
+        },
+        {
+            "type": "Feature",
+            "properties": {"id": "east", "name": "East Plot"},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [[[0.02, 0.0], [0.03, 0.0], [0.03, 0.01], [0.02, 0.01], [0.02, 0.0]]],
+            },
+        },
+    ]
+    _write_feature_collection(geojson_path, features)
+
+    paired = engine.load_key_plot_geometries_from_geojson(geojson_path)
+
+    assert [item.plot.plot_id for item in paired] == ["west", "east"]
+    assert [item.plot.name for item in paired] == ["West Plot", "East Plot"]
+    assert paired[0].geometry.covers(Point(0.005, 0.005))
+    assert not paired[0].geometry.covers(Point(0.025, 0.005))
+    assert paired[1].geometry.covers(Point(0.025, 0.005))
+
+
 def test_normalize_key_plot_name_replaces_numbered_plot_prefixes():
     engine = _engine()
 
