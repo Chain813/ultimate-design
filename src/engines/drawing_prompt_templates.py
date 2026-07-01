@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from src.engines.drawing_prompt_engine import (
@@ -22,6 +23,11 @@ from src.engines.drawing_prompt_engine import (
     LLMCallError,
     build_image_prompt,
     get_drawing_profile,
+)
+from src.engines.key_plot_engine import (
+    KEY_PLOT_DRAWING_SUFFIXES,
+    format_key_plot_context,
+    get_configured_key_plots,
 )
 from src.workflow.template_assets import (
     get_template_asset_rows,
@@ -876,6 +882,10 @@ Visual Identity (Inspired by Awesome-AIGC-Architecture):
 
 # 构建名称索引
 _TEMPLATE_INDEX = {t.name: t for t in DRAWING_TEMPLATES}
+_KEY_PLOT_DETAIL_CHAPTER = "06 重点地段更新改造设计"
+_KEY_PLOT_DETAIL_STAGE = "10"
+_KEY_PLOT_SUFFIX_PATTERN = "|".join(re.escape(suffix) for suffix in KEY_PLOT_DRAWING_SUFFIXES)
+_KEY_PLOT_NUMBER_RE = re.compile(rf"^地块\d+(?:{_KEY_PLOT_SUFFIX_PATTERN})$")
 
 
 def get_template(name: str) -> DrawingTemplate | None:
@@ -927,8 +937,15 @@ def _generate_generic_template(drawing_name: str) -> DrawingTemplate | None:
     )
 
 
+def _is_numbered_key_plot_drawing(drawing_name: str) -> bool:
+    """Return whether the drawing targets a configured numbered key plot."""
+    return bool(_KEY_PLOT_NUMBER_RE.search(drawing_name))
+
+
 def _infer_chapter_from_name(drawing_name: str) -> str:
     """Infer chapter from drawing name keywords."""
+    if _is_numbered_key_plot_drawing(drawing_name):
+        return _KEY_PLOT_DETAIL_CHAPTER
     for chapter, drawings in BOOK_CHAPTERS.items():
         if drawing_name in drawings:
             return chapter
@@ -949,6 +966,8 @@ def _infer_chapter_from_name(drawing_name: str) -> str:
 
 def _infer_stage_from_name(drawing_name: str) -> str:
     """Infer stage code from drawing name."""
+    if _is_numbered_key_plot_drawing(drawing_name):
+        return _KEY_PLOT_DETAIL_STAGE
     for chapter, drawings in BOOK_CHAPTERS.items():
         if drawing_name in drawings:
             chapter_stage_map = {
@@ -964,6 +983,12 @@ def _infer_stage_from_name(drawing_name: str) -> str:
     return "01"
 
 
+def _get_key_plot_prompt_context() -> str:
+    spatial_objects = f"研究范围红线、主要道路、{get_site_name()}周边核心节点、图例区 and 固定图框。"
+    key_plot_context = format_key_plot_context(get_configured_key_plots())
+    return f"{key_plot_context}\n{spatial_objects}"
+
+
 def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     """构建固定资产约束下的 Image 2.0 图纸提示词。
 
@@ -972,7 +997,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     tuple[str, str]
         (完整提示词, 系统提示词)
     """
-    tmpl = get_template(template_name)
+    tmpl = get_or_create_template(template_name)
     if not tmpl:
         return "", ""
 
@@ -996,7 +1021,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
         main_expression=tmpl.description,
         must_include=template_requirements,
         legend_content=_default_legend_content(tmpl.name),
-        key_plots=f"研究范围红线、五个重点地块、主要道路、{get_site_name()}周边核心节点、图例区 and 固定图框。",
+        key_plots=_get_key_plot_prompt_context(),
         design_strategy=dyn_strategy,
         analysis_conclusion=dyn_conclusion,
         avoid_content="不得重绘底图、不得移动边界、不得改写重点地块、不得改变图框、不得虚构道路和用地分类。",
