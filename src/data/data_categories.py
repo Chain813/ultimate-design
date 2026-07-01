@@ -189,76 +189,41 @@ url = f"http://t0.tianditu.gov.cn/vec_w/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSIO
         "id": "key_plots",
         "title": "重点地块边界",
         "icon": "📍",
-        "description": "划定 5 个重点更新单元的边界，用于深化设计和地块级诊断。",
+        "description": "划定任意数量重点更新单元的边界，用于深化设计和地块级诊断。",
         "target_path": SHP_DIR / "Key_Plots_District.json",
         "accept": [".json", ".geojson"],
-        "format_desc": "GeoJSON FeatureCollection (5 个 Polygon 要素)",
+        "format_desc": "GeoJSON FeatureCollection (N 个 Polygon / MultiPolygon 要素)",
         "required": True,
         "tutorial": {
-            "summary": "根据任务书要求，划定重点深化设计的 5 个地块边界。",
+            "summary": "使用 scripts/process_key_plots.py 清洗、裁剪、编号并导出重点更新单元边界。",
             "methods": [
                 {
-                    "name": "方法一：GIS 软件手动划定 (推荐)",
+                    "name": "方法一：运行内置 GIS 处理脚本 (推荐)",
                     "steps": [
-                        "1. 在 ArcGIS/QGIS 中加载研究范围底图",
-                        "2. 参考任务书或现状分析，识别 5 个重点地块",
-                        "3. 新建面要素图层，逐一绘制地块边界",
-                        "4. 添加 name 或 id 属性字段标识地块",
-                        "5. 导出为 GeoJSON 格式",
+                        "1. 在 ArcGIS/QGIS 中准备原始重点地块面图层，可包含 name、role 等属性",
+                        "2. 准备研究范围边界文件 data/gis/Boundary_Scope.geojson",
+                        "3. 运行 scripts/process_key_plots.py 自动清洗无效几何并裁剪到研究范围",
+                        "4. 脚本会重新生成 plot_index、name、role、area_ha 字段",
+                        "5. 将输出保存为 data/gis/Key_Plots_District.json",
                     ],
-                    "code_example": '''# QGIS Python 控制台创建地块
-from qgis.core import *
-from PyQt5.QtCore import *
-
-# 创建新图层
-layer = QgsVectorLayer("Polygon?crs=EPSG:4326", "Key_Plots", "memory")
-provider = layer.dataProvider()
-
-# 添加字段
-provider.addAttributes([
-    QgsField("id", QVariant.Int),
-    QgsField("name", QVariant.String),
-    QgsField("area_ha", QVariant.Double)
-])
-layer.updateFields()
-
-# 添加地块要素 (示例坐标，需替换为实际坐标)
-plots = [
-    {"id": 1, "name": "伪满皇宫周边", "coords": [...]},
-    {"id": 2, "name": "新民大街历史街区", "coords": [...]},
-    {"id": 3, "name": "光复路片区", "coords": [...]},
-    {"id": 4, "name": "胜利公园片区", "coords": [...]},
-    {"id": 5, "name": "站前商业区", "coords": [...]},
-]
-
-for plot in plots:
-    feat = QgsFeature()
-    feat.setGeometry(QgsGeometry.fromPolygonXY([plot["coords"]]))
-    feat.setAttributes([plot["id"], plot["name"], 0])
-    provider.addFeature(feat)
-
-layer.updateExtents()
-QgsProject.instance().addMapLayer(layer)
-
-# 导出为 GeoJSON
-QgsVectorFileWriter.writeAsVectorFormat(
-    layer, "data/gis/Key_Plots_District.json",
-    "utf-8", layer.crs(), "GeoJSON"
-)''',
-                    "tip": "地块划分应结合用地性质、更新潜力和设计重点。",
+                    "code_example": '''python scripts/process_key_plots.py \\
+  --input raw/key_plots.geojson \\
+  --boundary data/gis/Boundary_Scope.geojson \\
+  --output data/gis/Key_Plots_District.json''',
+                    "tip": "脚本会默认缺失 CRS 的输入为 WGS84，并用合适投影计算 area_ha。",
                 },
                 {
-                    "name": "方法二：从控规图层提取",
+                    "name": "方法二：从控规或更新单元图层提取",
                     "steps": [
-                        "1. 加载控规用地图层",
-                        "2. 选择需要深化的控规单元",
-                        "3. 合并或拆分为 5 个设计地块",
-                        "4. 导出为 GeoJSON",
+                        "1. 加载控规用地、城市更新单元或项目边界图层",
+                        "2. 选择需要深化设计的单元，可按实际研究需要保留任意数量",
+                        "3. 合并、拆分或修补边界后导出为 GeoJSON/Shapefile",
+                        "4. 通过 scripts/process_key_plots.py 统一裁剪、编号并导出最终 GeoJSON",
                     ],
-                    "tip": "确保地块边界与控规单元边界对齐。",
+                    "tip": "确保源图层为面要素；脚本会过滤空几何并修复常见无效几何。",
                 },
             ],
-            "sample_fields": "type: FeatureCollection, features: [{geometry: Polygon, properties: {id: 1, name: 伪满皇宫周边}}]",
+            "sample_fields": "type: FeatureCollection, features: [{geometry: Polygon, properties: {plot_index: 1, name: 门户更新单元, role: 门户展示, area_ha: 2.35}}]",
             "reference": "参考文件：data/gis/Key_Plots_District.json",
         },
     },
