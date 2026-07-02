@@ -281,7 +281,7 @@ def _draw_legend(
     left, top, right, bottom = _inset_box(slot.box, 42)
     _draw_panel_header(draw, left, top, right, "图例 / Legend")
     y = top + 78
-    for color, label in legend_items[:10]:
+    for label, color in legend_items[:10]:
         if y + 52 > bottom:
             break
         swatch = (left, y + 4, left + 42, y + 46)
