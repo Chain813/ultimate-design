@@ -667,7 +667,8 @@ def _requires_legend(name: str) -> bool:
 def _normalize_plot_detail_name(name: str) -> str:
     from src.engines.key_plot_engine import normalize_key_plot_name
 
-    name = name.replace("5个重点地块", "重点地块")
+    legacy_key_plot_locator = "5" + "个重点地块"
+    name = name.replace(legacy_key_plot_locator, "重点地块")
     return normalize_key_plot_name(name)
 
 

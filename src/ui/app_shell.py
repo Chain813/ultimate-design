@@ -232,7 +232,7 @@ def render_auto_tour():
             {url:"/专项系统设计", label:"🔧 09 专项系统设计", duration:35,
              desc:"交通/TOD/生活圈/天际线/风貌景观四大专项"},
             {url:"/重点地段深化", label:"🔍 10 重点地段深化", duration:45,
-             desc:"5个重点地块：诊断雷达、控规反推、人群画像、Before/After推演"},
+             desc:"重点更新单元：诊断雷达、控规反推、人群画像、Before/After推演"},
             {url:"/实施路径", label:"📅 11 实施路径", duration:25,
              desc:"六种更新模式、三期时序甘特图、留改拆总图"},
             {url:"/城市设计导则", label:"📐 12 城市设计导则", duration:25,

@@ -162,26 +162,12 @@ def get_gvi_summary() -> str:
 
 @st.cache_data(ttl=3600, max_entries=20)
 def get_key_plots_summary() -> str:
-    """读取 Key_Plots_District.json，返回地块名称和面积列表。"""
-    path = resolve_path(str(GIS_FILES["plots"]))
-    if not path.exists():
-        return "重点地块数据暂不可用。"
-
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    features = data.get("features", [])
-    if not features:
-        return "重点地块数据为空。"
-
-    lines = [f"研究范围共 {len(features)} 个重点更新单元："]
-    for feat in features:
-        props = feat.get("properties", {})
-        name = props.get("name", f"地块_{props.get('OBJECTID', '?')}")
-        area = props.get("Shape_Area", 0)
-        lines.append(f"  - {name}: 面积 {area/10000:.2f} ha")
-
-    return "\n".join(lines)
+    try:
+        from src.engines.key_plot_engine import format_key_plot_context, get_configured_key_plots
+        return format_key_plot_context(get_configured_key_plots())
+    except Exception:
+        logger.warning("Key plot summary unavailable", exc_info=True)
+        return "重点更新单元数据暂不可用。"
 
 
 # ═══════════════════════════════════════════

@@ -52,7 +52,7 @@ TEMPLATE_ASSET_SPECS: tuple[TemplateAssetSpec, ...] = (
         prompt_channel="红线边界图",
         required=True,
         accepted_types=("geojson", "json", "svg", "png", "jpg", "jpeg", "pdf", "zip"),
-        description="五个重点地块或重点更新单元的边界/编号/mask，用于定位深化设计对象。",
+        description="重点更新单元的边界/编号/mask，用于定位深化设计对象。",
         generation_rule="重点地块位置、形状、编号和边界必须固定，最终成图阶段应重新叠加清晰边界。",
     ),
     TemplateAssetSpec(

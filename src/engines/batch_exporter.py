@@ -7,7 +7,11 @@ from dataclasses import dataclass, field
 from typing import Callable, List, Optional
 
 from src.engines.drawing_pipeline import DrawingPipeline
-from src.engines.drawing_prompt_engine import flatten_chapter_drawings
+from src.engines.drawing_prompt_engine import (
+    BOOK_CHAPTERS as LEGACY_BOOK_CHAPTERS,
+    flatten_chapter_drawings,
+    get_book_chapters,
+)
 from src.engines.version_store import VersionStore
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -27,7 +31,13 @@ class BatchExporter:
                  drawing_names: List[str] = None):
         self.pipeline = pipeline
         self.store = store
-        self.drawing_names = drawing_names or flatten_chapter_drawings()
+        self.drawing_names = flatten_chapter_drawings() if drawing_names is None else drawing_names
+        self._chapter_map = None
+
+    def _get_chapter_map(self):
+        if self._chapter_map is None:
+            self._chapter_map = get_book_chapters()
+        return self._chapter_map
 
     def export_full_atlas(self, skip_existing: bool = True,
                           quality_loop: bool = False,
@@ -75,8 +85,7 @@ class BatchExporter:
                            failed=failed, errors=errors)
 
     def export_chapter(self, chapter: str, **kwargs) -> ExportReport:
-        from src.engines.drawing_prompt_engine import BOOK_CHAPTERS
-        chapter_drawings = BOOK_CHAPTERS.get(chapter, [])
+        chapter_drawings = self._get_chapter_map().get(chapter, [])
         old_names = self.drawing_names
         self.drawing_names = chapter_drawings
         try:
@@ -93,8 +102,13 @@ class BatchExporter:
             self.drawing_names = old_names
 
     def _infer_chapter(self, drawing_name: str) -> str:
-        from src.engines.drawing_prompt_engine import BOOK_CHAPTERS
-        for chapter, drawings in BOOK_CHAPTERS.items():
+        try:
+            chapter_map = self._get_chapter_map()
+        except Exception:
+            logger.warning("Dynamic chapter map unavailable for metadata inference", exc_info=True)
+            chapter_map = LEGACY_BOOK_CHAPTERS
+
+        for chapter, drawings in chapter_map.items():
             if drawing_name in drawings:
                 return chapter
         return "未分类"
