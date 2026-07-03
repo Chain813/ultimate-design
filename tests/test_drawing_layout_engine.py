@@ -1,4 +1,4 @@
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 import pytest
 
 import src.engines.drawing_layout_engine as layout_engine
@@ -179,6 +179,97 @@ def test_legend_items_use_label_color_order(monkeypatch):
     _assert_color_close(sheet.getpixel(swatch_center), legend_color)
     assert "历史建筑" in drawn_texts
     assert "#f2c94c" not in drawn_texts
+
+
+@pytest.mark.parametrize(
+    ("layout_id", "slot_id"),
+    [
+        ("full_bleed_effect", "hero_visual"),
+        ("chapter_cover", "cover_visual"),
+    ],
+)
+def test_full_bleed_primary_visual_uses_cover_crop_for_extreme_aspect_ratio(layout_id, slot_id):
+    visual_color = (16, 125, 201)
+    sheet = compose_layout_sheet(
+        layout_id,
+        {slot_id: Image.new("RGB", (5000, 200), visual_color)},
+        title="",
+    )
+    width, height = A3_LANDSCAPE_SIZE
+
+    sample_points = [
+        (30, 30),
+        (width - 31, 30),
+        (30, height - 31),
+        (width - 31, height - 31),
+        (width // 2, 30),
+        (width // 2, height - 31),
+    ]
+
+    for point in sample_points:
+        _assert_color_close(sheet.getpixel(point), visual_color, tolerance=3)
+
+
+def test_rgba_slot_image_alpha_composites_transparent_pixels_over_slot_fill():
+    transparent_source = Image.new("RGBA", (800, 600), (0, 0, 0, 0))
+    red = (230, 20, 30)
+    ImageDraw.Draw(transparent_source).rectangle((330, 250, 470, 350), fill=red + (255,))
+
+    sheet = compose_layout_sheet(
+        "map_legend_right",
+        {"main_map": transparent_source},
+        title="",
+    )
+
+    slot = next(slot for slot in get_layout_profile("map_legend_right").slots if slot.slot_id == "main_map")
+    inner_left, inner_top = slot.box[0] + 18, slot.box[1] + 18
+    transparent_probe = (inner_left + 140, inner_top + 140)
+    red_probe = ((slot.box[0] + slot.box[2]) // 2, (slot.box[1] + slot.box[3]) // 2)
+
+    _assert_color_close(sheet.getpixel(transparent_probe), (247, 244, 238), tolerance=8)
+    _assert_color_close(sheet.getpixel(red_probe), red, tolerance=10)
+
+
+@pytest.mark.parametrize(
+    ("layout_id", "primary_slot_id"),
+    [
+        ("map_legend_right", "main_map"),
+        ("analysis_dashboard", "analysis_map"),
+        ("full_bleed_effect", "hero_visual"),
+        ("chapter_cover", "cover_visual"),
+    ],
+)
+def test_main_image_alias_populates_primary_visual_slot(layout_id, primary_slot_id):
+    main_color = (203, 40, 90)
+    sheet = compose_layout_sheet(
+        layout_id,
+        {"main": Image.new("RGB", (1200, 900), main_color)},
+        title="",
+    )
+
+    slot = next(slot for slot in get_layout_profile(layout_id).slots if slot.slot_id == primary_slot_id)
+    center = ((slot.box[0] + slot.box[2]) // 2, (slot.box[1] + slot.box[3]) // 2)
+
+    _assert_color_close(sheet.getpixel(center), main_color, tolerance=4)
+
+
+def test_draw_text_replaces_unsupported_unicode_instead_of_dropping_it():
+    class UnicodeRejectingDraw:
+        def __init__(self):
+            self.calls: list[str] = []
+
+        def text(self, xy, text, font, fill):
+            rendered = str(text)
+            self.calls.append(rendered)
+            if any(ord(character) > 127 for character in rendered):
+                raise UnicodeEncodeError("latin-1", rendered, 0, len(rendered), "unsupported")
+
+    draw = UnicodeRejectingDraw()
+
+    layout_engine._draw_text(draw, (0, 0), "\u4e2d\u6587", 24, fill="#000000")
+
+    assert draw.calls[0] == "\u4e2d\u6587"
+    assert draw.calls[-1]
 
 
 def test_empty_notes_render_placeholder_text(monkeypatch):

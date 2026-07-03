@@ -130,6 +130,36 @@ _PROFILES: tuple[LayoutProfile, ...] = (
 
 _PROFILE_BY_ID = {profile.layout_id: profile for profile in _PROFILES}
 
+_PRIMARY_VISUAL_SLOT_BY_LAYOUT = {
+    "map_legend_right": "main_map",
+    "analysis_dashboard": "analysis_map",
+    "full_bleed_effect": "hero_visual",
+    "chapter_cover": "cover_visual",
+}
+
+_COVER_VISUAL_SLOT_IDS = {"hero_visual", "cover_visual"}
+
+_FONT_CANDIDATES: tuple[Path | str, ...] = (
+    Path("C:/Windows/Fonts/msyh.ttc"),
+    Path("C:/Windows/Fonts/msyhbd.ttc"),
+    Path("C:/Windows/Fonts/simhei.ttf"),
+    Path("C:/Windows/Fonts/simsun.ttc"),
+    Path("C:/Windows/Fonts/arialuni.ttf"),
+    Path("C:/Windows/Fonts/arial.ttf"),
+    Path("/System/Library/Fonts/PingFang.ttc"),
+    Path("/System/Library/Fonts/STHeiti Light.ttc"),
+    Path("/System/Library/Fonts/STHeiti Medium.ttc"),
+    Path("/Library/Fonts/Arial Unicode.ttf"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"),
+    Path("/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"),
+    Path("/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc"),
+    Path("/usr/share/fonts/truetype/noto/NotoSansSC-Regular.otf"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-microhei.ttc"),
+    Path("/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc"),
+    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+    "DejaVuSans.ttf",
+)
+
 
 def list_layout_profiles() -> list[LayoutProfile]:
     """Return all registered layout profiles in stable order."""
@@ -195,13 +225,28 @@ def compose_layout_sheet(
 
     _draw_page_background(draw)
     for slot in profile.slots:
-        _render_slot(sheet, draw, slot, images.get(slot.slot_id))
+        _render_slot(sheet, draw, slot, _image_for_slot(profile, slot, images))
 
     _draw_title(sheet, title=title, chapter=chapter, profile=profile)
     _draw_legend(sheet, profile, legend_items or [])
     _draw_notes(sheet, profile, notes or [])
     _draw_footer(sheet, profile)
     return sheet
+
+
+def _image_for_slot(
+    profile: LayoutProfile,
+    slot: LayoutSlot,
+    images: dict[str, Image.Image],
+) -> Image.Image | None:
+    if slot.slot_id in images:
+        return images[slot.slot_id]
+
+    primary_slot_id = _PRIMARY_VISUAL_SLOT_BY_LAYOUT.get(profile.layout_id)
+    if slot.slot_id == primary_slot_id:
+        return images.get("main")
+
+    return None
 
 
 def _draw_page_background(draw: ImageDraw.ImageDraw) -> None:
@@ -230,7 +275,7 @@ def _render_slot(
             draw.line((inner[0], inner[3], inner[2], inner[1]), fill="#c5bfb3", width=2)
             _draw_text(draw, (inner[0] + 24, inner[1] + 24), slot.label, 34, fill="#455a6f")
     else:
-        _paste_image_fit(sheet, image, inner, fill="#f7f4ee")
+        _paste_image_fit(sheet, image, inner, fill="#f7f4ee", cover=_slot_uses_cover(slot))
 
     if not is_full_bleed:
         label_box = (left + 22, top + 18, min(right - 22, left + 460), top + 76)
@@ -238,17 +283,41 @@ def _render_slot(
         _draw_text(draw, (label_box[0] + 18, label_box[1] + 9), slot.label, 28, fill="#ffffff")
 
 
-def _paste_image_fit(sheet: Image.Image, image: Image.Image, box: tuple[int, int, int, int], fill: str) -> None:
+def _slot_uses_cover(slot: LayoutSlot) -> bool:
+    return slot.box == (0, 0, *A3_LANDSCAPE_SIZE) or slot.slot_id in _COVER_VISUAL_SLOT_IDS
+
+
+def _paste_image_fit(
+    sheet: Image.Image,
+    image: Image.Image,
+    box: tuple[int, int, int, int],
+    fill: str,
+    cover: bool = False,
+) -> None:
     left, top, right, bottom = box
     width = max(1, right - left)
     height = max(1, bottom - top)
-    source = image.convert("RGB")
-    fitted = ImageOps.contain(source, (width, height), method=Image.Resampling.LANCZOS)
+    source = _normalize_slot_image(image)
+    target_size = (width, height)
+    if cover:
+        fitted = ImageOps.fit(source, target_size, method=Image.Resampling.LANCZOS)
+    else:
+        fitted = ImageOps.contain(source, target_size, method=Image.Resampling.LANCZOS)
+
     draw = ImageDraw.Draw(sheet)
     draw.rectangle(box, fill=fill)
     paste_left = left + (width - fitted.width) // 2
     paste_top = top + (height - fitted.height) // 2
-    sheet.paste(fitted, (paste_left, paste_top))
+    if fitted.mode == "RGBA":
+        sheet.paste(fitted.convert("RGB"), (paste_left, paste_top), fitted.getchannel("A"))
+    else:
+        sheet.paste(fitted, (paste_left, paste_top))
+
+
+def _normalize_slot_image(image: Image.Image) -> Image.Image:
+    if image.mode in {"RGBA", "LA"} or (image.mode == "P" and "transparency" in image.info):
+        return image.convert("RGBA")
+    return image.convert("RGB")
 
 
 def _draw_title(sheet: Image.Image, title: str, chapter: str, profile: LayoutProfile) -> None:
@@ -389,11 +458,20 @@ def _draw_text(
     size: int,
     fill: str,
 ) -> None:
-    font = _load_font(size)
-    try:
-        draw.text(xy, text, font=font, fill=fill)
-    except UnicodeEncodeError:
-        draw.text(xy, text.encode("ascii", "ignore").decode("ascii"), font=font, fill=fill)
+    for font in _load_font_options(size):
+        try:
+            draw.text(xy, text, font=font, fill=fill)
+            return
+        except UnicodeEncodeError:
+            continue
+
+    fallback_text = text.encode("ascii", "replace").decode("ascii") or "?"
+    for font in _load_font_options(size):
+        try:
+            draw.text(xy, fallback_text, font=font, fill=fill)
+            return
+        except UnicodeEncodeError:
+            continue
 
 
 def _text_width(text: str, font: ImageFont.ImageFont) -> int:
@@ -404,22 +482,27 @@ def _text_width(text: str, font: ImageFont.ImageFont) -> int:
 
 
 def _load_font(size: int) -> ImageFont.ImageFont:
-    candidates = (
-        Path("C:/Windows/Fonts/msyh.ttc"),
-        Path("C:/Windows/Fonts/simhei.ttf"),
-        Path("C:/Windows/Fonts/simsun.ttc"),
-        Path("C:/Windows/Fonts/arial.ttf"),
-    )
-    for path in candidates:
-        if path.exists():
-            try:
-                return ImageFont.truetype(str(path), size)
-            except OSError:
+    return next(_load_font_options(size))
+
+
+def _load_font_options(size: int):
+    seen: set[str] = set()
+    for candidate in _FONT_CANDIDATES:
+        key = str(candidate).lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        if isinstance(candidate, Path):
+            if not candidate.exists():
                 continue
-    try:
-        return ImageFont.truetype("DejaVuSans.ttf", size)
-    except OSError:
-        return ImageFont.load_default()
+            location = str(candidate)
+        else:
+            location = candidate
+        try:
+            yield ImageFont.truetype(location, size)
+        except OSError:
+            continue
+    yield ImageFont.load_default()
 
 
 def _validate_profiles() -> None:
