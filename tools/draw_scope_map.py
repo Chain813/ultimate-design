@@ -398,6 +398,148 @@ def draw_centered_text(draw, text, cx, cy, fill, font):
     h = bbox[3] - bbox[1]
     draw.text((cx - w // 2, cy - h // 2), text, fill=fill, font=font)
 
+
+_LEGEND_STYLE_COLORS = {
+    "rect_red_border": "#ff3b30",
+    "outline_red": "#ff3b30",
+    "rect_orange_border": "#ff9500",
+    "outline_orange": "#ff9500",
+    "rect_building": "#e5e5e7",
+    "building": "#e5e5e7",
+    "rect_water": "#d0e6f7",
+    "water": "#d0e6f7",
+    "line_rail": "#48484a",
+    "rail": "#48484a",
+    "rect_road": "#e5e5ea",
+    "road": "#e5e5ea",
+    "line_blue": "#3b82f6",
+    "arrow_blue": "#3b82f6",
+    "line_red_dashed": "#ff2d55",
+    "green_dash": "#22c55e",
+    "sun_yellow": "#facc15",
+    "highlight_red": "#ef4444",
+    "rect_euluc_0": "#ffff00",
+    "rect_euluc_1": "#e60000",
+    "rect_euluc_2": "#ff7f00",
+    "rect_euluc_3": "#aa7855",
+    "rect_euluc_4": "#9c9c9c",
+    "rect_euluc_5": "#686868",
+    "rect_euluc_6": "#ff7f7f",
+    "rect_euluc_7": "#ff7fff",
+    "rect_euluc_8": "#ff7fbf",
+    "rect_euluc_9": "#7fffff",
+    "rect_euluc_10": "#38a800",
+    "rect_green_plan": "#bbf7d0",
+    "rect_water_plan": "#e2f0fd",
+    "rect_green_status": "#dcfce7",
+    "line_h1": "#ef4444",
+    "line_h2": "#f97316",
+    "line_h3": "#eab308",
+    "line_h4": "#9ca3af",
+    "line_t1": "#ef4444",
+    "line_t2": "#3b82f6",
+    "line_t3": "#10b981",
+    "rect_protect_1": "#fee2e2",
+    "rect_protect_2": "#fef3c7",
+    "rect_protect_3": "#f1f5f9",
+    "rect_height_1": "#fee2e2",
+    "rect_height_2": "#fecdd3",
+    "rect_height_3": "#fb7185",
+    "rect_height_4": "#e11d48",
+    "rect_height_5": "#9f1239",
+    "rect_plan_blue": "#93c5fd",
+    "rect_plan_green": "#a7f3d0",
+    "rect_plan_red": "#fca5a5",
+    "rect_plan_yellow": "#fde047",
+    "rect_purple_fill": "#a855f7",
+    "rect_blue_fill": "#3b82f6",
+    "rect_green": "#22c55e",
+    "rect_heatmap_high": "#ef4444",
+    "rect_heatmap_med": "#f97316",
+    "rect_heatmap_low": "#facc15",
+    "rect_wf_blue": "#3b82f6",
+    "rect_wf_purple": "#c084fc",
+    "rect_wf_green": "#4ade80",
+    "rect_wf_yellow": "#fbbf24",
+    "rect_wf_slate": "#94a3b8",
+}
+
+_LEGEND_STYLE_KEYWORD_COLORS = (
+    ("red", "#ef4444"),
+    ("orange", "#f97316"),
+    ("yellow", "#facc15"),
+    ("green", "#22c55e"),
+    ("blue", "#3b82f6"),
+    ("cyan", "#06b6d4"),
+    ("purple", "#a855f7"),
+    ("pink", "#db2777"),
+    ("gold", "#f59e0b"),
+    ("water", "#d0e6f7"),
+    ("rail", "#48484a"),
+    ("road", "#e5e5ea"),
+    ("building", "#e5e5e7"),
+    ("slate", "#94a3b8"),
+    ("gray", "#94a3b8"),
+    ("grey", "#94a3b8"),
+)
+
+
+def _legend_style_to_hex(style) -> str:
+    style_text = str(style or "").strip()
+    if style_text.startswith("#") and len(style_text) in {4, 7}:
+        return style_text.lower()
+
+    key = style_text.lower()
+    if key in _LEGEND_STYLE_COLORS:
+        return _LEGEND_STYLE_COLORS[key]
+
+    for token, color in _LEGEND_STYLE_KEYWORD_COLORS:
+        if token in key:
+            return color
+    return "#607d8b"
+
+
+def _legend_items_from_module(module, drawing_type: str) -> list[tuple[str, str]]:
+    raw_items = getattr(module, "legend_items", None) if module else None
+    if not raw_items and module:
+        metadata = getattr(module, "DRAWING_METADATA", None)
+        if isinstance(metadata, dict):
+            meta = metadata.get(drawing_type)
+            if meta is None:
+                for key, value in metadata.items():
+                    if key in drawing_type or drawing_type in key:
+                        meta = value
+                        break
+            if isinstance(meta, dict):
+                raw_items = meta.get("legend_items")
+
+    converted = []
+    for item in raw_items or []:
+        if not isinstance(item, (list, tuple)) or len(item) < 2:
+            continue
+        label, style = item[0], item[1]
+        converted.append((str(label), _legend_style_to_hex(style)))
+    return converted
+
+
+def _layout_legend_items(drawing_type: str) -> list[tuple[str, str]]:
+    module = get_drawing_module(drawing_type)
+    legend_items = _legend_items_from_module(module, drawing_type)
+    if legend_items:
+        return legend_items
+
+    default_mod = get_drawing_module("现状区位图")
+    return _legend_items_from_module(default_mod, "现状区位图")
+
+
+def _scale_text_from_view_width(view_w) -> str:
+    try:
+        scale_ratio = float(view_w) / 0.31968
+        scale_rounded = int(round(scale_ratio / 500)) * 500
+    except (TypeError, ValueError, OverflowError):
+        scale_rounded = 5000
+    return f"1:{max(scale_rounded, 500)}"
+
 def generate_dynamic_description(drawing_type, title):
     if drawing_type in ["公众参与与博弈协商成果图", "投资估算与经济测算图"]:
         return None
@@ -493,14 +635,17 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
         print(f"Processing A3 layout profile: {layout_id}...")
         from src.engines.frame_generator import compose_framed_sheet
 
-        map_img = Image.open(map_path).convert("RGB")
+        with Image.open(map_path) as source:
+            map_img = source.convert("RGB")
         summary = "\n".join(line for line in (description_lines or []) if line)
         sheet = compose_framed_sheet(
             main_image=map_img,
             title=title,
             chapter=drawing_type,
             summary=summary,
+            legend_items=_layout_legend_items(drawing_type),
             drawing_number=drawing_number,
+            scale_text=_scale_text_from_view_width(view_w),
             layout_id=layout_id,
         )
         sheet.save(output_path)

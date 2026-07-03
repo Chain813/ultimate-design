@@ -2,6 +2,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 from src.engines.drawing_prompt_engine import (
     BOOK_CHAPTERS,
     ImagePromptRequest,
@@ -194,3 +196,10 @@ def test_explicit_layout_profile_id_overrides_recommendation():
 
     assert "Layout profile: analysis_dashboard" in result.prompt
     assert "Layout profile: dual_compare" not in result.prompt
+
+
+def test_unknown_layout_profile_id_raises():
+    request = _base_request(layout_profile_id="unknown_layout_profile")
+
+    with pytest.raises(ValueError, match="unknown_layout_profile"):
+        build_image_prompt(request)

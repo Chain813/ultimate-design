@@ -133,6 +133,7 @@ _PROFILE_BY_ID = {profile.layout_id: profile for profile in _PROFILES}
 _PRIMARY_VISUAL_SLOT_BY_LAYOUT = {
     "map_legend_right": "main_map",
     "analysis_dashboard": "analysis_map",
+    "matrix_storyboard": "step_1",
     "full_bleed_effect": "hero_visual",
     "chapter_cover": "cover_visual",
 }

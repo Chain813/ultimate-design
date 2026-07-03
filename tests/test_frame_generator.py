@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import SimpleNamespace
 
 from PIL import Image
 
@@ -52,3 +53,55 @@ def test_results_page_wires_selected_layout_id_to_atlas_generation():
     assert "图纸版式" in page_source
     assert "selected_layout_id" in page_source
     assert "layout_id=selected_layout_id" in page_source
+
+
+def test_process_a3_layout_passes_legacy_metadata_to_selected_layout(tmp_path, monkeypatch):
+    from src.engines import frame_generator
+    from tools import draw_scope_map
+
+    map_path = tmp_path / "map.png"
+    output_path = tmp_path / "sheet.png"
+    Image.new("RGB", (40, 20), "#f8fafc").save(map_path)
+
+    drawing_module = SimpleNamespace(
+        legend_items=[
+            ("Boundary", "rect_red_border"),
+            ("Blue link", "line_blue"),
+            ("Fallback", "style_not_mapped"),
+        ]
+    )
+    default_module = SimpleNamespace(legend_items=[("Default", "rect_water")])
+
+    def fake_get_drawing_module(drawing_type):
+        if drawing_type == "custom metadata drawing":
+            return drawing_module
+        return default_module
+
+    captured = {}
+
+    def fake_compose_framed_sheet(**kwargs):
+        captured.update(kwargs)
+        return Image.new("RGB", A3_LANDSCAPE_SIZE, "#ffffff")
+
+    monkeypatch.setattr(draw_scope_map, "get_drawing_module", fake_get_drawing_module)
+    monkeypatch.setattr(frame_generator, "compose_framed_sheet", fake_compose_framed_sheet)
+
+    draw_scope_map.process_a3_layout(
+        map_path,
+        output_path,
+        view_w=959.04,
+        drawing_type="custom metadata drawing",
+        title="Custom Metadata",
+        description_lines=["diagnostic note"],
+        drawing_number="DR-TST",
+        layout_id="analysis_dashboard",
+    )
+
+    assert captured["layout_id"] == "analysis_dashboard"
+    assert captured["legend_items"] == [
+        ("Boundary", "#ff3b30"),
+        ("Blue link", "#3b82f6"),
+        ("Fallback", "#607d8b"),
+    ]
+    assert captured["scale_text"] == "1:3000"
+    assert output_path.exists()

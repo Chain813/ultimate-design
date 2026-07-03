@@ -235,6 +235,7 @@ def test_rgba_slot_image_alpha_composites_transparent_pixels_over_slot_fill():
     [
         ("map_legend_right", "main_map"),
         ("analysis_dashboard", "analysis_map"),
+        ("matrix_storyboard", "step_1"),
         ("full_bleed_effect", "hero_visual"),
         ("chapter_cover", "cover_visual"),
     ],
