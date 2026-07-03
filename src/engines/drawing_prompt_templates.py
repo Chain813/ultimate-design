@@ -24,6 +24,7 @@ from src.engines.drawing_prompt_engine import (
     build_image_prompt,
     get_drawing_profile,
 )
+from src.engines.drawing_layout_engine import recommend_layout_profile
 from src.engines.key_plot_engine import (
     KEY_PLOT_DRAWING_SUFFIXES,
     format_key_plot_context,
@@ -1010,6 +1011,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
 
     from src.engines.design_description_engine import generate_dynamic_design_description
     dyn_strategy, dyn_conclusion = generate_dynamic_design_description(tmpl.name, tmpl.stage)
+    layout_profile = recommend_layout_profile(tmpl.name)
 
     request = ImagePromptRequest(
         chapter=tmpl.chapter,
@@ -1032,6 +1034,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
             "固定制图资产": asset_context,
             "模板内容要求": template_requirements,
         },
+        layout_profile_id=layout_profile.layout_id,
     )
     result = build_image_prompt(request)
     if result.can_generate:

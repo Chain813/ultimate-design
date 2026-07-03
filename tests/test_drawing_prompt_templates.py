@@ -2,6 +2,22 @@ from src.engines import drawing_prompt_templates as templates
 from src.engines.key_plot_engine import KeyPlot
 
 
+def test_build_drawing_prompt_passes_recommended_layout_profile(monkeypatch):
+    from src.engines.drawing_layout_engine import get_layout_profile
+
+    _stub_dynamic_description(monkeypatch)
+    monkeypatch.setattr(templates, "load_template_asset_manifest", _complete_manifest)
+    monkeypatch.setattr(
+        templates,
+        "recommend_layout_profile",
+        lambda _name: get_layout_profile("analysis_dashboard"),
+    )
+
+    prompt, _ = templates.build_drawing_prompt("地块7街道断面图")
+
+    assert "Layout profile: analysis_dashboard" in prompt
+
+
 def _stub_dynamic_description(monkeypatch):
     from src.engines import design_description_engine
 

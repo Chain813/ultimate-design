@@ -1,0 +1,54 @@
+from pathlib import Path
+
+from PIL import Image
+
+from src.engines.drawing_layout_engine import A3_LANDSCAPE_SIZE
+from src.engines.frame_generator import compose_framed_sheet, sheet_to_bytes
+
+
+def _sample_image(color: str = "#94a3b8") -> Image.Image:
+    return Image.new("RGB", (640, 360), color)
+
+
+def test_compose_framed_sheet_legacy_call_returns_a3_landscape_size():
+    sheet = compose_framed_sheet(
+        main_image=_sample_image(),
+        title="用地现状分析图",
+        chapter="02 数据诊断篇",
+        summary="保留旧调用方式的说明文本。",
+        legend_items=[("居住用地", "#facc15")],
+        drawing_number="DR-011",
+        scale_text="1:5000",
+    )
+
+    assert sheet.size == A3_LANDSCAPE_SIZE
+    assert sheet.mode == "RGB"
+    assert sheet_to_bytes(sheet).startswith(b"\x89PNG")
+
+
+def test_compose_framed_sheet_dual_compare_accepts_secondary_images_and_legend_items():
+    sheet = compose_framed_sheet(
+        main_image=_sample_image("#d1d5db"),
+        title="地块2改造前后对比图",
+        layout_id="dual_compare",
+        secondary_images={
+            "before_view": _sample_image("#64748b"),
+            "after_view": _sample_image("#86efac"),
+        },
+        legend_items=[("保留", "#3b82f6"), ("新增", "#22c55e")],
+    )
+
+    assert sheet.size == A3_LANDSCAPE_SIZE
+    assert sheet.mode == "RGB"
+
+
+def test_results_page_wires_selected_layout_id_to_atlas_generation():
+    page_source = (
+        Path(__file__).resolve().parents[1] / "pages" / "13_成果表达.py"
+    ).read_text(encoding="utf-8")
+
+    assert "list_layout_profiles" in page_source
+    assert "recommend_layout_profile" in page_source
+    assert "图纸版式" in page_source
+    assert "selected_layout_id" in page_source
+    assert "layout_id=selected_layout_id" in page_source

@@ -9,6 +9,12 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Sequence, TYPE_CHECKING
 
+from src.engines.drawing_layout_engine import (
+    get_layout_profile,
+    layout_prompt_clause,
+    recommend_layout_profile,
+)
+
 if TYPE_CHECKING:
     from src.engines.key_plot_engine import KeyPlot
 
@@ -348,6 +354,7 @@ class ImagePromptRequest:
     mark_as_schematic: bool = False
     use_existing_results: bool = True
     evidence_blocks: Dict[str, str] = None
+    layout_profile_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -519,6 +526,13 @@ def flatten_chapter_drawings(key_plots: Sequence["KeyPlot"] | None = None) -> Li
 
 
 def _compose_prompt(request: ImagePromptRequest, profile: DrawingProfile, negative_prompt: str, template_only: bool) -> str:
+    layout_profile = (
+        get_layout_profile(request.layout_profile_id)
+        if request.layout_profile_id
+        else recommend_layout_profile(request.drawing_name)
+    )
+    layout_clause = layout_prompt_clause(layout_profile)
+    layout_supplement = request.layout_structure.strip() if request.layout_structure else "无补充版式要求"
     uploaded = [channel for channel in UPLOAD_CHANNELS if channel in set(request.uploaded_channels or [])]
     upload_text = "\n".join(f"- {UPLOAD_REFERENCE_TEXT[channel]}" for channel in uploaded) or "- 当前未上传底图；仅可生成概念或版式提示词，不得虚构真实空间信息。"
     frame_text = FRAME_SYSTEM if profile.requires_standard_frame else "封面、目录或效果类图纸不强制加入完整图框，可保留克制的标题与必要项目信息。"
@@ -544,7 +558,8 @@ def _compose_prompt(request: ImagePromptRequest, profile: DrawingProfile, negati
 {content_text}
 
 【版式结构】
-版式采用{request.layout_structure}。图面需形成清晰的信息层级：主图优先，策略标签次之，图例和说明辅助。避免让装饰性元素压过真实数据和空间关系。
+{layout_clause}
+补充版式要求：{layout_supplement}。图面需形成清晰的信息层级：主图优先，策略标签次之，图例和说明辅助。避免让装饰性元素压过真实数据和空间关系。
 
 【图例与标注】
 图例内容包括：{request.legend_content or '使用占位符标注图例分类，等待用户后期替换。'}。必须出现的重点地块或空间对象：{request.key_plots or '重点地块、研究范围边界、主要道路和伪满皇宫周边核心节点。'}。{schematic_text}

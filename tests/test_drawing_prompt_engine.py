@@ -165,3 +165,32 @@ def test_rating_revision_strengthens_boundary_and_text_rules():
 
     assert "必须严格保持上传红线图边界" in revised
     assert "只生成一级标题和少量关键词" in revised
+
+
+def test_prompt_includes_recommended_layout_clause():
+    request = _base_request(
+        drawing_name="地块2改造前后对比图",
+        drawing_type="重点地块深化类",
+        main_expression="对比更新前后的街区空间品质和功能提升",
+        layout_structure="保留改造前后对比的补充说明",
+    )
+
+    result = build_image_prompt(request)
+
+    assert result.can_generate
+    assert "Layout profile: dual_compare" in result.prompt
+    assert "保留改造前后对比的补充说明" in result.prompt
+    assert "Times New Roman" in result.prompt
+
+
+def test_explicit_layout_profile_id_overrides_recommendation():
+    request = _base_request(
+        drawing_name="地块2改造前后对比图",
+        drawing_type="重点地块深化类",
+        layout_profile_id="analysis_dashboard",
+    )
+
+    result = build_image_prompt(request)
+
+    assert "Layout profile: analysis_dashboard" in result.prompt
+    assert "Layout profile: dual_compare" not in result.prompt

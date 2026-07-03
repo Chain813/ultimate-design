@@ -24,6 +24,8 @@ from typing import List, Optional, Tuple
 
 from PIL import Image, ImageDraw, ImageFont
 
+from src.engines.drawing_layout_engine import compose_layout_sheet
+
 # ── 常量 ──────────────────────────────────────────
 
 # A3 横版 300dpi: 4961 x 3508
@@ -75,6 +77,8 @@ def compose_framed_sheet(
     legend_items: Optional[List[Tuple[str, str]]] = None,
     drawing_number: str = "",
     scale_text: str = "1:5000",
+    layout_id: str = "map_legend_right",
+    secondary_images: Optional[dict[str, Image.Image]] = None,
 ) -> Image.Image:
     """将主图嵌入标准规划图框，返回合成后的 PIL Image。
 
@@ -91,6 +95,30 @@ def compose_framed_sheet(
         合成后的 A3 尺寸 PIL Image。
     """
     legend_items = legend_items or []
+    images = {"main": main_image}
+    if layout_id == "dual_compare":
+        images["before_view"] = main_image
+        images["after_view"] = main_image
+    if secondary_images:
+        images.update(secondary_images)
+
+    notes = []
+    if summary:
+        notes.append(summary)
+    if drawing_number:
+        notes.append(f"Drawing number: {drawing_number}")
+    if scale_text:
+        notes.append(f"Scale: {scale_text}")
+
+    if layout_id != "legacy":
+        return compose_layout_sheet(
+            layout_id=layout_id,
+            images=images,
+            title=title,
+            chapter=chapter,
+            legend_items=list(legend_items),
+            notes=notes,
+        )
 
     # ── 创建画布 ──
     sheet = Image.new("RGB", (SHEET_W, SHEET_H), BG_COLOR)
