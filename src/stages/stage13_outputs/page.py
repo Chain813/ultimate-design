@@ -15,6 +15,7 @@ from src.ui.persistent_outputs import register_thesis_output, register_report_ou
 
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage13_outputs.config import STAGE13_WORKSPACE
+from src.engines.drawing_layout_engine import list_layout_profiles, recommend_layout_profile
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -128,6 +129,28 @@ def render_page() -> None:
             
             drawing_title = st.text_input("图纸标题", value=default_title)
             drawing_num = st.text_input("图纸编号", value=default_code)
+            
+            layout_profiles = list_layout_profiles()
+            recommended_layout = recommend_layout_profile(drawing_title or drawing_type)
+            layout_options = [profile.layout_id for profile in layout_profiles]
+            layout_labels = {
+                profile.layout_id: f"{profile.name} ({profile.layout_id})"
+                for profile in layout_profiles
+            }
+            default_layout_index = next(
+                (
+                    index
+                    for index, profile in enumerate(layout_profiles)
+                    if profile.layout_id == recommended_layout.layout_id
+                ),
+                0,
+            )
+            selected_layout_id = st.selectbox(
+                "图纸版式",
+                layout_options,
+                index=default_layout_index,
+                format_func=lambda layout_id: layout_labels.get(layout_id, layout_id),
+            )
             
             st.markdown("### 2. 设计说明与规划指标")
             
@@ -316,7 +339,8 @@ def render_page() -> None:
                                 drawing_number=drawing_num,
                                 author=author,
                                 author_id=author_id,
-                                organization=organization
+                                organization=organization,
+                                layout_id=selected_layout_id
                             )
                         
                         # 记录文件以供预览

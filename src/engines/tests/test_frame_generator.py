@@ -45,7 +45,7 @@ def test_compose_framed_sheet_dual_compare_accepts_secondary_images_and_legend_i
 
 def test_results_page_wires_selected_layout_id_to_atlas_generation():
     page_source = (
-        Path(__file__).resolve().parents[3] / "pages" / "13_成果表达.py"
+        Path(__file__).resolve().parents[3] / "src" / "stages" / "stage13_outputs" / "page.py"
     ).read_text(encoding="utf-8")
 
     assert "list_layout_profiles" in page_source
