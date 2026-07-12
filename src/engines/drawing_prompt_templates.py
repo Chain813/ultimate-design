@@ -894,6 +894,8 @@ def get_template(name: str) -> DrawingTemplate | None:
     return _TEMPLATE_INDEX.get(name)
 
 
+
+
 def get_templates_by_stage(stage_code: str) -> list[DrawingTemplate]:
     """获取某阶段的全部模板。"""
     return [t for t in DRAWING_TEMPLATES if t.stage == stage_code]
@@ -909,11 +911,22 @@ def get_or_create_template(drawing_name: str) -> DrawingTemplate | None:
     tmpl = get_template(drawing_name)
     if tmpl:
         return tmpl
+    from src.engines.drawing_prompt_engine import flatten_chapter_drawings
+    all_drawings = flatten_chapter_drawings()
+    if drawing_name not in all_drawings and not _is_numbered_key_plot_drawing(drawing_name):
+        clean_name = drawing_name.replace("图纸", "").replace("分析", "").replace("图", "").replace("表", "").strip()
+        has_overlap = False
+        for d in all_drawings:
+            clean_d = d.replace("图纸", "").replace("分析", "").replace("图", "").replace("表", "").strip()
+            if len(clean_name) >= 2 and (clean_name in clean_d or clean_d in clean_name):
+                has_overlap = True
+                break
+        if not has_overlap:
+            return None
     return _generate_generic_template(drawing_name)
 
 
 def _generate_generic_template(drawing_name: str) -> DrawingTemplate | None:
-    """Generate a generic template based on drawing name."""
     try:
         profile = get_drawing_profile(drawing_name)
     except Exception:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 def _load_module():
-    script_path = Path(__file__).resolve().parents[1] / "tools" / "record_project_workflow_video.py"
+    script_path = Path(__file__).resolve().parents[2] / "tools" / "record_project_workflow_video.py"
     spec = importlib.util.spec_from_file_location("record_project_workflow_video", script_path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)

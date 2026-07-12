@@ -103,10 +103,28 @@ ANALYSIS_INFO = {
 def parse_drawing_type(drawing_type):
     # Detect parcel index
     p_idx = 0
-    for idx, info in PARCEL_INFO.items():
-        if info["key"] in drawing_type:
-            p_idx = idx
-            break
+    import re
+    match = re.search(r"地块(\d+)", drawing_type)
+    if match:
+        p_idx = max(0, int(match.group(1)) - 1)
+    else:
+        try:
+            from src.engines.key_plot_engine import get_configured_key_plots
+            plots = get_configured_key_plots()
+            for i, plot in enumerate(plots):
+                if plot.name in drawing_type:
+                    p_idx = i
+                    break
+            else:
+                for idx, info in PARCEL_INFO.items():
+                    if info["key"] in drawing_type:
+                        p_idx = idx
+                        break
+        except Exception:
+            for idx, info in PARCEL_INFO.items():
+                if info["key"] in drawing_type:
+                    p_idx = idx
+                    break
             
     # Detect analysis type
     a_type = "satellite"
@@ -168,7 +186,32 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     
     # 1. Parse Parcel Index and Analysis Type
     p_idx, a_type = parse_drawing_type(drawing_type)
-    p_info = PARCEL_INFO[p_idx]
+    
+    plots = []
+    try:
+        from src.engines.key_plot_engine import get_configured_key_plots
+        plots = get_configured_key_plots()
+    except Exception:
+        pass
+
+    if p_idx < len(plots):
+        plot = plots[p_idx]
+        p_info = {
+            "key": plot.name,
+            "name": plot.name,
+            "title": plot.name,
+            "area": f"{plot.area_ha:.2f}",
+            "desc_base": f"{plot.name}改造以“{plot.role or '特色更新'}”为特色。通过对地块进行功能织补，注入多元活力与复合业态，提升空间品质。"
+        }
+    else:
+        p_info = PARCEL_INFO.get(p_idx, {
+            "key": f"地块{p_idx+1}",
+            "name": f"地块{p_idx+1}",
+            "title": f"地块{p_idx+1}更新单元",
+            "area": "0.00",
+            "desc_base": f"地块{p_idx+1}规划聚焦于特色更新改造。通过织补公共服务设施与改善空间品质，实现区域协同提升。"
+        })
+        
     a_info = ANALYSIS_INFO[a_type]
     
     # 2. Setup A3 Main Canvas Coordinates
@@ -177,7 +220,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.set_ylim(0, 100)
     
     # Recalculate center and view bounds locally for the specific parcel
-    if key_plots is not None and not key_plots.empty:
+    if key_plots is not None and not key_plots.empty and p_idx < len(key_plots):
         curr_row = key_plots.iloc[p_idx]
         p_minx, p_miny, p_maxx, p_maxy = curr_row.geometry.bounds
         cx = (p_minx + p_maxx) / 2
@@ -238,7 +281,8 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     if a_type == "satellite":
         # Load and render high-resolution satellite imagery from TIFF dynamically
         tif_path = None
-        graduate_dir = Path("E:/graduate")
+        repo_drive = Path(__file__).resolve().anchor
+        graduate_dir = Path(repo_drive) / "graduate"
         if graduate_dir.exists():
             for root, dirs, files in os.walk(graduate_dir):
                 for file in files:
@@ -248,7 +292,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         
         # Fallback to secondary location
         if not tif_path:
-            album_dir = Path("E:/画册/影像")
+            album_dir = Path(repo_drive) / "画册" / "影像"
             if album_dir.exists():
                 for root, dirs, files in os.walk(album_dir):
                     for file in files:

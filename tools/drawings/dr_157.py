@@ -169,7 +169,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     draw.rectangle([1200, 750, 1500, 1000], fill=(255, 255, 255), outline=(217, 119, 6), width=2)
     draw.rectangle([1200, 750, 1500, 770], fill=(217, 119, 6))
     draw.text((1215, 800), "满意规划方案输出", fill=(15, 23, 42), font=font_box_header)
-    out_text = "最终深化生成：\n[DR-076] 五地块深化设计总图、[DR-082] 实施分期图。符合居民、政府、开发商多方利益共识。"
+    out_text = "最终深化生成：\n[DR-058] 重点地块深化设计总图、[DR-060] 实施分期图。符合居民、政府、开发商多方利益共识。"
     wrapped_out = wrap_text_by_pixels(out_text, font_body, 270, draw)
     y_text = 840
     for line in wrapped_out:

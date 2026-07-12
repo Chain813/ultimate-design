@@ -94,7 +94,7 @@ def test_module_import_does_not_load_key_plot_engine_at_top_level():
 
     completed = subprocess.run(
         [sys.executable, "-c", code],
-        cwd=Path(__file__).resolve().parents[1],
+        cwd=Path(__file__).resolve().parents[3],
         capture_output=True,
         text=True,
         check=True,

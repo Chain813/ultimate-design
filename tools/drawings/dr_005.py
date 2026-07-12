@@ -98,7 +98,8 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
     # 1. Satellite Base (with high-res TIFF dynamic loading)
     tif_path = None
-    graduate_dir = Path("E:/graduate")
+    repo_drive = Path(__file__).resolve().anchor
+    graduate_dir = Path(repo_drive) / "graduate"
     if graduate_dir.exists():
         for root, dirs, files in os.walk(graduate_dir):
             for file in files:
@@ -107,7 +108,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
                     break
     
     if not tif_path:
-        album_dir = Path("E:/画册/影像")
+        album_dir = Path(repo_drive) / "画册" / "影像"
         if album_dir.exists():
             for root, dirs, files in os.walk(album_dir):
                 for file in files:

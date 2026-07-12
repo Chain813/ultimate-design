@@ -116,6 +116,26 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     draw.text((rx0 + 15, ry0 + 65), "更新图册章节结构", fill=(15, 23, 42), font=font_box_header)
     draw.text((rx0 + 15, ry0 + 92), "ATLAS STRUCTURE", fill=(148, 163, 184), font=font_box_sub)
 
+    # Dynamically query key plots to construct Chapter 5 sheet list
+    try:
+        from src.engines.key_plot_engine import get_configured_key_plots, plot_names
+        plots = get_configured_key_plots()
+        plot_names_list = plot_names(plots)
+    except Exception:
+        plot_names_list = ["老水产批发市场", "中车旧厂区", "食品调料市场", "清禾市场", "石油公司"]
+    
+    if not plot_names_list:
+        plot_names_list = ["重点更新单元"]
+        
+    start_idx = 61
+    plot_sheets = []
+    for pname in plot_names_list:
+        end_idx = start_idx + 19
+        plot_sheets.append(f"DR-{start_idx:03d}~{end_idx:03d}_{pname}更新方案图集")
+        start_idx = end_idx + 1
+        
+    ch5_sheets = "DR-058_重点地块深化设计总图、DR-059_AIGC技术推演过程图、DR-060_实施分期图、" + "、".join(plot_sheets)
+
     # Chapters
     chapters = [
         {
@@ -145,7 +165,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         {
             "id": 5, "y0": 1135, "y1": 1450, "color": (217, 119, 6), # Amber
             "title": "第5章 重点地块设计", "sub": "KEY PLOT DESIGN",
-            "sheets": "DR-058_五地块深化设计总图、DR-059_AIGC技术推演过程图、DR-060_实施分期图、DR-061~081_老水产市场更新方案图集、DR-082~101_食品调料市场更新方案图集、DR-102~120_市一中北侧地块更新方案图集、DR-121~138_清禾集贸市场更新方案图集、DR-139~154_中国石油地块更新方案图集",
+            "sheets": ch5_sheets,
             "max_lines": 8
         }
     ]

@@ -72,7 +72,7 @@ def calculate_metrics():
     planned_areas = base_areas.copy()
     for i in range(len(key_plots)):
         pa = key_plots.geometry.iloc[i].area / SCALE_FACTOR
-        ratios = per_plot_planned_ratios[i]
+        ratios = per_plot_planned_ratios[i] if i < len(per_plot_planned_ratios) else {'B': 0.40, 'A': 0.20, 'G': 0.40}
         for code, ratio in ratios.items():
             planned_areas[code] = planned_areas.get(code, 0.0) + pa * ratio
 
@@ -104,26 +104,16 @@ def calculate_metrics():
         historic_footprint = historic_in_keys['footprint_area'].sum()
         historic_floor = historic_in_keys['floor_area'].sum()
 
-    area_0 = key_plots.geometry.iloc[0].area / SCALE_FACTOR
-    area_1 = key_plots.geometry.iloc[1].area / SCALE_FACTOR
-    area_2 = key_plots.geometry.iloc[2].area / SCALE_FACTOR
-    area_3 = key_plots.geometry.iloc[3].area / SCALE_FACTOR
-    area_4 = key_plots.geometry.iloc[4].area / SCALE_FACTOR
-
-    new_footprint = (
-        area_0 * 0.25 +
-        area_1 * 0.28 +
-        area_2 * 0.25 +
-        area_3 * 0.25 +
-        area_4 * 0.15
-    )
-    new_floor = (
-        area_0 * 1.3 +
-        area_1 * 1.4 +
-        area_2 * 1.3 +
-        area_3 * 1.3 +
-        area_4 * 0.2
-    )
+    new_footprint = 0.0
+    new_floor = 0.0
+    default_f_factors = [0.25, 0.28, 0.25, 0.25, 0.15]
+    default_g_factors = [1.3, 1.4, 1.3, 1.3, 0.2]
+    for idx in range(len(key_plots)):
+        area_idx = key_plots.geometry.iloc[idx].area / SCALE_FACTOR
+        f_fact = default_f_factors[idx] if idx < len(default_f_factors) else 0.25
+        g_fact = default_g_factors[idx] if idx < len(default_g_factors) else 1.3
+        new_footprint += area_idx * f_fact
+        new_floor += area_idx * g_fact
 
     total_plan_footprint = retained_footprint + historic_footprint + new_footprint
     total_plan_floor = retained_floor + historic_floor + new_floor
@@ -148,7 +138,8 @@ def calculate_metrics():
     per_plot_planned = []
     for i in range(len(key_plots)):
         pa = plot_areas_sqm[i]
-        planned = {code: pa * ratio for code, ratio in per_plot_planned_ratios[i].items()}
+        ratios = per_plot_planned_ratios[i] if i < len(per_plot_planned_ratios) else {'B': 0.40, 'A': 0.20, 'G': 0.40}
+        planned = {code: pa * ratio for code, ratio in ratios.items()}
         per_plot_planned.append(planned)
 
     return {
@@ -490,17 +481,34 @@ def draw_tables():
 
     plot_areas_ha = [a / 10000 for a in data["plot_areas_sqm"]]
 
-    t3_rows = [
-        ["KP-01", "农贸水产市场", f"{plot_areas_ha[0]:.2f}", "B/A混合", "≤1.3", "≤25%", "≥38%", "≤18", "御花园东巷文创生活街区"],
-        ["KP-02", "食品调料大市场", f"{plot_areas_ha[1]:.2f}", "B/A混合", "≤1.4", "≤28%", "≥35%", "≤18", "活态市集·风味院落"],
-        ["KP-03", "市一中北侧", f"{plot_areas_ha[2]:.2f}", "A/R混合", "≤1.3", "≤25%", "≥35%", "≤18", "全龄共享生活社区"],
-        ["KP-04", "清禾集贸市场", f"{plot_areas_ha[3]:.2f}", "B/A混合", "≤1.3", "≤25%", "≥35%", "9~15", "历史界面缝合·社区生活发生器"],
-        ["KP-05", "中国石油", f"{plot_areas_ha[4]:.2f}", "G/B混合", "≤0.2", "≤15%", "≥80%", "≤9", "宽城子能量花园"],
+    t3_rows = []
+    default_positions = [
+        "御花园东巷文创生活街区",
+        "活态市集·风味院落",
+        "全龄共享生活社区",
+        "历史界面缝合·社区生活发生器",
+        "宽城子能量花园"
     ]
+    default_types = ["B/A混合", "B/A混合", "A/R混合", "B/A混合", "G/B混合"]
+    default_far = ["≤1.3", "≤1.4", "≤1.3", "≤1.3", "≤0.2"]
+    default_density = ["≤25%", "≤28%", "≤25%", "≤25%", "≤15%"]
+    default_green = ["≥38%", "≥35%", "≥35%", "≥35%", "≥80%"]
+    default_height = ["≤18", "≤18", "≤18", "9~15", "≤9"]
+
+    for i in range(len(key_plots)):
+        pname = plot_names[i]
+        ha = plot_areas_ha[i]
+        ptype = default_types[i] if i < len(default_types) else "B/A混合"
+        pfar = default_far[i] if i < len(default_far) else "≤1.3"
+        pdensity = default_density[i] if i < len(default_density) else "≤25%"
+        pgreen = default_green[i] if i < len(default_green) else "≥35%"
+        pheight = default_height[i] if i < len(default_height) else "≤18"
+        pos = default_positions[i] if i < len(default_positions) else "重点更新单元"
+        t3_rows.append([f"KP-{i+1:02d}", pname, f"{ha:.2f}", ptype, pfar, pdensity, pgreen, pheight, pos])
 
     total_key_ha = sum(plot_areas_ha)
     t3_rows.append({"_summary": True, "cells": [
-        "合计", "五个重点地块", f"{total_key_ha:.2f}", "--", "≤1.4", "≤28%", "≥35%", "≤18", "城市设计管控单元"
+        "合计", f"{len(key_plots)}个重点地块", f"{total_key_ha:.2f}", "--", "≤1.4", "≤28%", "≥35%", "≤18", "城市设计管控单元"
     ]})
 
     t3_end = draw_table_generic(draw, 1180, t3_y, t3_headers, t3_cols, t3_rows, 38,
@@ -528,7 +536,7 @@ def draw_tables():
     ]
 
     t4_all_rows = []
-    for plot_idx in range(5):
+    for plot_idx in range(len(key_plots)):
         pname = plot_names[plot_idx]
         pa = plot_areas_sqm[plot_idx]
         exist = per_plot_existing[plot_idx]

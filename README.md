@@ -10,7 +10,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-238%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-CI%20suite-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -28,7 +28,9 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 | 能力 | 说明 |
 |---|---|
 | **15 页面精简工作流** | 包含主入口 app.py 及 14 个功能页面（其中 3 组页面合并），聚焦核心设计流程 |
-| **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范 of A3 图册 |
+| **专业图纸模板与多版式图册** | 基于 Python 空间矢量绘图、PIL 图框封装与多版式排版引擎，高精度生成符合国标与工程规范的 A3 图册 |
+| **动态重点更新单元** | 从 `Key_Plots_District.json` / GeoJSON 当前记录读取 N 个重点地块，自动展开图纸目录、诊断卡片与深化提示词 |
+| **内置 GIS 处理管线** | `scripts/process_key_plots.py` 支持重点地块清洗、拓扑修复、边界裁切、面积测算和 WGS84 GeoJSON 输出 |
 | **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
 | **DesignContext 设计纲要** | 统一提取 19 个阶段 AI 文本输出，LLM 合成结构化设计纲要，驱动图纸生产 |
 | **策略驱动 AIGC 渲染** | 6 种设计策略风格（历史保护/微更新/功能置换/TOD/生态/文创）自动匹配渲染参数 |
@@ -37,7 +39,7 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 | **后台缓存预加载** | daemon 线程静默预热 37MB GeoJSON、RAG 模型等，页面切换秒开 |
 | **引擎懒加载** | `__getattr__` 模式延迟加载 pandas/numpy/PIL，启动速度提升 |
 | **录屏自动滑动组件** | 页面右下角常驻防穿帮录屏控制器，支持帧率级平滑像素滚动与快捷键交互 |
-| **238 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **CI 自动化测试套件** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
 
 ---
 
@@ -58,6 +60,8 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 ### 3. 📊 数据-逻辑分离与 MPI/GVI 循证诊断系统 (Evidence-Based Assessment System)
 本系统遵循现代软件工程规范，实现了“空间数据与分析逻辑的彻底解耦”。
 * **多维指标融合诊断**：通过动态层次分析法（AHP）与更新潜力模型（MPI），将 GVI（街景绿视率）、SVF（天空可视率）、POI 商业活力指数与社交媒体舆情（NLP 情感分析得分）有机叠合，为每个重点更新单元出具全方位的“诊断报告”。
+* **动态重点更新单元**：`KeyPlotEngine` 从重点地块 GeoJSON 中读取当前记录数，不再假设固定 5 个地块；Stage 10、Stage 13、提示词模板和图册目录都会按 N 个地块动态展开。
+* **内置空间处理脚本**：`scripts/process_key_plots.py` 对原始重点地块边界执行拓扑修复、研究范围裁切、投影面积测算、字段归一和 WGS84 GeoJSON 输出，保证上传数据可直接进入诊断与制图链路。
 * **一键跨城市迁移**：当需要将平台应用到全新的地块时，用户无需修改任何前端界面或分析逻辑代码，只需按照 `data/` 目录规范替换 GeoJSON 矢量文件和相关的 CSV 指标数据。系统在启动时会自动读取并刷新 3D 数字孪生底座及各阶段的分析表单，实现极低成本的平台复用与业务拓展。
 
 ---
@@ -92,7 +96,7 @@ streamlit run app.py
 ### 🩺 3. 健康自检
 
 ```powershell
-python -m pytest                    # 238 项单元测试
+python -m pytest                    # 全量单元测试
 python tools/check_env.py           # 15 页面完整性校验
 python tools/data_quality_check.py  # 数据质量评级
 python tools/secret_scan.py         # 敏感信息扫描
@@ -144,7 +148,7 @@ data/
 ├── shp/
 │   ├── Boundary_Scope.geojson           # 研究范围红线 (必须)
 │   ├── Building_Footprints.geojson      # 建筑基底 (含 Floor 字段)
-│   ├── Key_Plots_District.json          # 5 个重点更新地块边界
+│   ├── Key_Plots_District.json          # N 个重点更新单元边界（由当前 GeoJSON 动态读取）
 │   ├── landuse_clipped.geojson          # 裁切后的用地分类 (含国标 RGB 色值)
 │   ├── road_network_clipped.geojson     # 裁切后的三级道路网络
 │   └── rail_network_clipped.geojson     # 裁切后的轨道交通网络
@@ -165,6 +169,7 @@ data/
 python scripts/fetch_real_estate_data.py          # 建筑年代 / 房价
 python scripts/fetch_supplementary_data.py --all  # 日照 / 交通等
 python scripts/clip_city_data.py                  # 裁切城市级数据至研究范围
+python scripts/process_key_plots.py --input data/raw/key_plots.geojson --boundary data/shp/Boundary_Scope.geojson --output data/shp/Key_Plots_District.json
 python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿)
 ```
 
@@ -201,7 +206,7 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 | 10 | 重点地段深化 | 诊断雷达图、控规指标反推、微观人群画像、地块深化方案 |
 | 11 | 实施路径 | 六种更新模式、三期时序甘特图 |
 | 12 | 城市设计导则 | 两步法导则生成、RAG 政策检索、控制图则 |
-| 13 | 成果表达 | Python 空间底图渲染、Web LLM 重绘提示词、PIL 自动红头图框封装 |
+| 13 | 成果表达 | Python 空间底图渲染、Web LLM 重绘提示词、六类 A3 版式选择、PIL 自动图框封装 |
 | 14 | 数据大屏 | 三维宏观决策大屏、规划指标统计看板、时空演化动态可视化 |
 
 ### 🟣 深化与集成：AIGC 与智能体技能（Stage 15-16）
@@ -231,7 +236,9 @@ ultimateDESIGN/
 │   │   ├── drawing_pipeline.py         #   DrawingPipeline 端到端编排器
 │   │   ├── drawing_prompt_engine.py    #   41 图纸提示词构建器
 │   │   ├── drawing_prompt_templates.py #   图纸模板元数据库
+│   │   ├── drawing_layout_engine.py    #   A3 图纸多版式排版引擎
 │   │   ├── frame_generator.py          #   A3 图框图纸组装引擎
+│   │   ├── key_plot_engine.py          #   动态重点更新单元读取 / 诊断 / 图纸目录
 │   │   ├── urban_image_segmentation.py #   街景图像分割引擎
 │   │   ├── engine_registry.py          #   AI/AIGC 引擎注册表
 │   │   ├── quality_assessor.py         #   双重质量评估 (Gemma + DeepSeek)
@@ -261,6 +268,7 @@ ultimateDESIGN/
 ├── scripts/                            # 自动化脚本
 │   ├── setup_env.bat                  #   环境自动安装 (Windows)
 │   ├── clip_city_data.py              #   城市级数据裁切至研究范围
+│   ├── process_key_plots.py           #   重点地块拓扑修复 / 边界裁切 / 面积测算
 │   ├── render_gis_assets.py           #   GIS 矢量光栅化 (AIGC 底稿)
 │   ├── run_drawing_export.py          #   高精度图纸批量导出
 │   ├── fetch_supplementary_data.py    #   补充数据获取
@@ -275,7 +283,7 @@ ultimateDESIGN/
 │   ├── secret_scan.py                 #   敏感信息扫描
 │   ├── startup_smoke.py              #   启动冒烟测试
 │   └── video_generator/              #   HyperFrames 视频工具 (Node.js)
-├── tests/                              # 40 个测试模块 / 238 项用例
+├── tests/                              # Pytest 自动化测试套件
 ├── data/                               # 数据资产 (数据与逻辑解耦)
 ├── static/                             # Streamlit 静态资源代理
 ├── assets/                             # CSS 样式 / WebGL 模板
@@ -305,7 +313,7 @@ GeoJSON 矢量数据                     Stable Diffusion WebUI
                                     └──────────┬──────────┘
   DrawingPipeline 编排                          │
        │                                       ▼
-       ├── 提示词构建 (41 模板)          生成专业图纸
+       ├── 提示词构建 (41 模板 + 版式约束) 生成专业图纸
        ├── 质量评估 (A/B/C/D)           (地理空间对齐)
        ├── 自动修正 & 重生成
        └── VersionStore 版本归档
@@ -351,6 +359,7 @@ git push origin main
 | [BUG_REPORT.md](./BUG_REPORT.md) | 已识别问题与修复日志 |
 | [PROJECT_INSPECTION_REPORT.md](./PROJECT_INSPECTION_REPORT.md) | 系统级架构体检报告 |
 | [GLOSSARY.md](./GLOSSARY.md) | 核心术语释义 (MPI / GVI / ControlNet 等) |
+| [docs/DYNAMIC_KEY_PLOTS_AND_LAYOUTS.md](./docs/DYNAMIC_KEY_PLOTS_AND_LAYOUTS.md) | 动态重点地块、GIS 处理脚本与多版式图纸生成说明 |
 | [README_EN.md](./README_EN.md) | English Documentation |
 
 ---

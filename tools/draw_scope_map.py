@@ -112,12 +112,33 @@ MAP_TYPE_TO_MODULE = {
 }
 
 def get_drawing_module(drawing_type):
-    if drawing_type in MAP_TYPE_TO_MODULE:
-        mod_name = MAP_TYPE_TO_MODULE[drawing_type]
-    elif any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
-        mod_name = "dr_parcel_detail"
-    else:
-        mod_name = "dr_004"
+    mod_name = None
+    for k, v in MAP_TYPE_TO_MODULE.items():
+        if drawing_type == k or (k.replace("五地块", "重点地块") in drawing_type):
+            mod_name = v
+            break
+            
+    if not mod_name:
+        import re
+        is_parcel_detail = (
+            any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"])
+            or bool(re.search(r"地块\d+", drawing_type))
+        )
+        if is_parcel_detail and "对比图" not in drawing_type:
+            mod_name = "dr_parcel_detail"
+        elif "对比图" in drawing_type:
+            match = re.search(r"地块(\d+)", drawing_type)
+            if match:
+                idx = int(match.group(1)) - 1
+                comparison_mods = ["dr_075", "dr_095", "dr_114", "dr_132", "dr_150"]
+                if idx < len(comparison_mods):
+                    mod_name = comparison_mods[idx]
+                else:
+                    mod_name = "dr_075"
+            else:
+                mod_name = "dr_075"
+        else:
+            mod_name = "dr_004"
     try:
         return importlib.import_module(f"tools.drawings.{mod_name}")
     except Exception as e:
@@ -220,7 +241,10 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
 
     # Check if this is a parcel detail drawing and adjust viewport to zoom in
     parcel_idx = None
-    if "老水产市场" in drawing_type:
+    match = re.search(r"地块(\d+)", drawing_type)
+    if match:
+        parcel_idx = int(match.group(1)) - 1
+    elif "老水产市场" in drawing_type:
         parcel_idx = 0
     elif "食品调料市场" in drawing_type:
         parcel_idx = 1
@@ -241,7 +265,7 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
         max_dim = max(p_w, p_h * 1.2454)
         
         # Override zoom factor to zoom in closer for more details on specific parcels (食品调料市场, 清禾集贸市场)
-        zoom_factor = 1.3 if any(k in drawing_type for k in ["食品调料市场", "清禾集贸市场"]) else 2.5
+        zoom_factor = 1.3 if (parcel_idx in (1, 3) or any(k in drawing_type for k in ["食品调料市场", "清禾集贸市场"])) else 2.5
         view_w = max_dim * zoom_factor
         view_h = view_w / 1.2454
 
@@ -320,7 +344,7 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
                 default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
 
     # Boundary red line (Apple Red) - skip for parcel detail drawings to keep them clean
-    if not any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
+    if parcel_idx is None and not any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
         boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)
 
     # 4. Add text annotations for key landmarks (if not AIGC flowchart)

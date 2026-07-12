@@ -18,13 +18,19 @@ python tools/check_env.py
 ---
 
 ### 第二步：运行全量单元测试
-上传前，必须确保所有核心算法和业务逻辑全部通过本地测试，目前项目包含 **238 项单元测试**。
+上传前，必须确保所有核心算法和业务逻辑全部通过本地测试。重点地块、GIS 处理、提示词解耦和多版式图纸链路应先跑聚焦回归，再跑全量套件。
 ```powershell
+# 重点回归：动态重点地块 / GIS 处理 / 多版式图纸 / 提示词链路
+python -m pytest tests/test_key_plot_engine.py tests/test_process_key_plots.py tests/test_drawing_layout_engine.py tests/test_drawing_prompt_engine.py tests/test_drawing_prompt_templates.py tests/test_site_diagnostic_engine.py tests/test_prompt_decoupling.py tests/test_frame_generator.py -v
+
 # 执行全量单元测试
-python -m pytest
+python -m pytest -q
 ```
 > [!IMPORTANT]
 > 必须确保测试通过率为 100%。如果存在失败用例，请参照 [BUG_REPORT.md](./BUG_REPORT.md) 的排查思路修复后再进行上传。
+
+> [!NOTE]
+> `tests/test_prompt_decoupling.py` 会临时写入测试配置，和其他包含同一 fixture 的套件并行运行时容易造成配置文件脏写；建议按上述命令串行执行并在测试后确认 `git status --short` 为空。
 
 ---
 
@@ -33,6 +39,11 @@ python -m pytest
 ```powershell
 # 扫描敏感泄露信息
 python tools/secret_scan.py
+
+# 与 GitHub Actions smoke job 对齐
+python tools/check_env.py
+python tools/startup_smoke.py
+python tools/data_quality_check.py
 ```
 #### 凭证清理与轮换标准：
 1. **本地配置文件**：确保根目录下仅有本地专用的 `.env`，该文件已被 `.gitignore` 排除在外，绝对不会被提交。

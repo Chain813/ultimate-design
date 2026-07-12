@@ -5,7 +5,26 @@ import json
 import argparse
 from pathlib import Path
 
-DB_PATH = Path("e:/AI-based-project/urban-platform/.codegraph/codegraph.db")
+def resolve_db_path():
+    # Resolve the repository root directory dynamically (relative to tools/codegraph_tool.py)
+    root = Path(__file__).resolve().parents[1]
+    
+    # 1. Check local workspace root
+    db = root / ".codegraph" / "codegraph.db"
+    if db.exists():
+        return db
+        
+    # 2. Check parent folder's parent (in case we are in a Git worktree, e.g. .worktrees/<branch>)
+    if len(root.parents) >= 2:
+        wt_db = root.parents[1] / ".codegraph" / "codegraph.db"
+        if wt_db.exists():
+            return wt_db
+            
+    # 3. Fallback to the original hardcoded path
+    return Path("e:/AI-based-project/urban-platform/.codegraph/codegraph.db")
+
+DB_PATH = resolve_db_path()
+
 
 def get_connection():
     if not DB_PATH.exists():
@@ -177,9 +196,11 @@ def cmd_visualize(args):
     cursor = conn.cursor()
     
     # Let's find files and see imports or containment relation between key modules.
-    # Group nodes by top-level files
-    cursor.execute("""
-        SELECT path FROM files WHERE path LIKE 'src/%' OR path LIKE 'tools/%' OR path = 'app.py';
+    # Group nodes by top-level files, excluding test files
+    cursor.execute(r"""
+        SELECT path FROM files 
+        WHERE (path LIKE 'src/%' OR path LIKE 'tools/%' OR path = 'app.py')
+          AND path NOT LIKE '%/tests/%' AND path NOT LIKE '%\tests\%';
     """)
     files = [r[0] for r in cursor.fetchall()]
     
@@ -191,9 +212,8 @@ def cmd_visualize(args):
     print("  classDef tool fill:#fffbeb,stroke:#fbbf24,stroke-width:2px;")
     print("  classDef main fill:#faf5ff,stroke:#a855f7,stroke-width:2px;")
     
-    # Get dependencies between files via edges
-    # We trace imports or calls across files
-    cursor.execute("""
+    # Get dependencies between files via edges, excluding test dependencies
+    cursor.execute(r"""
         SELECT DISTINCT s.file_path, t.file_path, e.kind
         FROM edges e
         JOIN nodes s ON e.source = s.id
@@ -201,6 +221,8 @@ def cmd_visualize(args):
         WHERE s.file_path != t.file_path 
           AND s.file_path IS NOT NULL 
           AND t.file_path IS NOT NULL
+          AND s.file_path NOT LIKE '%/tests/%' AND s.file_path NOT LIKE '%\tests\%'
+          AND t.file_path NOT LIKE '%/tests/%' AND t.file_path NOT LIKE '%\tests\%'
           AND (s.file_path LIKE 'src/%' OR s.file_path LIKE 'tools/%' OR s.file_path = 'app.py')
           AND (t.file_path LIKE 'src/%' OR t.file_path LIKE 'tools/%' OR t.file_path = 'app.py');
     """)
@@ -241,6 +263,58 @@ def cmd_visualize(args):
     print("```")
     conn.close()
 
+def cmd_check_architecture(args):
+    """Check for architectural decoupling violations in the codebase."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    
+    # Query distinct import relationships between local source files and src/pages modules
+    cursor.execute("""
+        SELECT DISTINCT s.file_path, t.name 
+        FROM edges e 
+        JOIN nodes s ON e.source = s.id 
+        JOIN nodes t ON e.target = t.id 
+        WHERE e.kind = 'imports' 
+          AND (t.name LIKE 'src.%' OR t.name = 'src' OR t.name LIKE 'pages.%' OR t.name = 'pages') 
+          AND s.file_path IS NOT NULL;
+    """)
+    all_imports = cursor.fetchall()
+    conn.close()
+    
+    violations = []
+    for src_file, imp in all_imports:
+        # Normalize slashes for consistency
+        src_file_norm = src_file.replace("\\", "/")
+        
+        # Rule 1: src/engines/ should never import from UI or Page layer
+        if src_file_norm.startswith('src/engines/') and (imp.startswith('src.ui') or imp.startswith('pages')):
+            violations.append(("Domain Engine importing from UI/Page layer", src_file, imp))
+            
+        # Rule 2: src/utils/ should never import from engines, workflow, ui, or pages
+        if src_file_norm.startswith('src/utils/') and (imp.startswith('src.engines') or imp.startswith('src.workflow') or imp.startswith('src.ui') or imp.startswith('pages')):
+            violations.append(("Utility Helper importing from high-level layer", src_file, imp))
+            
+        # Rule 3: src/config/ should never import from engines, workflow, ui, or pages
+        if src_file_norm.startswith('src/config/') and (imp.startswith('src.engines') or imp.startswith('src.workflow') or imp.startswith('src.ui') or imp.startswith('pages')):
+            violations.append(("Config module importing from high-level layer", src_file, imp))
+            
+        # Rule 4: src/data/ should never import from engines, workflow, ui, or pages
+        if src_file_norm.startswith('src/data/') and (imp.startswith('src.engines') or imp.startswith('src.workflow') or imp.startswith('src.ui') or imp.startswith('pages')):
+            violations.append(("Data module importing from high-level layer", src_file, imp))
+            
+    print("=== Architectural Decoupling Audit ===")
+    if not violations:
+        print("  [OK] No architectural coupling violations detected. Perfect layer separation!")
+        sys.exit(0)
+    else:
+        print(f"  [FAIL] Found {len(violations)} architectural coupling violations:")
+        for rule, src_file, imp in violations:
+            print(f"    - [{rule}]:")
+            print(f"        File: {src_file}")
+            print(f"        Imports: {imp}")
+        sys.exit(1)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Codegraph database querying tool.")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -268,6 +342,9 @@ def main():
     # Visualize command
     subparsers.add_parser("visualize", help="Generate a Mermaid dependency graph.")
     
+    # Check architecture command
+    subparsers.add_parser("check-architecture", help="Check for decoupling violations in the codebase.")
+    
     args = parser.parse_args()
     if args.command == "status":
         cmd_status(args)
@@ -281,6 +358,8 @@ def main():
         cmd_callees(args)
     elif args.command == "visualize":
         cmd_visualize(args)
+    elif args.command == "check-architecture":
+        cmd_check_architecture(args)
 
 if __name__ == "__main__":
     main()

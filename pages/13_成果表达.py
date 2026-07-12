@@ -148,6 +148,26 @@ elif selected_sub == "🖼️ 图册自动组装":
         
         st.markdown("### 2. 设计说明与规划指标")
         
+        # Dynamically load key plots to build descriptions
+        try:
+            from src.engines.key_plot_engine import get_configured_key_plots
+            plots = get_configured_key_plots()
+            plot_names_list = [p.name for p in plots]
+        except Exception:
+            plot_names_list = ["老水产批发市场", "中车旧厂区", "食品调料市场", "清禾市场", "石油公司"]
+        
+        if not plot_names_list:
+            plot_names_list = ["重点更新单元"]
+        
+        n_p = len(plot_names_list)
+        p1 = plot_names_list[:max(1, n_p // 3)]
+        p2 = plot_names_list[max(1, n_p // 3):max(2, 2 * n_p // 3)]
+        p3 = plot_names_list[max(2, 2 * n_p // 3):]
+        
+        recent_str = "、".join(p1)
+        mid_str = "、".join(p2) if p2 else "配套更新项目"
+        long_str = "、".join(p3) if p3 else "周边低效地块"
+
         # Default descriptions helper
         default_desc = {
             "现状区位图": [
@@ -157,7 +177,7 @@ elif selected_sub == "🖼️ 图册自动组装":
             ],
             "研究范围图": [
                 "1. 核心范围：规划确定的更新改造研究边界西起亚泰大街，东至伊通河，南至长通路，北至京哈铁路，总用地面积约为 160 公顷。",
-                "2. 重点更新单元：规划重点针对片区内低效国有或集体资产更新单元进行城市设计与活力针灸，包括老水产批发市场 and 中车旧厂区等。",
+                f"2. 重点更新单元：规划重点针对片区内低效国有或集体资产更新单元进行城市设计与活力针灸，包括{recent_str}等重点更新地块。",
                 "3. 现状本底：周边路网成熟，紧邻长春站交通门户，是缝合老宽城铁北地区与长春历史文化中轴线的空间关键锁扣。"
             ],
             "卫星图": [
@@ -261,9 +281,9 @@ elif selected_sub == "🖼️ 图册自动组装":
                 "3. 智能协商：通过 LLM 智能体模拟政府、专家、居民与开发商进行决策协商，综合评选最优方案，实现全链条数字化辅助。"
             ],
             "实施分期图": [
-                "1. 近期建设（1-3年）：优先启动水产批发市场及食品调料市场地块（绿色区），置换为社区商业与公共停车场以疏导人流。",
-                "2. 中期推进（3-5年）：推进中车工业遗存活化项目（蓝色区），将旧厂房改建为数智文创街区，并缝合被铁路线阻断的路网。",
-                "3. 远期展望（5-10年）：实施清禾市场及石油公司周边低效住宅微更新项目（紫色区），彻底完成全区公共绿地与设施配套。"
+                f"1. 近期建设（1-3年）：优先启动{recent_str}地块（绿色区），置换为社区商业与公共停车场以疏导人流。",
+                f"2. 中期推进（3-5年）：推进{mid_str}等旧工业/低效设施活化项目（蓝色区），将旧厂房与边角地改建为数智文创与双创空间。",
+                f"3. 远期展望（5-10年）：实施{long_str}周边低效住宅与设施配套微更新项目（紫色区），彻底完成全区公共绿地与设施配套。"
             ]
         }
         

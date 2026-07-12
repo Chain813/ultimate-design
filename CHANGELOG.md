@@ -2,6 +2,22 @@
 
 本项目所有的核心重构与功能更新将记录在此。
 
+## [v5.9.0] - 2026-07-07
+### 🧭 动态重点地块、GIS 处理管线与多版式图纸生成重构
+
+**重点地块内容动态化**：
+* 新增 `KeyPlotEngine` 重点更新单元读取与目录生成能力，Stage 10、Stage 13、诊断卡片、图纸目录和提示词链路不再假设固定 5 个地块，而是按当前 `Key_Plots_District.json` / GeoJSON 记录自动展开 N 个地块；
+* 增强场地诊断与图纸目录测试，覆盖空数据、单地块、多地块、字段缺失、排序、面积与诊断 fallback 等边界情况。
+
+**GIS 空间数据处理内置化**：
+* 新增 `scripts/process_key_plots.py`，支持原始重点地块 GeoJSON/Shapefile 的 CRS 归一、无效几何修复、研究范围裁切、投影/测地面积测算、字段标准化与 WGS84 GeoJSON 输出；
+* 补齐 `tests/test_process_key_plots.py`，验证裁切、空结果、字段保留、面积计算和命令行入口行为。
+
+**多版式 A3 图纸生成链路**：
+* 新增 `drawing_layout_engine.py`，内置 `map_legend_right`、`dual_compare`、`analysis_dashboard`、`matrix_storyboard`、`full_bleed_effect`、`chapter_cover` 六类 A3 版式，并提供版式推荐、图例映射、标题栏与注记区排版能力；
+* 将版式选择接入 `frame_generator.py`、`tools/draw_scope_map.py`、`pages/13_成果表达.py`、`drawing_prompt_engine.py` 与 `drawing_prompt_templates.py`，确保用户选择的版式同时影响图框封装、最终输出和 AIGC 提示词；
+* 更新 README、README_EN、WORKFLOW、GITHUB_PREPARATION、GLOSSARY 与新增专项说明文档，明确动态地块、GIS 处理脚本、多版式输出和 CI 验证流程。
+
 ## [v5.8.0] - 2026-06-19
 ### 🧹 工具目录净化、全局隐私脱敏与工作流对齐重构
 

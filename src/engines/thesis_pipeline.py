@@ -454,13 +454,11 @@ def _gen_landscape_style(pc, lc, model="deepseek-v4-pro"):
 def _get_plot_names() -> list:
     """获取重点地块名称列表"""
     try:
-        from src.engines.spatial_data_injector import get_key_plots_summary
-        summary = get_key_plots_summary()
-        # 从摘要中提取地块名
-        import re
-        names = re.findall(r'[「【](.+?)[」】]', summary)
+        from src.engines.key_plot_engine import get_configured_key_plots, plot_names
+        plots = get_configured_key_plots()
+        names = plot_names(plots)
         if names:
-            return names[:5]
+            return names
     except Exception:
         pass
     # 默认地块列表
@@ -823,7 +821,7 @@ def run_full_pipeline(
 
     # 计算总步数
     plot_names = _get_plot_names()
-    n_plots = min(len(plot_names), 5)
+    n_plots = len(plot_names)
     total_steps = (
         2 +     # Stage 05: 诊断报告 + MPI
         2 +     # Stage 06: 案例 + 概念
@@ -869,7 +867,7 @@ def run_full_pipeline(
 
     # ── Stage 10 ──
     lc(f"\n🏗️ Stage 10: 重点地块深化 ({n_plots} 个地块)")
-    for pname in plot_names[:n_plots]:
+    for pname in plot_names:
         lc(f"   地块: {pname}")
         _gen_plot_metrics(pc, lc, pname, model=model); step += 1; pc(step, total_steps, f"{pname} 指标")
         _gen_plot_personas(pc, lc, pname, model=model); step += 1; pc(step, total_steps, f"{pname} 人群")
