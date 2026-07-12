@@ -480,6 +480,8 @@ def draw_tables():
     t3_y = 280
 
     plot_areas_ha = [a / 10000 for a in data["plot_areas_sqm"]]
+    key_plots = data["key_plots"]
+    plot_names = data["plot_names"]
 
     t3_rows = []
     default_positions = [
