@@ -2,7 +2,10 @@ import json
 import os
 import pandas as pd
 import streamlit as st
-import streamlit.components.v1 as components
+try:
+    import streamlit.components.v1 as components
+except ModuleNotFoundError:
+    components = st.components.v1
 from pathlib import Path
 from src.config import get_static_url, get_map_viewport, DATA_FILES, GIS_FILES
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features, get_merged_poi_data
