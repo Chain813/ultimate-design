@@ -17,6 +17,7 @@ PACKAGE_IMPORT_NAMES = {
     "streamlit-folium": "streamlit_folium",
     "webdriver-manager": "webdriver_manager",
     "pywebview": "webview",
+    "pytest-xdist": "xdist",
 }
 
 def check_package(package_name):

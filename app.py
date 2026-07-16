@@ -1,4 +1,8 @@
 import streamlit as st
+
+# 🌟 强制隐藏侧边栏，设定宽屏模式
+st.set_page_config(page_title="系统主页", layout="wide", initial_sidebar_state="collapsed")
+
 from src.utils.logger_setup import setup_logger
 
 # 🌟 初始化全局系统日志
@@ -6,26 +10,25 @@ setup_logger()
 import json
 import os
 from pathlib import Path
+
+import pandas as pd
+import streamlit.components.v1 as components
+
+from src.config import get_static_url
+from src.engines.spatial_engine import get_hud_statistics
+from src.ui.app_shell import (
+    render_engine_status_alert,
+    render_top_nav,
+)
+from src.ui.asset_prefetch import render_static_asset_prefetch
+from src.ui.critical_images import get_inline_static_image_src
 from src.ui.design_system import (
     render_page_banner,
     render_section_intro,
     render_summary_cards,
 )
-from src.ui.app_shell import (
-    render_engine_status_alert,
-    render_top_nav,
-)
-from src.engines.spatial_engine import get_hud_statistics
-from src.config import get_static_url
-from src.utils.service_check import check_engine_status
-from src.ui.asset_prefetch import render_static_asset_prefetch
-from src.ui.critical_images import get_inline_static_image_src
 from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
-import pandas as pd
-import streamlit.components.v1 as components
-
-# 🌟 强制隐藏侧边栏，设定宽屏模式
-st.set_page_config(page_title="系统主页", layout="wide", initial_sidebar_state="collapsed")
+from src.utils.service_check import check_engine_status
 
 def get_page_route(page_path):
     """将文件路径转换为 Streamlit 路由 URL"""
@@ -37,6 +40,7 @@ def get_page_route(page_path):
 
 # 项目配置检查 — 首次启动时引导填写
 from src.ui.project_config_banner import render_project_config_banner
+
 _project_ready = render_project_config_banner()
 if not _project_ready:
     st.stop()  # 配置未完成，停止渲染后续内容
@@ -47,6 +51,7 @@ render_engine_status_alert()
 
 # 启动后台缓存预热（静默加载其他页面数据）
 from src.utils.preloader import start_preloading
+
 start_preloading()
 
 # 🎬 演示模式：最大化显示区域 (使用 style.css 中的 .presentation-active 类)
@@ -111,7 +116,8 @@ MODULE_SECTIONS = [
 MODULES = [mod for section in MODULE_SECTIONS for mod in section["modules"]]
 
 # 动态页面标题
-from src.config.site import get_project_info, get_site_name, get_site_city
+from src.config.site import get_project_info, get_site_city, get_site_name
+
 _proj = get_project_info()
 _site_name = get_site_name()
 _title = _proj.get("name") or "城市设计智能推演平台"
@@ -349,6 +355,7 @@ render_skyline_hud()
 # 📊 数据就绪状态
 # ==========================================
 from src.data import get_data_readiness
+
 readiness = get_data_readiness()
 render_summary_cards([
     {"value": f"{readiness['loaded']}/{readiness['total']}", "title": "数据完备度", "desc": "已上传数据类别"},
