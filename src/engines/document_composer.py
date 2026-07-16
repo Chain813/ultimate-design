@@ -19,7 +19,6 @@ import logging
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING

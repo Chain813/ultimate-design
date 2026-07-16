@@ -192,9 +192,8 @@ def render_copilot_sidebar():
         st.markdown("### 💬 AI 规划助手")
         st.caption("基于法规 RAG 的全生命周期 AI 助理。")
         st.markdown("""<style>.copilot-user{background-color:rgba(0,113,227,0.08);border-left:3px solid #0071e3;padding:8px 12px;border-radius:8px;margin:6px 0;font-size:13px;color:#1d1d1f}.copilot-ai{background-color:rgba(0,0,0,0.02);border-left:3px solid #86868b;padding:8px 12px;border-radius:8px;margin:6px 0;font-size:13px;color:#1d1d1f}</style>""", unsafe_allow_html=True)
-        if st.session_state.get("copilot_history"):
-            if st.button("🗑️ 清空对话", key="copilot_clear", use_container_width=True):
-                st.session_state["copilot_history"] = []; st.rerun()
+        if st.session_state.get("copilot_history") and st.button("🗑️ 清空对话", key="copilot_clear", use_container_width=True):
+            st.session_state["copilot_history"] = []; st.rerun()
         st.markdown("---")
         for msg in st.session_state.get("copilot_history", []):
             role, content = msg["role"], msg["content"]
@@ -452,10 +451,9 @@ def render_engine_status_alert():
 
 
 def render_presentation_toggle():
-    with st.sidebar:
-        with st.expander("🎬 演示控制", expanded=False):
-            st.session_state["presentation_mode"] = st.toggle("演示模式", value=st.session_state.get("presentation_mode", False), key="pres_toggle")
-            st.session_state["demo_mode"] = st.toggle("离线演示", value=st.session_state.get("demo_mode", False), key="demo_toggle_sidebar")
+    with st.sidebar, st.expander("🎬 演示控制", expanded=False):
+        st.session_state["presentation_mode"] = st.toggle("演示模式", value=st.session_state.get("presentation_mode", False), key="pres_toggle")
+        st.session_state["demo_mode"] = st.toggle("离线演示", value=st.session_state.get("demo_mode", False), key="demo_toggle_sidebar")
 
 
 def render_settings_panel():

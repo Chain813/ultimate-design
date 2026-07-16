@@ -37,9 +37,9 @@ if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
 # ==========================================
 # 配置
 # ==========================================
-AK = os.getenv("Baidu_Map_AK", "")
+AK = os.getenv("BAIDU_MAP_AK", "")
 if not AK or AK.startswith("YOUR_"):
-    print("❌ 请在 .env 中填写有效的 Baidu_Map_AK")
+    print("❌ 请在 .env 中填写有效的 BAIDU_MAP_AK")
     sys.exit(1)
 
 # 百度坐标偏移常量 (BD-09 → WGS-84 近似修正)

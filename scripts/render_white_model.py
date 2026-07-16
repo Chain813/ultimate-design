@@ -139,7 +139,7 @@ for coords, floors, is_hist in buildings_inside:
     elif floors <= 8:   colors_inside.append('#B0A590')
     else:               colors_inside.append('#9B8E76')
 
-for coords, floors, is_hist in buildings_context:
+for coords, _floors, _is_hist in buildings_context:
     xy = [to_xy(lng, lat) for lng, lat in coords]
     patches_ctx.append(Polygon(xy, closed=True))
     # Dim, uniform color for context

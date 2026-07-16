@@ -8,7 +8,6 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from datetime import UTC, datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from src.config import DATA_DIR, META_DIR, ROOT_DIR
 

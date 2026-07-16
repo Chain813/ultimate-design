@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 from src.engines.drawing_pipeline import DrawingPipeline
 from src.engines.drawing_prompt_engine import flatten_chapter_drawings

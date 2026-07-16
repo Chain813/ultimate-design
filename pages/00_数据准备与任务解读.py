@@ -263,10 +263,9 @@ if selected_sub == "📦 数据上传中心":
                     st.markdown(f"**文件名**: {uploaded_file.name}")
                     st.markdown(f"**文件大小**: {uploaded_file.size / 1024:.1f} KB")
 
-                    if st.button("💾 保存到项目", key=f"save_{cat['id']}", type="primary", use_container_width=True):
-                        if save_uploaded_file(uploaded_file, cat["target_path"]):
-                            st.success("✅ 保存成功!")
-                            st.rerun()
+                    if st.button("💾 保存到项目", key=f"save_{cat['id']}", type="primary", use_container_width=True) and save_uploaded_file(uploaded_file, cat["target_path"]):
+                        st.success("✅ 保存成功!")
+                        st.rerun()
 
 
 # ============================================================
@@ -376,38 +375,37 @@ elif selected_sub == "📋 项目概况与任务要求":
                     unsafe_allow_html=True
                 )
 
-    with col2:
-        with st.container(border=True):
-            st.markdown("#### 📗 毕业设计开题报告")
-            st.caption("前期调研、文献综述与核心技术路线推演报告。")
-            if PROPOSAL_PATH.exists():
-                st.download_button(
-                    "📥 下载开题报告 PDF",
-                    PROPOSAL_PATH.read_bytes(),
-                    file_name=PROPOSAL_PATH.name,
-                    mime="application/pdf",
-                    type="primary",
-                    **stretch_width(st.download_button),
-                )
-            else:
-                st.warning("未找到开题报告文件。")
+    with col2, st.container(border=True):
+        st.markdown("#### 📗 毕业设计开题报告")
+        st.caption("前期调研、文献综述与核心技术路线推演报告。")
+        if PROPOSAL_PATH.exists():
+            st.download_button(
+                "📥 下载开题报告 PDF",
+                PROPOSAL_PATH.read_bytes(),
+                file_name=PROPOSAL_PATH.name,
+                mime="application/pdf",
+                type="primary",
+                **stretch_width(st.download_button),
+            )
+        else:
+            st.warning("未找到开题报告文件。")
 
-            with st.expander("👁️ 查看核心框架提纲", expanded=True):
-                st.markdown(
-                    '''<div style="font-size:13px; color:#48484a; line-height:1.6;
-                    max-height:280px; overflow-y:auto; padding:12px;
-                    background:rgba(0,0,0,0.03); border-radius:8px; border: 1px solid rgba(0,0,0,0.08);">
-                    <b style="color:#1d1d1f;">第一部分：现状研判与问题痛点</b><br>
-                    • 历史文脉断裂与空间感知弱化<br>
-                    • 工业遗存与建筑资产闲置低效<br>
-                    • 跨铁路交通微循环与慢行系统不畅<br><br>
-                    <b style="color:#1d1d1f;">第二部分：目标定位与愿景</b><br>
-                    数字孪生驱动的"古今共振"街区微更新规划<br><br>
-                    <b style="color:#1d1d1f;">第三部分：拟采用的核心技术路线</b><br>
-                    <code>GIS底座构建</code> ➔ <code>多源数据语义萃取</code> ➔ <code>AHP-MPI 潜力评估</code> ➔ <code>AIGC (SD/ControlNet) 推演</code>
-                    </div>''',
-                    unsafe_allow_html=True
-                )
+        with st.expander("👁️ 查看核心框架提纲", expanded=True):
+            st.markdown(
+                '''<div style="font-size:13px; color:#48484a; line-height:1.6;
+                max-height:280px; overflow-y:auto; padding:12px;
+                background:rgba(0,0,0,0.03); border-radius:8px; border: 1px solid rgba(0,0,0,0.08);">
+                <b style="color:#1d1d1f;">第一部分：现状研判与问题痛点</b><br>
+                • 历史文脉断裂与空间感知弱化<br>
+                • 工业遗存与建筑资产闲置低效<br>
+                • 跨铁路交通微循环与慢行系统不畅<br><br>
+                <b style="color:#1d1d1f;">第二部分：目标定位与愿景</b><br>
+                数字孪生驱动的"古今共振"街区微更新规划<br><br>
+                <b style="color:#1d1d1f;">第三部分：拟采用的核心技术路线</b><br>
+                <code>GIS底座构建</code> ➔ <code>多源数据语义萃取</code> ➔ <code>AHP-MPI 潜力评估</code> ➔ <code>AIGC (SD/ControlNet) 推演</code>
+                </div>''',
+                unsafe_allow_html=True
+            )
 
 
 # ============================================================

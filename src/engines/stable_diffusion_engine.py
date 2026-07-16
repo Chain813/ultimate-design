@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import requests
 from PIL import Image, ImageDraw

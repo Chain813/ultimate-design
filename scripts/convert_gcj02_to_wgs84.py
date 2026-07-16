@@ -138,20 +138,19 @@ def main():
     with open(ROOT / "data/gis/Key_Plots_District.json", encoding="utf-8") as f:
         geo = json.load(f)
 
+    def flatten(c, target_list):
+        if isinstance(c[0], (int, float)):
+            target_list.append((c[0], c[1]))
+            return
+        for item in c:
+            flatten(item, target_list)
+
     total_bbox_hits = 0
     for feat in geo["features"]:
         props = feat["properties"]
         name = props.get("Name", props.get("name", "?"))
         coords_flat = []
-
-        def flatten(c):
-            if isinstance(c[0], (int, float)):
-                coords_flat.append((c[0], c[1]))
-                return
-            for item in c:
-                flatten(item)
-
-        flatten(feat["geometry"]["coordinates"])
+        flatten(feat["geometry"]["coordinates"], coords_flat)
         lngs = [p[0] for p in coords_flat]
         lats = [p[1] for p in coords_flat]
 

@@ -172,13 +172,12 @@ def render_page() -> None:
                         st.session_state[f"force_regen_{sec['id']}"] = True
                         st.rerun()
 
-                if not is_done or st.session_state.get(f"force_regen_{sec['id']}", False):
-                    if st.button(
-                        f"📝 生成第{sec['id']}章：{sec['title']}",
-                        type="primary",
-                        key=f"gen_{sec['id']}",
-                        disabled=not stage12_ready,
-                    ):
+                if (not is_done or st.session_state.get(f"force_regen_{sec['id']}", False)) and st.button(
+                    f"📝 生成第{sec['id']}章：{sec['title']}",
+                    type="primary",
+                    key=f"gen_{sec['id']}",
+                    disabled=not stage12_ready,
+                ):
                         # 清除强制重新生成标记
                         st.session_state.pop(f"force_regen_{sec['id']}", None)
 

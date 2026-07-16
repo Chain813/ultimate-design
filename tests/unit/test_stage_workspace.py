@@ -54,7 +54,8 @@ def test_build_stage_workspace_html_contains_subpage_links_and_output_key():
 
 
 def test_workspace_css_is_scoped_to_stage_workspace_classes():
-    css = open("assets/style.css", encoding="utf-8").read()
+    with open("assets/style.css", encoding="utf-8") as f:
+        css = f.read()
 
     assert ".stage-workspace-shell" in css
     assert ".stage-workspace-tab.is-active" in css

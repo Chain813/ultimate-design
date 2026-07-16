@@ -21,7 +21,6 @@ import logging
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -331,7 +330,7 @@ class WhiteModelRenderer:
         projected.sort(key=lambda x: x[0])
 
         # ── 2. 渲染建筑 ──
-        for depth_key, bld, base_pts, roof_pts in projected:
+        for _depth_key, bld, base_pts, roof_pts in projected:
             self._draw_building_25d(
                 draw, bld, base_pts, roof_pts,
                 ox, oy, w, h, outline_only,

@@ -28,9 +28,9 @@ def load_api_key():
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
-                if line.strip().startswith("Baidu_Map_AK"):
+                if line.strip().startswith("BAIDU_MAP_AK") or line.strip().startswith("Baidu_Map_AK"):
                     return line.strip().split("=", 1)[1].strip()
-    return os.getenv("Baidu_Map_AK", "")
+    return os.getenv("BAIDU_MAP_AK", "")
 
 BAIDU_AK = load_api_key()
 
@@ -504,7 +504,7 @@ def main():
 
     if not BAIDU_AK:
         print("\n警告: 未配置百度地图 API Key")
-        print("请在 .env 文件中设置 Baidu_Map_AK=your_key")
+        print("请在 .env 文件中设置 BAIDU_MAP_AK=your_key")
         return
 
     # 1. 获取房产数据 (建筑年代 + 房价)

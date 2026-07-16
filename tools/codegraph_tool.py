@@ -215,7 +215,7 @@ def cmd_visualize(args):
     
     # Generate nodes
     seen_nodes = set()
-    for source, target, kind in file_edges:
+    for source, target, _kind in file_edges:
         seen_nodes.add(source)
         seen_nodes.add(target)
         

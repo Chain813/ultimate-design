@@ -29,7 +29,6 @@ import io
 import logging
 import traceback
 from collections.abc import Callable
-from typing import Dict, List, Optional, Tuple
 
 from src.engines.document_composer import (
     REPORT_CHAPTERS,

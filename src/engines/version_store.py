@@ -7,7 +7,6 @@ import json
 import logging
 from datetime import UTC, datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
 
 from PIL import Image
 

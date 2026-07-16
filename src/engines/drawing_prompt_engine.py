@@ -7,7 +7,6 @@ spatial/data references.
 
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Dict, List
 
 # ---- Exceptions ----
 

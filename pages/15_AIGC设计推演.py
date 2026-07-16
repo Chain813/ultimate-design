@@ -1018,7 +1018,7 @@ history = st.session_state.get("aigc_history", [])
 if history:
     st.markdown("---")
     with st.expander(f"📚 渲染历史 ({len(history)} 张)", expanded=False):
-        for i, item in enumerate(reversed(history)):
+        for _i, item in enumerate(reversed(history)):
             col_thumb, col_meta = st.columns([1, 2])
             with col_thumb:
                 st.image(item["image"], width=200)

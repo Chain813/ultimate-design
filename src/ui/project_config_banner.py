@@ -244,9 +244,10 @@ def render_project_config_banner():
         )
 
         st.markdown("##### 🗺️ 地图 API（可选）")
+        mixed_key = "Baidu_Map_AK"
         baidu_ak = st.text_input(
             "Baidu_Map_AK",
-            value=env.get("Baidu_Map_AK", os.environ.get("Baidu_Map_AK", "")),
+            value=env.get("BAIDU_MAP_AK", env.get(mixed_key, os.environ.get("BAIDU_MAP_AK", os.environ.get(mixed_key, "")))),
             type="password",
             placeholder="百度地图 AK",
             help="可选 — 用于地理编码和 POI 采集",
@@ -313,7 +314,7 @@ def render_project_config_banner():
             # 写入 .env
             env_updates = {"DEEPSEEK_API_KEY": deepseek_key.strip()}
             if baidu_ak.strip():
-                env_updates["Baidu_Map_AK"] = baidu_ak.strip()
+                env_updates["BAIDU_MAP_AK"] = baidu_ak.strip()
             _write_env(env_updates)
 
             # 同时设置当前进程环境变量

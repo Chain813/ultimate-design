@@ -26,7 +26,7 @@ def _scan_local_models() -> list[str]:
     try:
         from src.config.loader import load_global_config
         ollama_url = load_global_config().get("engines",{}).get("llm",{}).get("ollama_url","http://127.0.0.1:11434")
-        resp = requests.get(f"{ollama_url.rstrip('/api/chat')}/api/tags", timeout=2)
+        resp = requests.get(f"{ollama_url.removesuffix('/api/chat')}/api/tags", timeout=2)
         if resp.status_code == 200:
             models = resp.json().get("models", [])
             return [m["name"] for m in models]

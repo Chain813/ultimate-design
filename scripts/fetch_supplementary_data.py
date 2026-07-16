@@ -37,9 +37,9 @@ def load_api_key():
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
-                if line.strip().startswith("Baidu_Map_AK"):
+                if line.strip().startswith("BAIDU_MAP_AK") or line.strip().startswith("Baidu_Map_AK"):
                     return line.strip().split("=", 1)[1].strip()
-    return os.getenv("Baidu_Map_AK", "")
+    return os.getenv("BAIDU_MAP_AK", "")
 
 BAIDU_AK = load_api_key()
 
@@ -689,10 +689,7 @@ class SunshineDataFetcher:
         meets_standard = shadow_length <= building_distance
 
         # 建议间距
-        if not meets_standard:
-            suggested_distance = shadow_length * 1.1  # 增加10%余量
-        else:
-            suggested_distance = building_distance
+        suggested_distance = shadow_length * 1.1 if not meets_standard else building_distance
 
         return {
             "sun_altitude": sun["altitude"],

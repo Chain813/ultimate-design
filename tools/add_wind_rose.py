@@ -101,11 +101,7 @@ def create_wind_rose(size=90):
         center = (cx, cy)
         
         # Determine fill color: alternate dark/light for 3D effect
-        if i % 2 == 0:
-            # Main point triangles
-            fill_color = (60, 60, 60, 220)  # dark
-        else:
-            fill_color = (160, 160, 160, 200)  # light
+        fill_color = (60, 60, 60, 220) if i % 2 == 0 else (160, 160, 160, 200)
         
         draw.polygon([center, p1, p2], fill=fill_color, outline=(50, 50, 50, 255))
     
