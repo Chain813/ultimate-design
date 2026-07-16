@@ -21,28 +21,6 @@
 
 UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**设计，支持导入任意城市的规划地块（自带长春伪满皇宫周边 170.2 公顷街区作为验证与实证案例）。它将城市更新设计拆解为 16 个标准化阶段，打通「GIS 数据采集 → LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与图则」的完整数字孪生工作流。
 
-```mermaid
-graph TD
-    UI[Streamlit 用户交互层] -->|用户输入| Bus[阶段数据总线]
-    Bus --> WF[工作流引擎]
-    
-    subgraph 核心计算引擎
-        WF --> GIS[空间分析引擎]
-        WF --> LLM[大语言模型引擎]
-        WF --> AIGC[制图生成管线]
-    end
-    
-    GIS -->|GeoJSON/指标| Data[(本地数据资产)]
-    LLM -->|RAG 检索| Kno[(政策法规知识库)]
-    AIGC -->|ControlNet/SD| Img[(AIGC 图纸生成)]
-    
-    Data --> Bus
-    Kno --> Bus
-    Img --> Bus
-    
-    Bus --> Out[成果导出与交付]
-```
-
 > 🎉 **最新特性：开箱即用的免安装绿色版**
 > 现已支持基于 **WinPython 3.12+** 的全隔离便携式打包方案。所有环境依赖、GIS 底层 C++ 动态库全部封装于单一文件夹内，配合系统自带的 `安装向导_UltimateDESIGN.bat`，可实现**一键释放、防污染独立运行及自动生成快捷方式**，极大降低了项目向非技术型设计师分发的门槛。
 
@@ -94,26 +72,58 @@ graph TD
 
 ```mermaid
 sequenceDiagram
-    participant P as 规划师 (合规与公共利益)
-    participant D as 开发商 (商业盈利与容积率)
-    participant R as 居民 (生活品质与补偿)
-    participant RAG as RAG 政策引擎
+    participant P as 角色 A (合规与全局利益)
+    participant D as 角色 B (经济效益考量)
+    participant R as 角色 C (品质与权益保障)
+    participant RAG as 政策知识库引擎
     
-    Note over P, R: Stage 07: 议题博弈与谈判
-    P->>RAG: 检索建筑限高规定
-    RAG-->>P: 最高限高: 24m (历史风貌区)
-    P->>D: 提出24m限高，控制容积率
-    D->>R: 提议增加底商面积作为补偿
-    R->>P: 接受底商，但要求增加公共绿地
-    Note over P, R: LLM 评估各方让步
-    P->>P: 生成共识度雷达图
-    P->>P: 输出问题-目标-策略矩阵
+    Note over P, R: 核心议题多轮博弈与谈判
+    P->>RAG: 检索空间规划法规约束
+    RAG-->>P: 返回空间限制条件
+    P->>D: 提出合规性限制与初步方案
+    D->>R: 基于经济效益提出补偿方案
+    R->>P: 反馈诉求并提出调整建议
+    Note over P, R: 大语言模型评估各方让步与共识
+    P->>P: 动态更新共识度雷达
+    P->>P: 输出利益平衡策略矩阵
 ```
 
 ### 3. 📊 数据-逻辑分离与 MPI/GVI 循证诊断系统 (Evidence-Based Assessment System)
 本系统遵循现代软件工程规范，实现了“空间数据与分析逻辑的彻底解耦”。
 * **多维指标融合诊断**：通过动态层次分析法（AHP）与更新潜力模型（MPI），将 GVI（街景绿视率）、SVF（天空可视率）、POI 商业活力指数与社交媒体舆情（NLP 情感分析得分）有机叠合，为每个重点更新单元出具全方位的“诊断报告”。
 * **一键跨城市迁移**：当需要将平台应用到全新的地块时，用户无需修改任何前端界面或分析逻辑代码，只需按照 `data/` 目录规范替换 GeoJSON 矢量文件和相关的 CSV 指标数据。系统在启动时会自动读取并刷新 3D 数字孪生底座及各阶段的分析表单，实现极低成本的平台复用与业务拓展。
+
+```mermaid
+graph TD
+    subgraph 空间数据底座 (解耦设计)
+        D1[三维建筑与形态数据]
+        D2[街景与环境感知数据]
+        D3[POI与功能业态数据]
+        D4[多源舆情与社会数据]
+    end
+    
+    subgraph 核心分析引擎
+        E1[空间与形态计算模型]
+        E2[环境视觉质量分析模型]
+        E3[商业活力评估模型]
+        E4[自然语言情感提取模型]
+    end
+    
+    D1 -.-> E1
+    D2 -.-> E2
+    D3 -.-> E3
+    D4 -.-> E4
+    
+    subgraph 决策输出层
+        E1 --> AHP[多维指标融合计算权重]
+        E2 --> AHP
+        E3 --> AHP
+        E4 --> AHP
+        AHP --> Out1[目标区域更新潜力排名]
+        AHP --> Out2[多维度现状诊断雷达图]
+    end
+```
+
 
 ---
 
@@ -344,30 +354,6 @@ ultimateDESIGN/
 ---
 
 ## ⚙️ 技术架构
-
-### 🎨 AIGC 制图管线
-
-```mermaid
-flowchart LR
-    A[(GeoJSON 矢量数据)] -->|render_gis_assets.py| B(GIS 矢量光栅化)
-    
-    subgraph ControlNet 约束原件
-        B --> C1[Canny: 路网骨架]
-        B --> C2[Seg: 用地分区]
-        B --> C3[Tile: 卫星底图/色彩]
-    end
-    
-    C1 --> SD{Stable Diffusion WebUI}
-    C2 --> SD
-    C3 --> SD
-    
-    subgraph DrawingPipeline 编排引擎
-        P[LLM 提示词引擎] --> SD
-        SD --> Q[双重质量评估]
-        Q -->|A/B 级| Out[专业级图纸输出]
-        Q -->|C/D 级| P
-    end
-```
 
 ### ⚡ 性能优化
 

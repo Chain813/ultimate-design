@@ -21,28 +21,6 @@
 
 UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 16 standardized stages, streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
 
-```mermaid
-graph TD
-    UI[Streamlit UI Layer] -->|User Input| Bus[Stage Data Bus]
-    Bus --> WF[Workflow Engine]
-    
-    subgraph Core Engines
-        WF --> GIS[Spatial Engine]
-        WF --> LLM[LLM Engine]
-        WF --> AIGC[Drawing Pipeline]
-    end
-    
-    GIS -->|GeoJSON/Indicators| Data[(Local Data Assets)]
-    LLM -->|RAG Retrieval| Kno[(Policy Knowledge Base)]
-    AIGC -->|ControlNet/SD| Img[(AIGC Image Generation)]
-    
-    Data --> Bus
-    Kno --> Bus
-    Img --> Bus
-    
-    Bus --> Out[Export & Delivery]
-```
-
 > 🎉 **New Feature: Out-of-the-Box Portable Version**
 > The platform now fully supports a fully isolated, portable packaging solution based on **WinPython 3.12+**. All environment dependencies and underlying GIS C++ dynamic libraries are encapsulated within a single folder. Coupled with the built-in `安装向导_UltimateDESIGN.bat` wizard, it enables one-click deployment, pollution-free independent execution, and automatic shortcut generation, drastically lowering the distribution barrier for non-technical designers.
 
@@ -64,6 +42,97 @@ graph TD
 | **238 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
 
 ---
+
+
+## 🧩 Core Functional Modules
+
+### 1. 🎨 Spatial Alignment & Mapping Pipeline
+This platform eliminates spatial hallucination in generative AI for planning by utilizing a Vector→Raster→AIGC pipeline.
+* **Spatial Constraint Extraction**: Converts GeoJSON vector layers into binary road skeletons, semantic landuse zoning, and building footprints.
+* **End-to-End Orchestration**: The pipeline utilizes LLMs to generate professional prompts, injecting them alongside rasterized GIS images into the generative engine.
+* **Dual Quality Loop**: A VLM assesses the visual quality while the LLM checks content compliance. Sub-standard drawings trigger automatic parameter adjustments and regeneration.
+
+```mermaid
+flowchart LR
+    A[(GIS Vector Data)] -->|Data Preprocessing Script| B(Vector Rasterization Module)
+    
+    subgraph Spatial Constraint Features
+        B --> C1[Canny: Skeleton Feature]
+        B --> C2[Seg: Semantic Segmentation]
+        B --> C3[Tile: Context Basemap]
+    end
+    
+    C1 --> SD{Visual Generative Engine}
+    C2 --> SD
+    C3 --> SD
+    
+    subgraph Intelligent Mapping Pipeline
+        P[LLM Prompt Engine] --> SD
+        SD --> Q[Multimodal Dual Quality Assessment]
+        Q -->|Meets Standard| Out[Professional Planning Drawing]
+        Q -->|Below Standard| P
+    end
+```
+
+### 2. 🤝 Multi-Agent Negotiation Simulation
+The system upgrades static planning into a dynamic three-role game-theoretic simulation for urban renewal.
+* **Closed-Loop Negotiation**: Agents simulate the interests of three major parties. They undergo rounds of Statements, Rebuttals, and Compromises on specific issues.
+* **Policy Knowledge Constraints**: During negotiations, a RAG system retrieves regulations (e.g., heritage protection lines, height limits) to enforce compliance.
+* **Consensus Quantification**: The system maps out the alignment of interests to generate a dynamic consensus radar and a final strategic matrix.
+
+```mermaid
+sequenceDiagram
+    participant P as Agent A (Compliance & Public Interest)
+    participant D as Agent B (Economic Viability)
+    participant R as Agent C (Quality & Rights)
+    participant RAG as Policy Knowledge Base
+    
+    Note over P, R: Multi-Round Issue Negotiation
+    P->>RAG: Retrieve spatial planning regulations
+    RAG-->>P: Return spatial constraints
+    P->>D: Propose compliant initial plan
+    D->>R: Offer compensation based on economics
+    R->>P: Provide feedback & adjustment requests
+    Note over P, R: LLM evaluates concessions & consensus
+    P->>P: Dynamically update consensus radar
+    P->>P: Output balanced strategy matrix
+```
+
+### 3. 📊 Evidence-Based Assessment System
+Adhering to modern software engineering, the system achieves complete decoupling of spatial data from analytical logic.
+* **Multi-Dimensional Fusion**: Synthesizes visual quality, spatial metrics, commercial vitality, and social sentiment into a comprehensive diagnosis.
+* **Zero-Code Migration**: Expanding to a new urban plot requires no code changes—simply replacing the underlying geographic files automatically refreshes the entire digital twin base.
+
+```mermaid
+graph TD
+    subgraph Spatial Data Base (Decoupled)
+        D1[3D Morphology Data]
+        D2[Street View & Context Data]
+        D3[POI & Functional Data]
+        D4[Social Sentiment Data]
+    end
+    
+    subgraph Analytical Engines
+        E1[Spatial Computation Model]
+        E2[Visual Quality Assessment Model]
+        E3[Commercial Vitality Model]
+        E4[NLP Sentiment Extraction]
+    end
+    
+    D1 -.-> E1
+    D2 -.-> E2
+    D3 -.-> E3
+    D4 -.-> E4
+    
+    subgraph Decision Output Layer
+        E1 --> AHP[Multi-Indicator Weight Fusion]
+        E2 --> AHP
+        E3 --> AHP
+        E4 --> AHP
+        AHP --> Out1[Target Area Renewal Potential Ranking]
+        AHP --> Out2[Multi-Dimensional Diagnostic Radar]
+    end
+```
 
 ## 🚀 Quick Start
 
@@ -145,26 +214,6 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 06 | Goal Setting | LLM case benchmarking (Xintiandi / King's Cross) |
 | 07 | Design Strategy | Tri-stakeholder simulation, consensus radar |
 
-#### 🤖 Multi-Agent Negotiation Simulation (Stage 07)
-
-```mermaid
-sequenceDiagram
-    participant P as Planner (Compliance)
-    participant D as Developer (Profit)
-    participant R as Resident (Quality of Life)
-    participant RAG as RAG Policy Engine
-    
-    Note over P, R: Stage 07: Issue Negotiation
-    P->>RAG: Check Building Height Limits
-    RAG-->>P: Max Height: 24m (Heritage Zone)
-    P->>D: Propose 24m limit, restrict FAR
-    D->>R: Propose retail spaces to compensate
-    R->>P: Accept retail, demand green spaces
-    Note over P, R: LLM evaluates concessions
-    P->>P: Generate Consensus Radar
-    P->>P: Output Strategy Matrix
-```
-
 ### 🔴 Design & Delivery (Stage 08–13)
 
 | Stage | Page | Core Function |
@@ -216,30 +265,6 @@ ultimateDESIGN/
 ```
 
 ---
-
-## ⚙️ AIGC Pipeline Architecture
-
-```mermaid
-flowchart LR
-    A[(GeoJSON Vectors)] -->|render_gis_assets.py| B(GIS Rasterization)
-    
-    subgraph ControlNet Constraints
-        B --> C1[Canny: Road Skeleton]
-        B --> C2[Seg: Landuse Zoning]
-        B --> C3[Tile: Satellite Basemap]
-    end
-    
-    C1 --> SD{Stable Diffusion WebUI}
-    C2 --> SD
-    C3 --> SD
-    
-    subgraph DrawingPipeline
-        P[LLM Prompt Engine] --> SD
-        SD --> Q[Quality Assessor]
-        Q -->|A/B Grade| Out[Professional Drawing]
-        Q -->|C/D Grade| P
-    end
-```
 
 ---
 
