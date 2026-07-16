@@ -21,6 +21,28 @@
 
 UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**设计，支持导入任意城市的规划地块（自带长春伪满皇宫周边 170.2 公顷街区作为验证与实证案例）。它将城市更新设计拆解为 16 个标准化阶段，打通「GIS 数据采集 → LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与图则」的完整数字孪生工作流。
 
+```mermaid
+graph TD
+    UI[Streamlit 用户交互层] -->|用户输入| Bus[阶段数据总线]
+    Bus --> WF[工作流引擎]
+    
+    subgraph 核心计算引擎
+        WF --> GIS[空间分析引擎]
+        WF --> LLM[大语言模型引擎]
+        WF --> AIGC[制图生成管线]
+    end
+    
+    GIS -->|GeoJSON/指标| Data[(本地数据资产)]
+    LLM -->|RAG 检索| Kno[(政策法规知识库)]
+    AIGC -->|ControlNet/SD| Img[(AIGC 图纸生成)]
+    
+    Data --> Bus
+    Kno --> Bus
+    Img --> Bus
+    
+    Bus --> Out[成果导出与交付]
+```
+
 > 🎉 **最新特性：开箱即用的免安装绿色版**
 > 现已支持基于 **WinPython 3.12+** 的全隔离便携式打包方案。所有环境依赖、GIS 底层 C++ 动态库全部封装于单一文件夹内，配合系统自带的 `安装向导_UltimateDESIGN.bat`，可实现**一键释放、防污染独立运行及自动生成快捷方式**，极大降低了项目向非技术型设计师分发的门槛。
 
@@ -69,6 +91,24 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 * **博弈闭环机制**：在 Stage 07 中，系统启动多 Agent 循环，分别模拟**居民（诉求生活品质与补偿）**、**开发商（诉求商业盈利与容积率）**与**规划师（诉求合规性与公共利益）**。三方围绕特定更新议题进行“Statement（立场陈述）→ Rebuttal（论点反驳）→ Compromise（妥协折中）”三轮博弈谈判。
 * **RAG 政策法规约束**：在协商中，系统自动调用 `rag_engine.py` 检索本地 `rag_knowledge.json` 政策法规库（包括历史风貌保护红线、限高控制、海绵城市规范等），对角色的立场进行合规性实时干预和审核。
 * **利益共识量化**：最终根据三方的发言态度和利益让步，实时渲染生成**三角色动态共识雷达图**并归纳为“问题-目标-策略”的利益平衡矩阵，作为最终规划文本的制定基础。
+
+```mermaid
+sequenceDiagram
+    participant P as 规划师 (合规与公共利益)
+    participant D as 开发商 (商业盈利与容积率)
+    participant R as 居民 (生活品质与补偿)
+    participant RAG as RAG 政策引擎
+    
+    Note over P, R: Stage 07: 议题博弈与谈判
+    P->>RAG: 检索建筑限高规定
+    RAG-->>P: 最高限高: 24m (历史风貌区)
+    P->>D: 提出24m限高，控制容积率
+    D->>R: 提议增加底商面积作为补偿
+    R->>P: 接受底商，但要求增加公共绿地
+    Note over P, R: LLM 评估各方让步
+    P->>P: 生成共识度雷达图
+    P->>P: 输出问题-目标-策略矩阵
+```
 
 ### 3. 📊 数据-逻辑分离与 MPI/GVI 循证诊断系统 (Evidence-Based Assessment System)
 本系统遵循现代软件工程规范，实现了“空间数据与分析逻辑的彻底解耦”。
@@ -307,23 +347,26 @@ ultimateDESIGN/
 
 ### 🎨 AIGC 制图管线
 
-```
-GeoJSON 矢量数据                     Stable Diffusion WebUI
-       │                                      ▲
-       ▼                                      │
-  render_gis_assets.py              ┌──────────┴──────────┐
-  (矢量光栅化)                       │   ControlNet 约束    │
-       │                            │  • Canny (路网骨架)   │
-       ├── road_guidance.png ──────▶│  • Seg (用地分区)    │
-       ├── landuse_seg.png ────────▶│                      │
-       └── satellite.png ─────────▶│  • Tile (色彩参考)   │
-                                    └──────────┬──────────┘
-  DrawingPipeline 编排                          │
-       │                                       ▼
-       ├── 提示词构建 (41 模板)          生成专业图纸
-       ├── 质量评估 (A/B/C/D)           (地理空间对齐)
-       ├── 自动修正 & 重生成
-       └── VersionStore 版本归档
+```mermaid
+flowchart LR
+    A[(GeoJSON 矢量数据)] -->|render_gis_assets.py| B(GIS 矢量光栅化)
+    
+    subgraph ControlNet 约束原件
+        B --> C1[Canny: 路网骨架]
+        B --> C2[Seg: 用地分区]
+        B --> C3[Tile: 卫星底图/色彩]
+    end
+    
+    C1 --> SD{Stable Diffusion WebUI}
+    C2 --> SD
+    C3 --> SD
+    
+    subgraph DrawingPipeline 编排引擎
+        P[LLM 提示词引擎] --> SD
+        SD --> Q[双重质量评估]
+        Q -->|A/B 级| Out[专业级图纸输出]
+        Q -->|C/D 级| P
+    end
 ```
 
 ### ⚡ 性能优化

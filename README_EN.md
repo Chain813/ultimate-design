@@ -21,6 +21,28 @@
 
 UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 16 standardized stages, streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
 
+```mermaid
+graph TD
+    UI[Streamlit UI Layer] -->|User Input| Bus[Stage Data Bus]
+    Bus --> WF[Workflow Engine]
+    
+    subgraph Core Engines
+        WF --> GIS[Spatial Engine]
+        WF --> LLM[LLM Engine]
+        WF --> AIGC[Drawing Pipeline]
+    end
+    
+    GIS -->|GeoJSON/Indicators| Data[(Local Data Assets)]
+    LLM -->|RAG Retrieval| Kno[(Policy Knowledge Base)]
+    AIGC -->|ControlNet/SD| Img[(AIGC Image Generation)]
+    
+    Data --> Bus
+    Kno --> Bus
+    Img --> Bus
+    
+    Bus --> Out[Export & Delivery]
+```
+
 > 🎉 **New Feature: Out-of-the-Box Portable Version**
 > The platform now fully supports a fully isolated, portable packaging solution based on **WinPython 3.12+**. All environment dependencies and underlying GIS C++ dynamic libraries are encapsulated within a single folder. Coupled with the built-in `安装向导_UltimateDESIGN.bat` wizard, it enables one-click deployment, pollution-free independent execution, and automatic shortcut generation, drastically lowering the distribution barrier for non-technical designers.
 
@@ -123,6 +145,26 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 | 06 | Goal Setting | LLM case benchmarking (Xintiandi / King's Cross) |
 | 07 | Design Strategy | Tri-stakeholder simulation, consensus radar |
 
+#### 🤖 Multi-Agent Negotiation Simulation (Stage 07)
+
+```mermaid
+sequenceDiagram
+    participant P as Planner (Compliance)
+    participant D as Developer (Profit)
+    participant R as Resident (Quality of Life)
+    participant RAG as RAG Policy Engine
+    
+    Note over P, R: Stage 07: Issue Negotiation
+    P->>RAG: Check Building Height Limits
+    RAG-->>P: Max Height: 24m (Heritage Zone)
+    P->>D: Propose 24m limit, restrict FAR
+    D->>R: Propose retail spaces to compensate
+    R->>P: Accept retail, demand green spaces
+    Note over P, R: LLM evaluates concessions
+    P->>P: Generate Consensus Radar
+    P->>P: Output Strategy Matrix
+```
+
 ### 🔴 Design & Delivery (Stage 08–13)
 
 | Stage | Page | Core Function |
@@ -177,22 +219,26 @@ ultimateDESIGN/
 
 ## ⚙️ AIGC Pipeline Architecture
 
-```
-GeoJSON Vector Data                   Stable Diffusion WebUI
-       │                                       ▲
-       ▼                                       │
-  render_gis_assets.py              ┌──────────┴──────────┐
-  (Vector Rasterization)            │   ControlNet Units   │
-       │                            │  • Canny (roads)     │
-       ├── road_guidance.png ──────▶│  • Seg (landuse)     │
-       ├── landuse_seg.png ────────▶│  • Tile (satellite)  │
-       └── satellite.png ─────────▶│                      │
-                                    └──────────┬──────────┘
-  DrawingPipeline                              │
-       ├── Prompt Build (41 templates)         ▼
-       ├── Quality Assess (A/B/C/D)    Professional Drawing
-       ├── Auto-Correct & Regenerate   (Spatially Aligned)
-       └── VersionStore Archive
+```mermaid
+flowchart LR
+    A[(GeoJSON Vectors)] -->|render_gis_assets.py| B(GIS Rasterization)
+    
+    subgraph ControlNet Constraints
+        B --> C1[Canny: Road Skeleton]
+        B --> C2[Seg: Landuse Zoning]
+        B --> C3[Tile: Satellite Basemap]
+    end
+    
+    C1 --> SD{Stable Diffusion WebUI}
+    C2 --> SD
+    C3 --> SD
+    
+    subgraph DrawingPipeline
+        P[LLM Prompt Engine] --> SD
+        SD --> Q[Quality Assessor]
+        Q -->|A/B Grade| Out[Professional Drawing]
+        Q -->|C/D Grade| P
+    end
 ```
 
 ---
