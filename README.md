@@ -423,5 +423,5 @@ git push origin main
 ---
 
 <div align="center">
-<sub>Built with Streamlit · Stable Diffusion · DeepSeek · GeoPandas · Plotly · HyperFrames</sub>
+<sub>Built with Interactive Web Framework · Generative Vision Models · Large Language Models · Spatial Analysis Libraries</sub>
 </div>
