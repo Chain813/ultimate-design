@@ -2,6 +2,31 @@
 
 本项目所有的核心重构与功能更新将记录在此。
 
+## [v5.9.0] - 2026-07-16
+### 🚀 终极部署现代化与项目净化 (P0-P3 Finalization)
+
+**免安装便携版架构 (Portable Environment)**
+* 彻底移除了对外部系统 Python 环境的依赖，新增了基于 WinPython 3.12+ 的全自闭环便携式运行环境；
+* 优化了环境初始化脚本，并发布了 启动_UltimateDESIGN.bat 与 安装向导_UltimateDESIGN.bat；
+* 解决了传统 BAT 脚本在中文 Windows 上的 CMD 乱码问题，强制使用 GBK 纯净编码保障兼容性。
+
+**性能体验与缓存机制优化 (UX & Performance)**
+* 为提升本地用户体验，在系统主页 (pp.py) 核心位置新增了【🗑️ 开启全新项目 (清空缓存)】功能，彻底解决了历史设计进度残留导致的展示错乱问题，实现了一键重置状态；
+* 移除了冗余的 selenium 与 webdriver-manager 自动化依赖，大幅度精简了 
+equirements.txt；
+* 删除了与核心架构无关的 OBS 录屏演示脚本 (	ools/record_project_workflow_video.py 等)，减轻代码库体积。
+
+**工程化重构与 CI 并行测试提速 (Engineering & Testing)**
+* 引入了 pytest-xdist 将单元测试由单线程切换为多核并发模式，测试总耗时从 ~52 秒压缩至 ~36 秒，提速约 30%；
+* 将散落各处的 	ests/ 全部重构聚合入 	ests/unit/ 目录，修复了数百个测试重命名带来的路径冲突；
+* 对安全扫描工具 	ools/secret_scan.py 增加了对 WinPython 和 .runtime-packages 的白名单豁免，修复了 .env.example 校验测试；
+* 238 项自动化测试达成 100% 通过率。
+
+**根目录断舍离与文档重构 (Root Cleanup)**
+* 移除了历史遗留的、高达 174MB 的幽灵压缩包及早期过时的体检报告；
+* 严格精简根目录，将 WORKFLOW.md、GLOSSARY.md、GITHUB_PREPARATION.md 统归于 docs/ 目录；
+* 将 BUG_REPORT.md 迁移至规范的 .github/ISSUE_TEMPLATE/。
+
 ## [v5.8.0] - 2026-06-19
 ### 🧹 工具目录净化、全局隐私脱敏与工作流对齐重构
 
