@@ -53,7 +53,9 @@ class QualityAssessor:
 
     def __init__(self, ollama_url: str = "", vision_model: str = "",
                  text_model: str = ""):
-        self.ollama_url = ollama_url or "http://127.0.0.1:11434"
+        from src.config.loader import load_global_config
+        default_ollama = load_global_config().get("engines",{}).get("llm",{}).get("ollama_url","http://127.0.0.1:11434")
+        self.ollama_url = ollama_url or default_ollama
         self.text_model = text_model or "deepseek-v4-pro"
         self.vision_model = vision_model or self._auto_select_vision_model()
 

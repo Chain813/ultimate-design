@@ -238,7 +238,8 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     if a_type == "satellite":
         # Load and render high-resolution satellite imagery from TIFF dynamically
         tif_path = None
-        graduate_dir = Path("E:/graduate")
+        from src.config.runtime import resolve_path
+graduate_dir = resolve_path("output/graduate")
         if graduate_dir.exists():
             for root, dirs, files in os.walk(graduate_dir):
                 for file in files:
@@ -248,7 +249,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         
         # Fallback to secondary location
         if not tif_path:
-            album_dir = Path("E:/画册/影像")
+            album_dir = resolve_path("output/album/images")
             if album_dir.exists():
                 for root, dirs, files in os.walk(album_dir):
                     for file in files:

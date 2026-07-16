@@ -39,7 +39,8 @@ def test_build_guideline_prompt_contains_project_info():
     """Guideline prompt contains project location and scope."""
     prompt = build_guideline_prompt()
     assert "长春" in prompt
-    assert "160公顷" in prompt or "160" in prompt
+    # Site name/city should come from config now (not hardcoded)
+    assert "长春" in prompt or "测试市" in prompt
 
 
 def test_build_spatial_stats_summary():

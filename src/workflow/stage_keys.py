@@ -58,7 +58,7 @@ class SK:
     AIGC_PROMPT = "prompt"
     AIGC_SEED = "seed"
 
-    # ── 毕业设计答辩稿 补充章节 (跨阶段) ──
+    # ── 补充分析 (跨阶段) ──
     # Stage 04 专项资源分析
     CULTURAL_ANALYSIS = "p04_cultural_analysis"
     INDUSTRY_ANALYSIS = "p04_industry_analysis"

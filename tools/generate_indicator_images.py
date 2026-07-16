@@ -275,7 +275,7 @@ def draw_tables():
     draw.rectangle([32, 60, 2198, 66], fill=(217, 119, 6))
 
     draw.text((55, 117), "规划技术指标表", fill=(15, 23, 42), font=font_large_title, anchor="lm")
-    draw.text((360, 117), "吉林建筑大学毕业设计说明 · URBAN PLAN LAND USE & DEVELOPMENT DENSITY CONTROL METRICS (DR-039)", fill=(100, 116, 139), font=font_sub_title, anchor="lm")
+    draw.text((360, 117), f"{i.get('name','')}项目设计说明 · URBAN PLAN LAND USE & DEVELOPMENT DENSITY CONTROL METRICS (DR-039)", fill=(100, 116, 139), font=font_sub_title, anchor="lm")
 
     # Helper function to draw justified text lines to ensure left and right margins are exactly equal
     def draw_justified_line(draw_obj, text, x_start, x_end, y, font, fill_color, font_bold=None):

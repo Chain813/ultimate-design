@@ -1,5 +1,5 @@
 # ultimateDESIGN 依赖清单
-# 最后验证环�? Python 3.14.2 / 2026-05-10
+# 最后验证环境 Python 3.14.2 / 2026-05-10
 streamlit==1.55.0
 pandas==2.3.3
 pydeck==0.9.1

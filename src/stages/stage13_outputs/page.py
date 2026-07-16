@@ -11,7 +11,7 @@ from src.ui.module_summary import render_stage_summary
 from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
 from src.workflow.stage_keys import SK
 from src.ui.streamlit_compat import stretch_width
-from src.ui.persistent_outputs import register_thesis_output, register_report_output
+from src.ui.persistent_outputs import register_document_output, register_report_output
 
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage13_outputs.config import STAGE13_WORKSPACE
@@ -276,9 +276,13 @@ def render_page() -> None:
             desc_3 = st.text_input("说明第 3 条", value=current_desc[2])
             
             st.markdown("### 3. 图签与图例基本信息")
-            author = st.text_input("制作人", value="", placeholder="请输入姓名")
-            author_id = st.text_input("学号", value="", placeholder="请输入学号")
-            organization = st.text_area("学校班级", value="吉林建筑大学建筑与规划学院\n城乡规划211班", height=60)
+            from src.config.site import get_author_info, get_institution_info
+            _cfg_author = get_author_info()
+            _cfg_inst = get_institution_info()
+            _default_org = f"{_cfg_inst.get('name', '')}\n{_cfg_inst.get('department', '')}".strip()
+            author = st.text_input("制作人", value=_cfg_author.get("name", ""), placeholder="请输入姓名")
+            author_id = st.text_input("编号", value=_cfg_author.get("id", ""), placeholder="请输入编号")
+            organization = st.text_area("单位/部门", value=_default_org, height=60)
             
             if st.button("🎨 一键代码绘图并组装图纸", type="primary", **stretch_width(st.button)):
                 with st.spinner("Python 代码绘图与排版卡片组装中..."):
@@ -439,38 +443,38 @@ def render_page() -> None:
                 st.info("暂无设计策略矩阵数据，请在 Stage 07 生成。")
 
 
-    elif selected_sub == "📝 毕业设计答辩稿":
+    elif selected_sub == "📝 项目设计报告":
         render_section_intro(
-            "毕业设计答辩稿生成",
-            "按吉林建筑大学模板规范生成毕业设计答辩稿（设计说明），严格遵循5章结构、字数约束和格式化排版。",
-            eyebrow="Graduation Thesis Composer",
+            "项目设计报告生成",
+            "自动汇编各阶段成果为结构化项目设计报告，严格遵循标准章节结构和格式化排版。",
+            eyebrow="Project Report Composer",
         )
 
-        from src.engines.thesis_composer import (
-            THESIS_CHAPTERS, assemble_thesis_docx, StudentInfo,
-            build_thesis_context, generate_single_section,
+        from src.engines.document_composer import (
+            REPORT_CHAPTERS, assemble_report_docx, AuthorInfo,
+            build_document_context, generate_single_section,
         )
 
         # ── 学生信息 ──
         st.markdown("### 👤 学籍信息")
         col_s1, col_s2, col_s3 = st.columns(3)
         with col_s1:
-            student_name = st.text_input("学生姓名", value="", key="thesis_name", placeholder="请输入姓名")
-            student_id = st.text_input("学号", value="", key="thesis_id", placeholder="请输入学号")
+            author_name = st.text_input("作者姓名", value="", key="report_name", placeholder="请输入姓名")
+            author_id = st.text_input("编号", value="", key="report_id", placeholder="请输入学号")
         with col_s2:
-            student_advisor = st.text_input("指导教师", value="", key="thesis_advisor")
-            student_date = st.text_input("答辩日期", value="2026年6月", key="thesis_date")
+            author_reviewer = st.text_input("审核人", value="", key="report_reviewer")
+            author_date = st.text_input("完成日期", value="2026年6月", key="report_date")
         with col_s3:
-            student_college = st.text_input("学院", value="建筑与规划学院", key="thesis_college")
-            student_major = st.text_input("专业", value="城乡规划", key="thesis_major")
+            author_org = st.text_input("单位", value="", key="report_org")
+            author_field = st.text_input("方向", value="", key="report_field")
 
-        student = StudentInfo(
-            name=student_name,
-            student_id=student_id,
-            advisor=student_advisor,
-            college=student_college,
-            major=student_major,
-            date=student_date,
+        student = AuthorInfo(
+            name=author_name,
+            author_id=author_id,
+            advisor=author_reviewer,
+            college=author_org,
+            major=author_field,
+            date=author_date,
         )
 
         st.markdown("---")
@@ -480,25 +484,25 @@ def render_page() -> None:
         # ══════════════════════════════════════
         st.markdown("### 🚀 一键生成管道")
 
-        from src.engines.thesis_pipeline import run_light_pipeline, run_full_pipeline
+        from src.engines.document_pipeline import run_light_pipeline, run_full_pipeline
 
         # ── 降 AI 率选项 ──
-        if "thesis_enable_deai" not in st.session_state:
-            st.session_state["thesis_enable_deai"] = True
-        if "thesis_deai_intensity" not in st.session_state:
-            st.session_state["thesis_deai_intensity"] = 0.7
+        if "report_enable_deai" not in st.session_state:
+            st.session_state["report_enable_deai"] = True
+        if "report_deai_intensity" not in st.session_state:
+            st.session_state["report_deai_intensity"] = 0.7
 
         col_deai_opt, col_deai_int = st.columns([3, 1])
         with col_deai_opt:
-            st.session_state["thesis_enable_deai"] = st.checkbox(
+            st.session_state["report_enable_deai"] = st.checkbox(
                 "🧬 启用 AI 率优化（降 AIGC 检测率）",
-                value=st.session_state["thesis_enable_deai"],
+                value=st.session_state["report_enable_deai"],
                 help="启用后管道会自动对生成的文本进行降 AI 处理：规则打散 + LLM 风格扰动 + 个人观察注入。可显著降低知网 AIGC 检测率。",
             )
         with col_deai_int:
-            if st.session_state["thesis_enable_deai"]:
-                st.session_state["thesis_deai_intensity"] = st.slider(
-                    "处理强度", 0.3, 1.0, st.session_state["thesis_deai_intensity"], 0.1,
+            if st.session_state["report_enable_deai"]:
+                st.session_state["report_deai_intensity"] = st.slider(
+                    "处理强度", 0.3, 1.0, st.session_state["report_deai_intensity"], 0.1,
                     help="越高改动越多，AI 痕迹越少，但可能与原文差异越大。建议 0.5-0.7。",
                 )
 
@@ -508,10 +512,10 @@ def render_page() -> None:
         with col_a:
             with st.container(border=True):
                 st.markdown("#### ⚡ 轻量管道")
-                st.caption("基于各阶段**已生成**的 AI 报告，快速产出答辩稿。适用于各阶段已运行过的场景。")
+                st.caption("基于各阶段**已生成**的 AI 报告，快速产出设计报告。适用于各阶段已运行过的场景。")
                 st.caption("约 36 步 · 预计 1-3 分钟")
 
-                if st.button("🚀 一键生成答辩稿（轻量）", key="pipeline_light", type="primary",
+                if st.button("🚀 一键生成设计报告（轻量）", key="pipeline_light", type="primary",
                              **stretch_width(st.button)):
                     with st.status("轻量管道运行中...", expanded=True) as status:
                         log_lines = []
@@ -530,12 +534,12 @@ def render_page() -> None:
                                 student=student,
                                 progress_callback=pc,
                                 log_callback=lc,
-                                enable_deai=st.session_state["thesis_enable_deai"],
-                                deai_intensity=st.session_state["thesis_deai_intensity"],
+                                enable_deai=st.session_state["report_enable_deai"],
+                                deai_intensity=st.session_state["report_deai_intensity"],
                             )
-                            st.session_state["thesis_chapters"] = chapters
-                            st.session_state["thesis_docx_buf"] = buf
-                            register_thesis_output(buf, student_name, student_id, chapters)
+                            st.session_state["report_chapters"] = chapters
+                            st.session_state["report_docx_buf"] = buf
+                            register_document_output(buf, author_name, author_id, chapters)
                             status.update(label="✅ 轻量管道执行完毕！", state="complete")
                         except Exception as e:
                             status.update(label=f"❌ 管道执行失败: {e}", state="error")
@@ -566,24 +570,24 @@ def render_page() -> None:
                                 student=student,
                                 progress_callback=pc,
                                 log_callback=lc,
-                                enable_deai=st.session_state["thesis_enable_deai"],
-                                deai_intensity=st.session_state["thesis_deai_intensity"],
+                                enable_deai=st.session_state["report_enable_deai"],
+                                deai_intensity=st.session_state["report_deai_intensity"],
                             )
-                            st.session_state["thesis_chapters"] = chapters
-                            st.session_state["thesis_docx_buf"] = buf
-                            register_thesis_output(buf, student_name, student_id, chapters)
+                            st.session_state["report_chapters"] = chapters
+                            st.session_state["report_docx_buf"] = buf
+                            register_document_output(buf, author_name, author_id, chapters)
                             status.update(label="✅ 全流程管道执行完毕！", state="complete")
                         except Exception as e:
                             status.update(label=f"❌ 管道执行失败: {e}", state="error")
                             st.error(traceback.format_exc())
 
         # ── 管道完成后自动显示下载按钮 ──
-        if "thesis_docx_buf" in st.session_state and st.session_state["thesis_docx_buf"] is not None:
-            st.success("✅ 答辩稿已就绪，点击下方按钮下载：")
+        if "report_docx_buf" in st.session_state and st.session_state["report_docx_buf"] is not None:
+            st.success("✅ 设计报告已就绪，点击下方按钮下载：")
             st.download_button(
-                "💾 下载毕业设计答辩稿.docx",
-                st.session_state["thesis_docx_buf"],
-                file_name=f"毕业设计答辩稿_{student_name}_{student_id}.docx",
+                "💾 下载项目设计报告.docx",
+                st.session_state["report_docx_buf"],
+                file_name=f"项目设计报告_{author_name}_{author_id}.docx",
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 **stretch_width(st.download_button),
             )
@@ -594,16 +598,16 @@ def render_page() -> None:
         st.markdown("### 📝 章节生成")
 
         # 初始化 session state
-        if "thesis_chapters" not in st.session_state:
-            st.session_state["thesis_chapters"] = {}
-        if "thesis_generating" not in st.session_state:
-            st.session_state["thesis_generating"] = False
+        if "report_chapters" not in st.session_state:
+            st.session_state["report_chapters"] = {}
+        if "report_generating" not in st.session_state:
+            st.session_state["report_generating"] = False
 
-        thesis_chapters = st.session_state["thesis_chapters"]
+        report_chapters = st.session_state["report_chapters"]
 
         # 分组展示按章节
         for ch in range(1, 6):
-            ch_sections = [s for s in THESIS_CHAPTERS if s.chapter == ch]
+            ch_sections = [s for s in REPORT_CHAPTERS if s.chapter == ch]
             ch_names = {
                 1: "第1章 项目背景与概况",
                 2: "第2章 现状调查与分析",
@@ -612,46 +616,46 @@ def render_page() -> None:
                 5: "第5章 重点地块设计",
             }
 
-            any_generated = any(s.section_id in thesis_chapters for s in ch_sections)
+            any_generated = any(s.section_id in report_chapters for s in ch_sections)
             with st.expander(
-                f"{ch_names[ch]} （{len([s for s in ch_sections if s.section_id in thesis_chapters])}/{len(ch_sections)} 节已生成）",
+                f"{ch_names[ch]} （{len([s for s in ch_sections if s.section_id in report_chapters])}/{len(ch_sections)} 节已生成）",
                 expanded=any_generated or (ch == 1)
             ):
                 for sec in ch_sections:
-                    generated = sec.section_id in thesis_chapters
+                    generated = sec.section_id in report_chapters
                     status = "✅" if generated else "⏳"
                     col_sec, col_btn = st.columns([5, 1])
                     with col_sec:
                         st.markdown(f"{status} **{sec.section_id} {sec.title}** — 约{sec.word_count}字")
                         if generated:
-                            st.markdown(thesis_chapters[sec.section_id])
+                            st.markdown(report_chapters[sec.section_id])
                     with col_btn:
-                        if st.button("🔄 重新生成" if generated else "🧠 生成", key=f"thesis_gen_{sec.section_id}"):
+                        if st.button("🔄 重新生成" if generated else "🧠 生成", key=f"report_gen_{sec.section_id}"):
                             with st.spinner(f"生成 {sec.section_id} {sec.title}..."):
-                                ctx_data = build_thesis_context()
+                                ctx_data = build_document_context()
                                 text = generate_single_section(sec, ctx_data)
-                                thesis_chapters[sec.section_id] = text
-                                st.session_state["thesis_chapters"] = thesis_chapters
+                                report_chapters[sec.section_id] = text
+                                st.session_state["report_chapters"] = report_chapters
                                 st.rerun()
 
         # ── 一键生成全部 ──
         st.markdown("---")
         col_all, col_clear = st.columns([3, 1])
         with col_all:
-            if st.button("🚀 一键生成全部章节", type="primary", disabled=st.session_state["thesis_generating"],
+            if st.button("🚀 一键生成全部章节", type="primary", disabled=st.session_state["report_generating"],
                          **stretch_width(st.button)):
-                st.session_state["thesis_generating"] = True
+                st.session_state["report_generating"] = True
                 st.rerun()
 
         with col_clear:
             if st.button("🗑️ 清空已生成", **stretch_width(st.button)):
-                st.session_state["thesis_chapters"] = {}
+                st.session_state["report_chapters"] = {}
                 st.rerun()
 
         # 执行批量生成
-        if st.session_state["thesis_generating"]:
-            ctx_data = build_thesis_context()
-            all_sections = THESIS_CHAPTERS
+        if st.session_state["report_generating"]:
+            ctx_data = build_document_context()
+            all_sections = REPORT_CHAPTERS
             total = len(all_sections)
             progress_bar = st.progress(0, text="准备生成...")
             status_text = st.empty()
@@ -660,46 +664,46 @@ def render_page() -> None:
                 progress_bar.progress((i) / total, text=f"生成 {sec.section_id} {sec.title}...")
                 status_text.info(f"⏳ 正在生成：{sec.section_id} {sec.title} （{i+1}/{total}）")
 
-                if sec.section_id not in thesis_chapters:
+                if sec.section_id not in report_chapters:
                     try:
                         text = generate_single_section(sec, ctx_data)
-                        thesis_chapters[sec.section_id] = text
-                        st.session_state["thesis_chapters"] = thesis_chapters
+                        report_chapters[sec.section_id] = text
+                        st.session_state["report_chapters"] = report_chapters
                     except Exception as e:
-                        thesis_chapters[sec.section_id] = f"[生成异常] {e}"
-                        st.session_state["thesis_chapters"] = thesis_chapters
+                        report_chapters[sec.section_id] = f"[生成异常] {e}"
+                        st.session_state["report_chapters"] = report_chapters
 
             progress_bar.progress(1.0, text="全部生成完成!")
             status_text.success(f"✅ 全部 {total} 节生成完毕！")
-            st.session_state["thesis_generating"] = False
+            st.session_state["report_generating"] = False
             st.rerun()
 
         # ── 统计 ──
-        generated_count = len(thesis_chapters)
-        total_count = len(THESIS_CHAPTERS)
+        generated_count = len(report_chapters)
+        total_count = len(REPORT_CHAPTERS)
         if generated_count > 0:
-            total_chars = sum(len(v) for v in thesis_chapters.values())
+            total_chars = sum(len(v) for v in report_chapters.values())
             st.info(f"已生成 {generated_count}/{total_count} 节，共 {total_chars} 字")
 
         # ── 导出面板 ──
         st.markdown("---")
-        st.markdown("### 📥 导出答辩稿")
+        st.markdown("### 📥 导出设计报告")
 
         if generated_count == total_count:
-            if st.button("📥 导出毕业设计答辩稿 (.docx)", type="primary", **stretch_width(st.button)):
+            if st.button("📥 导出项目设计报告 (.docx)", type="primary", **stretch_width(st.button)):
                 with st.spinner("正在组装 Word 文档（严格按模板格式）..."):
                     try:
-                        buf = assemble_thesis_docx(
-                            chapters=thesis_chapters,
+                        buf = assemble_report_docx(
+                            chapters=report_chapters,
                             student=student,
                         )
-                        st.session_state["thesis_docx_buf"] = buf
-                        register_thesis_output(buf, student_name, student_id, thesis_chapters)
-                        st.success("✅ 答辩稿生成成功！请点击下方按钮下载。")
+                        st.session_state["report_docx_buf"] = buf
+                        register_document_output(buf, author_name, author_id, report_chapters)
+                        st.success("✅ 设计报告生成成功！请点击下方按钮下载。")
                         st.download_button(
-                            "💾 下载毕业设计答辩稿.docx",
+                            "💾 下载项目设计报告.docx",
                             buf,
-                            file_name=f"毕业设计答辩稿_{student_name}_{student_id}.docx",
+                            file_name=f"项目设计报告_{author_name}_{author_id}.docx",
                             mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                             **stretch_width(st.download_button),
                         )

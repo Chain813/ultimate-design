@@ -1,4 +1,4 @@
-"""降 AI 率后处理器 —— 降低毕业论文答辩稿的 AIGC 检测率
+"""降 AI 率后处理器 —— 降低毕业报告设计报告的 AIGC 检测率
 
 核心策略（借鉴 AI-Cleaner、TextHumanize、Adversarial-Paraphrasing 等开源项目）：
 
@@ -42,8 +42,8 @@ def _assign_models():
     global CHAPTER_MODEL_MAP
     if CHAPTER_MODEL_MAP:
         return
-    from src.engines.thesis_composer import THESIS_CHAPTERS
-    for i, sec in enumerate(THESIS_CHAPTERS):
+    from src.engines.document_composer import REPORT_CHAPTERS
+    for i, sec in enumerate(REPORT_CHAPTERS):
         # 轮流分配，不同章用不同模型
         ch = sec.chapter
         CHAPTER_MODEL_MAP[sec.section_id] = _available_models[ch % len(_available_models)]
@@ -313,10 +313,10 @@ def deai_all_chapters(
     Returns:
         处理后的 chapters dict
     """
-    from src.engines.thesis_composer import THESIS_CHAPTERS
+    from src.engines.document_composer import REPORT_CHAPTERS
 
     # 构建 section_id → chapter 映射
-    section_chapter = {sec.section_id: sec.chapter for sec in THESIS_CHAPTERS}
+    section_chapter = {sec.section_id: sec.chapter for sec in REPORT_CHAPTERS}
 
     processed: Dict[str, str] = {}
     items = list(chapters.items())

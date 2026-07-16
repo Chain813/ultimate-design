@@ -7,9 +7,9 @@ import logging
 
 logger = logging.getLogger("ultimateDESIGN")
 
-def load_thesis_from_draft() -> Tuple[Dict[str, str], Dict[str, str]]:
+def load_document_from_draft() -> Tuple[Dict[str, str], Dict[str, str]]:
     """
-    从本地桌面草稿提取答辩稿内容。
+    从本地桌面草稿提取文档内容。
     返回:
         (chapters, metadata)
         chapters: {section_id: text}
@@ -22,7 +22,11 @@ def load_thesis_from_draft() -> Tuple[Dict[str, str], Dict[str, str]]:
             "references": str
         }
     """
-    path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "毕业设计答辩稿_陈礼冲_202111003.docx")
+    from src.config.site import get_author_info
+    author = get_author_info()
+    author_name = author.get("name", "作者")
+    author_id = author.get("id", "编号")
+    path = os.path.join(os.path.expanduser("~"), "Desktop", "项目文档", f"项目设计报告_{author_name}_{author_id}.docx")
     chapters = {}
     metadata = {
         "abstract_cn": "",

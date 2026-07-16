@@ -991,7 +991,7 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
         drawing_name=tmpl.name,
         drawing_type=profile.drawing_type,
         aspect_ratio="A3横版",
-        output_scene="毕业设计图册 / A1 展板 / 方案汇报",
+        output_scene="项目图册 / A1 展板 / 方案汇报",
         uploaded_channels=uploaded_channels,
         main_expression=tmpl.description,
         must_include=template_requirements,

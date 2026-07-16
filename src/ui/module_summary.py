@@ -1,6 +1,6 @@
 """阶段研究小结组件 —— 每个阶段页面底部的专业结论面板。
 
-面向答辩委员会，用城乡规划专业术语输出当前阶段的核心发现。
+用城乡规划专业术语输出当前阶段的核心发现。
 支持：
 - 静态发现列表
 - 动态数据注入（自动从数据总线读取）
@@ -23,7 +23,9 @@ from src.ui.streamlit_compat import stretch_width
 def _scan_local_models() -> list[str]:
     """Scan local Ollama instance for available models."""
     try:
-        resp = requests.get("http://127.0.0.1:11434/api/tags", timeout=2)
+        from src.config.loader import load_global_config
+        ollama_url = load_global_config().get("engines",{}).get("llm",{}).get("ollama_url","http://127.0.0.1:11434")
+        resp = requests.get(f"{ollama_url.rstrip('/api/chat')}/api/tags", timeout=2)
         if resp.status_code == 200:
             models = resp.json().get("models", [])
             return [m["name"] for m in models]
@@ -486,7 +488,7 @@ def _render_llm_summary_button(
     model_tag = "deepseek-v4-pro"
 
     if st.button(
-        f"🧠 AI 生成 Stage {stage_code} 答辩小结",
+        f"🧠 AI 生成 Stage {stage_code} 阶段小结",
         key=f"summary_btn_{stage_code}",
         **stretch_width(st.button),
     ):
@@ -539,7 +541,7 @@ def _render_llm_summary_button(
 
         data_context = "\n".join(data_lines)
 
-        progress.progress(0.50, text=f"正在调用 {model_tag} 生成答辩小结...")
+        progress.progress(0.50, text=f"正在调用 {model_tag} 生成阶段小结...")
 
         result = generate_stage_summary_text(
             stage_code, stage_name, data_context, model=model_tag
@@ -550,7 +552,7 @@ def _render_llm_summary_button(
         if result:
             st.session_state[session_key] = result
 
-        progress.progress(1.0, text="答辩小结生成完成！")
+        progress.progress(1.0, text="阶段小结生成完成！")
         time.sleep(0.5)
         progress.empty()
 
@@ -559,7 +561,7 @@ def _render_llm_summary_button(
             f"""<div style="background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.2);
             border-radius: 12px; padding: 16px 20px; margin-top: 12px;">
             <div style="color: #34d399; font-size: 13px; font-weight: 800; margin-bottom: 8px;">
-            🧠 AI 生成的答辩小结 (Stage {escape(stage_code)})</div>
+            🧠 AI 生成的阶段小结 (Stage {escape(stage_code)})</div>
             <div style="color: #e2e8f0; font-size: 14px; line-height: 1.7;">
             {escape(st.session_state[session_key])}</div></div>""",
             unsafe_allow_html=True,
@@ -567,7 +569,7 @@ def _render_llm_summary_button(
         st.download_button(
             "📥 导出小结",
             st.session_state[session_key],
-            file_name=f"Stage{stage_code}_答辩小结.md",
+            file_name=f"Stage{stage_code}_阶段小结.md",
             mime="text/markdown",
             key=f"dl_summary_{stage_code}",
             **stretch_width(st.download_button),
@@ -600,10 +602,10 @@ def generate_stage_summary_text(
     """
     from src.engines.llm_engine import call_llm_engine
 
-    prompt = f"""你是城乡规划专业毕业设计的答辩评审专家。
+    prompt = f"""你是城乡规划专业评审专家。
 请根据以下"{stage_name}"阶段的数据分析结果以及前期各阶段的已有成果，撰写一段完整的阶段研究小结。
 
-本阶段小结不仅需要总结当前阶段的发现，还需要体现与前期阶段数据的关联性和递进逻辑，使答辩委员会能够理解整个研究的系统性。
+本阶段小结不仅需要总结当前阶段的发现，还需要体现与前期阶段数据的关联性和递进逻辑，使评审专家组能够理解整个研究的系统性。
 
 硬性要求：
 1. **真实性第一**：严禁编造任何数字、面积、POI 数量或地块名称。
@@ -618,7 +620,7 @@ def generate_stage_summary_text(
 {data_context[:6000]}
 """
     sys_prompt = (
-        "你是城乡规划专业答辩委员会成员，拥有丰富的城市更新与历史街区保护经验。"
+        "你是城乡规划专业评审专家，拥有丰富的城市更新与历史街区保护经验。"
         "你极其严谨，宁缺毋滥，禁止虚构任何未在上下文中出现的事实或数据。"
         "你需要综合分析当前阶段与前期阶段的数据，展现系统性研究思维。"
         "禁止输出技术代码或 JSON 格式，只输出专业文本。"

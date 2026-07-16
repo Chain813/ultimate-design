@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Regenerate thesis with AI-focused abstract, using existing chapters where possible."""
+"""Regenerate report with AI-focused abstract, using existing chapters where possible."""
 import os, sys, io
 from pathlib import Path
 
@@ -22,18 +22,18 @@ if env_path.exists():
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
-from src.engines.thesis_composer import (
-    assemble_thesis_docx, StudentInfo,
+from src.engines.document_composer import (
+    assemble_report_docx, AuthorInfo,
     _generate_abstract_from_chapters, _generate_english_abstract,
     _extract_keywords_from_chapters, _extract_english_keywords,
     _generate_references_from_chapters, _generate_acknowledgments,
-    THESIS_CHAPTERS, load_student_info_json,
+    REPORT_CHAPTERS, load_author_info_json,
 )
-from src.engines.thesis_pipeline import run_light_pipeline
+from src.engines.document_pipeline import run_light_pipeline
 
-student = load_student_info_json()
+student = load_author_info_json()
 
-print("Regenerating thesis with AI/AIGC-focused abstract...")
+print("Regenerating report with AI/AIGC-focused abstract...")
 print("This will regenerate all 27 chapters + de-AI processing + new abstract")
 print("=" * 60)
 
@@ -47,13 +47,13 @@ chapters, buf = run_light_pipeline(
 )
 
 # Save
-fname = f'毕业设计答辩稿_{student.name}_{student.student_id}.docx'
+fname = f'项目设计报告_{student.name}_{student.student_id}.docx'
 outpath = Path('output') / fname
 try:
     with open(outpath, 'wb') as f:
         f.write(buf.getvalue())
 except PermissionError:
-    fname = f'毕业设计答辩稿_{student.name}_{student.student_id}_new.docx'
+    fname = f'项目设计报告_{student.name}_{student.student_id}_new.docx'
     outpath = Path('output') / fname
     with open(outpath, 'wb') as f:
         f.write(buf.getvalue())

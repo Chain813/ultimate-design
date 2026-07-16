@@ -13,6 +13,9 @@ from .site import (
     get_site_desc,
     get_site_adjacent,
     get_site_policies,
+    get_project_info,
+    get_institution_info,
+    get_author_info,
 )
 from .paths import (
     ASSETS_DIR,
@@ -48,6 +51,9 @@ __all__ = [
     "get_site_desc",
     "get_site_adjacent",
     "get_site_policies",
+    "get_project_info",
+    "get_institution_info",
+    "get_author_info",
     "ROOT_DIR",
     "DATA_DIR",
     "CSV_DIR",

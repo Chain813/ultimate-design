@@ -5,7 +5,8 @@ import json
 import argparse
 from pathlib import Path
 
-DB_PATH = Path("e:/AI-based-project/urban-platform/.codegraph/codegraph.db")
+from src.config.runtime import resolve_path
+DB_PATH = resolve_path(".codegraph/codegraph.db")
 
 def get_connection():
     if not DB_PATH.exists():

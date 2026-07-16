@@ -325,7 +325,7 @@ def save_stage_summary_to_file(
     
     ai_summary_section = ""
     if ai_summary:
-        ai_summary_section = f"\n\n### 🧠 AI 答辩小结\n{ai_summary.strip()}"
+        ai_summary_section = f"\n\n### 🧠 AI 阶段小结\n{ai_summary.strip()}"
         
     stage_section = f"""## 📌 Stage {stage_code}: {title}
 - **方法/方法论**: {methodology or '无'}

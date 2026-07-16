@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Generate complete graduation thesis via full pipeline + de-AI processing."""
+"""Generate complete graduation report via full pipeline + de-AI processing."""
 import os, io, sys, traceback, time
 from pathlib import Path
 
@@ -21,10 +21,10 @@ if env_path.exists():
                 k, v = line.split('=', 1)
                 os.environ.setdefault(k.strip(), v.strip())
 
-from src.engines.thesis_composer import StudentInfo, load_student_info_json
-from src.engines.thesis_pipeline import run_light_pipeline
+from src.engines.document_composer import AuthorInfo, load_author_info_json
+from src.engines.document_pipeline import run_light_pipeline
 
-student = load_student_info_json()
+student = load_author_info_json()
 
 output_dir = Path('output')
 output_dir.mkdir(exist_ok=True)
@@ -40,7 +40,7 @@ def lc(msg):
     print(f'  {msg}', flush=True)
 
 print('=' * 60, flush=True)
-print('Starting thesis generation (light pipeline + de-AI processing)', flush=True)
+print('Starting report generation (light pipeline + de-AI processing)', flush=True)
 print('=' * 60, flush=True)
 
 try:
@@ -54,13 +54,13 @@ try:
     )
 
     # Save
-    fname = f'毕业设计答辩稿_{student.name}_{student.student_id}.docx'
+    fname = f'项目设计报告_{student.name}_{student.student_id}.docx'
     outpath = output_dir / fname
     try:
         with open(outpath, 'wb') as f:
             f.write(buf.getvalue())
     except PermissionError:
-        fname = f'毕业设计答辩稿_{student.name}_{student.student_id}_new.docx'
+        fname = f'项目设计报告_{student.name}_{student.student_id}_new.docx'
         outpath = output_dir / fname
         with open(outpath, 'wb') as f:
             f.write(buf.getvalue())
@@ -73,7 +73,7 @@ try:
     generated = len(chapters)
 
     print(f'\n{"=" * 60}', flush=True)
-    print(f'DONE! Thesis generated successfully.', flush=True)
+    print(f'DONE! Report generated successfully.', flush=True)
     print(f'Output: {outpath} ({len(buf.getvalue())/1024:.1f} KB)', flush=True)
     print(f'Chapters: {generated}/27 | Total chars: {total_chars}', flush=True)
     print(f'Time: {mins}m{secs}s', flush=True)

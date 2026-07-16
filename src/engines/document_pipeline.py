@@ -1,22 +1,22 @@
-"""毕业设计答辩稿 — 一键生成管道
+"""项目设计报告 — 一键生成管道
 
 提供两条独立的自动化管道：
-A. run_light_pipeline()    — 轻量管道：基于已有 stage 数据，快速生成答辩稿
-B. run_full_pipeline()     — 全流程管道：从空间数据出发，生成所有阶段报告 + 答辩稿
+A. run_light_pipeline()    — 轻量管道：基于已有 stage 数据，快速生成设计报告
+B. run_full_pipeline()     — 全流程管道：从空间数据出发，生成所有阶段报告 + 设计报告
 
 Usage:
-    from src.engines.thesis_pipeline import run_light_pipeline, run_full_pipeline
+    from src.engines.document_pipeline import run_light_pipeline, run_full_pipeline
 
     # 轻量管道
     chapters, docx_buf = run_light_pipeline(
-        student=StudentInfo(...),
+        student=AuthorInfo(...),
         progress_callback=lambda cur, tot, label: print(f"{cur}/{tot}: {label}"),
         log_callback=lambda msg: print(f"  {msg}"),
     )
 
     # 全流程管道
     chapters, docx_buf = run_full_pipeline(
-        student=StudentInfo(...),
+        student=AuthorInfo(...),
         progress_callback=lambda cur, tot, label: print(f"{cur}/{tot}: {label}"),
         log_callback=lambda msg: print(f"  {msg}"),
     )
@@ -30,9 +30,9 @@ import traceback
 from typing import Callable, Dict, List, Optional, Tuple
 
 from src.engines.llm_engine import call_llm_engine
-from src.engines.thesis_composer import (
-    THESIS_CHAPTERS, StudentInfo,
-    build_thesis_context, generate_single_section, assemble_thesis_docx,
+from src.engines.document_composer import (
+    REPORT_CHAPTERS, AuthorInfo,
+    build_document_context, generate_single_section, assemble_report_docx,
 )
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -687,14 +687,14 @@ def _load(stage_code: str, key: str, default=None):
 # ═══════════════════════════════════════════════════════════════
 
 def run_light_pipeline(
-    student: Optional[StudentInfo] = None,
+    student: Optional[AuthorInfo] = None,
     progress_callback: Optional[Callable[[int, int, str], None]] = None,
     log_callback: Optional[Callable[[str], None]] = None,
     model: str = "deepseek-v4-pro",
     enable_deai: bool = False,
     deai_intensity: float = 0.7,
 ) -> Tuple[Dict[str, str], io.BytesIO]:
-    """轻量管道：基于已有 stage 数据，快速生成答辩稿。
+    """轻量管道：基于已有 stage 数据，快速生成设计报告。
 
     步骤: 8个补充小节 → 27个论文章节 → [降AI处理] → docx 组装
 
@@ -706,7 +706,7 @@ def run_light_pipeline(
         (chapters_dict, docx_bytesio)
     """
     if student is None:
-        student = StudentInfo()
+        student = AuthorInfo()
 
     def pc(cur, total, label):
         if progress_callback:
@@ -720,7 +720,7 @@ def run_light_pipeline(
     step = 0
 
     lc("=" * 50)
-    lc("🚀 轻量管道启动 — 基于已有数据生成答辩稿")
+    lc("🚀 轻量管道启动 — 基于已有数据生成设计报告")
     lc("=" * 50)
 
     # Step 1: 补充小节
@@ -731,9 +731,9 @@ def run_light_pipeline(
 
     # Step 2: 论文章节
     lc("\n📝 Phase 2/3: 生成论文章节 (27 节)")
-    ctx = build_thesis_context()
+    ctx = build_document_context()
     chapters: Dict[str, str] = {}
-    for i, sec in enumerate(THESIS_CHAPTERS):
+    for i, sec in enumerate(REPORT_CHAPTERS):
         pc(step + i, total_steps, f"论文 {sec.section_id} {sec.title}")
         try:
             text = generate_single_section(sec, ctx, model=model)
@@ -768,8 +768,8 @@ def run_light_pipeline(
     step += 1
     pc(step, total_steps, "组装 docx...")
     try:
-        buf = assemble_thesis_docx(chapters=chapters, student=student)
-        lc(f"✅ 答辩稿生成完毕！({len(buf.getvalue())/1024:.1f} KB)")
+        buf = assemble_report_docx(chapters=chapters, student=student)
+        lc(f"✅ 设计报告生成完毕！({len(buf.getvalue())/1024:.1f} KB)")
     except Exception as e:
         lc(f"❌ 文档组装失败: {e}")
         raise
@@ -783,14 +783,14 @@ def run_light_pipeline(
 # ═══════════════════════════════════════════════════════════════
 
 def run_full_pipeline(
-    student: Optional[StudentInfo] = None,
+    student: Optional[AuthorInfo] = None,
     progress_callback: Optional[Callable[[int, int, str], None]] = None,
     log_callback: Optional[Callable[[str], None]] = None,
     model: str = "deepseek-v4-pro",
     enable_deai: bool = False,
     deai_intensity: float = 0.7,
 ) -> Tuple[Dict[str, str], io.BytesIO]:
-    """全流程管道：从空间数据出发，生成所有阶段报告 + 答辩稿。
+    """全流程管道：从空间数据出发，生成所有阶段报告 + 设计报告。
 
     步骤:
     Stage 05 诊断报告 + MPI 排行
@@ -807,7 +807,7 @@ def run_full_pipeline(
         (chapters_dict, docx_bytesio)
     """
     if student is None:
-        student = StudentInfo()
+        student = AuthorInfo()
 
     def pc(cur, total, label):
         if progress_callback:
@@ -889,9 +889,9 @@ def run_full_pipeline(
 
     # ── 论文章节 ──
     lc("\n📝 生成论文章节 (27 节)")
-    ctx = build_thesis_context()
+    ctx = build_document_context()
     chapters: Dict[str, str] = {}
-    for i, sec in enumerate(THESIS_CHAPTERS):
+    for i, sec in enumerate(REPORT_CHAPTERS):
         pc(step + i, total_steps, f"论文 {sec.section_id} {sec.title}")
         try:
             text = generate_single_section(sec, ctx, model=model)
@@ -925,10 +925,10 @@ def run_full_pipeline(
     step += 1
     pc(step, total_steps, "组装 docx...")
     try:
-        buf = assemble_thesis_docx(chapters=chapters, student=student)
+        buf = assemble_report_docx(chapters=chapters, student=student)
         lc(f"\n{'='*50}")
         lc(f"🎉 全流程管道执行完毕！")
-        lc(f"📄 答辩稿大小: {len(buf.getvalue())/1024:.1f} KB")
+        lc(f"📄 设计报告大小: {len(buf.getvalue())/1024:.1f} KB")
         lc(f"📊 论文章节数: {len(chapters)}")
         lc(f"{'='*50}")
     except Exception as e:

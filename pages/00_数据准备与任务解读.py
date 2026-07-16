@@ -470,6 +470,6 @@ render_stage_summary(
         {"point": "核心任务为系统性概念设计 + 数字孪生与 AIGC 推演表达", "evidence": "任务书核心任务条款"},
         {"point": "四大核心痛点：用地混杂、交通割裂、老龄化、环境品质不足", "evidence": "开题报告现状诊断结论"},
     ],
-    methodology="基于毕业设计任务书与开题报告的文本解析",
+    methodology="基于项目任务书与开题报告的文本解析",
     implication="为后续资料收集（Stage 02）和现场调研（Stage 03）提供了明确的工作边界",
 )

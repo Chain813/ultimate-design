@@ -31,6 +31,8 @@ logs/
 *.err.log
 
 config/student_info.json
+config/project.yaml
+config/author.json
 assets/default_cover.jpg
 
 # 内部文档与代理运行痕迹

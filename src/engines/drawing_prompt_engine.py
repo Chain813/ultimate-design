@@ -310,7 +310,7 @@ NEGATIVE_BY_PRECISION = {
 UNIFIED_STYLE = (
     "整体采用蓝黑色底极简专业风，深蓝黑色背景，青蓝色发光线条，白色中文标题，少量英文辅助。"
     "历史文化重点使用暖金色，问题识别与预警使用红橙黄色，生态绿地和公共空间使用低饱和青绿色。"
-    "整体图面简洁、理性、专业、高清，适合城市规划毕业设计图册、A1展板和方案汇报PPT。"
+    "整体图面简洁、理性、专业、高清，适合城市规划项目图册、A1展板和方案汇报PPT。"
 )
 
 FRAME_SYSTEM = (
@@ -532,7 +532,7 @@ def _compose_prompt(request: ImagePromptRequest, profile: DrawingProfile, negati
     content_text = _format_content_block(request)
     template_prefix = "这是一条视觉表达模板提示词，不能输出具体评价等级、热力强弱或统计结论。" if template_only else ""
 
-    body = f"""生成一张{request.aspect_ratio}城市规划毕业设计“{request.drawing_name}”图册图纸，用于{request.output_scene}，图纸类型为{profile.drawing_type}。
+    body = f"""生成一张{request.aspect_ratio}城市规划项目设计“{request.drawing_name}”图册图纸，用于{request.output_scene}，图纸类型为{profile.drawing_type}。
 
 项目名称为“{PROJECT_DEFAULTS['project_cn']}”。项目地点为{PROJECT_DEFAULTS['location']}，研究范围为{PROJECT_DEFAULTS['scope']}，总用地面积{PROJECT_DEFAULTS['area']}，核心地标包括{PROJECT_DEFAULTS['landmarks']}。项目主题包括{PROJECT_DEFAULTS['themes']}。
 

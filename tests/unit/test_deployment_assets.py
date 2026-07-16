@@ -35,7 +35,7 @@ def test_heavy_atlas_assets_are_not_tracked_for_deployment():
 def test_prefetch_assets_include_default_3d_map_assets_only():
     assert "static/buildings.geojson" in PREFETCH_ASSETS
     assert "static/building_shadows.geojson" in PREFETCH_ASSETS
-    assert "static/atlas/答辩PPT.pptx" not in PREFETCH_ASSETS
+    assert "static/atlas/项目汇报.pptx" not in PREFETCH_ASSETS
     assert all(not asset.startswith("static/atlas/") for asset in PREFETCH_ASSETS)
 
 

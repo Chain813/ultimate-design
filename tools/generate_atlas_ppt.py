@@ -336,11 +336,11 @@ def add_thank_you_slide(prs, blank_layout):
     y = Mm(268)
     _add_rect(slide, Mm(140), y - Mm(4), Mm(140), Mm(0.6), LIGHT_GRAY)
     _add_textbox(slide, Mm(40), y, Mm(340), Mm(10),
-                 "感谢吉林建筑大学建筑与规划学院全体老师的培育与教导",
+                 "感谢所有参与项目指导与支持的老师与专家",
                  font_size=14, bold=False, color=DARK_TEXT,
                  alignment=PP_ALIGN.CENTER)
     _add_textbox(slide, Mm(40), y + Mm(12), Mm(340), Mm(10),
-                 "汇报人: 陈礼冲  |  吉林建筑大学 建筑与规划学院 · 城乡规划211班",
+                 f"汇报人: {get_author_info().get('name','')}  |  {get_institution_info().get('name','')} {get_institution_info().get('department','')}".strip(),
                  font_size=12, bold=False, color=MID_GRAY,
                  alignment=PP_ALIGN.CENTER)
 

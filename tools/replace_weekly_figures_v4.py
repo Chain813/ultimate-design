@@ -8,9 +8,10 @@ from PIL import Image
 sys.stdout.reconfigure(encoding='utf-8')
 
 USER_HOME = os.path.expanduser("~")
-DOC_PATH = os.path.join(USER_HOME, "Desktop", "陈礼冲 毕设", "毕业设计周志(开题之后).doc")
-BACKUP_PATH = os.path.join(USER_HOME, "Desktop", "陈礼冲 毕设", "毕业设计周志(开题之后)_backup.doc")
-ATLAS_DIR = r"e:\AI-based-project\urban-platform\static\atlas"
+DOC_PATH = os.path.join(USER_HOME, "Desktop", "项目文档", "项目周志.doc")
+BACKUP_PATH = os.path.join(USER_HOME, "Desktop", "项目文档", "项目周志_backup.doc")
+from src.config.runtime import resolve_path
+ATLAS_DIR = str(resolve_path("static/atlas"))
 
 # We group shapes by week. For each week, we delete all shapes and insert the two images side-by-side
 # at the insertion point of the first shape.

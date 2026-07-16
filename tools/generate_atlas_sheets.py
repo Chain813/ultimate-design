@@ -13,7 +13,11 @@ STATIC_DIR = ROOT / "static"
 ASSETS_DIR = ROOT / "assets"
 ATLAS_DIR = STATIC_DIR / "atlas"
 
-def draw_cover(output_path, author="陈礼冲", author_id="202111003", organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
+from src.config.site import get_author_info, get_institution_info
+a = get_author_info()
+i = get_institution_info()
+def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get("name","")}
+{i.get("department","")}"):
     print("Generating Cover page...")
     cover = Image.new("RGB", (2440, 2000), color=(255, 255, 255))
     draw = ImageDraw.Draw(cover)
@@ -42,7 +46,7 @@ def draw_cover(output_path, author="陈礼冲", author_id="202111003", organizat
     draw.text((250, 980), "规划图册集 / URBAN RENEWAL ATLAS", fill=(15, 23, 42), font=font_stamp)
     
     meta_y = 1200
-    draw.text((250, meta_y), "设计单位：吉林建筑大学建筑与规划学院", fill=(71, 85, 105), font=font_body)
+    draw.text((250, meta_y), "f"设计单位：{i.get("name","")} {i.get("department","")}"", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 50), f"设计团队：城乡规划211班 {author} ({author_id})", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 100), "指导教师：崔诚慧", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 150), "时间：2026.6", fill=(71, 85, 105), font=font_body)
@@ -51,7 +55,8 @@ def draw_cover(output_path, author="陈礼冲", author_id="202111003", organizat
     paper_frame.save(output_path)
     print(f"Cover page generated and saved to {output_path}")
 
-def draw_toc(output_path, author="陈礼冲", author_id="202111003", organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
+def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get("name","")}
+{i.get("department","")}"):
     print("Generating Table of Contents...")
     toc_img = Image.new("RGB", (2240, 1584), color=(248, 250, 252))
     draw = ImageDraw.Draw(toc_img)
@@ -84,7 +89,7 @@ def draw_toc(output_path, author="陈礼冲", author_id="202111003", organizatio
     draw.text((55, 87), "图册目录", fill=(15, 23, 42), font=font_large_title, anchor="lm")
     draw.text((230, 78), "本图册的图纸索引与主要编制说明。", fill=(100, 116, 139), font=font_desc, anchor="lm")
     draw.text((230, 100), "本规划旨在重塑历史地段活力，推动数字孪生与古今共振。", fill=(100, 116, 139), font=font_desc, anchor="lm")
-    draw.text((1380, 68), f"设计团队：吉林建筑大学建筑与规划学院 城乡规划211班", fill=(100, 116, 139), font=font_meta)
+    draw.text((1380, 68), f"f"设计团队：{i.get("name","")} {i.get("department","")}"", fill=(100, 116, 139), font=font_meta)
     draw.text((1380, 86), f"制 作 人：{author} ({author_id})   指导教师：崔诚慧", fill=(100, 116, 139), font=font_meta)
     draw.text((1380, 104), "图幅：A3 (420\u00d7297mm)   坐标：WGS-84   日期：2026年6月", fill=(100, 116, 139), font=font_meta)
 

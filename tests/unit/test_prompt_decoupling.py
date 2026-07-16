@@ -84,9 +84,9 @@ def test_decoupled_drawing_prompt(mock_config):
     assert "\u6d4b\u8bd5" in prompt or "\u6d4b\u8bd5" in sys_prompt
 
 
-def test_decoupled_thesis_prompt(mock_config):
-    from src.engines.thesis_composer import get_thesis_system_prompt
-    prompt = get_thesis_system_prompt()
+def test_decoupled_report_prompt(mock_config):
+    from src.engines.document_composer import get_document_system_prompt
+    prompt = get_document_system_prompt()
     assert "\u6d4b\u8bd5\u5e02" in prompt
     assert "\u6d4b\u8bd5\u533a" in prompt
     assert "\u6d4b\u8bd5\u5730\u5757" in prompt

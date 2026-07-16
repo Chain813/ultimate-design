@@ -206,7 +206,7 @@ show_nav_bar = render_top_nav
 
 
 def render_auto_tour():
-    """自动演示导览：录制答辩视频时自动按时间线切换页面，带进度指示器和倒计时。"""
+    """自动演示导览：自动按时间线切换页面，带进度指示器和倒计时。"""
     tour_js = r"""<script>
     (function(){
         if(window.__tourInited)return;window.__tourInited=1;
@@ -293,7 +293,7 @@ def render_auto_tour():
 <div class="tour-trigger" onclick="toggleTourHud()">🎬</div>
 <div class="tour-panel">
   <div class="tour-header">
-    <h4>🎬 答辩录屏自动导览</h4>
+    <h4>🎬 自动演示导览</h4>
     <button style="background:transparent;border:none;color:#94a3b8;font-size:16px;cursor:pointer" onclick="toggleTourHud()">×</button>
   </div>
   <div class="tour-body">

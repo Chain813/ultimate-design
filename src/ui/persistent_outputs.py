@@ -8,11 +8,11 @@
 Usage (在任意页面注册成果):
     from src.ui.persistent_outputs import register_output
     register_output(
-        label="毕业设计答辩稿",
+        label="项目设计报告",
         data=docx_buf,
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        filename="毕业设计答辩稿.docx",
-        category="thesis",
+        filename="项目设计报告.docx",
+        category="document",
     )
 
 Usage (所有页面渲染常驻栏):
@@ -40,7 +40,7 @@ import streamlit as st
 class PersistentOutput:
     """单个持久化成果"""
     key: str                # 唯一标识符 (如 "thesis_docx", "diagnosis_report")
-    label: str              # 显示名称 (如 "毕业设计答辩稿")
+    label: str              # 显示名称 (如 "项目设计报告")
     category: str           # 分类: "thesis" | "report" | "image" | "data" | "drawing"
     mime: str               # MIME 类型
     filename: str           # 下载文件名
@@ -267,7 +267,7 @@ def has_outputs(category: Optional[str] = None) -> bool:
 
 # 分类图标和颜色
 CATEGORY_META = {
-    "thesis":    {"icon": "📝", "color": "#f59e0b", "label": "答辩稿"},
+    "document":  {"icon": "📝", "color": "#f59e0b", "label": "设计报告"},
     "report":    {"icon": "📊", "color": "#38bdf8", "label": "分析报告"},
     "drawing":   {"icon": "🗺️", "color": "#a855f7", "label": "规划图纸"},
     "image":     {"icon": "🖼️", "color": "#10b981", "label": "生成图像"},
@@ -350,25 +350,25 @@ def render_persistent_output_bar():
 # 便捷注册函数（供各阶段页面直接调用）
 # ═══════════════════════════════════════════════════════════════
 
-def register_thesis_output(
+def register_document_output(
     docx_buf,
     student_name: str = "",
     student_id: str = "",
     chapters: Optional[Dict[str, str]] = None,
 ):
-    """注册毕业设计答辩稿成果"""
+    """注册项目设计报告成果"""
     safe_name = student_name or "学生"
     safe_id = student_id or "000000"
-    fname = f"毕业设计答辩稿_{safe_name}_{safe_id}.docx"
+    fname = f"项目设计报告_{safe_name}_{safe_id}.docx"
 
     # 注册 docx
     register_output(
-        label="毕业设计答辩稿 (.docx)",
+        label="项目设计报告 (.docx)",
         data=docx_buf,
         mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         filename=fname,
-        category="thesis",
-        key="thesis_docx",
+        category="document",
+        key="report_docx",
     )
 
     # 如果有章节数据，注册纯文本备份
@@ -377,12 +377,12 @@ def register_thesis_output(
             f"## {sid} {chapters[sid]}" for sid in sorted(chapters.keys())
         )
         register_output(
-            label="答辩稿纯文本 (.txt)",
+            label="设计报告纯文本 (.txt)",
             data=full_text,
             mime="text/plain; charset=utf-8",
-            filename=f"毕业设计答辩稿_{safe_name}_{safe_id}.txt",
-            category="thesis",
-            key="thesis_txt",
+            filename=f"项目设计报告_{safe_name}_{safe_id}.txt",
+            category="document",
+            key="report_txt",
         )
 
 

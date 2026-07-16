@@ -7,7 +7,7 @@ def test_stage13_workspace_preserves_legacy_subpage_labels():
         "🗺️ 规划图纸代码生成",
         "🖼️ 图册自动组装",
         "📤 文档导出",
-        "📝 毕业设计答辩稿",
+        "📝 项目设计报告",
     ]
 
 
@@ -16,7 +16,7 @@ def test_stage13_output_keys_describe_export_artifacts():
 
     output_keys = [item.output_key for item in STAGE13_WORKSPACE.subpages]
 
-    assert output_keys == ["planning_drawings", "atlas_package", "final_report", "thesis_defense"]
+    assert output_keys == ["planning_drawings", "atlas_package", "final_report", "project_report"]
 
 
 def test_stage13_page_renderer_is_importable():

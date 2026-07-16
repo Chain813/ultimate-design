@@ -5,7 +5,7 @@ from src.workflow.stage_keys import SK
 STAGE13_WORKSPACE = StageWorkspaceSpec(
     stage_code="13",
     title="成果表达",
-    description="汇总规划图纸、图册、文档和毕业设计答辩稿，形成最终展示成果。",
+    description="汇总规划图纸、图册、文档和项目设计报告，形成最终展示成果。",
     evidence_stages=("10", "11", "12", "13"),
     subpages=[
         SubpageSpec(
@@ -33,12 +33,12 @@ STAGE13_WORKSPACE = StageWorkspaceSpec(
             aliases=("文档", "导出"),
         ),
         SubpageSpec(
-            label="📝 毕业设计答辩稿",
-            title="毕业设计答辩稿",
-            description="生成面向毕业设计答辩的汇报文本和成果归档。",
-            output_key="thesis_defense",
+            label="📝 项目设计报告",
+            title="项目设计报告",
+            description="生成项目设计报告，自动汇编各阶段成果为结构化文档。",
+            output_key="project_report",
             artifact_category="presentation",
-            aliases=("答辩稿", "毕业设计"),
+            aliases=("设计报告", "项目报告"),
         ),
     ],
 )

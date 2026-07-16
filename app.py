@@ -35,6 +35,12 @@ def get_page_route(page_path):
     name = name.replace(".py", "")
     return name
 
+# 项目配置检查 — 首次启动时引导填写
+from src.ui.project_config_banner import render_project_config_banner
+_project_ready = render_project_config_banner()
+if not _project_ready:
+    st.stop()  # 配置未完成，停止渲染后续内容
+
 # 加载顶部导航与系统状态警报
 render_top_nav()
 render_engine_status_alert()
@@ -104,8 +110,16 @@ MODULE_SECTIONS = [
 # Flatten for backward-compatible counting
 MODULES = [mod for section in MODULE_SECTIONS for mod in section["modules"]]
 
+# 动态页面标题
+from src.config.site import get_project_info, get_site_name, get_site_city
+_proj = get_project_info()
+_site_name = get_site_name()
+_title = _proj.get("name") or "城市设计智能推演平台"
+if _site_name:
+    _title = f"{_title} — {_site_name}"
+
 render_page_banner(
-    title="长春伪满皇宫周边街区微更新支持平台",
+    title=_title,
     description="集成 AHP 空间潜力诊断、LLM 规划多主体协同决策与 AIGC + ControlNet 生成式设计推演，打造全流程智能城乡规划微更新支持底盘。",
     eyebrow="Home",
     tags=["AHP-MPI 空间量化分析法", "LLM 多智能体协同决策", "AIGC + ControlNet 视觉风貌推演"],

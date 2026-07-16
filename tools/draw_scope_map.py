@@ -488,7 +488,9 @@ def generate_dynamic_description(drawing_type, title):
         pass
     return None
 
-def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位图", title="现状区位图", description_lines=None, drawing_number="DR-001", author="陈礼冲", author_id="202111003", organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
+def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位图", title="现状区位图", description_lines=None, drawing_number="DR-001", from src.config.site import get_author_info
+a=get_author_info()
+author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
     print("Processing A3 layout template...")
     template = Image.open(STATIC_DIR / 'a3_layout_preview_full.png').convert('RGB')
     map_img = Image.open(map_path).convert('RGB')

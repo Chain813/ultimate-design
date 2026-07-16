@@ -1,15 +1,15 @@
-"""毕业设计答辩稿 生成引擎
+"""项目设计报告 生成引擎
 
 核心功能:
-1. THESIS_CHAPTERS —— 27 个小节的完整定义（章节号、标题、字数、数据源、生成策略）
-2. build_thesis_context() —— 从 stage_bus + spatial_data 聚合所有可用数据
+1. REPORT_CHAPTERS —— 27 个小节的完整定义（章节号、标题、字数、数据源、生成策略）
+2. build_document_context() —— 从 stage_bus + spatial_data 聚合所有可用数据
 3. generate_all_chapters() —— 逐章节调用 deepseek-v4-pro 生成正文
-4. assemble_thesis_docx() —— 严格按模板格式组装 .docx
+4. assemble_report_docx() —— 严格按模板格式组装 .docx
 
 Usage:
-    from src.engines.thesis_composer import generate_all_chapters, assemble_thesis_docx
+    from src.engines.document_composer import generate_all_chapters, assemble_report_docx
     chapters = generate_all_chapters(student_info, progress_callback)
-    docx_bytes = assemble_thesis_docx(chapters, student_info)
+    docx_bytes = assemble_report_docx(chapters, student_info)
 """
 
 from __future__ import annotations
@@ -34,8 +34,8 @@ logger = logging.getLogger("ultimateDESIGN")
 # ═══════════════════════════════════════════════════════════════
 
 @dataclass
-class ThesisSection:
-    """毕业设计答辩稿 单个小节的完整定义"""
+class ReportSection:
+    """项目设计报告 单个小节的完整定义"""
     section_id: str          # e.g. "1.1"
     title: str               # 中文标题
     word_count: int          # 目标字数
@@ -45,15 +45,15 @@ class ThesisSection:
     description: str = ""    # 本节内容简述
 
 
-THESIS_CHAPTERS: List[ThesisSection] = [
+REPORT_CHAPTERS: List[ReportSection] = [
     # ═══ 第 1 章：项目背景与概况 ═══
-    ThesisSection(
+    ReportSection(
         section_id="1.1", title="项目背景", word_count=500, chapter=1,
         strategy="rewrite",
         data_sources=["design_brief", "diagnosis_report"],
         description="项目缘起、区域发展背景、城市更新政策背景、研究必要性",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="1.2", title="目标与任务", word_count=500, chapter=1,
         strategy="rewrite",
         data_sources=["design_brief", "design_concept", "case_benchmark"],
@@ -61,49 +61,49 @@ THESIS_CHAPTERS: List[ThesisSection] = [
     ),
 
     # ═══ 第 2 章：现状调查与分析 (每节 ~50 字概要) ═══
-    ThesisSection(
+    ReportSection(
         section_id="2.1", title="区位及范围", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["spatial_context", "boundary"],
         description="研究范围的地理位置、四至边界、面积",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.2", title="用地现状分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["landuse_summary", "spatial_context"],
         description="现状用地分类与占比特征",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.3", title="交通现状分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["traffic_summary", "spatial_context"],
         description="现状路网结构与交通特征",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.4", title="建筑现状分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["building_summary", "spatial_context"],
         description="现状建筑高度、质量与分布特征",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.5", title="景观现状分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["gvi_summary", "spatial_context"],
         description="现状绿化率、绿视率与景观品质",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.6", title="文化资源分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["p04_cultural_analysis", "spatial_context"],
         description="历史建筑、工业遗产与文化资源分布",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.7", title="产业业态分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["p04_industry_analysis", "poi_summary"],
         description="现状产业业态与商业分布特征",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="2.8", title="人群需求分析", word_count=50, chapter=2,
         strategy="generate",
         data_sources=["p04_population_analysis", "spatial_context"],
@@ -111,31 +111,31 @@ THESIS_CHAPTERS: List[ThesisSection] = [
     ),
 
     # ═══ 第 3 章：设计理念与构思 (每节 ~200 字) ═══
-    ThesisSection(
+    ReportSection(
         section_id="3.1", title="设计依据", word_count=200, chapter=3,
         strategy="rewrite",
         data_sources=["p07_design_basis", "design_concept", "case_benchmark", "rag_policy", "spatial_context"],
         description="上位规划、政策法规、案例分析依据",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="3.2", title="设计原则", word_count=200, chapter=3,
         strategy="rewrite",
         data_sources=["p07_design_principles", "design_concept", "strategy_matrix", "diagnosis_report"],
         description="规划设计基本原则（保护优先、有机更新、多方参与等）",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="3.3", title="设计目标", word_count=200, chapter=3,
         strategy="rewrite",
         data_sources=["design_concept", "design_brief", "diagnosis_report", "spatial_context"],
         description="量化设计目标（容积率、绿地率、限高等）",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="3.4", title="设计定位", word_count=200, chapter=3,
         strategy="rewrite",
         data_sources=["p07_design_positioning", "design_concept", "strategy_matrix", "spatial_structure"],
         description="项目功能定位与空间形象定位",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="3.5", title="设计策略", word_count=200, chapter=3,
         strategy="rewrite",
         data_sources=["strategy_matrix", "negotiation_result"],
@@ -143,49 +143,49 @@ THESIS_CHAPTERS: List[ThesisSection] = [
     ),
 
     # ═══ 第 4 章：总体方案设计 (每节 ~200 字) ═══
-    ThesisSection(
+    ReportSection(
         section_id="4.1", title="总图说明", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["spatial_structure", "landuse_sandbox"],
         description="总体规划布局说明",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.2", title="用地结构规划", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["landuse_sandbox", "spatial_structure"],
         description="用地分类与结构优化",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.3", title="开发强度规划", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["landuse_sandbox", "building_form", "spatial_structure"],
         description="容积率、建筑密度、高度分区",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.4", title="交通组织规划", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["traffic_system", "spatial_structure"],
         description="道路系统、公共交通、慢行网络",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.5", title="空间布局规划", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["spatial_structure", "public_space"],
         description="空间结构、轴线、节点体系",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.6", title="产业业态规划", word_count=200, chapter=4,
         strategy="generate",
         data_sources=["p09_industry_planning", "strategy_matrix", "spatial_structure"],
         description="产业布局与业态引导",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.7", title="景观系统规划", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["landscape_style", "public_space", "gvi_summary"],
         description="绿地系统、景观结构、风貌分区",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="4.8", title="城市设计导则", word_count=200, chapter=4,
         strategy="rewrite",
         data_sources=["design_guideline", "design_brief"],
@@ -193,19 +193,19 @@ THESIS_CHAPTERS: List[ThesisSection] = [
     ),
 
     # ═══ 第 5 章：重点地块设计 ═══
-    ThesisSection(
+    ReportSection(
         section_id="5.1", title="特色专项研究", word_count=200, chapter=5,
         strategy="generate",
         data_sources=["p10_specialized_study", "design_brief", "diagnosis_report"],
         description="项目特色专项（如工业遗产活化、数字孪生辅助设计等）",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="5.2", title="地块选择与依据", word_count=800, chapter=5,
         strategy="rewrite",
         data_sources=["mpi_ranking", "top_plot", "radar_data", "plot_designs", "plot_metrics", "spatial_context"],
         description="重点地块的选择标准、依据与概况",
     ),
-    ThesisSection(
+    ReportSection(
         section_id="5.3", title="地块设计说明", word_count=800, chapter=5,
         strategy="rewrite",
         data_sources=["plot_designs", "plot_metrics", "plot_personas", "spatial_context", "landuse_sandbox"],
@@ -228,7 +228,7 @@ def _safe_str(val, max_chars: int = 3000) -> str:
     return s
 
 
-def build_thesis_context() -> Dict[str, str]:
+def build_document_context() -> Dict[str, str]:
     """从 stage_bus + spatial_data 聚合所有可用数据源。
 
     Returns:
@@ -329,18 +329,23 @@ def build_thesis_context() -> Dict[str, str]:
 # LLM Prompt 构建
 # ═══════════════════════════════════════════════════════════════
 
-def get_thesis_system_prompt() -> str:
+def get_document_system_prompt() -> str:
     from src.config import get_site_city, get_site_district, get_site_name, get_site_desc
     city = get_site_city()
     district = get_site_district()
     site_name = get_site_name()
     desc = get_site_desc()
 
-    return f"""你是一个严格的数据到文本转换引擎。你的唯一任务是将提供的项目数据
-整理成毕业设计答辩稿的正文段落。
+    from src.config.site import get_project_info
+    proj = get_project_info()
+    proj_name = proj.get("name", "城市设计智能推演平台")
+    proj_sub = proj.get("subtitle", f"——以{city}市{district}{site_name}为例")
 
-项目名称：《基于大模型与多模态AI的城市更新空间设计智能推演系统
-——以{city}市{district}{site_name}为例》
+    return f"""你是一个严格的数据到文本转换引擎。你的唯一任务是将提供的项目数据
+整理成项目设计报告的正文段落。
+
+项目名称：《{proj_name}
+{proj_sub}》
 
 研究范围：{city}市{district}{site_name}，{desc}
 
@@ -361,7 +366,7 @@ def get_thesis_system_prompt() -> str:
 5. 只输出正文段落，不输出章节标题。"""
 
 
-def _resolve_sources(sec: ThesisSection, ctx: Dict[str, str]) -> str:
+def _resolve_sources(sec: ReportSection, ctx: Dict[str, str]) -> str:
     """将 data_sources 列表解析为可注入 prompt 的文本块"""
     parts = []
     for src in sec.data_sources:
@@ -408,7 +413,7 @@ def _resolve_sources(sec: ThesisSection, ctx: Dict[str, str]) -> str:
     return "\n\n".join(parts)
 
 
-def build_chapter_prompt(sec: ThesisSection, ctx: Dict[str, str]) -> str:
+def build_chapter_prompt(sec: ReportSection, ctx: Dict[str, str]) -> str:
     """为单个小节构建 LLM prompt"""
     source_text = _resolve_sources(sec, ctx)
     has_sources = bool(source_text.strip())
@@ -420,7 +425,7 @@ def build_chapter_prompt(sec: ThesisSection, ctx: Dict[str, str]) -> str:
 
 ⚠️ 本节无可用源数据。你必须输出以下占位符文本（一字不差）：
 
-[待生成] 本节依赖上游阶段数据，请先在对应阶段页面运行 AI 生成后再重新生成答辩稿。依赖数据源：{', '.join(sec.data_sources) if sec.data_sources else '无特定数据源'}。
+[待生成] 本节依赖上游阶段数据，请先在对应阶段页面运行 AI 生成后再重新生成设计报告。依赖数据源：{', '.join(sec.data_sources) if sec.data_sources else '无特定数据源'}。
 
 禁止在占位符之外输出任何其他内容。"""
 
@@ -470,7 +475,7 @@ def build_chapter_prompt(sec: ThesisSection, ctx: Dict[str, str]) -> str:
 # ═══════════════════════════════════════════════════════════════
 
 def generate_single_section(
-    sec: ThesisSection,
+    sec: ReportSection,
     ctx: Dict[str, str],
     model: str = "deepseek-v4-pro",
 ) -> str:
@@ -480,7 +485,7 @@ def generate_single_section(
     prompt = build_chapter_prompt(sec, ctx)
     result = call_llm_engine(
         prompt=prompt,
-        system_prompt=get_thesis_system_prompt(),
+        system_prompt=get_document_system_prompt(),
         model=model,
     )
 
@@ -510,12 +515,12 @@ def generate_all_chapters(
     import streamlit as st
 
     if ctx is None:
-        ctx = build_thesis_context()
+        ctx = build_document_context()
 
     results: Dict[str, str] = {}
-    total = len(THESIS_CHAPTERS)
+    total = len(REPORT_CHAPTERS)
 
-    for i, sec in enumerate(THESIS_CHAPTERS):
+    for i, sec in enumerate(REPORT_CHAPTERS):
         if progress_callback:
             progress_callback(i, total, sec.section_id)
 
@@ -673,7 +678,7 @@ def _add_toc(doc):
 # ═══════════════════════════════════════════════════════════════
 
 @dataclass
-class StudentInfo:
+class AuthorInfo:
     """学生信息"""
     name: str = ""
     student_id: str = ""
@@ -683,19 +688,19 @@ class StudentInfo:
     date: str = "2026年6月"
 
 
-def load_student_info_json() -> StudentInfo:
+def load_author_info_json() -> AuthorInfo:
     """从 config/student_info.json 加载学生配置，确保不硬编码隐私数据"""
     import os
     import json
     from src.config.runtime import resolve_path
     
-    default_info = StudentInfo()
+    default_info = AuthorInfo()
     try:
         config_path = resolve_path("config/student_info.json")
         if config_path.exists():
             with open(config_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return StudentInfo(
+                return AuthorInfo(
                     name=data.get("name", ""),
                     student_id=data.get("student_id", ""),
                     advisor=data.get("advisor", ""),
@@ -708,7 +713,7 @@ def load_student_info_json() -> StudentInfo:
     return default_info
 
 
-def save_student_info_json(student: StudentInfo) -> None:
+def save_author_info_json(student: AuthorInfo) -> None:
     """将学生学籍配置写入本地 config/student_info.json (已被 gitignore 忽略)"""
     import os
     import json
@@ -738,7 +743,7 @@ def scan_local_references() -> List[str]:
     import os
     from pathlib import Path
     from src.config.paths import ROOT_DIR, config
-    
+
     # Try config first
     path_val = config.get("data", {}).get("references_dir")
     if path_val:
@@ -747,12 +752,8 @@ def scan_local_references() -> List[str]:
             path = ROOT_DIR / path
         path = str(path)
     else:
-        # Fall back to default location in workspace or the legacy path
-        default_workspace_path = ROOT_DIR / "data" / "references"
-        if default_workspace_path.exists():
-            path = str(default_workspace_path)
-        else:
-            path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "参考文献")
+        # Fall back to workspace default
+        path = str(ROOT_DIR / "data" / "references")
 
     if os.path.exists(path):
         try:
@@ -765,9 +766,9 @@ def scan_local_references() -> List[str]:
     return []
 
 
-def assemble_thesis_docx(
+def assemble_report_docx(
     chapters: Dict[str, str],
-    student: Optional[StudentInfo] = None,
+    student: Optional[AuthorInfo] = None,
     abstract_cn: str = "",
     abstract_en: str = "",
     keywords_cn: str = "",
@@ -775,13 +776,13 @@ def assemble_thesis_docx(
     references: str = "",
     acknowledgments: str = "",
 ) -> io.BytesIO:
-    """组装完整的毕业设计答辩稿 .docx
+    """组装完整的项目设计报告 .docx
 
     Returns:
         BytesIO buffer 用于 st.download_button
     """
     if student is None:
-        student = StudentInfo()
+        student = AuthorInfo()
 
     doc = Document()
 
@@ -895,7 +896,7 @@ def assemble_thesis_docx(
     }
 
     last_chapter = 0
-    for sec in THESIS_CHAPTERS:
+    for sec in REPORT_CHAPTERS:
         text = chapters.get(sec.section_id, f"[未生成] {sec.title}")
 
         # 新章开始时添加章标题
@@ -983,7 +984,7 @@ def _all_chapters_text(chapters: Dict[str, str], max_chars: int = 5000) -> str:
     """拼接所有章节文本"""
     parts = []
     total = 0
-    for sec in THESIS_CHAPTERS:
+    for sec in REPORT_CHAPTERS:
         text = chapters.get(sec.section_id, "")
         if text:
             excerpt = text[:300]
@@ -1044,7 +1045,7 @@ def _extract_keywords_from_chapters(chapters: Dict[str, str]) -> str:
     from src.engines.llm_engine import call_llm_engine
 
     ctx = _all_chapters_text(chapters, 2000)
-    prompt = f"""请根据以下毕业设计内容，提取 3-5 个核心中文关键词（用分号分隔）。
+    prompt = f"""请根据以下项目设计内容，提取 3-5 个核心中文关键词（用分号分隔）。
 
 项目题目：《基于大模型与多模态AI的城市更新空间设计智能推演系统——以长春市宽城区伪满皇宫周边街区为例》
 
@@ -1123,7 +1124,7 @@ def _generate_references_from_chapters(chapters: Dict[str, str]) -> str:
     local_refs = scan_local_references()
     local_refs_str = "\n".join(f"- {f}" for f in local_refs) if local_refs else "无"
 
-    prompt = f"""请根据以下毕业设计内容，以及学生本地阅读的真实文献，生成至少 30 篇参考文献列表，严格遵循 GB/T 7714-2015 格式。
+    prompt = f"""请根据以下项目设计内容，以及学生本地阅读的真实文献，生成至少 30 篇参考文献列表，严格遵循 GB/T 7714-2015 格式。
 
 【学生本地阅读的真实文献】（你必须首先为以下真实文献文件名生成标准的 GB/T 7714-2015 学术文献条目，并排在整个参考文献的最前面）：
 {local_refs_str}
@@ -1152,15 +1153,22 @@ def _generate_references_from_chapters(chapters: Dict[str, str]) -> str:
     return result.strip() if result else "[1] 参考文献生成失败，请检查 LLM API。"
 
 
-def _generate_acknowledgments(student: StudentInfo) -> str:
+def _generate_acknowledgments(student: AuthorInfo) -> str:
     """生成致谢"""
     from src.engines.llm_engine import call_llm_engine
 
-    prompt = f"""请为一位吉林建筑大学城乡规划专业本科毕业生的毕业设计撰写致谢（约300-500字）。
+    from src.config.site import get_institution_info, get_project_info
+    inst = get_institution_info()
+    proj = get_project_info()
+    inst_name = inst.get("name", "项目单位")
+    inst_dept = inst.get("department", "")
+    proj_name = proj.get("name", "项目设计")
+
+    prompt = f"""请为{proj_name}撰写致谢（约300-500字）。
 
 要求：
 1. 感谢指导教师（{student.advisor}）的悉心指导
-2. 感谢同学、家人、学校
+2. 感谢团队成员、合作方
 3. 提及本设计使用的大模型与多模态AI技术辅助
 4. 感情真挚，避免过度夸张
 5. 不使用夸张的形容词堆砌
@@ -1171,4 +1179,5 @@ def _generate_acknowledgments(student: StudentInfo) -> str:
         system_prompt="你是一个致谢文本撰写工具。撰写简洁真挚的致谢，不要编造具体的人物对话、故事或场景。感情真挚但避免夸张和虚构。",
         model="deepseek-v4-pro",
     )
-    return result.strip() if result else f"感谢指导教师{student.advisor}的悉心指导，感谢吉林建筑大学建筑与规划学院的培养。"
+    fallback_inst = f"{inst_name}{inst_dept}" if inst_dept else inst_name
+    return result.strip() if result else f"感谢指导教师{student.advisor}的悉心指导，感谢{fallback_inst}的支持。"

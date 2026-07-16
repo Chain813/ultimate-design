@@ -47,7 +47,7 @@ def test_check_prompt_completeness_returns_report():
         drawing_name="区位分析图",
         drawing_type="研究范围类",
         aspect_ratio="A3横版",
-        output_scene="毕业设计图册",
+        output_scene="项目图册",
         uploaded_channels=[],
         main_expression="区位分析",
     )
@@ -66,7 +66,7 @@ def test_check_prompt_completeness_precision_levels():
         drawing_name="总平面图",
         drawing_type="总体规划类",
         aspect_ratio="A3横版",
-        output_scene="毕业设计图册",
+        output_scene="项目图册",
         uploaded_channels=[],
         main_expression="总平面",
     )
@@ -79,7 +79,7 @@ def test_check_prompt_completeness_precision_levels():
         drawing_name="封面",
         drawing_type="封面类",
         aspect_ratio="A3横版",
-        output_scene="毕业设计图册",
+        output_scene="项目图册",
         uploaded_channels=[],
         main_expression="封面设计",
     )
