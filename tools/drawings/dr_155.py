@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 # tools/drawings/dr_155.py
-from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 NO_FRAME = True
 
@@ -14,7 +14,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -72,7 +72,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         font_body = ImageFont.truetype(font_path, 18)
         font_body_bold = ImageFont.truetype(font_bold_path, 18)
         font_desc = ImageFont.truetype(font_path, 18)
-    except IOError:
+    except OSError:
         font_large_title = ImageFont.load_default()
         font_card_title = ImageFont.load_default()
         font_box_header = ImageFont.load_default()
@@ -181,7 +181,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         y_text = ch["y0"] + 40
         max_l = ch.get("max_lines", 2)
         if len(wrapped_sheets) > max_l:
-            wrapped_sheets = wrapped_sheets[:max_l - 1] + [wrapped_sheets[max_l - 1] + "...等"]
+            wrapped_sheets = [*wrapped_sheets[:max_l - 1], wrapped_sheets[max_l - 1] + "...等"]
         for ws in wrapped_sheets:
             draw.text((sx0 + 20, y_text), ws, fill=(71, 85, 105), font=font_body)
             y_text += 32

@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
+import math
 import os
 import sys
-import math
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 # Set up paths
@@ -23,7 +23,7 @@ def init_fonts():
         f_desc = ImageFont.truetype(font_path, 18)
         f_field = ImageFont.truetype(font_path, 14)
         f_field_bold = ImageFont.truetype(font_bold_path, 14)
-    except IOError:
+    except OSError:
         f_large_title = f_card_title = f_box_header = f_box_sub = f_body = f_body_bold = f_desc = f_field = f_field_bold = ImageFont.load_default()
     return f_large_title, f_card_title, f_box_header, f_box_sub, f_body, f_body_bold, f_desc, f_field, f_field_bold
 
@@ -56,7 +56,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -140,7 +140,7 @@ def generate_dr159():
     
     draw_grid_background(draw, W, H, cell_size=79.2)
     
-    f_large_title, f_card_title, f_box_header, f_box_sub, f_body, f_body_bold, f_desc, _, _ = init_fonts()
+    f_large_title, f_card_title, f_box_header, _f_box_sub, f_body, f_body_bold, f_desc, _, _ = init_fonts()
     
     draw_base_layout(
         draw,
@@ -270,7 +270,7 @@ def generate_dr160():
     
     draw_grid_background(draw, W, H, cell_size=79.2)
     
-    f_large_title, f_card_title, f_box_header, f_box_sub, f_body, f_body_bold, f_desc, _, _ = init_fonts()
+    f_large_title, f_card_title, f_box_header, _f_box_sub, f_body, f_body_bold, f_desc, _, _ = init_fonts()
     
     draw_base_layout(
         draw,
@@ -422,7 +422,7 @@ def generate_dr161():
     
     draw_grid_background(draw, W, H, cell_size=79.2)
     
-    f_large_title, f_card_title, f_box_header, f_box_sub, f_body, f_body_bold, f_desc, f_field, f_field_bold = init_fonts()
+    f_large_title, f_card_title, _f_box_header, _f_box_sub, _f_body, _f_body_bold, f_desc, f_field, f_field_bold = init_fonts()
     
     draw_base_layout(
         draw,

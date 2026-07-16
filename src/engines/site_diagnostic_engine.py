@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
-from src.config import SHP_FILES, DATA_FILES
+from src.config import DATA_FILES, SHP_FILES
 from src.config.runtime import resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")

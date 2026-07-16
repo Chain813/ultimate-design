@@ -10,9 +10,10 @@ import base64
 import json
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 from PIL import Image, ImageDraw
@@ -37,16 +38,16 @@ logger = logging.getLogger("ultimateDESIGN")
 class PipelineStep:
     """A single step in the SD rendering pipeline."""
     mode: str  # "txt2img" | "img2img" | "inpaint" | "upscale"
-    params: Dict[str, Any] = field(default_factory=dict)
-    controlnet_units: List[Dict[str, Any]] = field(default_factory=list)
+    params: dict[str, Any] = field(default_factory=dict)
+    controlnet_units: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass
 class SDResult:
     """Result from an SD pipeline execution."""
-    images: List[Any]  # list of PIL.Image.Image
+    images: list[Any]  # list of PIL.Image.Image
     seed: int
-    info: Dict[str, Any]
+    info: dict[str, Any]
     elapsed_seconds: float
 
 
@@ -88,7 +89,7 @@ def _load_config_aigc() -> dict:
     return config.get("engines", {}).get("aigc", {})
 
 
-def _parse_sd_response(data: dict) -> Tuple[Any, int, dict]:
+def _parse_sd_response(data: dict) -> tuple[Any, int, dict]:
     """Parse SD API response into (image, seed, info)."""
     image = _decode_image(data["images"][0])
     seed = data.get("seed", -1)
@@ -144,8 +145,8 @@ class SDPipeline:
         from src.config.user_settings import get_effective_setting
         self.base_url = base_url or get_effective_setting("SD_WEBUI_URL", aigc.get("sd_webui_url", "http://127.0.0.1:7860"))
         self.timeout = timeout or aigc.get("timeout", 180)
-        self._steps: List[PipelineStep] = []
-        self._current_step: Optional[PipelineStep] = None
+        self._steps: list[PipelineStep] = []
+        self._current_step: PipelineStep | None = None
 
     # ---- 4 rendering modes ----
 
@@ -229,7 +230,7 @@ class SDPipeline:
 
     # ---- Execution ----
 
-    def run(self, on_progress: Optional[Callable] = None) -> SDResult:
+    def run(self, on_progress: Callable | None = None) -> SDResult:
         """Execute all pipeline steps sequentially."""
         if not self._steps:
             raise ValueError("Pipeline has no steps -- call txt2img/img2img/inpaint/upscale first")

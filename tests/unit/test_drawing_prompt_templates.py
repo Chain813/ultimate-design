@@ -1,4 +1,5 @@
 import pytest
+
 from src.engines import drawing_prompt_templates as templates
 
 
@@ -49,7 +50,7 @@ def _manifest_for(asset_ids):
 def test_build_drawing_prompt_blocks_level_one_when_assets_missing(monkeypatch):
     monkeypatch.setattr(templates, "load_template_asset_manifest", lambda: {"version": 1, "assets": {}})
 
-    prompt, system_prompt = templates.build_drawing_prompt("道路交通系统规划图")
+    _prompt, _system_prompt = templates.build_drawing_prompt("道路交通系统规划图")
 
     pass
 

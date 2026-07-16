@@ -2,6 +2,7 @@
 import os
 import sys
 from pathlib import Path
+
 from PIL import Image, ImageFilter
 
 ROOT = Path(__file__).resolve().parent.parent

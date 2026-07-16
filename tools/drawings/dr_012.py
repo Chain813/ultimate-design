@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-from shapely.geometry import Point
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -234,7 +234,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, 67.8, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 

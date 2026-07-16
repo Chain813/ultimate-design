@@ -1,7 +1,8 @@
 import os
 import sys
-from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Adjust path to import config if run standalone
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -140,7 +141,7 @@ def generate_workflow_flowchart():
         draw.line([col_x - 15, 145, col_x + card_w + 15, 145], fill=scheme["stroke"], width=2)
         draw.text((col_x + 10, 112), meta["title"], fill=scheme["text"], font=col_title_font)
 
-    for node_id, node in NODES.items():
+    for _node_id, node in NODES.items():
         cx = COL_X[node["col"]] + card_w // 2
         row_idx = int(node["row"])
         frac = node["row"] - row_idx
@@ -190,7 +191,7 @@ def generate_workflow_flowchart():
     legend_y = 1080 - 30
     draw.text((40, legend_y), "图例分类: ", fill=(15, 23, 42), font=node_title_font)
     offset_x = 150
-    for key, val in COLOR_SCHEMES.items():
+    for _key, val in COLOR_SCHEMES.items():
         draw.rounded_rectangle([offset_x, legend_y - 2, offset_x + 20, legend_y + 12], radius=3, fill=val["fill"], outline=val["stroke"])
         draw.text((offset_x + 28, legend_y - 2), val["desc"], fill=(15, 23, 42), font=subtitle_font)
         offset_x += 240
@@ -650,7 +651,7 @@ def generate_atlas_chapters_mindmap():
 
         # Draw Backbone and connect it to the Chapter Card bottom-center
         if group_centers:
-            last_g_center_y, last_g_h = group_centers[-1]
+            last_g_center_y, _last_g_h = group_centers[-1]
             # Connect bottom-center of chapter card to top-center of backbone helper
             draw.line([(ch_x + ch_w // 2, ch_y + ch_h), (ch_x + ch_w // 2, 375), (backbone_x, 375), (backbone_x, 400)], fill=ch["stroke"], width=2)
             # Vertical backbone line

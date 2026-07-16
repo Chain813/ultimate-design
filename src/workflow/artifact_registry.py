@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Any
 
 from src.workflow.approval_state import ApprovalStatus, load_approval_record
@@ -53,7 +53,7 @@ def register_artifact(
         "version": version,
         "approval_status": approval.get("status", ApprovalStatus.DRAFT.value),
         "risk_level": approval.get("risk_level", "none"),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "metadata": metadata or {},
     }
     registry[artifact_id] = record

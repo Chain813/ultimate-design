@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
+import logging
 import os
 import re
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, List, Optional, Tuple
+
 import docx
-import logging
 
 logger = logging.getLogger("ultimateDESIGN")
 
-def load_document_from_draft() -> Tuple[Dict[str, str], Dict[str, str]]:
+def load_document_from_draft() -> tuple[dict[str, str], dict[str, str]]:
     """
     从本地桌面草稿提取文档内容。
     返回:

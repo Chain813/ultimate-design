@@ -1,11 +1,10 @@
-from html import escape
 import re
 import urllib.parse
+from html import escape
 
 import streamlit as st
 
 from src.ui.design_system import load_design_css
-
 
 CITY_DESIGN_STAGES = [
     {"code": "00", "title": "数据准备与任务解读", "focus": "上传项目原始数据、查阅获取教程、锁定研究范围与任务要求。"},

@@ -24,16 +24,21 @@ Usage:
 
 from __future__ import annotations
 
+import contextlib
 import io
 import logging
 import traceback
-from typing import Callable, Dict, List, Optional, Tuple
+from collections.abc import Callable
+from typing import Dict, List, Optional, Tuple
 
-from src.engines.llm_engine import call_llm_engine
 from src.engines.document_composer import (
-    REPORT_CHAPTERS, AuthorInfo,
-    build_document_context, generate_single_section, assemble_report_docx,
+    REPORT_CHAPTERS,
+    AuthorInfo,
+    assemble_report_docx,
+    build_document_context,
+    generate_single_section,
 )
+from src.engines.llm_engine import call_llm_engine
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -159,8 +164,7 @@ def _gen_case_benchmark(pc, lc, model="deepseek-v4-pro"):
     if _skip_if_exists("06", SK.CASE_BENCHMARK): lc("⏭️ 案例对标已存在"); return
 
     diag = ""
-    try: diag = str(_load("05", SK.DIAGNOSIS_REPORT, "") or "")[:2000]
-    except: pass
+    with contextlib.suppress(BaseException): diag = str(_load("05", SK.DIAGNOSIS_REPORT, "") or "")[:2000]
 
     spatial = _spatial(3000)
     prompt = f"""基于以下信息：
@@ -687,13 +691,13 @@ def _load(stage_code: str, key: str, default=None):
 # ═══════════════════════════════════════════════════════════════
 
 def run_light_pipeline(
-    student: Optional[AuthorInfo] = None,
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
-    log_callback: Optional[Callable[[str], None]] = None,
+    student: AuthorInfo | None = None,
+    progress_callback: Callable[[int, int, str], None] | None = None,
+    log_callback: Callable[[str], None] | None = None,
     model: str = "deepseek-v4-pro",
     enable_deai: bool = False,
     deai_intensity: float = 0.7,
-) -> Tuple[Dict[str, str], io.BytesIO]:
+) -> tuple[dict[str, str], io.BytesIO]:
     """轻量管道：基于已有 stage 数据，快速生成设计报告。
 
     步骤: 8个补充小节 → 27个论文章节 → [降AI处理] → docx 组装
@@ -732,7 +736,7 @@ def run_light_pipeline(
     # Step 2: 论文章节
     lc("\n📝 Phase 2/3: 生成论文章节 (27 节)")
     ctx = build_document_context()
-    chapters: Dict[str, str] = {}
+    chapters: dict[str, str] = {}
     for i, sec in enumerate(REPORT_CHAPTERS):
         pc(step + i, total_steps, f"论文 {sec.section_id} {sec.title}")
         try:
@@ -783,13 +787,13 @@ def run_light_pipeline(
 # ═══════════════════════════════════════════════════════════════
 
 def run_full_pipeline(
-    student: Optional[AuthorInfo] = None,
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
-    log_callback: Optional[Callable[[str], None]] = None,
+    student: AuthorInfo | None = None,
+    progress_callback: Callable[[int, int, str], None] | None = None,
+    log_callback: Callable[[str], None] | None = None,
     model: str = "deepseek-v4-pro",
     enable_deai: bool = False,
     deai_intensity: float = 0.7,
-) -> Tuple[Dict[str, str], io.BytesIO]:
+) -> tuple[dict[str, str], io.BytesIO]:
     """全流程管道：从空间数据出发，生成所有阶段报告 + 设计报告。
 
     步骤:
@@ -890,7 +894,7 @@ def run_full_pipeline(
     # ── 论文章节 ──
     lc("\n📝 生成论文章节 (27 节)")
     ctx = build_document_context()
-    chapters: Dict[str, str] = {}
+    chapters: dict[str, str] = {}
     for i, sec in enumerate(REPORT_CHAPTERS):
         pc(step + i, total_steps, f"论文 {sec.section_id} {sec.title}")
         try:

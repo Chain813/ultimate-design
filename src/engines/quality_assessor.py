@@ -24,15 +24,15 @@ class VisualScore:
     """Result from visual assessment."""
     score: float
     description: str
-    issues: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
 
 
 @dataclass
 class ContentScore:
     """Result from content assessment."""
     score: float
-    issues: List[str] = field(default_factory=list)
-    suggestions: List[str] = field(default_factory=list)
+    issues: list[str] = field(default_factory=list)
+    suggestions: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -42,8 +42,8 @@ class QualityReport:
     visual_score: float
     content_score: float
     combined_score: float
-    issue_types: List[str] = field(default_factory=list)
-    suggestions: List[str] = field(default_factory=list)
+    issue_types: list[str] = field(default_factory=list)
+    suggestions: list[str] = field(default_factory=list)
     raw_visual: str = ""
     raw_content: str = ""
 

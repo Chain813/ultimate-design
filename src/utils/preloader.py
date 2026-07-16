@@ -10,6 +10,7 @@ Usage:
 import logging
 import os
 import threading
+
 import streamlit as st
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -42,9 +43,9 @@ def _preload_light():
 
 def _preload_tier1():
     """Tier 1: 最高优先级 —— 大文件 GeoJSON 和模型加载。"""
-    from src.engines.spatial_engine import get_skyline_features, get_merged_poi_data
-    from src.engines.spatial_data_injector import get_landuse_summary
     from src.engines.site_diagnostic_engine import get_plot_diagnostics
+    from src.engines.spatial_data_injector import get_landuse_summary
+    from src.engines.spatial_engine import get_merged_poi_data, get_skyline_features
 
     _warm("get_merged_poi_data", get_merged_poi_data)
     _warm("get_skyline_features", get_skyline_features)
@@ -54,14 +55,14 @@ def _preload_tier1():
 
 def _preload_tier2():
     """Tier 2: 中优先级 —— 聚合统计和 RAG 模型。"""
-    from src.engines.spatial_engine import get_hud_statistics
-    from src.engines.spatial_data_injector import (
-        get_key_plots_summary,
-        get_building_summary,
-        get_poi_summary,
-        get_gvi_summary,
-    )
     from src.config.loader import load_global_config, load_rag_knowledge
+    from src.engines.spatial_data_injector import (
+        get_building_summary,
+        get_gvi_summary,
+        get_key_plots_summary,
+        get_poi_summary,
+    )
+    from src.engines.spatial_engine import get_hud_statistics
 
     _warm("load_global_config", load_global_config)
     _warm("load_rag_knowledge", load_rag_knowledge)
@@ -74,7 +75,7 @@ def _preload_tier2():
 
 def _preload_tier3():
     """Tier 3: RAG 嵌入模型（最重，放最后）。"""
-    from src.engines.rag_engine import load_bge_micro_model, get_cached_db_embeddings
+    from src.engines.rag_engine import get_cached_db_embeddings, load_bge_micro_model
 
     _warm("load_bge_micro_model", load_bge_micro_model)
     _warm("get_cached_db_embeddings", get_cached_db_embeddings)

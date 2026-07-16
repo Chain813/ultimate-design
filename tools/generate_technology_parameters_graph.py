@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import os
-import sys
 import shutil
-from PIL import Image, ImageDraw, ImageFont
+import sys
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Adjust path to import config if run standalone
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -27,7 +27,7 @@ def wrap_text_to_lines(text, font, max_width):
     
     def get_width(t):
         try:
-            left, top, right, bottom = font.getbbox(t)
+            left, _top, right, _bottom = font.getbbox(t)
             return right - left
         except AttributeError:
             return font.getsize(t)[0]
@@ -136,7 +136,7 @@ def draw_stage_group_scaled(draw, title, sub_cards, x0, y0, w_box, h_box, scheme
         
         for l_idx, line in enumerate(wrapped):
             try:
-                left, top, right, bottom = body_font.getbbox(line)
+                left, _top, right, _bottom = body_font.getbbox(line)
                 w_line = right - left
             except AttributeError:
                 w_line = body_font.getsize(line)[0]

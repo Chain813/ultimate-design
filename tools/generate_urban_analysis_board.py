@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generate six precise urban analysis diagrams from project GIS layers.
 
 The output intentionally avoids satellite-photo texture. It translates the
@@ -15,8 +14,8 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.font_manager as fm
-import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.patches import Circle, FancyArrowPatch, PathPatch, Rectangle
 from matplotlib.path import Path as MplPath

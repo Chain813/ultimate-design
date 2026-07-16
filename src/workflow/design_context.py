@@ -241,7 +241,7 @@ def synthesize_design_brief(ctx: DesignContext) -> str:
     return result
 
 
-def get_context_for_drawing(drawing_type: str, ctx: Optional[DesignContext] = None) -> dict:
+def get_context_for_drawing(drawing_type: str, ctx: DesignContext | None = None) -> dict:
     """根据图纸类型提取相关上下文子集。"""
     if ctx is None:
         ctx = build_design_context()
@@ -287,7 +287,7 @@ def get_context_for_drawing(drawing_type: str, ctx: Optional[DesignContext] = No
     return base
 
 
-def get_context_for_guideline(ctx: Optional[DesignContext] = None) -> dict:
+def get_context_for_guideline(ctx: DesignContext | None = None) -> dict:
     """提取导则生成所需的上下文。"""
     if ctx is None:
         ctx = build_design_context()

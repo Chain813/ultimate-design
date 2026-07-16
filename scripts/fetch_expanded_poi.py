@@ -11,11 +11,11 @@
     2. 运行: python scripts/fetch_expanded_poi.py
     3. 新数据将自动合并到 data/Changchun_POI_Real.csv
 """
+import json
+import math
 import os
 import sys
 import time
-import math
-import json
 from pathlib import Path
 
 # 项目根目录

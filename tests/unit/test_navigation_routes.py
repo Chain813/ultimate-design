@@ -1,6 +1,6 @@
-from pathlib import Path
 import re
 import urllib.parse
+from pathlib import Path
 
 
 def _streamlit_page_slugs():

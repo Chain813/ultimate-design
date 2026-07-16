@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 # tools/generate_list_diagrams.py
 import os
 import sys
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -32,7 +32,7 @@ def load_fonts():
             "formula": ImageFont.truetype(FONT_BOLD_PATH, 48),
             "formula_sub": ImageFont.truetype(FONT_PATH, 36),
         }
-    except IOError:
+    except OSError:
         default = ImageFont.load_default()
         fonts = {k: default for k in ["large_title","card_title","box_header","body","body_bold","desc","code","code_bold","badge","formula","formula_sub"]}
     return fonts
@@ -43,7 +43,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
     
     def get_width(t):
         try:
-            left, top, right, bottom = font.getbbox(t)
+            left, _top, right, _bottom = font.getbbox(t)
             return right - left
         except AttributeError:
             return font.getsize(t)[0]
@@ -403,7 +403,7 @@ def generate_formulas_sheet():
             fits = True
             for fl in f_lines:
                 try:
-                    left, top, right, bottom = temp_font.getbbox(fl)
+                    left, _top, right, _bottom = temp_font.getbbox(fl)
                     w = right - left
                 except AttributeError:
                     w = temp_font.getsize(fl)[0]

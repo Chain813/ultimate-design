@@ -1,14 +1,18 @@
 import json
 import os
+
 import pandas as pd
 import streamlit as st
+
 try:
     import streamlit.components.v1 as components
 except ModuleNotFoundError:
     components = st.components.v1
 from pathlib import Path
-from src.config import get_static_url, get_map_viewport, DATA_FILES, GIS_FILES
-from src.engines.spatial_engine import get_hud_statistics, get_skyline_features, get_merged_poi_data
+
+from src.config import DATA_FILES, GIS_FILES, get_map_viewport, get_static_url
+from src.engines.spatial_engine import get_hud_statistics, get_merged_poi_data, get_skyline_features
+
 
 @st.cache_data(ttl=3600, max_entries=20)
 def load_map_data(file_path):
@@ -197,8 +201,9 @@ def render_digital_twin_map(height=650, key_suffix=""):
             quality_elev = st.slider("柱体拉伸倍数", 1, 150, 10, key=f"map_qelev_{key_suffix}")
 
         try:
-            from src.engines.spatial_engine import get_spatial_data
             import math
+
+            from src.engines.spatial_engine import get_spatial_data
             df_3d = get_spatial_data().copy()
             
             metric_map = {
@@ -239,7 +244,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
                     "radius": quality_rad
                 })
         except Exception as e:
-            st.error(f"加载空间品质数据失败: {str(e)}")
+            st.error(f"加载空间品质数据失败: {e!s}")
 
     # 2. 填充模板
     try:
@@ -273,4 +278,4 @@ def render_digital_twin_map(height=650, key_suffix=""):
         </style>""", unsafe_allow_html=True)
         components.html(html_template, height=height, scrolling=False)
     except Exception as e:
-        st.error(f"地图组件核心加载失败: {str(e)}")
+        st.error(f"地图组件核心加载失败: {e!s}")

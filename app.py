@@ -30,6 +30,7 @@ from src.ui.design_system import (
 from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
 from src.utils.service_check import check_engine_status
 
+
 def get_page_route(page_path):
     """将文件路径转换为 Streamlit 路由 URL"""
     name = os.path.basename(page_path)
@@ -354,6 +355,8 @@ render_skyline_hud()
 # ==========================================
 # 📊 数据就绪状态
 # ==========================================
+import contextlib
+
 from src.data import get_data_readiness
 
 readiness = get_data_readiness()
@@ -376,10 +379,8 @@ with c2:
         from src.workflow.stage_data_bus import _get_cache_path
         cache_file = _get_cache_path()
         if cache_file.exists():
-            try:
+            with contextlib.suppress(Exception):
                 cache_file.unlink()
-            except Exception:
-                pass
         if "stage_bus" in st.session_state:
             del st.session_state["stage_bus"]
         st.toast("✅ 缓存已清空，系统焕然一新！")

@@ -7,24 +7,28 @@ GVI绿视率、MPI排行等，生成覆盖全域的、落到空间上的设计�
 """
 
 from pathlib import Path
+
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
+
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.spatial_data_injector import (
     get_full_spatial_context,
-    get_landuse_summary,
-    get_poi_summary,
     get_gvi_summary,
     get_key_plots_summary,
+    get_landuse_summary,
+    get_poi_summary,
 )
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
-from src.workflow import resolve_subpage_value
-from src.workflow.stage_keys import SK
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
+from src.workflow import resolve_subpage_value
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
+from src.workflow.stage_keys import SK
 
 st.set_page_config(page_title="06 目标定位", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()

@@ -1,36 +1,38 @@
 """Stage 07: structured page renderer for strategy negotiation."""
 
 import base64
-import time
 import re
+import time
 from pathlib import Path
 
 import streamlit as st
+
 try:
     import streamlit.components.v1 as components
 except ModuleNotFoundError:
     components = st.components.v1
-from src.ui.design_system import render_page_banner, render_section_intro
-from src.ui.chart_theme import apply_plotly_polar_theme
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import generate_policy_matrix
 from src.engines.spatial_data_injector import (
     get_full_spatial_context,
-    get_landuse_summary,
     get_key_plots_summary,
+    get_landuse_summary,
 )
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage07_strategy.config import STAGE07_WORKSPACE
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
-from src.workflow.approval_state import record_policy_review
-from src.workflow.stage_keys import SK
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.chart_theme import apply_plotly_polar_theme
+from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.module_summary import render_stage_summary
 from src.ui.persistent_outputs import register_report_output
 from src.ui.streamlit_compat import stretch_width
-
+from src.workflow.approval_state import record_policy_review
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
+from src.workflow.stage_keys import SK
 
 graphic_svg = """
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 200" width="100%" height="100%" style="max-width: 600px; filter: drop-shadow(0 8px 16px rgba(0,0,0,0.04));">
@@ -184,7 +186,7 @@ def render_page() -> None:
         def _render_dialogue_static(name: str, thinking: str, formal: str, round_label: str):
             # 兼容性：模糊匹配名称，加载正确的配色和头像
             norm_name = name
-            for k in _color_map.keys():
+            for k in _color_map:
                 if k in name or name in k or re.sub(r'[^\w\u4e00-\u9fa5]', '', k) == re.sub(r'[^\w\u4e00-\u9fa5]', '', name):
                     norm_name = k
                     break
@@ -491,11 +493,11 @@ def render_page() -> None:
                         parsed = parse_llm_json(resp, fallback=None)
                         if parsed and isinstance(parsed, dict):
                             valid = True
-                            for k in scores.keys():
+                            for k in scores:
                                 if k not in parsed or not isinstance(parsed[k], (int, float)):
                                     valid = False
                             if valid:
-                                return {k: min(100.0, max(0.0, float(parsed[k]))) for k in scores.keys()}
+                                return {k: min(100.0, max(0.0, float(parsed[k]))) for k in scores}
                     except Exception:
                         pass
 
@@ -582,7 +584,7 @@ def render_page() -> None:
                 def _render_dialogue_streaming(ph, name: str, thinking: str, formal: str, round_label: str):
                     # 兼容性：模糊匹配名称，加载正确的配色和头像
                     norm_name = name
-                    for k in _color_map.keys():
+                    for k in _color_map:
                         if k in name or name in k or re.sub(r'[^\w\u4e00-\u9fa5]', '', k) == re.sub(r'[^\w\u4e00-\u9fa5]', '', name):
                             norm_name = k
                             break
@@ -721,8 +723,8 @@ def render_page() -> None:
                     register_report_output(label="策略共识矩阵", content=summary, stage_code="07", key="strategy_matrix")
                     # 自动重新生成重放网页与示意图成果
                     try:
-                        from scripts.generate_negotiation_replay import main as generate_replay
                         from scripts.generate_negotiation_infographic import main as generate_infographic
+                        from scripts.generate_negotiation_replay import main as generate_replay
                         generate_replay()
                         generate_infographic()
                     except Exception as e:
@@ -756,8 +758,8 @@ def render_page() -> None:
             import plotly.graph_objects as go
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
-                r=list(voting.values()) + [list(voting.values())[0]],
-                theta=list(voting.keys()) + [list(voting.keys())[0]],
+                r=[*list(voting.values()), next(iter(voting.values()))],
+                theta=[*list(voting.keys()), next(iter(voting.keys()))],
                 fill="toself",
                 fillcolor="rgba(99,102,241,0.15)",
                 line=dict(color="#818cf8", width=2),

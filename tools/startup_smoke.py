@@ -1,8 +1,7 @@
 """Minimal startup smoke checks for CI."""
 
-from pathlib import Path
 import py_compile
-
+from pathlib import Path
 
 TARGETS = [
     "app.py",

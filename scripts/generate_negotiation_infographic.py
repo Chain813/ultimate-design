@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """scripts/generate_negotiation_infographic.py
 
 Generates a high-resolution 1920x1080 infographic card summarizing the 
@@ -6,13 +5,14 @@ multi-agent planning negotiation process, saved to static/negotiation_infographi
 Now with white-mode layout, grid background, and dynamic text alignment.
 """
 
-import os
 import json
+import os
 import re
 import sys
 from pathlib import Path
-import matplotlib.pyplot as plt
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle
 
 # Add project root to path
@@ -179,7 +179,7 @@ def main():
         r_dialogues = rounds_data.get(r_name, [])
         y_cursor = 0.19  # Starts near top of box
         
-        for p_idx, player in enumerate(r_dialogues[:3]):
+        for _p_idx, player in enumerate(r_dialogues[:3]):
             name_clean = player["name"].split("（")[0]
             p_color = color_gold if "居民" in name_clean else (color_emerald if "文旅" in name_clean else color_indigo)
             

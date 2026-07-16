@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generate dense technical diagrams for A1 exhibition board 01."""
 from __future__ import annotations
 
@@ -6,7 +5,6 @@ from pathlib import Path
 from textwrap import wrap
 
 from PIL import Image, ImageDraw, ImageFont
-
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "static" / "exhibition_boards" / "tech_diagrams"

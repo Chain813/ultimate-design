@@ -1,6 +1,8 @@
 import os
 import sys
+
 from PIL import Image, ImageDraw, ImageFont
+
 from src.config.paths import STATIC_DIR
 
 # Output Directory

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
-
+from typing import Any, Optional
 
 from src.engines.drawing_prompt_engine import (
     CompletenessReport,
@@ -15,12 +15,12 @@ from src.engines.drawing_prompt_engine import (
     get_drawing_profile,
     revise_prompt_by_rating,
 )
-from src.engines.quality_assessor import QualityAssessor
 from src.engines.drawing_prompt_templates import (
     build_drawing_prompt,
     generate_drawing_prompt_with_llm,
     get_or_create_template,
 )
+from src.engines.quality_assessor import QualityAssessor
 from src.engines.stable_diffusion_engine import SDPipeline, SDResult
 from src.workflow.stage_data_bus import save_stage_output
 from src.workflow.stage_keys import SK
@@ -56,7 +56,7 @@ class DrawingPipeline:
         self.sd = sd_pipeline or SDPipeline()
 
     def generate_single(self, template_name: str, mode: str = "auto",
-                        on_progress: Optional[Callable] = None) -> PipelineResult:
+                        on_progress: Callable | None = None) -> PipelineResult:
         """Generate a single drawing end-to-end."""
         report = self._validate_assets(template_name)
         if not report.can_generate:
@@ -115,7 +115,7 @@ class DrawingPipeline:
         )
 
     def generate_batch(self, template_names: list[str], mode: str = "auto",
-                       on_progress: Optional[Callable] = None) -> list[PipelineResult]:
+                       on_progress: Callable | None = None) -> list[PipelineResult]:
         """Generate multiple drawings sequentially."""
         results = []
         total = len(template_names)
@@ -129,7 +129,7 @@ class DrawingPipeline:
         return results
 
     def render_only(self, template_name: str, prompt: str,
-                    on_progress: Optional[Callable] = None) -> PipelineResult:
+                    on_progress: Callable | None = None) -> PipelineResult:
         """Render a pre-confirmed prompt (for confirm mode)."""
         try:
             profile = get_drawing_profile(template_name)
@@ -155,7 +155,7 @@ class DrawingPipeline:
         self,
         template_name: str,
         max_retries: int = 2,
-        on_progress: Optional[Callable] = None,
+        on_progress: Callable | None = None,
     ) -> PipelineResult:
         """Generate -> assess -> revise -> regenerate until A/B or max retries."""
         assessor = QualityAssessor()
@@ -194,7 +194,7 @@ class DrawingPipeline:
         return check_prompt_completeness(request, profile)
 
     def _generate_prompt(self, template_name: str) -> str:
-        prompt, sys_prompt = build_drawing_prompt(template_name)
+        prompt, _sys_prompt = build_drawing_prompt(template_name)
         if not prompt:
             raise TemplateNotFoundError(f"Template not found: {template_name}")
         if "暂不生成最终 Image 2.0 提示词" in prompt:
@@ -237,6 +237,7 @@ class DrawingPipeline:
         """
         try:
             from PIL import Image as _PILImage
+
             from src.config import DATA_DIR
             from src.workflow.template_assets import load_template_asset_manifest
 
@@ -280,6 +281,7 @@ class DrawingPipeline:
         """
         try:
             from PIL import Image as _PILImage
+
             from src.config import DATA_DIR
             from src.workflow.template_assets import load_template_asset_manifest
 

@@ -3,21 +3,23 @@
 import logging
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
-from src.engines.llm_engine import call_llm_engine_stream, call_llm_engine
+
+from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
 from src.engines.spatial_data_injector import get_full_spatial_context
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage12_guideline.config import STAGE12_WORKSPACE
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.module_summary import render_stage_summary
+from src.ui.streamlit_compat import stretch_width
 from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.artifact_registry import register_artifact
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
 from src.workflow.stage_keys import SK
-from src.ui.streamlit_compat import stretch_width
-
 
 GUIDELINE_SECTIONS = [
     {
@@ -297,6 +299,7 @@ def render_page() -> None:
 
         import pandas as pd
         import plotly.express as px
+
         from src.config import SHP_FILES
 
         @st.cache_data(ttl=3600, max_entries=20)

@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 import sys
+
 import win32com.client
 from PIL import Image
 
@@ -11,6 +11,7 @@ USER_HOME = os.path.expanduser("~")
 DOC_PATH = os.path.join(USER_HOME, "Desktop", "项目文档", "项目周志.doc")
 BACKUP_PATH = os.path.join(USER_HOME, "Desktop", "项目文档", "项目周志_backup.doc")
 from src.config.runtime import resolve_path
+
 ATLAS_DIR = str(resolve_path("static/atlas"))
 
 # We group shapes by week. For each week, we delete all shapes and insert the two images side-by-side

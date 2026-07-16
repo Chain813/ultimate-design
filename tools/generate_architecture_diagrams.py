@@ -1,6 +1,7 @@
 import os
-import matplotlib.pyplot as plt
+
 import matplotlib.patches as patches
+import matplotlib.pyplot as plt
 
 # Ensure Chinese characters are rendered correctly
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
@@ -19,7 +20,7 @@ C_WARN = "#DC3545"
 C_OK = "#28A745"
 
 def draw_system_architecture():
-    fig, ax = plt.subplots(figsize=(10, 6.5), dpi=300)
+    _fig, ax = plt.subplots(figsize=(10, 6.5), dpi=300)
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 8)
     ax.axis('off')
@@ -87,7 +88,7 @@ def draw_system_architecture():
     print("Generated system_architecture.png")
 
 def draw_negotiation_workflow():
-    fig, ax = plt.subplots(figsize=(8, 5.5), dpi=300)
+    _fig, ax = plt.subplots(figsize=(8, 5.5), dpi=300)
     ax.set_xlim(0, 8)
     ax.set_ylim(0, 6)
     ax.axis('off')
@@ -142,7 +143,7 @@ def draw_negotiation_workflow():
     print("Generated negotiation_workflow.png")
 
 def draw_compliance_audit_flow():
-    fig, ax = plt.subplots(figsize=(8, 5), dpi=300)
+    _fig, ax = plt.subplots(figsize=(8, 5), dpi=300)
     ax.set_xlim(0, 8)
     ax.set_ylim(0, 5)
     ax.axis('off')

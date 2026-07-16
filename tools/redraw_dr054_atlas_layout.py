@@ -1,13 +1,11 @@
-# -*- coding: utf-8 -*-
 """Redraw DR-054 with the standard atlas sheet layout and custom map code."""
 from __future__ import annotations
 
+import shutil
 from io import BytesIO
 from pathlib import Path
-import shutil
 
 from PIL import Image, ImageDraw, ImageFont
-
 
 ROOT = Path(__file__).resolve().parent.parent
 ATLAS_DIR = ROOT / "static" / "atlas"

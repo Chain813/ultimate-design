@@ -1,7 +1,8 @@
 import sys
+
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-from src.engines.nlp_engine import classify_sentiment, _load_sentiment_lexicon
+from src.engines.nlp_engine import _load_sentiment_lexicon, classify_sentiment
 
 
 def test_load_sentiment_lexicon_returns_frozensets():
@@ -28,7 +29,7 @@ def test_classify_sentiment_negative():
 
 def test_classify_sentiment_neutral():
     texts = ["今天天气还可以"]
-    labels, scores = classify_sentiment(texts)
+    labels, _scores = classify_sentiment(texts)
     assert labels[0] == "neutral"
 
 
@@ -41,6 +42,6 @@ def test_classify_sentiment_returns_all_three_labels():
 
 def test_classify_sentiment_scores_in_range():
     texts = ["环境特别差，非常破旧", "非常满意，很舒适漂亮"]
-    labels, scores = classify_sentiment(texts)
+    _labels, scores = classify_sentiment(texts)
     for s in scores:
         assert -1.0 <= s <= 1.0

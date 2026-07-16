@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
 from pathlib import Path
@@ -207,7 +206,7 @@ def rename_atlas_files():
     
     # First, collect all files recursively
     all_files = []
-    for root_dir, dirs, files in os.walk(str(ATLAS_DIR)):
+    for root_dir, _dirs, files in os.walk(str(ATLAS_DIR)):
         for f in files:
             if f.lower().endswith(".png"):
                 full_path = Path(root_dir) / f

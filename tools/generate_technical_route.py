@@ -1,8 +1,8 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
-from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Adjust path to import config if run standalone
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -26,7 +26,7 @@ def wrap_text_to_lines(text, font, max_width):
     
     def get_width(t):
         try:
-            left, top, right, bottom = font.getbbox(t)
+            left, _top, right, _bottom = font.getbbox(t)
             return right - left
         except AttributeError:
             return font.getsize(t)[0]
@@ -101,7 +101,7 @@ def draw_card_node(draw, x0, y0, x1, y1, text, scheme, font, scale, is_category=
     
     for i, line in enumerate(wrapped_lines):
         try:
-            left, top, right, bottom = font.getbbox(line)
+            left, _top, right, _bottom = font.getbbox(line)
             w_line = right - left
         except AttributeError:
             w_line = font.getsize(line)[0]

@@ -9,13 +9,19 @@ import streamlit as st
 
 from src.config import DATA_DIR, DOCS_DIR, META_DIR
 from src.data import DATA_CATEGORIES, check_data_exists, get_data_readiness, get_data_size
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_data_pipeline, render_mission_decoding_hud
 from src.ui.app_shell import render_top_nav
+from src.ui.design_system import (
+    render_data_pipeline,
+    render_mission_decoding_hud,
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
 from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
-from src.workflow.stage_data_bus import save_stage_output, render_evidence_chain_bar
-from src.workflow import resolve_subpage_value
 from src.utils.text_io import read_text_with_fallback
+from src.workflow import resolve_subpage_value
+from src.workflow.stage_data_bus import render_evidence_chain_bar, save_stage_output
 
 st.set_page_config(page_title="00 数据准备与任务解读", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()
@@ -343,33 +349,32 @@ elif selected_sub == "📋 项目概况与任务要求":
 
     # 任务书与开题报告
     col1, col2 = st.columns(2)
-    with col1:
-        with st.container(border=True):
-            st.markdown("#### 📕 毕业设计任务书")
-            st.caption("官方下发的设计要求与边界限定文件。")
-            if TASK_BOOK_PATH.exists():
-                st.download_button(
-                    "📥 下载任务书 PDF",
-                    TASK_BOOK_PATH.read_bytes(),
-                    file_name=TASK_BOOK_PATH.name,
-                    mime="application/pdf",
-                    type="primary",
-                    **stretch_width(st.download_button),
-                )
-            else:
-                st.warning("未找到任务书文件。")
+    with col1, st.container(border=True):
+        st.markdown("#### 📕 毕业设计任务书")
+        st.caption("官方下发的设计要求与边界限定文件。")
+        if TASK_BOOK_PATH.exists():
+            st.download_button(
+                "📥 下载任务书 PDF",
+                TASK_BOOK_PATH.read_bytes(),
+                file_name=TASK_BOOK_PATH.name,
+                mime="application/pdf",
+                type="primary",
+                **stretch_width(st.download_button),
+            )
+        else:
+            st.warning("未找到任务书文件。")
 
-            mission_path = META_DIR / "mission_text.txt"
-            if mission_path.exists():
-                mission_text = read_text_with_fallback(mission_path)
-                with st.expander("👁️ 查看任务书核心摘录", expanded=True):
-                    st.markdown(
-                        f'''<div style="font-size:13px; color:#48484a; line-height:1.6;
+        mission_path = META_DIR / "mission_text.txt"
+        if mission_path.exists():
+            mission_text = read_text_with_fallback(mission_path)
+            with st.expander("👁️ 查看任务书核心摘录", expanded=True):
+                st.markdown(
+                    f'''<div style="font-size:13px; color:#48484a; line-height:1.6;
                         max-height:280px; overflow-y:auto; padding:12px;
                         background:rgba(0,0,0,0.03); border-radius:8px; border: 1px solid rgba(0,0,0,0.08);">
                         {mission_text[:1800].replace(chr(10), "<br>")}</div>''',
-                        unsafe_allow_html=True
-                    )
+                    unsafe_allow_html=True
+                )
 
     with col2:
         with st.container(border=True):

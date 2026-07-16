@@ -682,10 +682,7 @@ class SunshineDataFetcher:
         altitude_rad = math.radians(sun["altitude"])
 
         # 阴影长度
-        if sun["altitude"] > 0:
-            shadow_length = building_height / math.tan(altitude_rad)
-        else:
-            shadow_length = float("inf")
+        shadow_length = building_height / math.tan(altitude_rad) if sun["altitude"] > 0 else float("inf")
 
         # 判断是否满足日照标准 (冬至日满窗日照≥2小时)
         # 简化判断：阴影长度是否小于建筑间距

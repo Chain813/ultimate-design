@@ -1,12 +1,13 @@
-# -*- coding: utf-8 -*-
 # tools/drawings/dr_075.py
-import os
+import contextlib
 import json
-from PIL import Image, ImageDraw, ImageFont
-import matplotlib.pyplot as plt
-import geopandas as gpd
+import os
 from pathlib import Path
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
 from matplotlib.font_manager import FontProperties
+from PIL import Image, ImageDraw, ImageFont
 from shapely.geometry import Point
 
 # Disable Matplotlib GUI warnings
@@ -23,7 +24,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -79,7 +80,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         font_body_bold = ImageFont.truetype(font_bold_path, 13)
         font_desc = ImageFont.truetype(font_path, 14)
         font_stamp = ImageFont.truetype(font_path, 12)
-    except IOError:
+    except OSError:
         font_large_title = ImageFont.load_default()
         font_card_title = ImageFont.load_default()
         font_box_header = ImageFont.load_default()
@@ -177,9 +178,10 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     
     # Floating Windrose (Pure Black, 12% size) with soft white radial gradient backdrop
     try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
         from pathlib import Path as _Path
+
+        import numpy as _np
+        from PIL import Image as _PIL_Image
         _rose_path = _Path("assets/长春市风玫瑰.png")
         if _rose_path.exists():
             _ax_rose = fig_map.add_axes([0.85, 0.85, 0.12, 0.12], facecolor='none', zorder=10)
@@ -209,10 +211,8 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     map_insert = Image.open(temp_img_path)
     map_insert_resized = map_insert.resize((1200, 1200), Image.Resampling.LANCZOS)
     img.paste(map_insert_resized, (70, 290))
-    try:
+    with contextlib.suppress(Exception):
         os.remove(temp_img_path)
-    except Exception:
-        pass
 
     # Coordinate mapping from projected EPSG:3857 to PIL pixel coordinates inside map_insert_resized
     def get_pixel_pos(x, y):
@@ -396,10 +396,8 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
     radar_img = Image.open(temp_radar_path)
     radar_img_resized = radar_img.resize((480, 480), Image.Resampling.LANCZOS)
     img.paste(radar_img_resized, (1380, 920))
-    try:
+    with contextlib.suppress(Exception):
         os.remove(temp_radar_path)
-    except Exception:
-        pass
 
     # ── Text Description Box (Right of Radar Chart inside bottom card, aligned to X: 1895) ──
     y_info = 940

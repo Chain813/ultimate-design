@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-
 
 ROOT = Path(__file__).resolve().parents[1]
 REALESRGAN_DIR = ROOT / "tools" / "realesrgan-ncnn-vulkan"

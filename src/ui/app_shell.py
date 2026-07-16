@@ -1,11 +1,16 @@
-import streamlit as st
 from html import escape
 from pathlib import Path
-from src.workflow.city_design_workflow import (
-    WORKFLOW_BOARDS, STAGE_LOOKUP, STAGE_MODULE_MAP, stage_primary_href,
-)
+
+import streamlit as st
+
 from src.ui.persistent_outputs import render_persistent_output_bar
 from src.utils.service_check import check_engine_status
+from src.workflow.city_design_workflow import (
+    STAGE_LOOKUP,
+    STAGE_MODULE_MAP,
+    WORKFLOW_BOARDS,
+    stage_primary_href,
+)
 
 
 def _build_nav_tree():
@@ -181,7 +186,7 @@ def render_scrolling_control():
 
 
 def render_copilot_sidebar():
-    from src.engines.copilot_engine import init_copilot_state, get_copilot_response
+    from src.engines.copilot_engine import get_copilot_response, init_copilot_state
     init_copilot_state()
     with st.sidebar:
         st.markdown("### 💬 AI 规划助手")
@@ -455,41 +460,46 @@ def render_presentation_toggle():
 
 def render_settings_panel():
     from src.config.user_settings import load_user_settings, save_user_settings
-    with st.sidebar:
-        with st.expander("⚙️ 系统设置", expanded=False):
-            settings = load_user_settings()
-            
-            # Form for settings editing
-            new_settings = {}
-            new_settings["DEEPSEEK_API_KEY"] = st.text_input(
-                "DeepSeek API 密钥",
-                value=settings.get("DEEPSEEK_API_KEY", ""),
-                type="password",
-                help="用于连接 DeepSeek API，输入后点击保存生效。"
-            )
-            new_settings["LLM_API_URL"] = st.text_input(
-                "大模型接口地址",
-                value=settings.get("LLM_API_URL", ""),
-                help="如果使用中转或自定义 API 接口，请在此修改。"
-            )
-            new_settings["SD_WEBUI_URL"] = st.text_input(
-                "SD WebUI 地址",
-                value=settings.get("SD_WEBUI_URL", ""),
-                help="Stable Diffusion WebUI 本地服务端口 (默认 7860)"
-            )
-            new_settings["OLLAMA_URL"] = st.text_input(
-                "Ollama 地址",
-                value=settings.get("OLLAMA_URL", ""),
-                help="Ollama 本地大模型接口地址 (默认 11434)"
-            )
-            
-            if st.button("💾 保存配置", key="save_settings_btn", use_container_width=True):
-                if save_user_settings(new_settings):
-                    st.success("配置已保存，已自动应用于系统环境变量！")
-                    st.rerun()
-                else:
-                    st.error("配置保存失败，请检查写入权限。")
+    with st.sidebar, st.expander("⚙️ 系统设置", expanded=False):
+        settings = load_user_settings()
+        
+        # Form for settings editing
+        new_settings = {}
+        new_settings["DEEPSEEK_API_KEY"] = st.text_input(
+            "DeepSeek API 密钥",
+            value=settings.get("DEEPSEEK_API_KEY", ""),
+            type="password",
+            help="用于连接 DeepSeek API，输入后点击保存生效。"
+        )
+        new_settings["LLM_API_URL"] = st.text_input(
+            "大模型接口地址",
+            value=settings.get("LLM_API_URL", ""),
+            help="如果使用中转或自定义 API 接口，请在此修改。"
+        )
+        new_settings["SD_WEBUI_URL"] = st.text_input(
+            "SD WebUI 地址",
+            value=settings.get("SD_WEBUI_URL", ""),
+            help="Stable Diffusion WebUI 本地服务端口 (默认 7860)"
+        )
+        new_settings["OLLAMA_URL"] = st.text_input(
+            "Ollama 地址",
+            value=settings.get("OLLAMA_URL", ""),
+            help="Ollama 本地大模型接口地址 (默认 11434)"
+        )
+        
+        if st.button("💾 保存配置", key="save_settings_btn", use_container_width=True):
+            if save_user_settings(new_settings):
+                st.success("配置已保存，已自动应用于系统环境变量！")
+                st.rerun()
+            else:
+                st.error("配置保存失败，请检查写入权限。")
 
 
-from src.ui.chart_theme import CHART_PALETTE, apply_plotly_polar_theme, apply_plotly_theme, get_chart_palette, rgba_from_hex  # noqa: E402,F401
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards  # noqa: E402,F401
+from src.ui.chart_theme import (
+    CHART_PALETTE,
+    apply_plotly_polar_theme,
+    apply_plotly_theme,
+    get_chart_palette,
+    rgba_from_hex,
+)
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards

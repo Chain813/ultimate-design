@@ -6,14 +6,15 @@ if str(root) not in sys.path:
     sys.path.append(str(root))
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
+from unittest.mock import MagicMock, patch
+
 import requests
-from unittest.mock import patch, MagicMock
 
 from src.engines.sd_exceptions import (
-    SDEngineError,
-    SDConnectionError,
-    SDTimeoutError,
     SDAPIError,
+    SDConnectionError,
+    SDEngineError,
+    SDTimeoutError,
     SDVRAMError,
 )
 
@@ -37,9 +38,10 @@ def test_sd_exceptions_are_catchable():
             raise AssertionError(f"{cls.__name__} was not raised")
 
 
-from PIL import Image
 import base64
 from io import BytesIO
+
+from PIL import Image
 
 
 def test_pipeline_step_defaults():
@@ -279,7 +281,7 @@ def test_upscale_without_image_raises():
 
 @patch("src.engines.stable_diffusion_engine.requests.post")
 def test_retry_on_connection_error(mock_post):
-    from src.engines.stable_diffusion_engine import SDPipeline, SDConnectionError
+    from src.engines.stable_diffusion_engine import SDConnectionError, SDPipeline
     mock_post.side_effect = requests.exceptions.ConnectionError("refused")
     pipe = SDPipeline(base_url="http://test:7860")
     pipe.txt2img(prompt="t", negative_prompt="b", width=64, height=64)
@@ -320,7 +322,7 @@ def test_timeout_raises_sdtimeouterror(mock_post):
 
 @patch("src.engines.stable_diffusion_engine.requests.post")
 def test_api_error_raises_sdapierror(mock_post):
-    from src.engines.stable_diffusion_engine import SDPipeline, SDAPIError
+    from src.engines.stable_diffusion_engine import SDAPIError, SDPipeline
     fail_resp = MagicMock()
     fail_resp.status_code = 500
     fail_resp.text = "Internal Server Error"

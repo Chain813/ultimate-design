@@ -8,24 +8,26 @@ import pandas as pd
 import streamlit as st
 
 from src.config import SHP_FILES
-from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.llm_engine import call_llm_engine_stream
+from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
-from src.ui.chart_theme import apply_plotly_theme, apply_plotly_polar_theme, get_chart_palette
-from src.ui.design_system import (
-    render_page_banner, render_section_intro, render_summary_cards,
-    render_analysis_pipeline_hud, render_diagnosis_pipeline_hud,
-)
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
-from src.ui.module_summary import render_stage_summary
-from src.ui.streamlit_compat import stretch_width
-from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
-from src.workflow.stage_keys import SK
-from src.ui.persistent_outputs import register_report_output, register_output
-
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage04_diagnosis.config import STAGE04_WORKSPACE
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.chart_theme import apply_plotly_polar_theme, apply_plotly_theme, get_chart_palette
+from src.ui.design_system import (
+    render_analysis_pipeline_hud,
+    render_diagnosis_pipeline_hud,
+    render_page_banner,
+    render_section_intro,
+    render_summary_cards,
+)
+from src.ui.digital_twin import render_digital_twin_map, render_skyline_hud
+from src.ui.module_summary import render_stage_summary
+from src.ui.persistent_outputs import register_output, register_report_output
+from src.ui.streamlit_compat import stretch_width
+from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar, save_stage_output
+from src.workflow.stage_keys import SK
 
 
 def render_page() -> None:
@@ -224,8 +226,8 @@ def render_page() -> None:
             import plotly.graph_objects as go
             fig = go.Figure()
             fig.add_trace(go.Scatterpolar(
-                r=values + [values[0]],
-                theta=categories + [categories[0]],
+                r=[*values, values[0]],
+                theta=[*categories, categories[0]],
                 fill="toself",
                 fillcolor="rgba(129,140,248,0.15)",
                 line=dict(color="#818cf8", width=2),

@@ -10,10 +10,10 @@ rebuild_rag.py — RAG 向量知识库全量重建脚本
     python rebuild_rag.py
 """
 
-import os
-import json
-import hashlib
 import glob
+import hashlib
+import json
+import os
 
 
 def extract_pdf_text(filepath, max_pages=30):

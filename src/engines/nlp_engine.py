@@ -11,7 +11,7 @@ import jieba
 import pandas as pd
 import streamlit as st
 
-from src.config import resolve_path, DATA_FILES
+from src.config import DATA_FILES, resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")
 

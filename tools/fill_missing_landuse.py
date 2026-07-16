@@ -1,8 +1,9 @@
 # tools/fill_missing_landuse.py
 import sys
+from pathlib import Path
+
 import geopandas as gpd
 import pandas as pd
-from pathlib import Path
 
 # Force UTF-8 stdout
 if hasattr(sys.stdout, 'reconfigure'):

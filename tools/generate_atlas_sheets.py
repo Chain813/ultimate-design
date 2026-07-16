@@ -1,7 +1,8 @@
 # tools/generate_atlas_sheets.py
-import sys
 import os
+import sys
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -13,11 +14,13 @@ STATIC_DIR = ROOT / "static"
 ASSETS_DIR = ROOT / "assets"
 ATLAS_DIR = STATIC_DIR / "atlas"
 
+import contextlib
+
 from src.config.site import get_author_info, get_institution_info
+
 a = get_author_info()
 i = get_institution_info()
-def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get("name","")}
-{i.get("department","")}"):
+def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get('name','')} {i.get('department','')}"):
     print("Generating Cover page...")
     cover = Image.new("RGB", (2440, 2000), color=(255, 255, 255))
     draw = ImageDraw.Draw(cover)
@@ -46,7 +49,7 @@ def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), o
     draw.text((250, 980), "规划图册集 / URBAN RENEWAL ATLAS", fill=(15, 23, 42), font=font_stamp)
     
     meta_y = 1200
-    draw.text((250, meta_y), "f"设计单位：{i.get("name","")} {i.get("department","")}"", fill=(71, 85, 105), font=font_body)
+    draw.text((250, meta_y), f"设计单位：{i.get('name','')} {i.get('department','')}", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 50), f"设计团队：城乡规划211班 {author} ({author_id})", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 100), "指导教师：崔诚慧", fill=(71, 85, 105), font=font_body)
     draw.text((250, meta_y + 150), "时间：2026.6", fill=(71, 85, 105), font=font_body)
@@ -55,8 +58,7 @@ def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), o
     paper_frame.save(output_path)
     print(f"Cover page generated and saved to {output_path}")
 
-def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get("name","")}
-{i.get("department","")}"):
+def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), organization=f"{i.get('name','')} {i.get('department','')}"):
     print("Generating Table of Contents...")
     toc_img = Image.new("RGB", (2240, 1584), color=(248, 250, 252))
     draw = ImageDraw.Draw(toc_img)
@@ -72,7 +74,7 @@ def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), org
         font_desc = ImageFont.truetype(font_path, 14)
         font_tbl_desc = ImageFont.truetype(font_path, 11)
         font_meta = ImageFont.truetype(font_path, 11)
-    except IOError:
+    except OSError:
         font_large_title = font_card_title = font_table_header = ImageFont.load_default()
         font_body_bold = font_body = font_desc = font_tbl_desc = font_meta = ImageFont.load_default()
 
@@ -89,7 +91,7 @@ def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), org
     draw.text((55, 87), "图册目录", fill=(15, 23, 42), font=font_large_title, anchor="lm")
     draw.text((230, 78), "本图册的图纸索引与主要编制说明。", fill=(100, 116, 139), font=font_desc, anchor="lm")
     draw.text((230, 100), "本规划旨在重塑历史地段活力，推动数字孪生与古今共振。", fill=(100, 116, 139), font=font_desc, anchor="lm")
-    draw.text((1380, 68), f"f"设计团队：{i.get("name","")} {i.get("department","")}"", fill=(100, 116, 139), font=font_meta)
+    draw.text((1380, 68), f"设计团队：{i.get('name','')} {i.get('department','')}", fill=(100, 116, 139), font=font_meta)
     draw.text((1380, 86), f"制 作 人：{author} ({author_id})   指导教师：崔诚慧", fill=(100, 116, 139), font=font_meta)
     draw.text((1380, 104), "图幅：A3 (420\u00d7297mm)   坐标：WGS-84   日期：2026年6月", fill=(100, 116, 139), font=font_meta)
 
@@ -309,8 +311,9 @@ def generate_single_sheet(args):
         # Ensure it exists in output_path by restoring it from backup if missing
         if not output_path.exists():
             try:
-                from scripts.rename_atlas_sheets import MAPPING_RULES
                 import shutil
+
+                from scripts.rename_atlas_sheets import MAPPING_RULES
                 BACKUP_DIR = STATIC_DIR / "atlas_backup"
                 
                 # Find the matched file in backup
@@ -318,7 +321,7 @@ def generate_single_sheet(args):
                 for old_pattern, new_name in MAPPING_RULES:
                     if new_name == filename:
                         # Find it in backup folder
-                        for root_dir, dirs, files in os.walk(str(BACKUP_DIR)):
+                        for root_dir, _dirs, files in os.walk(str(BACKUP_DIR)):
                             for f in files:
                                 if f.lower().endswith(".png") and old_pattern in (Path(root_dir) / f).relative_to(BACKUP_DIR).as_posix():
                                     matched_file = Path(root_dir) / f
@@ -375,10 +378,8 @@ def generate_single_sheet(args):
         traceback.print_exc()
     finally:
         if temp_map_path.exists():
-            try:
+            with contextlib.suppress(Exception):
                 os.remove(temp_map_path)
-            except Exception:
-                pass
 
 def generate_all_atlas_drawings(targets=None):
     ATLAS_DIR.mkdir(parents=True, exist_ok=True)

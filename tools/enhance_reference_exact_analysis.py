@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Enhance reference-exact analysis graphics without generative redrawing.
 
 This keeps the Image-tool reference board visually unchanged, then improves
@@ -36,7 +35,7 @@ def enhance_base(img: Image.Image) -> Image.Image:
 
 
 def s(value: int | float) -> int:
-    return int(round(value * SCALE))
+    return round(value * SCALE)
 
 
 def dashed_line(draw: ImageDraw.ImageDraw, xy, fill, width=2, dash=10, gap=7):

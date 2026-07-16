@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """一键重新编译研究报告(Word)与演示幻灯(PowerPoint)的整合脚本"""
 import os
 import shutil

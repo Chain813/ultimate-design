@@ -9,8 +9,8 @@
 
 输出：终端摘要 + docs/STAGE2_DATA_QUALITY_REPORT.md
 """
-import sys
 import json
+import sys
 from pathlib import Path
 
 # Windows 终端 UTF-8 编码修复
@@ -344,7 +344,7 @@ def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) ->
         return 0, "polygon", "范围内无POI命中"
 
     if Point is None or shape is None:
-        return int(len(candidates)), "bbox_fallback", "缺少GIS依赖,使用bbox粗筛"
+        return len(candidates), "bbox_fallback", "缺少GIS依赖,使用bbox粗筛"
 
     try:
         plot_geom = shape(geometry)
@@ -356,7 +356,7 @@ def _count_poi_for_geometry(df_poi: pd.DataFrame, geometry: dict, bbox: dict) ->
         note = "" if count > 0 else "bbox有候选但多边形内无命中"
         return count, "polygon", note
     except Exception:
-        return int(len(candidates)), "bbox_fallback", "几何异常,使用bbox粗筛"
+        return len(candidates), "bbox_fallback", "几何异常,使用bbox粗筛"
 
 
 def main():

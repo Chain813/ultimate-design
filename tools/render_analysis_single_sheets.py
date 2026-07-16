@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Render DR-013 style single sheets for selected analysis panels."""
 from __future__ import annotations
 
@@ -44,7 +43,7 @@ def wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, m
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -125,8 +124,8 @@ def paste_vector_panel(canvas: Image.Image, panel_key: str, box: tuple[int, int,
     import matplotlib
 
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import generate_urban_analysis_board as board
+    import matplotlib.pyplot as plt
 
     x1, y1, x2, y2 = box
     max_w = x2 - x1

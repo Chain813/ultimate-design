@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
 import os
 from pathlib import Path
+
 import geopandas as gpd
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
 import matplotlib.patches as mpatches
-from shapely.geometry import Point
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -110,7 +110,7 @@ def parse_drawing_type(drawing_type):
             
     # Detect analysis type
     a_type = "satellite"
-    for a_key in ANALYSIS_INFO.keys():
+    for a_key in ANALYSIS_INFO:
         if a_key in drawing_type or ANALYSIS_INFO[a_key]["title_suffix"] in drawing_type:
             a_type = a_key
             break
@@ -239,9 +239,9 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         # Load and render high-resolution satellite imagery from TIFF dynamically
         tif_path = None
         from src.config.runtime import resolve_path
-graduate_dir = resolve_path("output/graduate")
+        graduate_dir = resolve_path("output/graduate")
         if graduate_dir.exists():
-            for root, dirs, files in os.walk(graduate_dir):
+            for root, _dirs, files in os.walk(graduate_dir):
                 for file in files:
                     if "2604161335" in file and file.lower().endswith(".tif"):
                         tif_path = Path(root) / file
@@ -251,7 +251,7 @@ graduate_dir = resolve_path("output/graduate")
         if not tif_path:
             album_dir = resolve_path("output/album/images")
             if album_dir.exists():
-                for root, dirs, files in os.walk(album_dir):
+                for root, _dirs, files in os.walk(album_dir):
                     for file in files:
                         if "2503142036" in file and file.lower().endswith(".tif"):
                             tif_path = Path(root) / file
@@ -578,10 +578,7 @@ graduate_dir = resolve_path("output/graduate")
         elif style == "fill_border":
             rect = mpatches.Rectangle((x, y - 0.8), 2.8, 1.7, facecolor=color_code, edgecolor='#475569', linewidth=0.5, zorder=4)
             ax.add_patch(rect)
-        elif style == "fill":
-            rect = mpatches.Rectangle((x, y - 0.8), 2.8, 1.7, facecolor=color_code, edgecolor='none', zorder=4)
-            ax.add_patch(rect)
-        elif style == "fill_water":
+        elif style == "fill" or style == "fill_water":
             rect = mpatches.Rectangle((x, y - 0.8), 2.8, 1.7, facecolor=color_code, edgecolor='none', zorder=4)
             ax.add_patch(rect)
         elif style == "line_road":
@@ -626,7 +623,7 @@ graduate_dir = resolve_path("output/graduate")
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
             
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 100)) * 100
+    scale_rounded = round(scale_ratio / 100) * 100
     ax.text((x_start + x_end)/2, y_bar - 0.8, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 

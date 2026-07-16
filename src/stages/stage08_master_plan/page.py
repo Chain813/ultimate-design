@@ -11,31 +11,36 @@
 from pathlib import Path
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
+
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.spatial_data_injector import (
-    get_full_spatial_context,
-    get_landuse_summary,
-    get_key_plots_summary,
-    get_building_summary,
     generate_spatial_insights,
+    get_building_summary,
+    get_full_spatial_context,
+    get_key_plots_summary,
+    get_landuse_summary,
 )
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
-from src.workflow.approval_state import StageDependency, render_dependency_gate
-from src.workflow.stage_keys import SK
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
+from src.workflow.approval_state import StageDependency, render_dependency_gate
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
+from src.workflow.stage_keys import SK
+
 
 @st.cache_resource
 def load_raw_landuse_gdf():
     import geopandas as gpd
     import numpy as np
     from shapely.geometry import Point
-    from src.config import resolve_path, GIS_FILES
+
+    from src.config import GIS_FILES, resolve_path
     
     path = resolve_path(str(GIS_FILES["landuse"]))
     if not path.exists():
@@ -428,7 +433,7 @@ def render_page() -> None:
                     
                     # 2. 计算各宗地关于各功能类别的得分 (考虑现状与空间中心邻近度)
                     scores = {}
-                    for cat in target_pcts.keys():
+                    for cat in target_pcts:
                         decay = gdf_proj[f"decay_{cat}"]
                         if cat == "公共设施":
                             is_orig = gdf_proj["Type"].isin(['医疗卫生', '教育科研', '体育文化', '行政办公'])
@@ -466,9 +471,9 @@ def render_page() -> None:
                     allocated_types[unallocated_in] = "交通场站"
                     
                     # 4. Matplotlib 绘制空间落位图
+                    import matplotlib.font_manager as fm
                     import matplotlib.pyplot as plt
                     from matplotlib.patches import Patch
-                    import matplotlib.font_manager as fm
                     
                     # 设置全局中文字体，防止 matplotlib 显示豆腐块
                     plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'SimSun', 'sans-serif']

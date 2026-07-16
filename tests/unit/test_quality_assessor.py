@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
@@ -8,10 +8,10 @@ if str(root) not in sys.path:
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from src.engines.quality_assessor import (
+    ContentScore,
     QualityAssessor,
     QualityReport,
     VisualScore,
-    ContentScore,
 )
 
 

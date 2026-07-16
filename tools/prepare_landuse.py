@@ -1,13 +1,15 @@
 import argparse
-import geopandas as gpd
 import os
 import sys
+
+import geopandas as gpd
+
 from src.config.paths import DATA_DIR, GIS_DIR
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
-def prepare_landuse(gpkg_path: str = None):
+def prepare_landuse(gpkg_path: str | None = None):
     print("🚀 开始土地利用数据裁剪流程...")
 
     # 1. 设置路径

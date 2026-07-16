@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """DR-039 总体策略图 — 对应答辩稿 3.5 设计策略"""
 from pathlib import Path
+
 import geopandas as gpd
-import pandas as pd
-import numpy as np
 import matplotlib.font_manager as fm
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as path_effects
+import numpy as np
+import pandas as pd
 from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -159,7 +159,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         (x3, y3, "邻里细胞④\n(历史缝合)"),
         (x4, y4, "邻里细胞⑤\n(能量花园)"),
     ]
-    for cx_cell, cy_cell, name in cells:
+    for cx_cell, cy_cell, _name in cells:
         circle_500 = mpatches.Circle((cx_cell, cy_cell), 500, facecolor='#D1FAE5', edgecolor='#059669', linewidth=1.0, alpha=0.15, zorder=2.4)
         ax_map.add_patch(circle_500)
         # Center node dot
@@ -245,7 +245,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text(x_start + scale_len/2, y_bar + 1.5, "250m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
     ax.text(x_end, y_bar + 1.5, "500m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, y_bar - 1.6, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=_font(font_prop, 10.5, 'bold'), zorder=4)
 
@@ -272,9 +272,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
         # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
     try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
         from pathlib import Path as _Path
+
+        import numpy as _np
+        from PIL import Image as _PIL_Image
         _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
         _rose_path = _assets_dir / "长春市风玫瑰.png"
         if _rose_path.exists():

@@ -9,9 +9,9 @@
 5. 自动对 GeoJSON 进行坐标 6 位精度截断、无关字段属性清洗过滤，并输出到 static 压缩缓存。
 6. 自动联动执行数据质量体检脚本 (tools/data_quality_check.py)。
 """
-import sys
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 # Windows 终端 UTF-8 编码修复
@@ -24,8 +24,8 @@ if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-import pandas as pd
 import geopandas as gpd
+import pandas as pd
 from shapely.geometry import shape
 
 from src.config import DATA_FILES, GIS_FILES, resolve_path
@@ -84,10 +84,7 @@ def process_tabular_data(boundary_geom, buffer_deg=0.01):
 
         is_xlsx = file_path.suffix.lower() == '.xlsx'
         try:
-            if is_xlsx:
-                df = pd.read_excel(file_path)
-            else:
-                df = pd.read_csv(file_path, encoding="utf-8-sig")
+            df = pd.read_excel(file_path) if is_xlsx else pd.read_csv(file_path, encoding="utf-8-sig")
         except Exception as e:
             print(f"  ❌ 读取 {name} 失败: {e}")
             continue
@@ -230,7 +227,7 @@ def compress_geojson_files(precision=6):
                         new_props[field] = props[field]
 
                 feature['properties'] = new_props
-                if 'geometry' in feature and feature['geometry']:
+                if feature.get('geometry'):
                     feature['geometry']['coordinates'] = round_coords(feature['geometry'].get('coordinates', []))
                 compressed_features.append(feature)
 

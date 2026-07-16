@@ -11,11 +11,7 @@
 """
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
-from src.ui.chart_theme import apply_plotly_polar_theme
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
-from src.ui.persistent_outputs import register_report_output
+
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_data_injector import (
@@ -23,15 +19,21 @@ from src.engines.spatial_data_injector import (
     get_plot_context,
     get_poi_summary,
 )
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
-from src.workflow.approval_state import StageDependency, render_dependency_gate
-from src.workflow.stage_keys import SK
-from src.ui.streamlit_compat import stretch_width
-
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage10_detail_design.config import STAGE10_WORKSPACE
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.chart_theme import apply_plotly_polar_theme
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.module_summary import render_stage_summary
+from src.ui.persistent_outputs import register_report_output
+from src.ui.streamlit_compat import stretch_width
+from src.workflow.approval_state import StageDependency, render_dependency_gate
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
+from src.workflow.stage_keys import SK
 
 
 def render_page() -> None:
@@ -169,8 +171,8 @@ def render_page() -> None:
         import plotly.graph_objects as go
         fig = go.Figure()
         fig.add_trace(go.Scatterpolar(
-            r=values + [values[0]],
-            theta=categories + [categories[0]],
+            r=[*values, values[0]],
+            theta=[*categories, categories[0]],
             fill="toself",
             fillcolor="rgba(99, 102, 241, 0.15)",
             line=dict(color="#818cf8", width=2),
@@ -514,7 +516,7 @@ def render_page() -> None:
                 "本模块自动展示 session 中已生成的渲染结果。")
 
         # 检查 session 中是否有 AIGC 结果
-        aigc_keys = [k for k in st.session_state.keys() if "sd_result" in k]
+        aigc_keys = [k for k in st.session_state if "sd_result" in k]
         if aigc_keys:
             st.markdown(f"#### 🖼️ 已生成 {len(aigc_keys)} 张渲染结果")
             cols = st.columns(min(3, len(aigc_keys)))

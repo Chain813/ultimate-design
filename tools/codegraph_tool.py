@@ -1,11 +1,12 @@
-import sqlite3
-import os
-import sys
-import json
 import argparse
+import json
+import os
+import sqlite3
+import sys
 from pathlib import Path
 
 from src.config.runtime import resolve_path
+
 DB_PATH = resolve_path(".codegraph/codegraph.db")
 
 def get_connection():

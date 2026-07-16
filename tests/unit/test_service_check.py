@@ -1,10 +1,10 @@
 from src.utils.service_check import (
-    is_port_alive,
-    check_engine_status,
-    EngineStatus,
-    SD_PORT,
-    OLLAMA_PORT,
     DEFAULT_TIMEOUT,
+    OLLAMA_PORT,
+    SD_PORT,
+    EngineStatus,
+    check_engine_status,
+    is_port_alive,
 )
 
 

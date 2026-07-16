@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Iterable
+from datetime import UTC, datetime, timezone
+from enum import Enum, StrEnum
 
 import streamlit as st
 
 from src.workflow.stage_data_bus import load_stage_output, save_stage_output, stage_ready
 
 
-class ApprovalStatus(str, Enum):
+class ApprovalStatus(StrEnum):
     DRAFT = "draft"
     REVIEW = "review"
     REVISE = "revise"
@@ -58,7 +58,7 @@ def save_approval_record(
         "comment": comment,
         "risk_level": risk_level,
         "metadata": metadata or {},
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
     save_stage_output(stage_code, approval_record_key(key), record)
     return record

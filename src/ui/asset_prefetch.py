@@ -9,7 +9,6 @@ import streamlit as st
 
 from src.config import ROOT_DIR, get_static_url
 
-
 DEPLOYMENT_ASSETS: dict[str, tuple[str, ...]] = {
     "critical": (
         "static/research_scope_2d_cropped.png",

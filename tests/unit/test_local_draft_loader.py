@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 import os
-from src.engines.local_draft_loader import load_document_from_draft, get_combined_references
+
+from src.engines.local_draft_loader import get_combined_references, load_document_from_draft
+
 
 def test_load_document_from_draft():
     draft_path = os.path.join(os.path.expanduser("~"), "Desktop", "项目文档", "项目设计报告_作者_编号.docx")

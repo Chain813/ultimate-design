@@ -10,13 +10,19 @@ import streamlit as st
 from PIL import Image
 
 from src.config import DATA_FILES, SHP_FILES, get_static_url
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards, render_rag_pipeline_hud, render_survey_pipeline_hud
 from src.ui.app_shell import render_top_nav
+from src.ui.design_system import (
+    render_page_banner,
+    render_rag_pipeline_hud,
+    render_section_intro,
+    render_summary_cards,
+    render_survey_pipeline_hud,
+)
 from src.ui.module_summary import render_stage_summary
 from src.ui.output_flow_panel import render_output_flow_prompt_panel
 from src.ui.streamlit_compat import stretch_width
-from src.workflow.stage_data_bus import save_stage_output, load_stage_output, render_evidence_chain_bar
 from src.workflow import resolve_subpage_value
+from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar, save_stage_output
 from src.workflow.template_assets import (
     get_template_asset_rows,
     get_template_asset_specs,

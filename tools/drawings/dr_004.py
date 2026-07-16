@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 from pathlib import Path
 
@@ -491,7 +490,7 @@ def draw_custom_overlays(ax_map, drawing_type, key_plots, get_xy, font_prop):
             ("胜利公园方向", 125.326, 43.896),
             ("伊通河生态区", 125.359, 43.901)
         ]
-        for name, lon, lat in destinations:
+        for _name, lon, lat in destinations:
             dcx, dcy = get_xy(lon, lat)
             ax_map.annotate(
                 "",
@@ -550,7 +549,7 @@ def draw_custom_overlays(ax_map, drawing_type, key_plots, get_xy, font_prop):
             txt.set_path_effects([path_effects.withStroke(linewidth=2.5, foreground="#FFFFFF")])
 
     elif drawing_type == "智慧城市与数字基础设施规划图":
-        for idx, (cx, cy) in enumerate(centroids):
+        for _idx, (cx, cy) in enumerate(centroids):
             for r in [80, 160]:
                 circle = mpatches.Circle(
                     (cx, cy),
@@ -632,8 +631,9 @@ def draw_custom_overlays(ax_map, drawing_type, key_plots, get_xy, font_prop):
 
     # Try loading windrose if exists
     try:
-        from PIL import Image as _PIL_Image
         from pathlib import Path as _Path
+
+        from PIL import Image as _PIL_Image
         _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
         _rose_path = _assets_dir / "长春市风玫瑰.png"
         if _rose_path.exists():
@@ -684,7 +684,7 @@ def draw_map(
 
     if drawing_type not in DRAWING_METADATA:
         matched = False
-        for k in DRAWING_METADATA.keys():
+        for k in DRAWING_METADATA:
             if k in drawing_type or drawing_type in k:
                 drawing_type = k
                 matched = True
@@ -1289,7 +1289,7 @@ def draw_map(
             zorder=4
         )
         scale_ratio = view_w / 0.31968
-        scale_rounded = int(round(scale_ratio / 500)) * 500
+        scale_rounded = round(scale_ratio / 500) * 500
         ax.text(
             (x_start + x_end) / 2,
             67.4,

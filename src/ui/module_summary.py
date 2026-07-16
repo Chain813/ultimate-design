@@ -15,6 +15,7 @@ from html import escape
 
 import requests
 import streamlit as st
+
 from src.ui.design_system import load_design_css
 from src.ui.streamlit_compat import stretch_width
 
@@ -230,9 +231,10 @@ def _enrich_findings_from_bus(stage_code: str, static_findings: list[dict]) -> l
 def _build_auto_chart(stage_code: str):
     """根据阶段和可用数据自动生成一张统计图表——覆盖全部 13 个阶段。"""
     try:
-        from src.workflow.stage_data_bus import load_stage_output
         import plotly.graph_objects as go
+
         from src.ui.chart_theme import apply_plotly_theme
+        from src.workflow.stage_data_bus import load_stage_output
     except ImportError:
         return None
 
@@ -349,8 +351,8 @@ def _build_auto_chart(stage_code: str):
         if not voting or not isinstance(voting, dict) or len(voting) < 3:
             voting = {"👥 居民代表（老王）": 50.0, "💰 文旅运营商（赵总）": 50.0, "📐 规划师（李工）": 50.0}
         fig = go.Figure(go.Scatterpolar(
-            r=list(voting.values()) + [list(voting.values())[0]],
-            theta=list(voting.keys()) + [list(voting.keys())[0]],
+            r=[*list(voting.values()), next(iter(voting.values()))],
+            theta=[*list(voting.keys()), next(iter(voting.keys()))],
             fill="toself",
             fillcolor="rgba(99,102,241,0.15)",
             line=dict(color="#818cf8", width=2),
@@ -407,7 +409,7 @@ def _build_auto_chart(stage_code: str):
         colors = ["#818cf8", "#34d399", "#f59e0b"]
         for i, (name, vals) in enumerate(sites.items()):
             fig.add_trace(go.Scatterpolar(
-                r=vals + [vals[0]], theta=dims + [dims[0]],
+                r=[*vals, vals[0]], theta=[*dims, dims[0]],
                 fill="toself", name=name,
                 fillcolor=f"rgba({int(colors[i][1:3],16)},{int(colors[i][3:5],16)},{int(colors[i][5:7],16)},0.1)",
                 line=dict(color=colors[i], width=2),
@@ -506,9 +508,7 @@ def _render_llm_summary_button(
         try:
             bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
             for k, v in bus_data.items():
-                if isinstance(v, str) and len(v) < 500:
-                    data_lines.append(f"[本阶段总线] {k}: {v}")
-                elif isinstance(v, (int, float)):
+                if (isinstance(v, str) and len(v) < 500) or isinstance(v, (int, float)):
                     data_lines.append(f"[本阶段总线] {k}: {v}")
         except Exception:
             pass
@@ -522,9 +522,7 @@ def _render_llm_summary_button(
                 if other_code == stage_code or not isinstance(other_data, dict):
                     continue
                 for k, v in other_data.items():
-                    if isinstance(v, str) and len(v) < 300:
-                        data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
-                    elif isinstance(v, (int, float)):
+                    if (isinstance(v, str) and len(v) < 300) or isinstance(v, (int, float)):
                         data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
         except Exception:
             pass

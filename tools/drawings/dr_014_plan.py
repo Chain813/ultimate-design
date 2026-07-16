@@ -1,19 +1,20 @@
-# -*- coding: utf-8 -*-
-from shapely.geometry import Point
-import pandas as pd
-import numpy as np
 from pathlib import Path
+
+import numpy as np
+import pandas as pd
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
 GIS_DIR = ROOT / "data/gis"
 ASSETS_DIR = ROOT / "assets"
 
-import matplotlib.pyplot as plt
+import geopandas as gpd
 import matplotlib.font_manager as fm
 import matplotlib.patheffects as path_effects
-import geopandas as gpd
+import matplotlib.pyplot as plt
 from PIL import Image
+
 
 def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop):
     if landuse is not None and not landuse.empty:
@@ -75,7 +76,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
         # Scores
         scores = {}
-        for cat in target_pcts.keys():
+        for cat in target_pcts:
             decay = gdf_proj[f"decay_{cat}"]
             if cat == "公共设施":
                 is_orig = gdf_proj["Type"].isin(['医疗卫生', '教育科研', '体育文化', '行政办公'])

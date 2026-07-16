@@ -19,7 +19,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from src.config import resolve_path, DATA_FILES, GIS_FILES, get_site_city, get_site_district, get_site_name
+from src.config import DATA_FILES, GIS_FILES, get_site_city, get_site_district, get_site_name, resolve_path
+
 logger = logging.getLogger("ultimateDESIGN")
 
 
@@ -56,10 +57,7 @@ def get_landuse_summary() -> str:
 
     # 尝试计算面积（投影坐标系）
     try:
-        if gdf.crs and gdf.crs.is_geographic:
-            gdf_proj = gdf.to_crs(gdf.estimate_utm_crs())
-        else:
-            gdf_proj = gdf
+        gdf_proj = gdf.to_crs(gdf.estimate_utm_crs()) if gdf.crs and gdf.crs.is_geographic else gdf
         gdf["area_sqm"] = gdf_proj.geometry.area
     except Exception:
         gdf["area_sqm"] = 0

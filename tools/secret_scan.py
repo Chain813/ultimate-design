@@ -1,10 +1,9 @@
 """Basic secret pattern scanner for repository and local env files."""
 
-from pathlib import Path
 import logging
 import re
 import sys
-
+from pathlib import Path
 
 PATTERNS = [
     re.compile(r"(?i)(api[_-]?key|secret|token)\s*[:=]\s*[\"']?[A-Za-z0-9_\-]{12,}"),

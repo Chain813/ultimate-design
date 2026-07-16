@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
-from shapely.geometry import Point, LineString
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
+
+import geopandas as gpd
 import matplotlib.font_manager as fm
 import matplotlib.patches as mpatches
 import matplotlib.patheffects as path_effects
-import geopandas as gpd
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from shapely.geometry import LineString, Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -194,7 +194,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     ax.text(x_start + scale_len/2, y_bar + 1.5, "250m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
     ax.text(x_end, y_bar + 1.5, "500m", color='#334155', ha='center', va='center', fontproperties=_font(font_prop, 10.0), zorder=4)
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
 
     # 5. Description Card (X: 101.5 to 139.4, Y: 4.0 to 65.0)
     ax.add_patch(mpatches.Rectangle((101.8, 3.7), 37.9, 61.3, facecolor='#E2E8F0', edgecolor='none', zorder=1))
@@ -219,9 +219,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
 
         # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
     try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
         from pathlib import Path as _Path
+
+        import numpy as _np
+        from PIL import Image as _PIL_Image
         _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
         _rose_path = _assets_dir / "长春市风玫瑰.png"
         if _rose_path.exists():

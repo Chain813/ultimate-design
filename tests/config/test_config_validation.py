@@ -1,5 +1,7 @@
 import pytest
+
 from src.config.loader import load_global_config
+
 
 def test_config_loader_validation(monkeypatch, tmp_path):
     # Mock resolve_path to point to a temporary test config

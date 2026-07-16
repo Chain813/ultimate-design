@@ -1,10 +1,11 @@
 import os
+import sys
+
 import numpy as np
 import pandas as pd
-from PIL import Image
 import torch
 import torch.nn as nn
-import sys
+from PIL import Image
 
 # Windows 终端 UTF-8 编码修复
 if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
@@ -13,7 +14,7 @@ if sys.stderr and hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8')
 
 # 🚨 核心换装：引入专门处理城市街景的 Transformers 引擎
-from transformers import SegformerImageProcessor, SegformerForSemanticSegmentation
+from transformers import SegformerForSemanticSegmentation, SegformerImageProcessor
 
 print("🚀 启动 NVIDIA Segformer 城市级四维空间语义测度引擎 (360°全景聚合版)...")
 

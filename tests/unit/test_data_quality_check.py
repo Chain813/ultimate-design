@@ -21,7 +21,7 @@ def test_count_poi_for_geometry_uses_polygon_not_bbox():
         ]
     )
 
-    count, method, note = _count_poi_for_geometry(df_poi, geometry, bbox)
+    count, method, _note = _count_poi_for_geometry(df_poi, geometry, bbox)
 
     assert count == 1
     assert method == "polygon"
@@ -35,7 +35,7 @@ def test_count_poi_for_geometry_empty_df():
     bbox = {"min_lng": 0, "max_lng": 1, "min_lat": 0, "max_lat": 1}
     df_poi = pd.DataFrame()
 
-    count, method, note = _count_poi_for_geometry(df_poi, geometry, bbox)
+    count, _method, note = _count_poi_for_geometry(df_poi, geometry, bbox)
     assert count == 0
     assert note == "POI数据为空"
 

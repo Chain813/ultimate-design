@@ -1,7 +1,7 @@
 from src.utils.exceptions import (
-    UltimateDesignError,
     DataNotFoundError,
     EngineUnavailableError,
+    UltimateDesignError,
     log_and_suppress,
 )
 

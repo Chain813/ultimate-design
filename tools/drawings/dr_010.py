@@ -1,14 +1,15 @@
 import os
-from shapely.geometry import Point
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -110,9 +111,9 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     # Load and display satellite image on sub-axes (with high-res TIFF dynamic loading)
     tif_path = None
     from src.config.runtime import resolve_path
-graduate_dir = resolve_path("output/graduate")
+    graduate_dir = resolve_path("output/graduate")
     if graduate_dir.exists():
-        for root, dirs, files in os.walk(graduate_dir):
+        for root, _dirs, files in os.walk(graduate_dir):
             for file in files:
                 if "2604161335" in file and file.lower().endswith(".tif"):
                     tif_path = Path(root) / file
@@ -121,7 +122,7 @@ graduate_dir = resolve_path("output/graduate")
     if not tif_path:
         album_dir = resolve_path("output/album/images")
         if album_dir.exists():
-            for root, dirs, files in os.walk(album_dir):
+            for root, _dirs, files in os.walk(album_dir):
                 for file in files:
                     if "2503142036" in file and file.lower().endswith(".tif"):
                         tif_path = Path(root) / file
@@ -270,7 +271,7 @@ graduate_dir = resolve_path("output/graduate")
             fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, 68.0, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=11.0, weight='bold'), zorder=4)
 

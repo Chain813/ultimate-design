@@ -10,7 +10,7 @@ from pathlib import Path
 import streamlit as st
 import streamlit.components.v1 as components
 
-from src.config import get_static_url, get_map_viewport, get_site_name
+from src.config import get_map_viewport, get_site_name, get_static_url
 from src.engines.spatial_engine import (
     get_hud_statistics,
     get_merged_poi_data,
@@ -19,7 +19,6 @@ from src.engines.spatial_engine import (
 from src.ui.app_shell import render_top_nav
 from src.ui.digital_twin import load_map_data
 from src.utils.runtime_flags import is_mobile_client
-
 
 st.set_page_config(page_title="数据大屏", layout="wide", initial_sidebar_state="collapsed")
 render_top_nav()

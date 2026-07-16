@@ -1,11 +1,12 @@
-import warnings
 import sys
+import warnings
+
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 import geopandas as gpd
 from shapely.geometry import Polygon
 
-from src.engines.spatial_engine import get_skyline_features, _filter_buildings_within_boundary
+from src.engines.spatial_engine import _filter_buildings_within_boundary, get_skyline_features
 
 
 def test_get_skyline_features_returns_dict_with_expected_keys():

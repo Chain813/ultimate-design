@@ -18,7 +18,8 @@ from __future__ import annotations
 
 import random
 import re
-from typing import Callable, Dict, List, Optional
+from collections.abc import Callable
+from typing import Dict, List, Optional
 
 from src.engines.llm_engine import call_llm_engine
 
@@ -33,7 +34,7 @@ DEAI_MODELS = {
 }
 
 # 章节 → 模型分配（轮流使用不同模型打破单一指纹）
-CHAPTER_MODEL_MAP: Dict[str, str] = {}
+CHAPTER_MODEL_MAP: dict[str, str] = {}
 _available_models = list(DEAI_MODELS.values())
 
 
@@ -43,7 +44,7 @@ def _assign_models():
     if CHAPTER_MODEL_MAP:
         return
     from src.engines.document_composer import REPORT_CHAPTERS
-    for i, sec in enumerate(REPORT_CHAPTERS):
+    for _i, sec in enumerate(REPORT_CHAPTERS):
         # 轮流分配，不同章用不同模型
         ch = sec.chapter
         CHAPTER_MODEL_MAP[sec.section_id] = _available_models[ch % len(_available_models)]
@@ -57,7 +58,7 @@ _assign_models()
 # ═══════════════════════════════════════════════════════════════
 
 # 模板化过渡词 → 替换词池
-TRANSITION_REPLACEMENTS: Dict[str, List[str]] = {
+TRANSITION_REPLACEMENTS: dict[str, list[str]] = {
     "首先": ["最初，", "在调研初期，", "项目启动阶段，", "第一步，", "一开始，", "从头梳理，"],
     "其次": ["接着，", "进一步来看，", "在随后的分析中，", "另外，", "与此同时，", "继而，"],
     "最后": ["最终，", "综合各方面因素，", "经过多轮论证，", "落实到方案层面，", "收束来看，"],
@@ -297,11 +298,11 @@ def deai_chapter(
 
 
 def deai_all_chapters(
-    chapters: Dict[str, str],
+    chapters: dict[str, str],
     intensity: float = 0.7,
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
-    log_callback: Optional[Callable[[str], None]] = None,
-) -> Dict[str, str]:
+    progress_callback: Callable[[int, int, str], None] | None = None,
+    log_callback: Callable[[str], None] | None = None,
+) -> dict[str, str]:
     """对全部章节执行降 AI 处理
 
     Args:
@@ -318,7 +319,7 @@ def deai_all_chapters(
     # 构建 section_id → chapter 映射
     section_chapter = {sec.section_id: sec.chapter for sec in REPORT_CHAPTERS}
 
-    processed: Dict[str, str] = {}
+    processed: dict[str, str] = {}
     items = list(chapters.items())
     total = len(items)
 

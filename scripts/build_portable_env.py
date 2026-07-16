@@ -1,9 +1,9 @@
 # scripts/build_portable_env.py
 import os
 import shutil
+import subprocess
 import urllib.request
 import zipfile
-import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]

@@ -6,7 +6,14 @@ Usage:
     from src.engines.guideline_prompt import build_guideline_prompt
 """
 
-from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent, get_site_policies
+from src.config import (
+    get_site_adjacent,
+    get_site_city,
+    get_site_desc,
+    get_site_district,
+    get_site_name,
+    get_site_policies,
+)
 
 GUIDELINE_CHAPTERS = [
     {
@@ -399,7 +406,7 @@ def retrieve_policy_context(query: str = "城市更新 历史文化街区 保护
     return ""
 
 
-def build_spatial_stats_summary(stats: dict = None, skyline: dict = None) -> str:
+def build_spatial_stats_summary(stats: dict | None = None, skyline: dict | None = None) -> str:
     """构建空间统计摘要。"""
     parts = []
     if stats:

@@ -5,9 +5,9 @@ it refuses or downgrades prompts when the selected drawing lacks required
 spatial/data references.
 """
 
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from typing import Dict, Iterable, List, Sequence
-
+from typing import Dict, List
 
 # ---- Exceptions ----
 
@@ -38,7 +38,7 @@ class CompletenessReport:
 
 class DynamicProjectDefaults(dict):
     def __getitem__(self, key):
-        from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent
+        from src.config import get_site_adjacent, get_site_city, get_site_desc, get_site_district, get_site_name
         city = get_site_city()
         district = get_site_district()
         site_name = get_site_name()
@@ -324,7 +324,7 @@ class DrawingProfile:
     name: str
     drawing_type: str
     precision: str
-    required_uploads: List[str]
+    required_uploads: list[str]
     allows_ai_expression: bool
     needs_real_data: bool
     requires_standard_frame: bool
@@ -352,7 +352,7 @@ class ImagePromptRequest:
     text_rules: str = "中文文字使用微软雅黑风格，英文辅助使用 Times New Roman 风格，只生成清晰标题和少量关键词；信息不完整处使用占位符，避免乱码。"
     mark_as_schematic: bool = False
     use_existing_results: bool = True
-    evidence_blocks: Dict[str, str] = None
+    evidence_blocks: dict[str, str] = None
 
 
 @dataclass(frozen=True)
@@ -361,8 +361,8 @@ class PromptBuildResult:
     prompt: str
     negative_prompt: str
     profile: DrawingProfile
-    missing_items: List[str]
-    notices: List[str]
+    missing_items: list[str]
+    notices: list[str]
     template_only: bool = False
 
 
@@ -392,7 +392,7 @@ def build_image_prompt(request: ImagePromptRequest) -> PromptBuildResult:
 
     if report.missing:
         # 核心逻辑修改：不再因为缺少资产而拒绝生成，而是切换到“示意/降级”模式
-        notices = [f"检测到缺少资产：{'、'.join(report.missing)}。系统已自动切换至‘示意/概念表达模式’以确保正常出图。"] + report.notices
+        notices = [f"检测到缺少资产：{'、'.join(report.missing)}。系统已自动切换至‘示意/概念表达模式’以确保正常出图。", *report.notices]
         negative_prompt = build_negative_prompt(profile.precision)
         # 强制标记为示意模式，允许 AI 脑补
         prompt = _compose_prompt(request, profile, negative_prompt, template_only=True)
@@ -516,7 +516,7 @@ def revise_prompt_by_rating(prompt: str, rating: str, issue_types: Iterable[str]
     return prompt.rstrip() + "\n\n【根据成图评级追加修正】\n" + "\n".join(f"- {item}" for item in additions)
 
 
-def flatten_chapter_drawings() -> List[str]:
+def flatten_chapter_drawings() -> list[str]:
     drawings = []
     for names in BOOK_CHAPTERS.values():
         drawings.extend(names)
@@ -583,7 +583,7 @@ def _format_content_block(request: ImagePromptRequest) -> str:
     return "\n".join(lines)
 
 
-def _format_evidence(evidence_blocks: Dict[str, str], enabled: bool = True) -> str:
+def _format_evidence(evidence_blocks: dict[str, str], enabled: bool = True) -> str:
     if not enabled:
         return "本次不嵌入前序阶段结果，仅依据用户填写字段生成。"
     cleaned = []
@@ -636,7 +636,7 @@ def _infer_drawing_type(name: str) -> str:
     return "标准图纸类"
 
 
-def _infer_required_uploads(name: str, precision: str) -> List[str]:
+def _infer_required_uploads(name: str, precision: str) -> list[str]:
     if precision == "三级精度":
         if any(key in name for key in ("鸟瞰", "人视", "效果", "改造前后", "运营场景")):
             return ["现状照片", "风格参考图"]
@@ -679,7 +679,7 @@ def _has_text(value) -> bool:
     return bool(str(value or "").strip())
 
 
-def _dedupe(items: Iterable[str]) -> List[str]:
+def _dedupe(items: Iterable[str]) -> list[str]:
     result = []
     for item in items:
         if item and item not in result:

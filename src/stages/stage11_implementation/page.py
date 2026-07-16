@@ -7,24 +7,26 @@
 """
 
 import streamlit as st
-from src.ui.design_system import render_page_banner, render_section_intro
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.module_summary import render_stage_summary
+
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_data_injector import (
     get_full_spatial_context,
     get_key_plots_summary,
 )
-from src.workflow.stage_data_bus import (
-    save_stage_output, load_stage_output, render_evidence_chain_bar,
-)
-from src.workflow.approval_state import StageDependency, render_dependency_gate
-from src.workflow.stage_keys import SK
-from src.ui.streamlit_compat import stretch_width
-
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage11_implementation.config import STAGE11_WORKSPACE
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.module_summary import render_stage_summary
+from src.ui.streamlit_compat import stretch_width
+from src.workflow.approval_state import StageDependency, render_dependency_gate
+from src.workflow.stage_data_bus import (
+    load_stage_output,
+    render_evidence_chain_bar,
+    save_stage_output,
+)
+from src.workflow.stage_keys import SK
 
 
 def render_page() -> None:

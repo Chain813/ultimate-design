@@ -4,11 +4,12 @@ Usage:
     from src.utils.llm_monitor import log_llm_call, get_llm_metrics
 """
 
-import os
 import json
 import logging
+import os
 import time
 from pathlib import Path
+
 import streamlit as st
 
 LOG_FILE = Path("logs/llm_usage.json")
@@ -60,7 +61,7 @@ def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, lat
 
 def get_llm_metrics():
     """Retrieve all LLM metrics from session state and disk."""
-    if "llm_metrics" in st.session_state and st.session_state["llm_metrics"]:
+    if st.session_state.get("llm_metrics"):
         return st.session_state["llm_metrics"]
         
     if LOG_FILE.exists():

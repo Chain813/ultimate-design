@@ -1,6 +1,7 @@
 import json
 import os
 
+
 def compress_geojson(input_path, output_path, precision=6):
     print(f"Compressing {input_path}...")
     if not os.path.exists(input_path):

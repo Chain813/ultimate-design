@@ -1,6 +1,8 @@
-# -*- coding: utf-8 -*-
 """Render bird's eye white model: study area centered, natural scale."""
-import os, sys, json, math
+import json
+import math
+import os
+import sys
 from pathlib import Path
 
 project_root = Path(__file__).resolve().parent.parent
@@ -8,6 +10,7 @@ os.chdir(str(project_root))
 sys.path.insert(0, str(project_root))
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
@@ -25,9 +28,9 @@ if cjk_font:
 else:
     print('WARNING: No CJK font found, Chinese text may render as boxes')
 import matplotlib.patches as mpatches
-from matplotlib.patches import Polygon
-from matplotlib.collections import PatchCollection
 import numpy as np
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Polygon
 from shapely.geometry import Polygon as SPoly
 
 # Load .env

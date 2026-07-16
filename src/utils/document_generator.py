@@ -1,8 +1,10 @@
-import docx
-from docx.shared import Pt, RGBColor, Inches
-from docx.enum.text import WD_ALIGN_PARAGRAPH
-from io import BytesIO
 import base64
+from io import BytesIO
+
+import docx
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt, RGBColor
+
 
 def generate_official_word_doc(title, text_content, aigc_history=None):
     """

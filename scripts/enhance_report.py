@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
 """Regenerate report with AI-focused abstract, using existing chapters where possible."""
-import os, sys, io
+import io
+import os
+import sys
 from pathlib import Path
 
 project_root = Path(__file__).resolve().parent.parent
@@ -23,11 +24,16 @@ if env_path.exists():
                 os.environ.setdefault(k.strip(), v.strip())
 
 from src.engines.document_composer import (
-    assemble_report_docx, AuthorInfo,
-    _generate_abstract_from_chapters, _generate_english_abstract,
-    _extract_keywords_from_chapters, _extract_english_keywords,
-    _generate_references_from_chapters, _generate_acknowledgments,
-    REPORT_CHAPTERS, load_author_info_json,
+    REPORT_CHAPTERS,
+    AuthorInfo,
+    _extract_english_keywords,
+    _extract_keywords_from_chapters,
+    _generate_abstract_from_chapters,
+    _generate_acknowledgments,
+    _generate_english_abstract,
+    _generate_references_from_chapters,
+    assemble_report_docx,
+    load_author_info_json,
 )
 from src.engines.document_pipeline import run_light_pipeline
 

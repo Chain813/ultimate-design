@@ -1,16 +1,15 @@
-# -*- coding: utf-8 -*-
 """scripts/run_real_negotiation.py
 
 Run real multi-agent planning negotiation using live DeepSeek API calls.
 Saves conversation logs, satisfaction scores, and strategy matrix to stage data bus.
 """
 
-import os
-import sys
-import json
-import time
-import re
 import hashlib
+import json
+import os
+import re
+import sys
+import time
 from pathlib import Path
 
 # Add project root to path
@@ -22,6 +21,7 @@ os.environ["FORCE_REAL_LLM"] = "1"
 
 # Import system dependencies
 import streamlit as st
+
 # Mock Streamlit session state and functions if necessary, but stage_data_bus writes to file directly.
 if not hasattr(st, "session_state"):
     st.session_state = {}
@@ -30,11 +30,12 @@ from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
 from src.engines.site_diagnostic_engine import generate_policy_matrix
 from src.engines.spatial_data_injector import (
     get_full_spatial_context,
-    get_landuse_summary,
     get_key_plots_summary,
+    get_landuse_summary,
 )
-from src.workflow.stage_data_bus import save_stage_output, load_stage_output
+from src.workflow.stage_data_bus import load_stage_output, save_stage_output
 from src.workflow.stage_keys import SK
+
 
 def parse_streaming_text(raw_text: str):
     pattern = r"(【正式回复】|\[正式回复\]|\*\*正式回复\*\*|###?\s*正式回复|正式回复[:：]|【正式发言】|\[正式发言\]|\*\*正式发言\*\*|###?\s*正式发言|正式发言[:：]|【正式方案】|\[正式方案\]|\*\*正式方案\*\*|###?\s*正式方案|正式方案[:：])"
@@ -92,11 +93,11 @@ def calculate_dynamic_satisfaction(memory_text: str):
         parsed = parse_llm_json(resp, fallback=None)
         if parsed and isinstance(parsed, dict):
             valid = True
-            for k in scores.keys():
+            for k in scores:
                 if k not in parsed or not isinstance(parsed[k], (int, float)):
                     valid = False
             if valid:
-                return {k: min(100.0, max(0.0, float(parsed[k]))) for k in scores.keys()}
+                return {k: min(100.0, max(0.0, float(parsed[k]))) for k in scores}
     except Exception as e:
         print(f"Error calculating satisfaction with LLM: {e}")
 

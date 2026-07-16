@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Add a wind rose (North arrow / compass) to atlas images that are missing one.
 The wind rose is drawn as a transparent PNG overlay using PIL, matching
 the style seen in DR-011 and DR-012 (N letter + 8-point star compass).
 """
+import math
 import os
 import sys
-import math
+
 from PIL import Image, ImageDraw, ImageFont
 
 sys.stdout.reconfigure(encoding='utf-8')
@@ -137,11 +137,11 @@ def add_wind_rose_to_image(img_path, output_path=None):
         output_path = img_path  # overwrite in place
         
     base_img = Image.open(img_path).convert('RGBA')
-    w, h = base_img.size
+    _w, _h = base_img.size
     
     # Create wind rose
     wr = create_wind_rose(size=70)
-    wr_w, wr_h = wr.size
+    wr_w, _wr_h = wr.size
     
     # Position: The map panel typically occupies x=[45..1415] in a 2240px wide image.
     # The wind rose in DR-011 is at approximately x=1060, y=170 (top-right of map panel)

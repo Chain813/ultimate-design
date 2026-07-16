@@ -7,11 +7,11 @@
 from __future__ import annotations
 
 import os
-import yaml
 from pathlib import Path
 from typing import Optional
 
 import streamlit as st
+import yaml
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PROJECT_YAML = PROJECT_ROOT / "config" / "project.yaml"
@@ -214,7 +214,7 @@ def render_project_config_banner():
                 vp_zoom = st.number_input("默认缩放", value=viewport.get("zoom", 14), min_value=1, max_value=20)
             with col_v2:
                 vp_pitch = st.number_input("倾斜角", value=viewport.get("pitch", 60), min_value=0, max_value=90)
-            col_v3, col_v4 = st.columns(2)
+            col_v3, _col_v4 = st.columns(2)
             with col_v3:
                 vp_bearing = st.number_input("旋转角", value=viewport.get("bearing", -20), min_value=-180, max_value=180)
 
@@ -256,7 +256,7 @@ def render_project_config_banner():
     # 保存按钮
     # ═══════════════════════════════════════
     st.markdown("---")
-    col_save, col_status = st.columns([1, 3])
+    col_save, _col_status = st.columns([1, 3])
     with col_save:
         if st.button("💾 保存配置", type="primary", use_container_width=True):
             # 验证必填项
@@ -319,7 +319,7 @@ def render_project_config_banner():
             # 同时设置当前进程环境变量
             os.environ["DEEPSEEK_API_KEY"] = deepseek_key.strip()
             if baidu_ak.strip():
-                os.environ["Baidu_Map_AK"] = baidu_ak.strip()
+                os.environ["BAIDU_MAP_AK"] = baidu_ak.strip()
 
             st.success("✅ 配置已保存！页面将在 2 秒后自动刷新...")
             import time

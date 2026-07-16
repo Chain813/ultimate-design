@@ -72,7 +72,7 @@ def compose_framed_sheet(
     title: str,
     chapter: str = "",
     summary: str = "",
-    legend_items: Optional[List[Tuple[str, str]]] = None,
+    legend_items: list[tuple[str, str]] | None = None,
     drawing_number: str = "",
     scale_text: str = "1:5000",
 ) -> Image.Image:

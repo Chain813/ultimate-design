@@ -104,6 +104,7 @@ def render_summary_cards(cards):
 
 import textwrap
 
+
 def _load_svg_template(template_name: str) -> str:
     path = Path(__file__).resolve().parents[2] / "assets" / "svg_templates" / f"{template_name}.html"
     if path.exists():

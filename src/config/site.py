@@ -15,8 +15,9 @@ Usage:
 from __future__ import annotations
 
 import logging
-import yaml
 from pathlib import Path
+
+import yaml
 
 from src.config.loader import load_global_config
 

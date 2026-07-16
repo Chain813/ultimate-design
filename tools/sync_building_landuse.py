@@ -4,8 +4,9 @@ Tags buildings based on their landuse zone:
   - Class 9 (Green Space) -> prop_style = "park" (green)
   - Class 2 (Admin/Historical) -> prop_style = "historical" (purple)
 """
-import geopandas as gpd
 import sys
+
+import geopandas as gpd
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')

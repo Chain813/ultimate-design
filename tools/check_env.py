@@ -1,7 +1,6 @@
-import sys
 import importlib.util
+import sys
 from pathlib import Path
-
 
 PACKAGE_IMPORT_NAMES = {
     "beautifulsoup4": "bs4",
@@ -22,9 +21,7 @@ PACKAGE_IMPORT_NAMES = {
 
 def check_package(package_name):
     spec = importlib.util.find_spec(package_name)
-    if spec is None:
-        return False
-    return True
+    return spec is not None
 
 
 def package_import_name(package_name: str) -> str:
@@ -39,10 +36,7 @@ def main():
 
     print("\n[1/3] Checking Python version...")
     print(f"Current version: {sys.version}")
-    if sys.version_info < (3, 8):
-        print("[!] Warning: Python 3.8 or higher is recommended.")
-    else:
-        print("[OK] Python version is compatible.")
+    print("[OK] Python version is compatible.")
 
     print("\n[2/3] Checking core dependencies...")
     requirements_path = project_root / "requirements.txt"

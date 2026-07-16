@@ -1,13 +1,13 @@
-# -*- coding: utf-8 -*-
 """DR-046 产业业态规划图 — 对应答辩稿 4.6 产业业态规划"""
 from pathlib import Path
-import numpy as np
-from shapely.geometry import Point, LineString
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import numpy as np
 from PIL import Image
+from shapely.geometry import LineString, Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -183,9 +183,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     # 3c. Draw wind rose on map (HUD)
         # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
     try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
         from pathlib import Path as _Path
+
+        import numpy as _np
+        from PIL import Image as _PIL_Image
         _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
         _rose_path = _assets_dir / "长春市风玫瑰.png"
         if _rose_path.exists():
@@ -275,7 +276,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             fontproperties=_font(font_prop, 10.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, y_ratio_val, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=_font(font_prop, 10.5, 'bold'), zorder=4)
 

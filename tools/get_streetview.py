@@ -1,15 +1,16 @@
 import os
+import sys
+import time
+
 import pandas as pd
 import requests
-import time
-import sys
 from dotenv import load_dotenv
 
 load_dotenv()
 
-AK = os.getenv("Baidu_Map_AK")
+AK = os.getenv("BAIDU_MAP_AK")
 if not AK:
-    raise ValueError("请设置环境变量 Baidu_Map_AK，参考 .env.example 文件")
+    raise ValueError("请设置环境变量 BAIDU_MAP_AK，参考 .env.example 文件")
 
 INPUT_EXCEL = r"data/Changchun_Precise_Points.xlsx"
 SAVE_DIR = r"data/streetview"

@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -34,7 +35,7 @@ class VersionStore:
         meta = {
             "version_id": version_id,
             "drawing_name": drawing_name,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "png_path": str(png_path),
             **metadata,
         }
@@ -42,7 +43,7 @@ class VersionStore:
         self._update_manifest(drawing_name, version_id, meta)
         return version_id
 
-    def load(self, drawing_name: str, version_id: str = "latest") -> Optional[Tuple]:
+    def load(self, drawing_name: str, version_id: str = "latest") -> tuple | None:
         drawing_dir = self.output_dir / drawing_name
         if not drawing_dir.exists():
             return None
@@ -65,10 +66,10 @@ class VersionStore:
             metadata = json.loads(json_path.read_text(encoding="utf-8"))
         return image, metadata
 
-    def get_latest(self, drawing_name: str) -> Optional[Tuple]:
+    def get_latest(self, drawing_name: str) -> tuple | None:
         return self.load(drawing_name, "latest")
 
-    def list_versions(self, drawing_name: str) -> List[Dict]:
+    def list_versions(self, drawing_name: str) -> list[dict]:
         drawing_dir = self.output_dir / drawing_name
         if not drawing_dir.exists():
             return []
@@ -117,10 +118,8 @@ class VersionStore:
     def _update_manifest(self, drawing_name: str, version_id: str, metadata: dict):
         manifest = {}
         if self._manifest_path.exists():
-            try:
+            with contextlib.suppress(Exception):
                 manifest = json.loads(self._manifest_path.read_text(encoding="utf-8"))
-            except Exception:
-                pass
         if drawing_name not in manifest:
             manifest[drawing_name] = {}
         manifest[drawing_name][version_id] = {

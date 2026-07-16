@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Export A1 exhibition boards as editable Photoshop source packages.
 
 The Python PSD libraries available in this environment can write pixel layers,
@@ -21,7 +20,6 @@ from pathlib import Path
 from urllib.parse import unquote, urlparse
 
 from PIL import Image, ImageDraw, ImageFont
-
 
 ROOT = Path(__file__).resolve().parents[1]
 BOARD_DIR = ROOT / "static" / "exhibition_boards"

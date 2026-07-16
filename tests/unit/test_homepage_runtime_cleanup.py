@@ -1,7 +1,6 @@
 import ast
 from pathlib import Path
 
-
 APP_PATH = Path("app.py")
 APP_SHELL_PATH = Path("src/ui/app_shell.py")
 

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from html import escape
-import re
 
 import streamlit as st
 

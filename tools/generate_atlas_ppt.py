@@ -9,12 +9,15 @@ Generate the atlas PPTX with:
 import os
 import sys
 from pathlib import Path
-from pptx import Presentation
-from pptx.util import Inches, Pt, Mm, Emu
-from pptx.dml.color import RGBColor
-from pptx.enum.text import PP_ALIGN
-from pptx.enum.shapes import MSO_SHAPE
+
 from PIL import Image, ImageFilter
+from pptx import Presentation
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import PP_ALIGN
+from pptx.util import Emu, Inches, Mm, Pt
+
+from src.config.site import get_author_info, get_institution_info
 
 # Force UTF-8 stdout
 sys.stdout.reconfigure(encoding='utf-8')
@@ -94,8 +97,8 @@ def _add_textbox(slide, left, top, width, height, text, font_size=14,
     run.font.name = font_name
     
     # Enable East Asian / Complex Script fonts in XML for PowerPoint rendering
-    from pptx.oxml.ns import qn
     from lxml import etree
+    from pptx.oxml.ns import qn
     rPr = run._r.get_or_add_rPr()
     for tag in ['latin', 'ea', 'cs']:
         el = rPr.find(qn(f'a:{tag}'))
@@ -227,7 +230,7 @@ def add_chapter_nav_slide(prs, blank_layout, active_chapter_idx):
     col_width = Mm(col_w)
     y_base = Mm(74)
 
-    for si, (fn, title) in enumerate(sheets):
+    for si, (_fn, title) in enumerate(sheets):
         col = si // col_cap
         row = si % col_cap
         x_pos = Mm(148) + col * col_width
@@ -373,13 +376,13 @@ def generate_ppt():
             missing_files.append(cover_fn)
 
     # ── 2) Per-chapter: nav slide + image slides ──
-    for ch_idx, (ch_name, ch_en_name, sheets) in enumerate(CHAPTERS):
+    for ch_idx, (_ch_name, _ch_en_name, sheets) in enumerate(CHAPTERS):
         # Chapter navigation divider
         add_chapter_nav_slide(prs, blank_layout, ch_idx)
         slide_count += 1
 
         # Image slides for this chapter
-        for fn, title in sheets:
+        for fn, _title in sheets:
             if fn in ["DR-001_规划设计图册封面.png", "DR-002_图册目录.png"]:
                 continue
             img_path = ATLAS_DIR / fn

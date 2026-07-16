@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 """DR-009 案例借鉴与对标分析图"""
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
+
 import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent.parent

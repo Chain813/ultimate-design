@@ -6,7 +6,7 @@ if str(root) not in sys.path:
     sys.path.append(str(root))
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-from src.workflow.stage_data_bus import save_stage_output, load_stage_output, stage_ready, list_completed_stages
+from src.workflow.stage_data_bus import list_completed_stages, load_stage_output, save_stage_output, stage_ready
 
 
 def test_save_and_load():
@@ -37,6 +37,7 @@ def test_list_completed_stages():
 def test_save_stage_summary_to_file(tmp_path):
     """save_stage_summary_to_file correctly writes and sorts stage data."""
     from unittest.mock import patch
+
     from src.workflow.stage_data_bus import save_stage_summary_to_file
     
     mock_file = tmp_path / "stage_generation_report.md"

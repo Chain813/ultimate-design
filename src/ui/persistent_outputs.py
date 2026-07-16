@@ -27,8 +27,8 @@ import io
 import json
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import streamlit as st
 
@@ -46,7 +46,7 @@ class PersistentOutput:
     filename: str           # 下载文件名
     timestamp: float = field(default_factory=time.time)
     size_bytes: int = 0     # 数据大小（字节）
-    metadata: Dict[str, str] = field(default_factory=dict)  # 额外信息
+    metadata: dict[str, str] = field(default_factory=dict)  # 额外信息
     _data_ref: str = ""     # session_state 中的数据引用键名
 
 
@@ -125,7 +125,7 @@ def _init_registry():
         _load_registry_from_disk()
 
 
-def _get_registry() -> Dict[str, PersistentOutput]:
+def _get_registry() -> dict[str, PersistentOutput]:
     """获取注册表"""
     _init_registry()
     return st.session_state[OUTPUT_REGISTRY_KEY]
@@ -141,8 +141,8 @@ def register_output(
     mime: str = "application/octet-stream",
     filename: str = "output",
     category: str = "report",
-    key: Optional[str] = None,
-    metadata: Optional[Dict[str, str]] = None,
+    key: str | None = None,
+    metadata: dict[str, str] | None = None,
     overwrite: bool = True,
 ) -> str:
     """注册一个持久化成果。"""
@@ -198,13 +198,13 @@ def register_output(
     return key
 
 
-def get_output(key: str) -> Optional[PersistentOutput]:
+def get_output(key: str) -> PersistentOutput | None:
     """获取单个已注册成果的元数据"""
     registry = _get_registry()
     return registry.get(key)
 
 
-def get_output_data(key: str) -> Optional[bytes]:
+def get_output_data(key: str) -> bytes | None:
     """获取已注册成果的实际数据"""
     output = get_output(key)
     if output is None:
@@ -212,7 +212,7 @@ def get_output_data(key: str) -> Optional[bytes]:
     return st.session_state.get(output._data_ref)
 
 
-def get_all_outputs(category: Optional[str] = None) -> List[PersistentOutput]:
+def get_all_outputs(category: str | None = None) -> list[PersistentOutput]:
     """获取所有已注册成果，按时间倒序"""
     registry = _get_registry()
     outputs = list(registry.values())
@@ -242,18 +242,15 @@ def unregister_output(key: str):
         _save_registry_to_disk()
 
 
-def clear_all_outputs(category: Optional[str] = None):
+def clear_all_outputs(category: str | None = None):
     """清空所有（或指定分类的）已注册成果"""
     registry = _get_registry()
-    if category:
-        keys = [k for k, v in registry.items() if v.category == category]
-    else:
-        keys = list(registry.keys())
+    keys = [k for k, v in registry.items() if v.category == category] if category else list(registry.keys())
     for k in keys:
         unregister_output(k)
 
 
-def has_outputs(category: Optional[str] = None) -> bool:
+def has_outputs(category: str | None = None) -> bool:
     """检查是否有已注册成果"""
     registry = _get_registry()
     if category:
@@ -315,33 +312,32 @@ def render_persistent_output_bar():
         meta = CATEGORY_META.get(output.category, {"icon": "📄", "color": "#64748b", "label": "其他"})
         data = get_output_data(output.key)
 
-        with cols[i % 3]:
-            with st.container(border=True):
-                # 标题行
-                st.markdown(
-                    f"<span style='color:{meta['color']};font-weight:700;'>{meta['icon']} {output.label}</span>"
-                    f"<span style='float:right;color:#94a3b8;font-size:0.75rem;'>{meta['label']}</span>",
-                    unsafe_allow_html=True,
-                )
+        with cols[i % 3], st.container(border=True):
+            # 标题行
+            st.markdown(
+                f"<span style='color:{meta['color']};font-weight:700;'>{meta['icon']} {output.label}</span>"
+                f"<span style='float:right;color:#94a3b8;font-size:0.75rem;'>{meta['label']}</span>",
+                unsafe_allow_html=True,
+            )
 
-                # 元信息
-                st.caption(
-                    f"📄 {output.filename[:40]}"
-                    f"{'…' if len(output.filename) > 40 else ''}"
-                    f" · {_format_size(output.size_bytes)}"
-                )
+            # 元信息
+            st.caption(
+                f"📄 {output.filename[:40]}"
+                f"{'…' if len(output.filename) > 40 else ''}"
+                f" · {_format_size(output.size_bytes)}"
+            )
 
-                if data is not None:
-                    st.download_button(
-                        f"💾 下载 {output.label}",
-                        data=data,
-                        file_name=output.filename,
-                        mime=output.mime,
-                        key=f"persistent_dl_{output.key}",
-                        use_container_width=True,
-                    )
-                else:
-                    st.warning("⚠️ 数据丢失，请重新生成")
+            if data is not None:
+                st.download_button(
+                    f"💾 下载 {output.label}",
+                    data=data,
+                    file_name=output.filename,
+                    mime=output.mime,
+                    key=f"persistent_dl_{output.key}",
+                    use_container_width=True,
+                )
+            else:
+                st.warning("⚠️ 数据丢失，请重新生成")
 
     st.markdown("---")
 
@@ -354,7 +350,7 @@ def register_document_output(
     docx_buf,
     student_name: str = "",
     student_id: str = "",
-    chapters: Optional[Dict[str, str]] = None,
+    chapters: dict[str, str] | None = None,
 ):
     """注册项目设计报告成果"""
     safe_name = student_name or "学生"
@@ -390,7 +386,7 @@ def register_report_output(
     label: str,
     content: str,
     stage_code: str = "",
-    key: Optional[str] = None,
+    key: str | None = None,
 ):
     """注册一份分析报告"""
     safe_stage = stage_code or "report"

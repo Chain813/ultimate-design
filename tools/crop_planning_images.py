@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 """Cropping tool to extract the map regions from the scanned PDF/JPEG master plan pages."""
 from pathlib import Path
+
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent

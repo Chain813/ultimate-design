@@ -3,6 +3,7 @@
 Prevents credentials leakage and persists configurations across installations.
 """
 
+import contextlib
 import json
 import os
 from pathlib import Path
@@ -21,10 +22,8 @@ DEFAULT_SETTINGS = {
 def load_user_settings() -> dict:
     """Load settings from the local JSON config file, creating defaults if missing."""
     if not SETTINGS_DIR.exists():
-        try:
+        with contextlib.suppress(Exception):
             SETTINGS_DIR.mkdir(parents=True, exist_ok=True)
-        except Exception:
-            pass
 
     settings = DEFAULT_SETTINGS.copy()
     if SETTINGS_FILE.exists():

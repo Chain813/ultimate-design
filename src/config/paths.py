@@ -1,10 +1,10 @@
 """Canonical project paths for app/pages/tools usage."""
 
 
-from .runtime import project_root
+from pathlib import Path
 
 from .loader import load_global_config
-from pathlib import Path
+from .runtime import project_root
 
 ROOT_DIR = project_root()
 DATA_DIR = ROOT_DIR / "data"

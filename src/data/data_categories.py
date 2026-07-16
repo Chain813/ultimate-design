@@ -8,7 +8,7 @@ Usage:
 """
 
 
-from src.config import DATA_DIR, SHP_DIR, STREETVIEW_DIR, CSV_DIR
+from src.config import CSV_DIR, DATA_DIR, SHP_DIR, STREETVIEW_DIR
 
 DATA_CATEGORIES = [
     {

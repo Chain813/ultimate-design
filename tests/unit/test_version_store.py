@@ -8,8 +8,9 @@ if str(root) not in sys.path:
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from PIL import Image
-from src.engines.version_store import VersionStore
+
 from src.engines.batch_exporter import BatchExporter, ExportReport
+from src.engines.version_store import VersionStore
 
 
 def test_save_creates_files(tmp_path):

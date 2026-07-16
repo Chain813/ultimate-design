@@ -4,11 +4,11 @@ import pytest
 from PIL import Image, ImageDraw
 
 from tools.generate_parcel_control_tables import (
+    _scaled_fonts,
     build_control_table_rows,
     calculate_metrics,
     load_key_plot_areas,
     metric_card_text_positions,
-    _scaled_fonts,
 )
 
 

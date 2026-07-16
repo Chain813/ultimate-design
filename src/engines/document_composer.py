@@ -17,8 +17,9 @@ from __future__ import annotations
 import io
 import logging
 import re
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
@@ -41,11 +42,11 @@ class ReportSection:
     word_count: int          # 目标字数
     chapter: int             # 所属章号
     strategy: str            # "rewrite" | "generate"
-    data_sources: List[str] = field(default_factory=list)  # stage_bus keys / spatial hint
+    data_sources: list[str] = field(default_factory=list)  # stage_bus keys / spatial hint
     description: str = ""    # 本节内容简述
 
 
-REPORT_CHAPTERS: List[ReportSection] = [
+REPORT_CHAPTERS: list[ReportSection] = [
     # ═══ 第 1 章：项目背景与概况 ═══
     ReportSection(
         section_id="1.1", title="项目背景", word_count=500, chapter=1,
@@ -228,13 +229,13 @@ def _safe_str(val, max_chars: int = 3000) -> str:
     return s
 
 
-def build_document_context() -> Dict[str, str]:
+def build_document_context() -> dict[str, str]:
     """从 stage_bus + spatial_data 聚合所有可用数据源。
 
     Returns:
         dict: {source_name: text_content} 供 LLM prompt 注入使用
     """
-    ctx: Dict[str, str] = {}
+    ctx: dict[str, str] = {}
 
     # ── 从 DesignContext 提取现有 stage 数据 ──
     try:
@@ -278,11 +279,11 @@ def build_document_context() -> Dict[str, str]:
     # ── 空间数据 ──
     try:
         from src.engines.spatial_data_injector import (
+            get_building_summary,
             get_full_spatial_context,
+            get_gvi_summary,
             get_landuse_summary,
             get_poi_summary,
-            get_gvi_summary,
-            get_building_summary,
             get_traffic_summary,
         )
         ctx["spatial_context"] = _safe_str(get_full_spatial_context(), 3000)
@@ -330,7 +331,7 @@ def build_document_context() -> Dict[str, str]:
 # ═══════════════════════════════════════════════════════════════
 
 def get_document_system_prompt() -> str:
-    from src.config import get_site_city, get_site_district, get_site_name, get_site_desc
+    from src.config import get_site_city, get_site_desc, get_site_district, get_site_name
     city = get_site_city()
     district = get_site_district()
     site_name = get_site_name()
@@ -366,7 +367,7 @@ def get_document_system_prompt() -> str:
 5. 只输出正文段落，不输出章节标题。"""
 
 
-def _resolve_sources(sec: ReportSection, ctx: Dict[str, str]) -> str:
+def _resolve_sources(sec: ReportSection, ctx: dict[str, str]) -> str:
     """将 data_sources 列表解析为可注入 prompt 的文本块"""
     parts = []
     for src in sec.data_sources:
@@ -413,7 +414,7 @@ def _resolve_sources(sec: ReportSection, ctx: Dict[str, str]) -> str:
     return "\n\n".join(parts)
 
 
-def build_chapter_prompt(sec: ReportSection, ctx: Dict[str, str]) -> str:
+def build_chapter_prompt(sec: ReportSection, ctx: dict[str, str]) -> str:
     """为单个小节构建 LLM prompt"""
     source_text = _resolve_sources(sec, ctx)
     has_sources = bool(source_text.strip())
@@ -476,7 +477,7 @@ def build_chapter_prompt(sec: ReportSection, ctx: Dict[str, str]) -> str:
 
 def generate_single_section(
     sec: ReportSection,
-    ctx: Dict[str, str],
+    ctx: dict[str, str],
     model: str = "deepseek-v4-pro",
 ) -> str:
     """生成单个小节的正文内容"""
@@ -496,11 +497,11 @@ def generate_single_section(
 
 
 def generate_all_chapters(
-    ctx: Optional[Dict[str, str]] = None,
-    progress_callback: Optional[Callable[[int, int, str], None]] = None,
-    chunk_callback: Optional[Callable[[str, str, str], None]] = None,
+    ctx: dict[str, str] | None = None,
+    progress_callback: Callable[[int, int, str], None] | None = None,
+    chunk_callback: Callable[[str, str, str], None] | None = None,
     model: str = "deepseek-v4-pro",
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """生成全部 27 个小节。
 
     Args:
@@ -517,7 +518,7 @@ def generate_all_chapters(
     if ctx is None:
         ctx = build_document_context()
 
-    results: Dict[str, str] = {}
+    results: dict[str, str] = {}
     total = len(REPORT_CHAPTERS)
 
     for i, sec in enumerate(REPORT_CHAPTERS):
@@ -690,8 +691,9 @@ class AuthorInfo:
 
 def load_author_info_json() -> AuthorInfo:
     """从 config/student_info.json 加载学生配置，确保不硬编码隐私数据"""
-    import os
     import json
+    import os
+
     from src.config.runtime import resolve_path
     
     default_info = AuthorInfo()
@@ -715,8 +717,9 @@ def load_author_info_json() -> AuthorInfo:
 
 def save_author_info_json(student: AuthorInfo) -> None:
     """将学生学籍配置写入本地 config/student_info.json (已被 gitignore 忽略)"""
-    import os
     import json
+    import os
+
     from src.config.runtime import resolve_path
     
     try:
@@ -738,10 +741,11 @@ def save_author_info_json(student: AuthorInfo) -> None:
         logger.warning(f"Failed to save config/student_info.json: {e}")
 
 
-def scan_local_references() -> List[str]:
+def scan_local_references() -> list[str]:
     """扫描本地参考文献文件夹中的所有 PDF 文件名"""
     import os
     from pathlib import Path
+
     from src.config.paths import ROOT_DIR, config
 
     # Try config first
@@ -767,8 +771,8 @@ def scan_local_references() -> List[str]:
 
 
 def assemble_report_docx(
-    chapters: Dict[str, str],
-    student: Optional[AuthorInfo] = None,
+    chapters: dict[str, str],
+    student: AuthorInfo | None = None,
     abstract_cn: str = "",
     abstract_en: str = "",
     keywords_cn: str = "",
@@ -980,7 +984,7 @@ def assemble_report_docx(
 # 辅助生成函数 (摘要/关键词/致谢/参考文献)
 # ═══════════════════════════════════════════════════════════════
 
-def _all_chapters_text(chapters: Dict[str, str], max_chars: int = 5000) -> str:
+def _all_chapters_text(chapters: dict[str, str], max_chars: int = 5000) -> str:
     """拼接所有章节文本"""
     parts = []
     total = 0
@@ -995,7 +999,7 @@ def _all_chapters_text(chapters: Dict[str, str], max_chars: int = 5000) -> str:
     return "\n".join(parts)
 
 
-def _generate_abstract_from_chapters(chapters: Dict[str, str]) -> str:
+def _generate_abstract_from_chapters(chapters: dict[str, str]) -> str:
     """从章节内容生成中文摘要——聚焦LLM与AIGC在城乡规划中的应用"""
     from src.engines.llm_engine import call_llm_engine
 
@@ -1040,7 +1044,7 @@ def _generate_abstract_from_chapters(chapters: Dict[str, str]) -> str:
     return result.strip() if result else "摘要生成失败，请检查 LLM API。"
 
 
-def _extract_keywords_from_chapters(chapters: Dict[str, str]) -> str:
+def _extract_keywords_from_chapters(chapters: dict[str, str]) -> str:
     """从章节内容提取中文关键词——突出AI与AIGC主题"""
     from src.engines.llm_engine import call_llm_engine
 
@@ -1068,7 +1072,7 @@ def _extract_keywords_from_chapters(chapters: Dict[str, str]) -> str:
     return result.strip() if result else "城市更新；大语言模型；AIGC；多智能体协商；AI辅助设计"
 
 
-def _generate_english_abstract(chapters: Dict[str, str]) -> str:
+def _generate_english_abstract(chapters: dict[str, str]) -> str:
     """生成英文摘要——聚焦LLM与AIGC在城乡规划中的应用"""
     from src.engines.llm_engine import call_llm_engine
 
@@ -1097,7 +1101,7 @@ Output only the English abstract text. No title."""
     return result.strip() if result else "Abstract generation failed."
 
 
-def _extract_english_keywords(chapters: Dict[str, str]) -> str:
+def _extract_english_keywords(chapters: dict[str, str]) -> str:
     """提取英文关键词"""
     from src.engines.llm_engine import call_llm_engine
 
@@ -1116,7 +1120,7 @@ Output only keywords, e.g.: Urban Renewal; Historic District; Digital Twin; AIGC
     return result.strip() if result else "Urban Renewal; Historic District; Digital Twin; AI-Assisted Design"
 
 
-def _generate_references_from_chapters(chapters: Dict[str, str]) -> str:
+def _generate_references_from_chapters(chapters: dict[str, str]) -> str:
     """生成 GB/T 7714-2015 格式参考文献"""
     from src.engines.llm_engine import call_llm_engine
 
@@ -1155,9 +1159,8 @@ def _generate_references_from_chapters(chapters: Dict[str, str]) -> str:
 
 def _generate_acknowledgments(student: AuthorInfo) -> str:
     """生成致谢"""
-    from src.engines.llm_engine import call_llm_engine
-
     from src.config.site import get_institution_info, get_project_info
+    from src.engines.llm_engine import call_llm_engine
     inst = get_institution_info()
     proj = get_project_info()
     inst_name = inst.get("name", "项目单位")

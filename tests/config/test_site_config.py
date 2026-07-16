@@ -1,16 +1,17 @@
-# -*- coding: utf-8 -*-
 import sys
+
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from src.config.site import (
+    get_landmarks,
+    get_local_crs,
+    get_map_viewport,
+    get_site_center,
+    get_site_city,
     get_site_config,
     get_site_name,
-    get_site_city,
-    get_site_center,
-    get_map_viewport,
-    get_local_crs,
-    get_landmarks,
 )
+
 
 def test_site_config_helpers():
     config = get_site_config()

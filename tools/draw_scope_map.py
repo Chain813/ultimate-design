@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
 # tools/draw_scope_map.py
+import importlib
 import json
-import sys
 import os
+import sys
 from pathlib import Path
+
 import geopandas as gpd
-import matplotlib.pyplot as plt
 import matplotlib.patheffects as path_effects
-from shapely.geometry import Point, box
-from PIL import Image, ImageDraw, ImageFont
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import importlib
+from PIL import Image, ImageDraw, ImageFont
+from shapely.geometry import Point, box
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC_DIR = ROOT / "static"
@@ -135,8 +135,8 @@ def generate_drawing_params(drawing_type: str) -> dict:
     Returns empty dict on failure.
     """
     try:
-        from src.workflow.design_context import build_design_context, get_context_for_drawing
         from src.engines.llm_engine import call_llm_engine
+        from src.workflow.design_context import build_design_context, get_context_for_drawing
 
         ctx = build_design_context()
         if not ctx.design_brief and "07" not in ctx.completed_stages:
@@ -292,10 +292,7 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
         return p.iloc[0].x, p.iloc[0].y
 
     # 3. Generate LLM-guided drawing params
-    if has_no_frame:
-        params = {}
-    else:
-        params = generate_drawing_params(drawing_type)
+    params = {} if has_no_frame else generate_drawing_params(drawing_type)
     if not isinstance(params, dict):
         params = {}
     params["drawing_type"] = drawing_type
@@ -352,7 +349,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -402,10 +399,11 @@ def generate_dynamic_description(drawing_type, title):
     if drawing_type in ["公众参与与博弈协商成果图", "投资估算与经济测算图"]:
         return None
     try:
-        from src.config import SHP_FILES
         import geopandas as gpd
-        import pandas as pd
         import numpy as np
+        import pandas as pd
+
+        from src.config import SHP_FILES
 
         boundary_path = SHP_FILES["boundary"]
         buildings_path = SHP_FILES["buildings"]
@@ -488,9 +486,11 @@ def generate_dynamic_description(drawing_type, title):
         pass
     return None
 
-def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位图", title="现状区位图", description_lines=None, drawing_number="DR-001", from src.config.site import get_author_info
+from src.config.site import get_author_info
+
 a=get_author_info()
-author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
+
+def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位图", title="现状区位图", description_lines=None, drawing_number="DR-001", author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大学建筑与规划学院\n城乡规划211班"):
     print("Processing A3 layout template...")
     template = Image.open(STATIC_DIR / 'a3_layout_preview_full.png').convert('RGB')
     map_img = Image.open(map_path).convert('RGB')
@@ -542,7 +542,7 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
         font_body = ImageFont.truetype(font_path, 18)
         font_tb = ImageFont.truetype(font_path, 24)
         font_body_bold = ImageFont.truetype(font_bold_path, 18)
-    except IOError:
+    except OSError:
         font_small = ImageFont.load_default()
         font_title = ImageFont.load_default()
         font_body = ImageFont.load_default()
@@ -553,7 +553,7 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
     if not is_mindmap:
         # Draw dynamic scale bar
         m_per_px = view_w / 1705
-        scale_bar_px = int(round(500 / m_per_px))
+        scale_bar_px = round(500 / m_per_px)
         x_start = 2101 - scale_bar_px // 2
         x_end = 2101 + scale_bar_px // 2
         
@@ -564,7 +564,7 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
         draw.text((x_end - 20, 555), "500m", fill=(72, 72, 74), font=font_small)
         
         scale_ratio = view_w / 0.31968
-        scale_rounded = int(round(scale_ratio / 500)) * 500
+        scale_rounded = round(scale_ratio / 500) * 500
         scale_text = f"比例尺 1:{scale_rounded}"
         bbox_scale = draw.textbbox((0, 0), scale_text, font=font_small)
         w_scale = bbox_scale[2] - bbox_scale[0]
@@ -966,19 +966,18 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
             y += spacing
 
         # Draw design description under the legend items inside the legend box!
-        if description_lines:
-            if y < 1120:
-                draw.line([(1910, y + 5), (2290, y + 5)], fill=(203, 213, 225), width=1)
-                y_desc_title = y + 15
-                draw.text((1915, y_desc_title), "设计说明 / DESIGN NOTES", fill=(29, 78, 216), font=font_body_bold)
-                y_line = y_desc_title + 24
-                max_text_width = 378
-                for line in description_lines[:3]:
-                    wrapped = wrap_text_by_pixels(line, font_body, max_text_width, draw)
-                    for wl in wrapped:
-                        draw.text((1915, y_line), wl, fill=(71, 85, 105), font=font_body)
-                        y_line += 20
-                    y_line += 6
+        if description_lines and y < 1120:
+            draw.line([(1910, y + 5), (2290, y + 5)], fill=(203, 213, 225), width=1)
+            y_desc_title = y + 15
+            draw.text((1915, y_desc_title), "设计说明 / DESIGN NOTES", fill=(29, 78, 216), font=font_body_bold)
+            y_line = y_desc_title + 24
+            max_text_width = 378
+            for line in description_lines[:3]:
+                wrapped = wrap_text_by_pixels(line, font_body, max_text_width, draw)
+                for wl in wrapped:
+                    draw.text((1915, y_line), wl, fill=(71, 85, 105), font=font_body)
+                    y_line += 20
+                y_line += 6
 
     # 6. Fill planning description card
     draw.rectangle([184, 1661, 1887, 1815], fill=(248, 250, 252))
@@ -1002,17 +1001,17 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
     # Fonts for the stamp
     try:
         font_stamp_large = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 26)
-    except IOError:
+    except OSError:
         try:
             font_stamp_large = ImageFont.truetype(font_path, 26)
-        except IOError:
+        except OSError:
             font_stamp_large = ImageFont.load_default()
             
     try:
         font_stamp_title = ImageFont.truetype(font_path, 20)
         font_stamp_body = ImageFont.truetype(font_path, 15)
         font_stamp_label = ImageFont.truetype(font_path, 12)
-    except IOError:
+    except OSError:
         font_stamp_title = ImageFont.load_default()
         font_stamp_body = ImageFont.load_default()
         font_stamp_label = ImageFont.load_default()
@@ -1091,7 +1090,7 @@ author=a.get("name",""), author_id=a.get("id",""), organization="吉林建筑大
             banner_draw.rounded_rectangle([sc_x, sc_y, sc_x+scale_card_w, sc_y+scale_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
             
             m_per_px = view_w / 1705
-            scale_bar_px = int(round(500 / m_per_px))
+            scale_bar_px = round(500 / m_per_px)
             scale_text = f"比例尺  1:{scale_rounded}"
             banner_draw.text((sc_x + 20, sc_y + 15), scale_text, fill=(30, 41, 59, 255), font=font_scale_bold_b)
             

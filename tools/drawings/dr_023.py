@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
 """DR-059: 综合现状问题诊断图 — 四大问题汇总诊断与问题热点标注"""
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -235,7 +235,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             y_desc -= 2.8
 
         # Hotspot labels
-        for name, lon, lat in issue["hotspots"]:
+        for name, _lon, _lat in issue["hotspots"]:
             ax.text(104.0, y_desc, f"📍 {name}", color=issue["color"], ha='left', va='center',
                     fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5), zorder=4)
             y_desc -= 2.5

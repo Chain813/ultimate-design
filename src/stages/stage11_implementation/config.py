@@ -1,6 +1,5 @@
 from src.stages.common.workspace import StageWorkspaceSpec, SubpageSpec
 
-
 STAGE11_WORKSPACE = StageWorkspaceSpec(
     stage_code="11",
     title="实施路径",

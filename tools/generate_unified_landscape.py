@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import os
-import sys
 import shutil
-from PIL import Image, ImageDraw, ImageFont
+import sys
 from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
 
 # Adjust path to import config if run standalone
 sys.path.append(str(Path(__file__).resolve().parents[1]))
@@ -32,7 +32,7 @@ def wrap_text_to_lines(text, font, max_width):
     
     def get_width(t):
         try:
-            left, top, right, bottom = font.getbbox(t)
+            left, _top, right, _bottom = font.getbbox(t)
             return right - left
         except AttributeError:
             return font.getsize(t)[0]
@@ -618,7 +618,7 @@ def draw_unified_landscape():
     # =============================================================
     # PASS 1: DRAW CONNECTION LINES & GLOWS (No labels or cards yet)
     # =============================================================
-    for start, end, label, color in connections:
+    for start, end, _label, color in connections:
         draw_curved_connection_line(draw, start, end, color)
 
     # Draw Stage -> Result direct horizontal links

@@ -64,7 +64,7 @@ class CameraView:
 
 
 # 预定义视角
-PRESET_VIEWS: Dict[str, CameraView] = {
+PRESET_VIEWS: dict[str, CameraView] = {
     "birdseye_sw": CameraView(
         name="鸟瞰_西南",
         eye_lng=125.340, eye_lat=43.900, eye_alt=800,
@@ -115,31 +115,31 @@ extra floors added, missing buildings, displaced buildings"""
 class Building3D:
     """单栋建筑的3D表示"""
     building_id: str
-    footprint: List[Tuple[float, float]]  # 底面多边形 (lng, lat)
+    footprint: list[tuple[float, float]]  # 底面多边形 (lng, lat)
     floors: int
     height_m: float                        # floors × FLOOR_HEIGHT
     is_historical: bool = False
     prop_style: str = "normal"
-    centroid: Tuple[float, float] = (0, 0)
+    centroid: tuple[float, float] = (0, 0)
 
 
 @dataclass
 class PlotBoundary:
     """重点地块"""
     name: str
-    boundary: List[Tuple[float, float]]
-    centroid: Tuple[float, float]
+    boundary: list[tuple[float, float]]
+    centroid: tuple[float, float]
 
 
 class WhiteModelRenderer:
     """从GIS建筑数据生成统一白模的渲染器"""
 
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Path | None = None):
         from src.config import DATA_DIR
         self.data_dir = data_dir or DATA_DIR
-        self.buildings: List[Building3D] = []
-        self.plots: List[PlotBoundary] = []
-        self.bounds: Tuple[float, float, float, float] = (0, 0, 0, 0)
+        self.buildings: list[Building3D] = []
+        self.plots: list[PlotBoundary] = []
+        self.bounds: tuple[float, float, float, float] = (0, 0, 0, 0)
         self._loaded = False
 
     # ── 数据加载 ──
@@ -216,7 +216,7 @@ class WhiteModelRenderer:
         logger.info(f"Loaded {len(self.buildings)} buildings, {len(self.plots)} plots")
 
     @staticmethod
-    def _extract_polygon(geom: dict) -> List[Tuple[float, float]]:
+    def _extract_polygon(geom: dict) -> list[tuple[float, float]]:
         """从 GeoJSON geometry 提取外环坐标"""
         try:
             if geom["type"] == "Polygon":
@@ -236,7 +236,7 @@ class WhiteModelRenderer:
         return []
 
     @staticmethod
-    def _centroid(coords: List[Tuple[float, float]]) -> Tuple[float, float]:
+    def _centroid(coords: list[tuple[float, float]]) -> tuple[float, float]:
         x = sum(c[0] for c in coords) / len(coords)
         y = sum(c[1] for c in coords) / len(coords)
         return (x, y)
@@ -264,7 +264,7 @@ class WhiteModelRenderer:
             "global_scale": 2.0,  # 全局缩放 (增大使建筑体块更大)
         }
 
-    def _project_2d(self, lng: float, lat: float, T: dict) -> Tuple[float, float]:
+    def _project_2d(self, lng: float, lat: float, T: dict) -> tuple[float, float]:
         """2.5D 等距投影: (lng, lat) → (sx, sy)"""
         wx = (lng - T["cx"]) * T["scale_x"] * T["global_scale"]
         wy = (lat - T["cy"]) * T["scale_y"] * T["global_scale"]
@@ -272,7 +272,7 @@ class WhiteModelRenderer:
         sy = (wx + wy) * T["sin_a"]
         return (sx, sy)
 
-    def _project_3d(self, lng: float, lat: float, alt: float, T: dict) -> Tuple[float, float]:
+    def _project_3d(self, lng: float, lat: float, alt: float, T: dict) -> tuple[float, float]:
         """2.5D 等距投影: (lng, lat, alt) → (sx, sy)"""
         sx, sy = self._project_2d(lng, lat, T)
         sy -= alt * T["z_scale"]  # 高度向上偏移 (屏幕y轴向下)
@@ -283,7 +283,7 @@ class WhiteModelRenderer:
     # ═══════════════════════════════════════════════
 
     def render_view(self, view: CameraView, output_path: str,
-                    highlight_plots: Optional[List[str]] = None,
+                    highlight_plots: list[str] | None = None,
                     outline_only: bool = False) -> str:
         """从指定视角渲染 2.5D 等距白模
 
@@ -355,8 +355,8 @@ class WhiteModelRenderer:
         return output_path
 
     def _draw_building_25d(self, draw: ImageDraw.ImageDraw, bld: Building3D,
-                           base_pts: List[Tuple[float, float]],
-                           roof_pts: List[Tuple[float, float]],
+                           base_pts: list[tuple[float, float]],
+                           roof_pts: list[tuple[float, float]],
                            ox: float, oy: float, w: int, h: int,
                            outline_only: bool):
         """绘制单栋建筑的 2.5D 体块
@@ -495,7 +495,7 @@ class WhiteModelRenderer:
         img.save(output_path, "PNG")
         return output_path
 
-    def _get_boundary_polygon(self) -> List[Tuple[float, float]]:
+    def _get_boundary_polygon(self) -> list[tuple[float, float]]:
         """获取研究范围边界多边形"""
         boundary_path = self.data_dir / "gis" / "Boundary_Scope.geojson"
         if boundary_path.exists():
@@ -557,7 +557,7 @@ class WhiteModelRenderer:
         return self.render_view(view, output_path,
                                 highlight_plots=[plot_name])
 
-    def render_all_birdseye(self, output_dir: str) -> List[str]:
+    def render_all_birdseye(self, output_dir: str) -> list[str]:
         """渲染所有预定义鸟瞰角度"""
         paths = []
         for direction in ["sw", "se", "nw"]:
@@ -566,7 +566,7 @@ class WhiteModelRenderer:
             paths.append(path)
         return paths
 
-    def render_all_plots(self, output_dir: str) -> List[str]:
+    def render_all_plots(self, output_dir: str) -> list[str]:
         """渲染所有重点地块的白模"""
         self.load_data()
         paths = []
@@ -620,7 +620,7 @@ class WhiteModelRenderer:
 # AIGC 生成管线集成
 # ══════════════════════════════════════════════════════════
 
-def build_consistent_aigc_prompt(style: str = "historic_renewal") -> Tuple[str, str]:
+def build_consistent_aigc_prompt(style: str = "historic_renewal") -> tuple[str, str]:
     """构建统一的 AIGC 提示词 (保证所有出图风格一致)
 
     Returns:

@@ -1,5 +1,7 @@
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
+
 
 def test_pipeline_end_to_end(monkeypatch):
     # Mock LLM Engine
@@ -11,8 +13,9 @@ def test_pipeline_end_to_end(monkeypatch):
     monkeypatch.setattr("src.engines.spatial_engine.get_skyline_features", lambda: {"max_height": 100})
 
     # Mock SD Engine
-    from src.engines.stable_diffusion_engine import SDResult
     from PIL import Image
+
+    from src.engines.stable_diffusion_engine import SDResult
     dummy_img = Image.new("RGB", (100, 100), color="blue")
     mock_sd = MagicMock()
     mock_sd.txt2img.return_value = None

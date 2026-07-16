@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock, patch
+
 from src.utils.runtime_flags import is_mobile_client
 
 

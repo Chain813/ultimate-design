@@ -1,17 +1,18 @@
-# -*- coding: utf-8 -*-
 """
 Super-resolution script for the 5 design creed strategy drawings.
 Uses caidas/swin2SR-lightweight-x2-64 on CPU.
 """
 import os
+
 # Avoid httpx IPv6 parsing bug with proxy settings
 os.environ['NO_PROXY'] = '127.0.0.1,localhost'
 
 import sys
-import torch
-import numpy as np
-from PIL import Image
 from pathlib import Path
+
+import numpy as np
+import torch
+from PIL import Image
 from transformers import Swin2SRForImageSuperResolution, Swin2SRImageProcessor
 
 ROOT = Path(__file__).resolve().parent.parent

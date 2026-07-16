@@ -23,7 +23,8 @@ logger = logging.getLogger("ultimateDESIGN")
 def load_bge_micro_model():
     """Lazily load BAAI/bge-micro-zh-v4 for vector retrieval."""
     try:
-        from transformers import AutoTokenizer, AutoModel
+        from transformers import AutoModel, AutoTokenizer
+
         from src.config.loader import load_global_config
         hf_mirror = load_global_config().get("engines", {}).get("hf_mirror", "")
         if hf_mirror:
@@ -47,6 +48,7 @@ def get_cached_db_embeddings():
     # 1. 尝试从本地持久化缓存读取
     import hashlib
     import pickle
+
     from src.config.loader import load_global_config
     from src.config.runtime import resolve_path
 

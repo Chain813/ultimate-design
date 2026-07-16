@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 # tools/drawings/dr_150.py
 import os
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 NO_FRAME = True
@@ -15,7 +15,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]
@@ -97,7 +97,7 @@ def get_layout_image(STATIC_DIR):
     # Try atlas first
     atlas_dir = STATIC_DIR / "atlas"
     if atlas_dir.exists():
-        for root, dirs, files in os.walk(str(atlas_dir)):
+        for root, _dirs, files in os.walk(str(atlas_dir)):
             for f in files:
                 if f.lower().endswith(".png") and fuzzy_name in f:
                     return Image.open(Path(root) / f)
@@ -105,7 +105,7 @@ def get_layout_image(STATIC_DIR):
     # Try backup
     backup_dir = STATIC_DIR / "atlas_backup"
     if backup_dir.exists():
-        for root, dirs, files in os.walk(str(backup_dir)):
+        for root, _dirs, files in os.walk(str(backup_dir)):
             for f in files:
                 if f.lower().endswith(".png") and fuzzy_name in f:
                     return Image.open(Path(root) / f)
@@ -149,7 +149,7 @@ def draw_map_early(output_path, view_w, view_h, STATIC_DIR):
         font_body = ImageFont.truetype(font_path, 18)
         font_body_bold = ImageFont.truetype(font_bold_path, 18)
         font_desc = ImageFont.truetype(font_path, 15)
-    except IOError:
+    except OSError:
         font_large_title = font_card_title = font_desc_title = font_body = font_body_bold = font_desc = ImageFont.load_default()
 
     # Draw grid

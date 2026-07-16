@@ -7,10 +7,9 @@ Usage:
 """
 
 import socket
+import threading
 import time
 from dataclasses import dataclass
-
-import threading
 
 SD_PORT = 7860
 OLLAMA_PORT = 11434

@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-from shapely.geometry import Point
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -135,10 +135,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             # Standard Planning Colors matching thesis v4:
             # Index 0, 1, 3 (Northwest, Northeast, East) are Commercial/文创 (#EF4444)
             # Index 2, 4 (West, Southwest) are Public Services/Admin (#C084FC)
-            if idx in [0, 1, 3]:
-                fc = "#EF4444"
-            else:
-                fc = "#C084FC"
+            fc = "#EF4444" if idx in [0, 1, 3] else "#C084FC"
             gpd.GeoSeries([row.geometry]).plot(ax=ax_map, facecolor=fc, edgecolor="none", linewidth=0, alpha=1.0, zorder=2.2)
 
     # Proposed roads: solid white lines with dark casing
@@ -147,7 +144,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         # Add proposed minor road network lines for developed plots
         if key_plots is not None and not key_plots.empty:
             proposed_lines = []
-            for idx, geom in enumerate(key_plots.geometry):
+            for _idx, geom in enumerate(key_plots.geometry):
                 if geom.is_valid and not geom.is_empty:
                     # Draw a loop pathway inside the key plot polygon (inward buffer)
                     for buf_dist in [-20, -12, -8]:
@@ -194,9 +191,10 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     # 3c. Draw wind rose on map (HUD)
         # Floating Windrose (Pure Black, 12.0 x 12.0) with soft white radial gradient backdrop
     try:
-        from PIL import Image as _PIL_Image
-        import numpy as _np
         from pathlib import Path as _Path
+
+        import numpy as _np
+        from PIL import Image as _PIL_Image
         _assets_dir = _Path(__file__).resolve().parent.parent.parent / "assets"
         _rose_path = _assets_dir / "长春市风玫瑰.png"
         if _rose_path.exists():
@@ -321,7 +319,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, y_ratio_val, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 

@@ -84,6 +84,7 @@ ignore = [
     "B008",   # Streamlit uses function calls in default args by design
     "B905",   # `zip()` without an explicit `strict=` parameter
     "UP015",  # Unnecessary open mode parameters — keep explicit for readability
+    "RUF001", "RUF002", "RUF003", # Allow ambiguous unicode characters (Chinese punctuations)
 ]
 
 [tool.ruff.lint.per-file-ignores]

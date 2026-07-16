@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 """
 Add the real Changchun wind rose (长春市风玫瑰.png) to the top-right corner
 of the map panel in all 30 target atlas drawings.
 """
 import os
 import sys
+
 from PIL import Image
 
 sys.stdout.reconfigure(encoding='utf-8')

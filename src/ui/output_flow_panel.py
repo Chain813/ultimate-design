@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Dict, Iterable, List, Optional
+from collections.abc import Iterable
+from typing import Dict, List, Optional
 
 import pandas as pd
 import streamlit as st
@@ -16,7 +17,7 @@ from src.workflow.template_assets import (
 )
 
 
-def build_output_flow_prompt(manifest: Optional[Dict] = None) -> str:
+def build_output_flow_prompt(manifest: dict | None = None) -> str:
     """Build the canonical final-output workflow prompt shown in the UI."""
     manifest = manifest or load_template_asset_manifest()
     rows = get_template_asset_rows(manifest)
@@ -59,7 +60,7 @@ def build_output_flow_prompt(manifest: Optional[Dict] = None) -> str:
 - 最终成果以程序合成为准，AI 图像模型只承担覆盖层和表现风格。"""
 
 
-def render_output_flow_prompt_panel(manifest: Optional[Dict] = None, expanded: bool = False) -> str:
+def render_output_flow_prompt_panel(manifest: dict | None = None, expanded: bool = False) -> str:
     """Render the final-output prompt panel and return the prompt text."""
     manifest = manifest or load_template_asset_manifest()
     rows = get_template_asset_rows(manifest)
@@ -94,8 +95,8 @@ def render_output_flow_prompt_panel(manifest: Optional[Dict] = None, expanded: b
     return prompt_text
 
 
-def _format_rows(rows: Iterable[Dict[str, str]]) -> str:
-    formatted: List[str] = []
+def _format_rows(rows: Iterable[dict[str, str]]) -> str:
+    formatted: list[str] = []
     for row in rows:
         formatted.append(f"- {row['资产']}：{row['状态']}；用途：{row['用途']}")
     return "\n".join(formatted) if formatted else "- 无"

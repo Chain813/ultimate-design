@@ -1,4 +1,5 @@
 import sys
+
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from src.engines.rag_engine import compute_query_embedding
@@ -75,5 +76,5 @@ def test_load_bge_model_fallback(monkeypatch):
     from src.engines.rag_engine import load_bge_micro_model
 
     monkeypatch.setitem(sys.modules, "transformers", None)
-    tokenizer, model = load_bge_micro_model()
+    _tokenizer, _model = load_bge_micro_model()
     # Without transformers, will fall back

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Restore original clean atlas images from static/atlas_backup into static/atlas.
 Uses MAPPING_RULES from rename_atlas_sheets.py to find the correct source file in backup.

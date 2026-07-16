@@ -11,10 +11,10 @@
 使用方法:
     python scripts/convert_gcj02_to_wgs84.py
 """
-import sys
+import copy
 import json
 import math
-import copy
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent

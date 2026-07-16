@@ -8,11 +8,11 @@ sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from src.engines.drawing_prompt_engine import (
     CompletenessReport,
+    ImagePromptRequest,
+    LLMCallError,
     PromptEngineError,
     TemplateNotFoundError,
-    LLMCallError,
     check_prompt_completeness,
-    ImagePromptRequest,
 )
 
 
@@ -87,8 +87,9 @@ def test_check_prompt_completeness_precision_levels():
     assert report_3.precision == "三级精度"
 
 
-from src.workflow.template_assets import save_template_asset
 import pytest
+
+from src.workflow.template_assets import save_template_asset
 
 
 def test_save_template_asset_rejects_invalid_type(tmp_path):
@@ -111,8 +112,9 @@ def test_save_template_asset_accepts_valid_type(tmp_path):
     manifest_path = tmp_path / "manifest.json"
     asset_dir = tmp_path / "assets"
 
-    from PIL import Image
     import io
+
+    from PIL import Image
     img = Image.new("RGB", (10, 10))
     buf = io.BytesIO()
     img.save(buf, format="PNG")
@@ -129,8 +131,8 @@ def test_save_template_asset_accepts_valid_type(tmp_path):
 
 
 from src.engines.drawing_prompt_templates import (
-    get_or_create_template,
     build_drawing_prompt,
+    get_or_create_template,
 )
 
 
@@ -159,7 +161,8 @@ def test_build_drawing_prompt_missing_template():
 # DrawingPipeline tests (Task 5)
 # ============================================================
 
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from PIL import Image
 
 
@@ -196,7 +199,7 @@ def test_pipeline_result_fields():
 @patch("src.engines.drawing_pipeline.get_drawing_profile")
 def test_generate_single_auto_mode(mock_profile, mock_check, mock_build, mock_llm, mock_sd):
     """generate_single in auto mode runs full pipeline."""
-    from src.engines.drawing_pipeline import DrawingPipeline, CompletenessReport
+    from src.engines.drawing_pipeline import CompletenessReport, DrawingPipeline
 
     mock_profile.return_value = MagicMock(
         precision="三级精度",

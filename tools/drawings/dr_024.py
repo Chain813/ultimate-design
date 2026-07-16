@@ -1,19 +1,19 @@
-# -*- coding: utf-8 -*-
 """DR-061: MPI更新潜力评估图 — 连续渐变热力图覆盖整个研究范围"""
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
-import matplotlib.colors as mcolors
-from matplotlib.path import Path as MplPath
-from matplotlib.patches import PathPatch
+
 import geopandas as gpd
-from shapely.geometry import Point, box
+import matplotlib.colors as mcolors
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from matplotlib.patches import PathPatch
+from matplotlib.path import Path as MplPath
 from PIL import Image
 from scipy.ndimage import gaussian_filter
+from shapely.geometry import Point, box
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"

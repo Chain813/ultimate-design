@@ -7,12 +7,12 @@ if str(root) not in sys.path:
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
 from src.engines.guideline_prompt import (
-    build_outline_prompt,
+    GUIDELINE_CHAPTERS,
     build_expansion_prompt,
     build_guideline_prompt,
-    GUIDELINE_CHAPTERS,
-    retrieve_policy_context,
+    build_outline_prompt,
     build_spatial_stats_summary,
+    retrieve_policy_context,
 )
 
 

@@ -5,7 +5,7 @@ import textwrap
 from pathlib import Path
 from unittest.mock import patch
 
-from tools.secret_scan import should_skip, main, PATTERNS
+from tools.secret_scan import PATTERNS, main, should_skip
 
 
 class TestShouldSkip:
@@ -33,12 +33,12 @@ class TestShouldSkip:
 class TestPatterns:
     def test_matches_api_key(self):
         # Build test string via concatenation to avoid self-triggering the scanner
-        fake_key = "sk-" + "a" * 16  # noqa: S105 - test fixture
+        fake_key = "sk-" + "a" * 16
         line = f'API_KEY = "{fake_key}"'
         assert any(p.search(line) for p in PATTERNS)
 
     def test_matches_secret(self):
-        fake_val = "a" * 20  # noqa: S105 - test fixture
+        fake_val = "a" * 20
         line = f"secret: {fake_val}"
         assert any(p.search(line) for p in PATTERNS)
 

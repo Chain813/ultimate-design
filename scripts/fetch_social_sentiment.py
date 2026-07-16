@@ -5,17 +5,18 @@
   适配项目：长春伪满皇宫周边街区多模态微更新决策平台
 ============================================================
 """
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
-import pandas as pd
-import time
+import os
 import random
 import sys
-import os
+import time
 import urllib.parse
+
+import pandas as pd
+from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 # 强制 UTF-8 输出，防止 Windows GBK 编码崩溃
 sys.stdout.reconfigure(encoding='utf-8')

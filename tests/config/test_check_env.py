@@ -2,7 +2,7 @@
 
 import inspect
 
-from tools.check_env import package_import_name, check_package
+from tools.check_env import check_package, package_import_name
 
 
 def test_package_import_name_known_mapping():

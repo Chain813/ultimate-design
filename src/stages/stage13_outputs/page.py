@@ -1,20 +1,21 @@
-import streamlit as st
-import shutil
 import io
 import os
+import shutil
 import traceback
 from pathlib import Path
+
+import streamlit as st
 from PIL import Image
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
-from src.ui.app_shell import render_top_nav
-from src.ui.module_summary import render_stage_summary
-from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
-from src.workflow.stage_keys import SK
-from src.ui.streamlit_compat import stretch_width
-from src.ui.persistent_outputs import register_document_output, register_report_output
 
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage13_outputs.config import STAGE13_WORKSPACE
+from src.ui.app_shell import render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+from src.ui.module_summary import render_stage_summary
+from src.ui.persistent_outputs import register_document_output, register_report_output
+from src.ui.streamlit_compat import stretch_width
+from src.workflow.stage_data_bus import load_stage_output, render_evidence_chain_bar
+from src.workflow.stage_keys import SK
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -286,8 +287,9 @@ def render_page() -> None:
             
             if st.button("🎨 一键代码绘图并组装图纸", type="primary", **stretch_width(st.button)):
                 with st.spinner("Python 代码绘图与排版卡片组装中..."):
-                    import tempfile
                     import os
+                    import tempfile
+
                     from tools.draw_scope_map import draw_spatial_map, process_a3_layout
                     
                     temp_fd, temp_map = tempfile.mkstemp(suffix=".png")
@@ -451,8 +453,11 @@ def render_page() -> None:
         )
 
         from src.engines.document_composer import (
-            REPORT_CHAPTERS, assemble_report_docx, AuthorInfo,
-            build_document_context, generate_single_section,
+            REPORT_CHAPTERS,
+            AuthorInfo,
+            assemble_report_docx,
+            build_document_context,
+            generate_single_section,
         )
 
         # ── 学生信息 ──
@@ -484,7 +489,7 @@ def render_page() -> None:
         # ══════════════════════════════════════
         st.markdown("### 🚀 一键生成管道")
 
-        from src.engines.document_pipeline import run_light_pipeline, run_full_pipeline
+        from src.engines.document_pipeline import run_full_pipeline, run_light_pipeline
 
         # ── 降 AI 率选项 ──
         if "report_enable_deai" not in st.session_state:
@@ -509,77 +514,75 @@ def render_page() -> None:
         col_a, col_b = st.columns(2)
 
         # ── 管道 A: 轻量 ──
-        with col_a:
-            with st.container(border=True):
-                st.markdown("#### ⚡ 轻量管道")
-                st.caption("基于各阶段**已生成**的 AI 报告，快速产出设计报告。适用于各阶段已运行过的场景。")
-                st.caption("约 36 步 · 预计 1-3 分钟")
+        with col_a, st.container(border=True):
+            st.markdown("#### ⚡ 轻量管道")
+            st.caption("基于各阶段**已生成**的 AI 报告，快速产出设计报告。适用于各阶段已运行过的场景。")
+            st.caption("约 36 步 · 预计 1-3 分钟")
 
-                if st.button("🚀 一键生成设计报告（轻量）", key="pipeline_light", type="primary",
-                             **stretch_width(st.button)):
-                    with st.status("轻量管道运行中...", expanded=True) as status:
-                        log_lines = []
-                        progress_bar = st.progress(0, text="准备中...")
+            if st.button("🚀 一键生成设计报告（轻量）", key="pipeline_light", type="primary",
+                         **stretch_width(st.button)):
+                with st.status("轻量管道运行中...", expanded=True) as status:
+                    log_lines = []
+                    progress_bar = st.progress(0, text="准备中...")
 
-                        def pc(cur, tot, label):
-                            progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
+                    def pc(cur, tot, label):
+                        progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
 
-                        def lc(msg):
-                            log_lines.append(msg)
-                            # 只显示最后 8 行避免刷屏
-                            st.text("\n".join(log_lines[-8:]))
+                    def lc(msg):
+                        log_lines.append(msg)
+                        # 只显示最后 8 行避免刷屏
+                        st.text("\n".join(log_lines[-8:]))
 
-                        try:
-                            chapters, buf = run_light_pipeline(
-                                student=student,
-                                progress_callback=pc,
-                                log_callback=lc,
-                                enable_deai=st.session_state["report_enable_deai"],
-                                deai_intensity=st.session_state["report_deai_intensity"],
-                            )
-                            st.session_state["report_chapters"] = chapters
-                            st.session_state["report_docx_buf"] = buf
-                            register_document_output(buf, author_name, author_id, chapters)
-                            status.update(label="✅ 轻量管道执行完毕！", state="complete")
-                        except Exception as e:
-                            status.update(label=f"❌ 管道执行失败: {e}", state="error")
-                            st.error(traceback.format_exc())
+                    try:
+                        chapters, buf = run_light_pipeline(
+                            student=student,
+                            progress_callback=pc,
+                            log_callback=lc,
+                            enable_deai=st.session_state["report_enable_deai"],
+                            deai_intensity=st.session_state["report_deai_intensity"],
+                        )
+                        st.session_state["report_chapters"] = chapters
+                        st.session_state["report_docx_buf"] = buf
+                        register_document_output(buf, author_name, author_id, chapters)
+                        status.update(label="✅ 轻量管道执行完毕！", state="complete")
+                    except Exception as e:
+                        status.update(label=f"❌ 管道执行失败: {e}", state="error")
+                        st.error(traceback.format_exc())
 
         # ── 管道 B: 全流程 ──
-        with col_b:
-            with st.container(border=True):
-                st.markdown("#### 🔄 全流程管道")
-                st.caption("**从零开始**自动生成所有阶段报告，无需任何已有数据。适用于全新项目。")
-                st.caption("约 50+ 步 · 50+ 次 LLM 调用 · 预计 5-10 分钟")
+        with col_b, st.container(border=True):
+            st.markdown("#### 🔄 全流程管道")
+            st.caption("**从零开始**自动生成所有阶段报告，无需任何已有数据。适用于全新项目。")
+            st.caption("约 50+ 步 · 50+ 次 LLM 调用 · 预计 5-10 分钟")
 
-                if st.button("🚀 全流程自动生成（从零开始）", key="pipeline_full", type="primary",
-                             **stretch_width(st.button)):
-                    with st.status("全流程管道运行中...", expanded=True) as status:
-                        log_lines = []
-                        progress_bar = st.progress(0, text="准备中...")
+            if st.button("🚀 全流程自动生成（从零开始）", key="pipeline_full", type="primary",
+                         **stretch_width(st.button)):
+                with st.status("全流程管道运行中...", expanded=True) as status:
+                    log_lines = []
+                    progress_bar = st.progress(0, text="准备中...")
 
-                        def pc(cur, tot, label):
-                            progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
+                    def pc(cur, tot, label):
+                        progress_bar.progress(cur / tot, text=f"{label} ({cur}/{tot})")
 
-                        def lc(msg):
-                            log_lines.append(msg)
-                            st.text("\n".join(log_lines[-8:]))
+                    def lc(msg):
+                        log_lines.append(msg)
+                        st.text("\n".join(log_lines[-8:]))
 
-                        try:
-                            chapters, buf = run_full_pipeline(
-                                student=student,
-                                progress_callback=pc,
-                                log_callback=lc,
-                                enable_deai=st.session_state["report_enable_deai"],
-                                deai_intensity=st.session_state["report_deai_intensity"],
-                            )
-                            st.session_state["report_chapters"] = chapters
-                            st.session_state["report_docx_buf"] = buf
-                            register_document_output(buf, author_name, author_id, chapters)
-                            status.update(label="✅ 全流程管道执行完毕！", state="complete")
-                        except Exception as e:
-                            status.update(label=f"❌ 管道执行失败: {e}", state="error")
-                            st.error(traceback.format_exc())
+                    try:
+                        chapters, buf = run_full_pipeline(
+                            student=student,
+                            progress_callback=pc,
+                            log_callback=lc,
+                            enable_deai=st.session_state["report_enable_deai"],
+                            deai_intensity=st.session_state["report_deai_intensity"],
+                        )
+                        st.session_state["report_chapters"] = chapters
+                        st.session_state["report_docx_buf"] = buf
+                        register_document_output(buf, author_name, author_id, chapters)
+                        status.update(label="✅ 全流程管道执行完毕！", state="complete")
+                    except Exception as e:
+                        status.update(label=f"❌ 管道执行失败: {e}", state="error")
+                        st.error(traceback.format_exc())
 
         # ── 管道完成后自动显示下载按钮 ──
         if "report_docx_buf" in st.session_state and st.session_state["report_docx_buf"] is not None:

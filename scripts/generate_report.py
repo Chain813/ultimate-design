@@ -1,6 +1,9 @@
-# -*- coding: utf-8 -*-
 """Generate complete graduation report via full pipeline + de-AI processing."""
-import os, io, sys, traceback, time
+import io
+import os
+import sys
+import time
+import traceback
 from pathlib import Path
 
 # Force UTF-8 output

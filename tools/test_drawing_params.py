@@ -5,7 +5,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT))
 
 import geopandas as gpd
-from tools.drawings.dr_parcel_detail import parse_drawing_type, PARCEL_INFO, ANALYSIS_INFO
+
+from tools.drawings.dr_parcel_detail import ANALYSIS_INFO, PARCEL_INFO, parse_drawing_type
 
 # Test parser
 test_cases = [

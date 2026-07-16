@@ -1,11 +1,11 @@
-# -*- coding: utf-8 -*-
 """DR-003 项目背景与政策解读图 — 对应答辩稿 1.1 项目背景"""
 from pathlib import Path
-import numpy as np
-import matplotlib.pyplot as plt
+
 import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
 import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent.parent

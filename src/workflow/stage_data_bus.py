@@ -10,7 +10,9 @@ import hashlib
 import json
 import logging
 from pathlib import Path
+
 import streamlit as st
+
 from src.config.runtime import resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -253,13 +255,12 @@ def generate_stage_transition_summary(current_stage: str) -> str:
     for key, val in sorted(bus_data.items()):
         parts = key.split("_", 1)
         stage_prefix = parts[0]
-        if stage_prefix.isdigit() and current_stage.isdigit():
-            if int(stage_prefix) < int(current_stage):
-                val_str = str(val)
-                if len(val_str) > 1000:
-                    val_str = val_str[:1000] + "...(已截断)"
-                key_name = parts[1] if len(parts) > 1 else key
-                upstream_text.append(f"【Stage {stage_prefix} - {key_name}】:\n{val_str}")
+        if stage_prefix.isdigit() and current_stage.isdigit() and int(stage_prefix) < int(current_stage):
+            val_str = str(val)
+            if len(val_str) > 1000:
+                val_str = val_str[:1000] + "...(已截断)"
+            key_name = parts[1] if len(parts) > 1 else key
+            upstream_text.append(f"【Stage {stage_prefix} - {key_name}】:\n{val_str}")
                 
     if not upstream_text:
         return "💡 **前序数据未就绪**：暂无充足的上游阶段数据产出。请先按顺序完成前序页面的量化分析以解锁智能工作衔接。"
@@ -302,6 +303,7 @@ def save_stage_summary_to_file(
     import os
     import re
     from pathlib import Path
+
     from src.config.runtime import resolve_path
     
     # 确定输出文件路径

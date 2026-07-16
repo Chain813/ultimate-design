@@ -1,11 +1,14 @@
-import os
+import contextlib
 import json
 import math
-import geopandas as gpd
-from shapely.geometry import Polygon, MultiPolygon
-from shapely.ops import unary_union
-from shapely.affinity import translate
+import os
 from pathlib import Path
+
+import geopandas as gpd
+from shapely.affinity import translate
+from shapely.geometry import MultiPolygon, Polygon
+from shapely.ops import unary_union
+
 
 def compute_shadow_geometry(geom, height):
     """
@@ -86,23 +89,19 @@ def main():
     
     # 预估建筑高度
     heights = []
-    for idx, row in gdf.iterrows():
+    for _idx, row in gdf.iterrows():
         props = row
         # 匹配 JavaScript 侧的高度提取逻辑
         floor = props.get('floor') or props.get('Floor') or props.get('levels') or props.get('building:levels')
         height = 1.0
         if floor is not None:
-            try:
+            with contextlib.suppress(ValueError, TypeError):
                 height = float(floor) * 3.5
-            except (ValueError, TypeError):
-                pass
         else:
             h_val = props.get('height') or props.get('Height')
             if h_val is not None:
-                try:
+                with contextlib.suppress(ValueError, TypeError):
                     height = float(h_val)
-                except (ValueError, TypeError):
-                    pass
         heights.append(height)
         
     # 应用矢量阴影投影

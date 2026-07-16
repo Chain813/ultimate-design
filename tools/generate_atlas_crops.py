@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Generate exhibition-board crops from atlas sheets without modifying atlas files."""
 from __future__ import annotations
 
@@ -7,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
-
 
 ROOT = Path(__file__).resolve().parent.parent
 ATLAS_DIR = ROOT / "static" / "atlas"
@@ -134,9 +132,7 @@ def should_process_atlas_image(path: Path) -> bool:
     name = path.name
     if not name.lower().endswith(".png"):
         return False
-    if "_backup" in name or name.startswith("test_"):
-        return False
-    return True
+    return not ("_backup" in name or name.startswith("test_"))
 
 
 def should_preserve_full_image(path: Path) -> bool:

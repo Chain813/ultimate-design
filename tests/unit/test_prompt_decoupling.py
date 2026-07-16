@@ -1,7 +1,8 @@
 import sys
-import yaml
-import pytest
 from pathlib import Path
+
+import pytest
+import yaml
 
 root = Path(__file__).resolve().parents[1]
 if str(root) not in sys.path:
@@ -10,8 +11,8 @@ if str(root) not in sys.path:
 # Mock streamlit before imports
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-from src.config.runtime import resolve_path
 from src.config.loader import load_global_config
+from src.config.runtime import resolve_path
 
 
 @pytest.fixture(autouse=True)

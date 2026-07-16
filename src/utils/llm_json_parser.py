@@ -5,8 +5,8 @@ Usage:
 """
 
 import json
-import re
 import logging
+import re
 
 logger = logging.getLogger("ultimateDESIGN")
 

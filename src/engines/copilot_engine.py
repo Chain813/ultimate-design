@@ -2,10 +2,12 @@
 """
 
 import logging
+
 import streamlit as st
+
+from src.config import get_site_city, get_site_desc, get_site_district, get_site_name
 from src.engines.llm_engine import call_llm_engine
 from src.engines.rag_engine import retrieve_rag_context
-from src.config import get_site_name, get_site_city, get_site_district, get_site_desc
 
 logger = logging.getLogger("ultimateDESIGN")
 

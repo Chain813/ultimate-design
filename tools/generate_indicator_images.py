@@ -1,7 +1,7 @@
-# -*- coding: utf-8 -*-
 import os
 import sys
 from pathlib import Path
+
 import geopandas as gpd
 from PIL import Image, ImageDraw, ImageFont
 
@@ -13,6 +13,10 @@ STATIC_DIR = ROOT / "static"
 ATLAS_DIR = STATIC_DIR / "atlas"
 
 SCALE_FACTOR = 1.92615
+
+from src.config.site import get_institution_info
+
+i = get_institution_info()
 
 def calculate_metrics():
     # Load spatial files
@@ -76,8 +80,8 @@ def calculate_metrics():
         for code, ratio in ratios.items():
             planned_areas[code] = planned_areas.get(code, 0.0) + pa * ratio
 
-    sum_exist_cat = sum(existing_areas.get(c, 0.0) for c in gb_mapping.keys())
-    sum_plan_cat = sum(planned_areas.get(c, 0.0) for c in gb_mapping.keys())
+    sum_exist_cat = sum(existing_areas.get(c, 0.0) for c in gb_mapping)
+    sum_plan_cat = sum(planned_areas.get(c, 0.0) for c in gb_mapping)
 
     remainder_exist = total_study_area - sum_exist_cat
     remainder_plan = total_study_area - sum_plan_cat
@@ -254,7 +258,7 @@ def draw_tables():
         font_tag = ImageFont.truetype(font_bold_path, 13)
         font_note = ImageFont.truetype(font_path, 12)
         font_note_bold = ImageFont.truetype(font_bold_path, 12)
-    except IOError:
+    except OSError:
         font_large_title = ImageFont.load_default()
         font_sub_title = ImageFont.load_default()
         font_section = ImageFont.load_default()
@@ -548,7 +552,7 @@ def draw_tables():
         if e_rem > 10 or p_rem > 10:
             active_cats.append(('--', '其他/道路', max(e_rem, 0), max(p_rem, 0)))
 
-        for ci, (code, label, e_val, p_val) in enumerate(active_cats):
+        for ci, (_code, label, e_val, p_val) in enumerate(active_cats):
             e_ha = e_val / 10000
             p_ha = p_val / 10000
             e_pct = (e_val / pa * 100) if pa > 0 else 0

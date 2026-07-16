@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
 import os
 import shutil
-from pathlib import Path
 import sys
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 ATLAS_DIR = ROOT / "static" / "atlas"
@@ -50,7 +49,7 @@ def get_code_from_filename(filename):
 def restore_static_files():
     print(f"Scanning all files in {BACKUP_DIR}...")
     backup_files = []
-    for root_dir, dirs, files in os.walk(str(BACKUP_DIR)):
+    for root_dir, _dirs, files in os.walk(str(BACKUP_DIR)):
         for f in files:
             if f.lower().endswith(".png"):
                 full_path = Path(root_dir) / f

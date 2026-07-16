@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """scripts/generate_negotiation_replay.py
 
 Generates static/negotiation_replay.html with embedded dialogue logs, satisfaction scores, 

@@ -1,6 +1,6 @@
 """Tests for tools/startup_smoke.py."""
 
-from tools.startup_smoke import main, TARGETS
+from tools.startup_smoke import TARGETS, main
 
 
 def test_targets_includes_all_pages():

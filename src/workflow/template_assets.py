@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
 from src.config import DATA_DIR, META_DIR, ROOT_DIR
-
 
 TEMPLATE_ASSET_DIR = DATA_DIR / "template_assets"
 TEMPLATE_ASSET_MANIFEST = META_DIR / "template_assets.json"
@@ -112,7 +112,7 @@ TEMPLATE_ASSET_SPECS: tuple[TemplateAssetSpec, ...] = (
 )
 
 
-def get_template_asset_specs() -> List[TemplateAssetSpec]:
+def get_template_asset_specs() -> list[TemplateAssetSpec]:
     return list(TEMPLATE_ASSET_SPECS)
 
 
@@ -123,7 +123,7 @@ def get_template_asset_spec(asset_id: str) -> TemplateAssetSpec:
     raise ValueError(f"Unknown template asset id: {asset_id}")
 
 
-def load_template_asset_manifest(manifest_path: Optional[Path] = None) -> Dict:
+def load_template_asset_manifest(manifest_path: Path | None = None) -> dict:
     path = manifest_path or TEMPLATE_ASSET_MANIFEST
     if not path.exists():
         return {"version": 1, "assets": {}}
@@ -144,9 +144,9 @@ def save_template_asset(
     original_name: str,
     content: bytes,
     note: str = "",
-    asset_dir: Optional[Path] = None,
-    manifest_path: Optional[Path] = None,
-) -> Dict:
+    asset_dir: Path | None = None,
+    manifest_path: Path | None = None,
+) -> dict:
     spec = get_template_asset_spec(asset_id)
 
     # Validate file type
@@ -177,7 +177,7 @@ def save_template_asset(
         "filename": filename,
         "relative_path": relative_path,
         "size_bytes": len(content),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
         "required": spec.required,
         "note": note.strip(),
     }
@@ -188,8 +188,8 @@ def save_template_asset(
 
 def remove_template_asset(
     asset_id: str,
-    asset_dir: Optional[Path] = None,
-    manifest_path: Optional[Path] = None,
+    asset_dir: Path | None = None,
+    manifest_path: Path | None = None,
 ) -> bool:
     storage_dir = asset_dir or TEMPLATE_ASSET_DIR
     manifest_file = manifest_path or TEMPLATE_ASSET_MANIFEST
@@ -206,13 +206,13 @@ def remove_template_asset(
     return True
 
 
-def get_uploaded_prompt_channels(manifest: Optional[Dict] = None) -> List[str]:
+def get_uploaded_prompt_channels(manifest: dict | None = None) -> list[str]:
     manifest = manifest or load_template_asset_manifest()
     channels = [entry.get("prompt_channel") for entry in manifest.get("assets", {}).values()]
     return _dedupe(channel for channel in channels if channel)
 
 
-def get_template_asset_rows(manifest: Optional[Dict] = None) -> List[Dict[str, str]]:
+def get_template_asset_rows(manifest: dict | None = None) -> list[dict[str, str]]:
     manifest = manifest or load_template_asset_manifest()
     uploaded = manifest.get("assets", {})
     rows = []
@@ -231,7 +231,7 @@ def get_template_asset_rows(manifest: Optional[Dict] = None) -> List[Dict[str, s
     return rows
 
 
-def summarize_template_assets_for_prompt(manifest: Optional[Dict] = None) -> str:
+def summarize_template_assets_for_prompt(manifest: dict | None = None) -> str:
     manifest = manifest or load_template_asset_manifest()
     uploaded = manifest.get("assets", {})
     if not uploaded:
@@ -261,7 +261,7 @@ def _relative_to_root(path: Path) -> str:
         return str(path.resolve())
 
 
-def _dedupe(items: Iterable[str]) -> List[str]:
+def _dedupe(items: Iterable[str]) -> list[str]:
     result = []
     for item in items:
         if item not in result:

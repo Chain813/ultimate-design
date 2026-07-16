@@ -1,7 +1,6 @@
 from src.stages.common.workspace import StageWorkspaceSpec, SubpageSpec
 from src.workflow.stage_keys import SK
 
-
 STAGE10_WORKSPACE = StageWorkspaceSpec(
     stage_code="10",
     title="重点地段深化",

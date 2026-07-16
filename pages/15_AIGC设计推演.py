@@ -8,12 +8,14 @@ import io
 import json
 import math
 import time
-import streamlit as st
 from pathlib import Path
-from PIL import Image as PILImage, ImageDraw
 
-from src.ui.design_system import render_page_banner, render_section_intro
+import streamlit as st
+from PIL import Image as PILImage
+from PIL import ImageDraw
+
 from src.ui.app_shell import render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_keys import SK
 
@@ -234,7 +236,7 @@ def _fetch_sd_models():
 @st.cache_data(ttl=3600, max_entries=20)
 def render_geojson_to_image(geojson_path: str, width: int = 1024, height: int = 768,
                             line_color: int = 255, line_width: int = 2,
-                            lng_range: tuple = None, lat_range: tuple = None,
+                            lng_range: tuple | None = None, lat_range: tuple | None = None,
                             enhance: bool = True) -> "PILImage.Image":
     """将 GeoJSON 渲染为高质量黑白线稿图，用于 ControlNet 输入。
 
@@ -279,7 +281,7 @@ def render_geojson_to_image(geojson_path: str, width: int = 1024, height: int = 
 @st.cache_data(ttl=3600, max_entries=20)
 def render_depth_map(road_path: str, building_path: str,
                      width: int = 1024, height: int = 768,
-                     lng_range: tuple = None, lat_range: tuple = None,
+                     lng_range: tuple | None = None, lat_range: tuple | None = None,
                      mode: str = "plan") -> "PILImage.Image":
     """渲染深度图。"""
     all_lngs, all_lats = [], []
@@ -357,7 +359,7 @@ def render_depth_map(road_path: str, building_path: str,
 
 @st.cache_data(ttl=3600, max_entries=20)
 def render_landuse_overlay(landuse_path: str, width: int = 1024, height: int = 768,
-                           lng_range: tuple = None, lat_range: tuple = None) -> "PILImage.Image":
+                           lng_range: tuple | None = None, lat_range: tuple | None = None) -> "PILImage.Image":
     """渲染用地类型色块叠加图，用于 ControlNet 语义约束。"""
     if not Path(landuse_path).exists():
         return PILImage.new("RGB", (width, height), (0, 0, 0))
@@ -445,13 +447,13 @@ def _draw_geometry(draw, geometry, to_pixel, color, width):
         for ring in coords:
             points = [to_pixel(c[0], c[1]) for c in ring if len(c) >= 2]
             if len(points) >= 2:
-                draw.line(points + [points[0]], fill=color, width=width)
+                draw.line([*points, points[0]], fill=color, width=width)
     elif gtype == "MultiPolygon":
         for poly in coords:
             for ring in poly:
                 points = [to_pixel(c[0], c[1]) for c in ring if len(c) >= 2]
                 if len(points) >= 2:
-                    draw.line(points + [points[0]], fill=color, width=width)
+                    draw.line([*points, points[0]], fill=color, width=width)
     elif gtype == "GeometryCollection":
         for g in geometry.get("geometries", []):
             _draw_geometry(draw, g, to_pixel, color, width)
@@ -734,12 +736,11 @@ if selected_styles:
     cols = st.columns(min(3, len(selected_styles)))
     for i, style_name in enumerate(selected_styles):
         style = STRATEGY_STYLES[style_name]
-        with cols[i % len(cols)]:
-            with st.container(border=True):
-                st.markdown(f"**{style_name}**")
-                st.caption(f"🎨 色彩: {style['colors']}")
-                st.caption(f"🧱 材质: {style['materials'][:60]}...")
-                st.caption(f"💡 光影: {style['lighting'][:60]}...")
+        with cols[i % len(cols)], st.container(border=True):
+            st.markdown(f"**{style_name}**")
+            st.caption(f"🎨 色彩: {style['colors']}")
+            st.caption(f"🧱 材质: {style['materials'][:60]}...")
+            st.caption(f"💡 光影: {style['lighting'][:60]}...")
 
 st.markdown("---")
 

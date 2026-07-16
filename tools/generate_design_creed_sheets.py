@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 # tools/generate_design_creed_sheets.py
 import os
-import sys
 import shutil
+import sys
 from pathlib import Path
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,7 +56,7 @@ def load_fonts():
             "large_number": ImageFont.truetype(FONT_BOLD_PATH, 72),
             "caption": ImageFont.truetype(FONT_PATH, 14),
         }
-    except IOError:
+    except OSError:
         default = ImageFont.load_default()
         fonts = {
             "large_title": default,
@@ -79,7 +79,7 @@ def wrap_text_by_pixels(text, font, max_width, draw):
             return draw.textlength(t, font=font)
         except AttributeError:
             try:
-                left, top, right, bottom = font.getbbox(t)
+                left, _top, right, _bottom = font.getbbox(t)
                 return right - left
             except AttributeError:
                 return font.getsize(t)[0]

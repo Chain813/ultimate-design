@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable, List, Optional
+from typing import List, Optional
 
 from src.engines.drawing_pipeline import DrawingPipeline
 from src.engines.drawing_prompt_engine import flatten_chapter_drawings
@@ -19,12 +20,12 @@ class ExportReport:
     success: int
     skipped: int
     failed: int
-    errors: List[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
 
 class BatchExporter:
     def __init__(self, pipeline: DrawingPipeline, store: VersionStore,
-                 drawing_names: List[str] = None):
+                 drawing_names: list[str] | None = None):
         self.pipeline = pipeline
         self.store = store
         self.drawing_names = drawing_names or flatten_chapter_drawings()
@@ -32,7 +33,7 @@ class BatchExporter:
     def export_full_atlas(self, skip_existing: bool = True,
                           quality_loop: bool = False,
                           max_retries: int = 2,
-                          on_progress: Optional[Callable] = None) -> ExportReport:
+                          on_progress: Callable | None = None) -> ExportReport:
         total = len(self.drawing_names)
         success = skipped = failed = 0
         errors = []
@@ -84,7 +85,7 @@ class BatchExporter:
         finally:
             self.drawing_names = old_names
 
-    def export_selected(self, drawing_names: List[str], **kwargs) -> ExportReport:
+    def export_selected(self, drawing_names: list[str], **kwargs) -> ExportReport:
         old_names = self.drawing_names
         self.drawing_names = drawing_names
         try:

@@ -1,14 +1,14 @@
-# -*- coding: utf-8 -*-
-from shapely.geometry import Point
-import pandas as pd
-import numpy as np
 from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
+
 import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 from PIL import Image
+from shapely.geometry import Point
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -188,7 +188,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
                 allocated += 1
                 
     # Plot glowing double-layer POI points
-    for px, py, cat_name, color in poi_points:
+    for px, py, _cat_name, color in poi_points:
         # Layer 1: Semi-transparent glow halo
         ax_map.plot(px, py, marker='o', markersize=8.5, color=color, alpha=0.25, zorder=4.5)
         # Layer 2: Sharp solid core with white edge
@@ -196,7 +196,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
                     markeredgecolor='#FFFFFF', markeredgewidth=0.6, zorder=5.0)
 
     # 3e. Plot the POI Vacuum Zones (Red dashed circle with diagonal hatching)
-    for idx, (lon, lat) in enumerate([(125.332, 43.906), (125.348, 43.903)]):
+    for _idx, (lon, lat) in enumerate([(125.332, 43.906), (125.348, 43.903)]):
         v_center = get_xy(lon, lat)
         circle_patch = mpatches.Circle(v_center, radius=210, facecolor="#FFF1F2", edgecolor="#EF4444",
                                        linewidth=1.2, linestyle='--', alpha=0.45, hatch="//", zorder=2.0)
@@ -324,7 +324,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, 67.8, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 

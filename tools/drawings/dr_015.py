@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
+from pathlib import Path
+
+import geopandas as gpd
+import matplotlib.font_manager as fm
+import matplotlib.patches as mpatches
+import matplotlib.patheffects as path_effects
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from PIL import Image
 from shapely.geometry import Point
 from shapely.ops import unary_union
-import pandas as pd
-import numpy as np
-from pathlib import Path
-import matplotlib.pyplot as plt
-import matplotlib.font_manager as fm
-import matplotlib.patheffects as path_effects
-import matplotlib.patches as mpatches
-import geopandas as gpd
-from PIL import Image
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 STATIC_DIR = ROOT / "static"
@@ -136,10 +136,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
     
     med_noise = None
     if buf_2 is not None:
-        if strong_noise is not None and not strong_noise.is_empty:
-            med_noise = buf_2.difference(strong_noise)
-        else:
-            med_noise = buf_2
+        med_noise = buf_2.difference(strong_noise) if strong_noise is not None and not strong_noise.is_empty else buf_2
             
     light_noise = None
     if buf_3 is not None:
@@ -151,10 +148,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
         elif med_noise is not None:
             exclude = med_noise
             
-        if exclude is not None and not exclude.is_empty:
-            light_noise = buf_3.difference(exclude)
-        else:
-            light_noise = buf_3
+        light_noise = buf_3.difference(exclude) if exclude is not None and not exclude.is_empty else buf_3
 
     # Plot Noise Buffers sequentially (Tiers 1, 2, 3)
     if strong_noise is not None and not strong_noise.is_empty:
@@ -309,7 +303,7 @@ def draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, c
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.0), zorder=4)
     
     scale_ratio = view_w / 0.31968
-    scale_rounded = int(round(scale_ratio / 500)) * 500
+    scale_rounded = round(scale_ratio / 500) * 500
     ax.text((x_start + x_end)/2, 67.8, f"比例尺 1:{scale_rounded}", color='#334155', ha='center', va='center',
             fontproperties=fm.FontProperties(family=font_prop['family'], size=10.5, weight='bold'), zorder=4)
 

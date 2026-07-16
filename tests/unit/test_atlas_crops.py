@@ -8,8 +8,8 @@ from tools.generate_atlas_crops import (
     build_crop_output_path,
     crop_atlas_image,
     scaled_standard_boxes,
-    should_process_atlas_image,
     should_preserve_full_image,
+    should_process_atlas_image,
 )
 
 

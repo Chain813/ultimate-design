@@ -2,9 +2,10 @@
 绘制 ultimateDESIGN 平台开源技术栈完整清单图表
 横板布局，适配 16:9 PPT 幻灯片，超清可读
 """
+import os
+
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 
 plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False

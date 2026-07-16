@@ -1,6 +1,8 @@
 # tools/crop_scope.py
 import sys
+
 from PIL import Image, ImageDraw, ImageFont
+
 
 def process_a3_layout(map_path, output_path):
     template = Image.open('static/a3_layout_preview_full.png').convert('RGB')
@@ -33,7 +35,7 @@ def process_a3_layout(map_path, output_path):
         font_title = ImageFont.truetype(font_path, 20)
         font_body = ImageFont.truetype(font_path, 15)
         font_tb = ImageFont.truetype(font_path, 18)
-    except IOError:
+    except OSError:
         font_small = ImageFont.load_default()
         font_title = ImageFont.load_default()
         font_body = ImageFont.load_default()

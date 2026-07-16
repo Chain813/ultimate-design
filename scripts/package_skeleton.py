@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 ultimateDESIGN 代码骨架自动打包工具。
 本脚本读取项目中的 .gitignore 配置，自动提取纯净的代码结构，
@@ -6,9 +5,9 @@ ultimateDESIGN 代码骨架自动打包工具。
 最终生成用于 GitHub 上传或分发的 ZIP 压缩包。
 """
 
+import fnmatch
 import os
 import zipfile
-import fnmatch
 from pathlib import Path
 
 # 定义默认忽略的目录和文件（即便 .gitignore 未包含也强制忽略）

@@ -1,6 +1,8 @@
 import os
 import sys
+
 from PIL import Image, ImageDraw, ImageFont
+
 from src.config.paths import STATIC_DIR
 
 # Define Output File
@@ -268,7 +270,7 @@ def main():
     draw.text((40, legend_y), "图例分类: ", fill=TEXT_COLOR_DARK, font=node_title_font)
     
     offset_x = 150
-    for key, val in COLOR_SCHEMES.items():
+    for _key, val in COLOR_SCHEMES.items():
         draw.rounded_rectangle([offset_x, legend_y - 2, offset_x + 20, legend_y + 12], radius=3, fill=val["fill"], outline=val["stroke"])
         draw.text((offset_x + 28, legend_y - 2), val["desc"], fill=TEXT_COLOR_DARK, font=subtitle_font)
         offset_x += 240

@@ -1,20 +1,20 @@
-# -*- coding: utf-8 -*-
 """阶段 16：制图与设计智能体 Skill 手册 —— 本地化智能体技能规范与实时交互沙盘。"""
 
-import time
-import os
-import sys
-import subprocess
 import json
 import logging
+import os
+import subprocess
+import sys
+import time
 from pathlib import Path
-from PIL import Image
-import streamlit as st
 
-from src.ui.design_system import render_page_banner, render_section_intro
-from src.ui.app_shell import render_top_nav, render_engine_status_alert
-from src.ui.streamlit_compat import stretch_width
+import streamlit as st
+from PIL import Image
+
 from src.engines.llm_engine import call_llm_engine
+from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.design_system import render_page_banner, render_section_intro
+from src.ui.streamlit_compat import stretch_width
 
 # 1. Config streamlit page
 st.set_page_config(page_title="16 AI智能体Skill手册", layout="wide", initial_sidebar_state="expanded")

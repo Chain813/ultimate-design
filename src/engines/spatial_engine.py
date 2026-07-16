@@ -9,13 +9,14 @@ Usage:
 
 import json
 import logging
+from collections.abc import Callable
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 import streamlit as st
-from typing import Any, Callable, Dict, List, Optional, Union
 
-from src.config import resolve_path, SHP_FILES, DATA_FILES, GIS_FILES
+from src.config import DATA_FILES, GIS_FILES, SHP_FILES, resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -44,7 +45,7 @@ def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     return df1 if not df1.empty else df2
 
 
-def _safe_read_csv(path: str, usecols: Optional[List[str]] = None) -> pd.DataFrame:
+def _safe_read_csv(path: str, usecols: list[str] | None = None) -> pd.DataFrame:
     try:
         resolved = resolve_path(path)
         if resolved.exists():
@@ -59,7 +60,7 @@ def _safe_read_csv(path: str, usecols: Optional[List[str]] = None) -> pd.DataFra
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=1800)
-def get_hud_statistics() -> Dict[str, Any]:
+def get_hud_statistics() -> dict[str, Any]:
     """Aggregate live statistics for the HUD overlay."""
     stats: dict = {}
     stats["poi_count"] = _safe_count(get_merged_poi_data, "N/A")
@@ -69,7 +70,7 @@ def get_hud_statistics() -> Dict[str, Any]:
     return stats
 
 
-def _safe_count(getter: Union[Callable, str], fallback: Any) -> Any:
+def _safe_count(getter: Callable | str, fallback: Any) -> Any:
     try:
         return len(getter()) if callable(getter) else len(pd.read_csv(str(getter), encoding="utf-8-sig"))
     except Exception:
@@ -86,7 +87,7 @@ def _safe_count_csv(path: str, fallback: Any) -> Any:
     return fallback
 
 
-def _calc_boundary_ha(geojson_path: str) -> Union[float, str]:
+def _calc_boundary_ha(geojson_path: str) -> float | str:
     try:
         p = resolve_path(geojson_path)
         with p.open("r", encoding="utf-8") as f:
@@ -111,7 +112,7 @@ def _calc_boundary_ha(geojson_path: str) -> Union[float, str]:
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=3600, max_entries=20)
-def get_skyline_features() -> Dict[str, Any]:
+def get_skyline_features() -> dict[str, Any]:
     """Extract max height, avg height, high-rise ratio, building count."""
     features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
     try:
@@ -134,7 +135,7 @@ def get_skyline_features() -> Dict[str, Any]:
             buildings["Height"] = 3.5
 
         if not buildings.empty:
-            features["building_count"] = int(len(buildings))
+            features["building_count"] = len(buildings)
             features["max_height"] = round(float(buildings["Height"].max()), 1)
             features["avg_height"] = round(float(buildings["Height"].mean()), 1)
             high_rise = buildings[buildings["Height"] >= 24]

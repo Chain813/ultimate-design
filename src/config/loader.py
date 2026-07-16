@@ -17,6 +17,7 @@ logger = logging.getLogger("ultimateDESIGN")
 
 import urllib.parse
 
+
 @st.cache_resource
 def load_global_config() -> dict:
     """Load config.yaml as a cached resource."""

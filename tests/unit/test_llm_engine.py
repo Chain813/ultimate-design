@@ -1,7 +1,8 @@
 import sys
+
 sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 
-from src.engines.llm_engine import _select_demo_response, _DEMO_RESPONSES, _DEFAULT_DEMO
+from src.engines.llm_engine import _DEFAULT_DEMO, _DEMO_RESPONSES, _select_demo_response
 
 
 def test_select_demo_response_matches_key():
@@ -34,7 +35,7 @@ def test_demo_responses_have_expected_keys():
 def test_demo_responses_contain_required_markers():
     """All demo responses should contain thought process and reply markers."""
     for resp in _DEMO_RESPONSES.values():
-        assert "思考过程" in resp or True  # some may not have explicit marker
+        assert True  # some may not have explicit marker
         assert len(resp) > 50  # responses should be substantial
 
 

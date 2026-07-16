@@ -15,11 +15,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from src.config import get_site_name
 from src.engines.drawing_prompt_engine import (
     BOOK_CHAPTERS,
     ImagePromptRequest,
-    TemplateNotFoundError,
     LLMCallError,
+    TemplateNotFoundError,
     build_image_prompt,
     get_drawing_profile,
 )
@@ -29,7 +30,6 @@ from src.workflow.template_assets import (
     load_template_asset_manifest,
     summarize_template_assets_for_prompt,
 )
-from src.config import get_site_name
 
 
 @dataclass
@@ -49,7 +49,14 @@ class DrawingTemplate:
 
 def _get_project_context() -> str:
     """获取项目基础数据上下文。"""
-    from src.config import get_site_city, get_site_district, get_site_name, get_site_desc, get_site_adjacent, get_site_policies
+    from src.config import (
+        get_site_adjacent,
+        get_site_city,
+        get_site_desc,
+        get_site_district,
+        get_site_name,
+        get_site_policies,
+    )
     city = get_site_city()
     district = get_site_district()
     site_name = get_site_name()

@@ -1,5 +1,6 @@
-import geopandas as gpd
 import shutil
+
+import geopandas as gpd
 
 print("Loading datasets...", flush=True)
 try:
