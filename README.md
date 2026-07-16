@@ -423,5 +423,5 @@ git push origin main
 ---
 
 <div align="center">
-<sub>Built with Interactive Web Framework · Generative Vision Models · Large Language Models · Spatial Analysis Libraries</sub>
+<sub>Built with Streamlit · Stable Diffusion · DeepSeek · Gemini · Codex · Claude Code · Antigravity · GeoPandas · Plotly · HyperFrames & Open Source Community</sub>
 </div>
