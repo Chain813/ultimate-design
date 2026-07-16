@@ -1,156 +1,74 @@
 @echo off
-chcp 65001 >nul
-title UltimateDESIGN å®‰è£…å‘å¯¼
+title UltimateDESIGN °²×°Ïòµ¼
 
-:: æ£€æŸ¥æ˜¯å¦ä»¥ç®¡ç†å‘˜æƒé™è¿è¡Œï¼ˆéƒ¨åˆ†ç›®å½•å’Œå¼€å§‹èœå•å¯èƒ½éœ€è¦ç®¡ç†å‘˜æƒé™ï¼‰
+:: ¼ì²éÊÇ·ñÒÔ¹ÜÀíÔ±È¨ÏŞÔËĞĞ
 net session >nul 2>&1
 if %errorLevel% == 0 (
     goto run_installer
 ) else (
     echo =======================================================
-    echo è¯·å³é”®ç‚¹å‡»æ­¤æ–‡ä»¶ï¼Œé€‰æ‹© "ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ" 
+    echo [ÌáÊ¾] ÕıÔÚÇëÇó¹ÜÀíÔ±È¨ÏŞÒÔ´´½¨×ÀÃæ¿ì½İ·½Ê½...
     echo =======================================================
-    pause
+    powershell -Command "Start-Process -FilePath '%0' -Verb RunAs"
     exit /b
 )
 
 :run_installer
-echo æ­£åœ¨å¯åŠ¨å›¾å½¢åŒ–å®‰è£…å‘å¯¼...
+color 0B
+echo.
+echo ========================================================
+echo   »¶Ó­Ê¹ÓÃ UltimateDESIGN ±ãĞ¯°æ°²×°Ïòµ¼
+echo ========================================================
+echo.
+echo ±¾³ÌĞò½«°ïÖúÄú£º
+echo 1. ÑéÖ¤±ãĞ¯Ê½ Python ÔËĞĞ»·¾³
+echo 2. ÔÚ×ÀÃæÉú³ÉÒ»¼üÆô¶¯¿ì½İ·½Ê½
+echo.
+pause
 
-set "PS_SCRIPT=%TEMP%\UD_Installer.ps1"
+set TARGET_DIR=%~dp0
+set WINPYTHON_DIR=%TARGET_DIR%WinPython
 
-:: åŠ¨æ€ç”Ÿæˆ PowerShell GUI è„šæœ¬
-> "%PS_SCRIPT%" (
-echo Add-Type -AssemblyName System.Windows.Forms
-echo Add-Type -AssemblyName System.Drawing
 echo.
-echo $form = New-Object System.Windows.Forms.Form
-echo $form.Text = "UltimateDESIGN å®‰è£…ç¨‹åº"
-echo $form.Size = New-Object System.Drawing.Size^(420,260^)
-echo $form.StartPosition = "CenterScreen"
-echo $form.FormBorderStyle = "FixedDialog"
-echo $form.MaximizeBox = $false
+echo [1/3] ÕıÔÚÑéÖ¤»·¾³ÍêÕûĞÔ...
+if not exist "%WINPYTHON_DIR%\python\python.exe" (
+    color 0C
+    echo [´íÎó] Î´ÕÒµ½±ãĞ¯Ê½»·¾³£ºWinPython
+    echo ÇëÈ·ÈÏÄúÒÑ¾­Ö´ĞĞÁËÖØ×°½Å±¾¡£
+    pause
+    exit /b 1
+)
+echo [OK] ±ãĞ¯°æ»·¾³ÑéÖ¤Í¨¹ı£¡
+
 echo.
-echo $label = New-Object System.Windows.Forms.Label
-echo $label.Location = New-Object System.Drawing.Point^(20,20^)
-echo $label.Size = New-Object System.Drawing.Size^(300,20^)
-echo $label.Text = "è¯·é€‰æ‹©å®‰è£…è·¯å¾„ (ç›®æ ‡æ–‡ä»¶å¤¹å°†è¢«åˆ›å»º):"
-echo $form.Controls.Add^($label^)
+echo [2/3] ÕıÔÚÅäÖÃÏµÍ³Â·¾¶...
+set LAUNCHER_PATH=%TARGET_DIR%Æô¶¯_UltimateDESIGN.bat
+if not exist "%LAUNCHER_PATH%" (
+    color 0C
+    echo [´íÎó] Î´ÕÒµ½Æô¶¯½Å±¾£¡
+    pause
+    exit /b 1
+)
+echo [OK] Æô¶¯½Å±¾Â·¾¶ÒÑ¶¨Î»¡£
+
 echo.
-echo $pathBox = New-Object System.Windows.Forms.TextBox
-echo $pathBox.Location = New-Object System.Drawing.Point^(20,40^)
-echo $pathBox.Size = New-Object System.Drawing.Size^(280,20^)
-echo $pathBox.Text = "C:\UltimateDESIGN"
-echo $form.Controls.Add^($pathBox^)
-echo.
-echo $browseBtn = New-Object System.Windows.Forms.Button
-echo $browseBtn.Location = New-Object System.Drawing.Point^(310,38^)
-echo $browseBtn.Size = New-Object System.Drawing.Size^(70,23^)
-echo $browseBtn.Text = "æµè§ˆ..."
-echo $browseBtn.Add_Click^{
-echo     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-echo     if^($dialog.ShowDialog^(^) -eq 'OK'^) ^{
-echo         $pathBox.Text = $dialog.SelectedPath + "\UltimateDESIGN"
-echo     ^}
-echo ^}
-echo $form.Controls.Add^($browseBtn^)
-echo.
-echo $checkDesktop = New-Object System.Windows.Forms.CheckBox
-echo $checkDesktop.Location = New-Object System.Drawing.Point^(20,80^)
-echo $checkDesktop.Size = New-Object System.Drawing.Size^(200,20^)
-echo $checkDesktop.Text = "åˆ›å»ºæ¡Œé¢å¿«æ·æ–¹å¼"
-echo $checkDesktop.Checked = $true
-echo $form.Controls.Add^($checkDesktop^)
-echo.
-echo $checkStartMenu = New-Object System.Windows.Forms.CheckBox
-echo $checkStartMenu.Location = New-Object System.Drawing.Point^(20,110^)
-echo $checkStartMenu.Size = New-Object System.Drawing.Size^(200,20^)
-echo $checkStartMenu.Text = "æ·»åŠ åˆ°å¼€å§‹èœå•"
-echo $checkStartMenu.Checked = $true
-echo $form.Controls.Add^($checkStartMenu^)
-echo.
-echo $installBtn = New-Object System.Windows.Forms.Button
-echo $installBtn.Location = New-Object System.Drawing.Point^(150,170^)
-echo $installBtn.Size = New-Object System.Drawing.Size^(100,30^)
-echo $installBtn.Text = "å¼€å§‹å®‰è£…"
-echo $installBtn.Add_Click^{
-echo     $installPath = $pathBox.Text
-echo     $form.DialogResult = [System.Windows.Forms.DialogResult]::OK
-echo     $form.Close^(^)
-echo     
-echo     # ä¼ å‚å› BAT
-echo     [System.IO.File]::WriteAllText^("$TEMP\UD_InstallParams.txt", "$installPath`n$($checkDesktop.Checked)`n$($checkStartMenu.Checked)"^)
-echo ^}
-echo $form.Controls.Add^($installBtn^)
-echo.
-echo $form.ShowDialog^(^) ^| Out-Null
+echo [3/3] ÕıÔÚÉú³É×ÀÃæ¿ì½İ·½Ê½...
+set SHORTCUT_NAME=UltimateDESIGN.lnk
+set SHORTCUT_PATH=%USERPROFILE%\Desktop\%SHORTCUT_NAME%
+
+powershell -Command "$WshShell = New-Object -comObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%SHORTCUT_PATH%'); $Shortcut.TargetPath = '%LAUNCHER_PATH%'; $Shortcut.WorkingDirectory = '%TARGET_DIR%'; $Shortcut.IconLocation = '%WINPYTHON_DIR%\python\python.exe,0'; $Shortcut.Save()"
+
+if exist "%SHORTCUT_PATH%" (
+    echo [OK] ×ÀÃæ¿ì½İ·½Ê½´´½¨³É¹¦£¡
+) else (
+    color 0E
+    echo [¾¯¸æ] ×ÀÃæ¿ì½İ·½Ê½´´½¨Ê§°Ü£¬Çë³¢ÊÔÊÖ¶¯´´½¨¡£
 )
 
-:: æ‰§è¡Œ PowerShell è„šæœ¬
-powershell -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File "%PS_SCRIPT%"
-
-:: è¯»å–ç”¨æˆ·é€‰æ‹©
-if not exist "%TEMP%\UD_InstallParams.txt" (
-    echo ç”¨æˆ·å–æ¶ˆäº†å®‰è£…ã€‚
-    exit /b
-)
-
-setlocal EnableDelayedExpansion
-set /a line=1
-for /f "usebackq delims=" %%A in ("%TEMP%\UD_InstallParams.txt") do (
-    if !line!==1 set "INSTALL_PATH=%%A"
-    if !line!==2 set "MAKE_DESKTOP=%%A"
-    if !line!==3 set "MAKE_START=%%A"
-    set /a line+=1
-)
-del "%TEMP%\UD_InstallParams.txt"
-del "%PS_SCRIPT%"
-
-if "%INSTALL_PATH%"=="" exit /b
-
-echo =======================================================
-echo å¼€å§‹éƒ¨ç½²æ–‡ä»¶åˆ°: %INSTALL_PATH%
-echo æ­£åœ¨å¤åˆ¶æ–‡ä»¶ (æ­¤è¿‡ç¨‹å¯èƒ½éœ€è¦å‡ åˆ†é’Ÿï¼Œè¯·è€å¿ƒç­‰å¾…...)
-echo =======================================================
-
-:: åˆ›å»ºç›®å½•
-mkdir "%INSTALL_PATH%" 2>nul
-
-:: ä½¿ç”¨ robocopy å¤åˆ¶æ–‡ä»¶ï¼Œæ’é™¤ç¼“å­˜å’Œæ— ç”¨æ–‡ä»¶
-robocopy "%~dp0." "%INSTALL_PATH%" /E /R:1 /W:1 /NFL /NDL /XD .git __pycache__ .pytest_cache /XF .gitignore *.pyc
-echo æ–‡ä»¶å¤åˆ¶å®Œæˆï¼
-
-:: ä½¿ç”¨ PowerShell ç”Ÿæˆå¿«æ·æ–¹å¼
-set "SHORTCUT_PS=%TEMP%\UD_Shortcut.ps1"
-> "%SHORTCUT_PS%" (
-echo $WshShell = New-Object -comObject WScript.Shell
-echo if ('%MAKE_DESKTOP%' -eq 'True') {
-echo     $DesktopPath = [Environment]::GetFolderPath('Desktop')
-echo     $Shortcut = $WshShell.CreateShortcut("$DesktopPath\UltimateDESIGN.lnk")
-echo     $Shortcut.TargetPath = "%INSTALL_PATH%\å¯åŠ¨_UltimateDESIGN.bat"
-echo     $Shortcut.WorkingDirectory = "%INSTALL_PATH%"
-echo     $Shortcut.Description = "Urban Platform Decision Support"
-echo     $Shortcut.IconLocation = "%INSTALL_PATH%\assets\favicon.ico"
-echo     $Shortcut.Save()
-echo }
-echo if ('%MAKE_START%' -eq 'True') {
-echo     $StartMenuPath = [Environment]::GetFolderPath('CommonStartMenu')
-echo     $ShortcutDir = "$StartMenuPath\Programs\UltimateDESIGN"
-echo     New-Item -ItemType Directory -Force -Path $ShortcutDir ^| Out-Null
-echo     $Shortcut = $WshShell.CreateShortcut("$ShortcutDir\UltimateDESIGN.lnk")
-echo     $Shortcut.TargetPath = "%INSTALL_PATH%\å¯åŠ¨_UltimateDESIGN.bat"
-echo     $Shortcut.WorkingDirectory = "%INSTALL_PATH%"
-echo     $Shortcut.Description = "Urban Platform Decision Support"
-echo     $Shortcut.IconLocation = "%INSTALL_PATH%\assets\favicon.ico"
-echo     $Shortcut.Save()
-echo }
-)
-powershell -ExecutionPolicy Bypass -NoProfile -File "%SHORTCUT_PS%"
-del "%SHORTCUT_PS%"
-
 echo.
-echo =======================================================
-echo å®‰è£…æˆåŠŸï¼
-echo å¿«æ·æ–¹å¼å·²åˆ›å»ºï¼Œæ‚¨ç°åœ¨å¯ä»¥é€šè¿‡æ¡Œé¢æˆ–å¼€å§‹èœå•å¯åŠ¨å¹³å°ã€‚
-echo =======================================================
+echo ========================================================
+echo   °²×°Íê³É£¡
+echo   ÏÖÔÚÄú¿ÉÒÔÖ±½ÓË«»÷×ÀÃæÉÏµÄ [UltimateDESIGN] Í¼±êÀ´ÔËĞĞÈí¼şÁË£¡
+echo ========================================================
+echo.
 pause
