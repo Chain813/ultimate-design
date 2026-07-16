@@ -51,7 +51,12 @@ def test_build_spatial_stats_summary():
     assert "110289" in result
 
 
-def test_retrieve_policy_context_fallback():
+def test_retrieve_policy_context_fallback(monkeypatch):
     """retrieve_policy_context returns empty string when RAG unavailable."""
+    monkeypatch.setattr(
+        "src.engines.rag_engine.retrieve_rag_context",
+        lambda *args, **kwargs: [],
+    )
     result = retrieve_policy_context("test query")
     assert isinstance(result, str)
+

@@ -7,7 +7,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 from io import BytesIO
-from typing import List
+from typing import Any, List
 
 import requests
 
@@ -57,13 +57,13 @@ class QualityAssessor:
         self.text_model = text_model or "deepseek-v4-pro"
         self.vision_model = vision_model or self._auto_select_vision_model()
 
-    def assess(self, image, prompt: str, drawing_name: str) -> QualityReport:
+    def assess(self, image: Any, prompt: str, drawing_name: str) -> QualityReport:
         """Run dual assessment and return combined report."""
         visual = self._visual_assessment(image, drawing_name)
         content = self._content_assessment(visual.description, prompt, drawing_name)
         return self._combine_scores(visual, content)
 
-    def _visual_assessment(self, image, drawing_name: str) -> VisualScore:
+    def _visual_assessment(self, image: Any, drawing_name: str) -> VisualScore:
         """Assess visual quality via Ollama Gemma vision."""
         img_b64 = self._encode_image(image)
         prompt = (
@@ -174,7 +174,7 @@ class QualityAssessor:
             pass
         return ContentScore(score=5.0, issues=["解析失败"], suggestions=[])
 
-    def _encode_image(self, image) -> str:
+    def _encode_image(self, image: Any) -> str:
         img_copy = image.copy()
         img_copy.thumbnail((1024, 1024))
         buffered = BytesIO()
@@ -202,7 +202,7 @@ class QualityAssessor:
             pass
         return 4
 
-    def _ensure_model_available(self, model: str):
+    def _ensure_model_available(self, model: str) -> None:
         try:
             resp = requests.get(f"{self.ollama_url}/api/tags", timeout=5)
             installed = [m["name"] for m in resp.json().get("models", [])]

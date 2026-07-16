@@ -343,6 +343,30 @@ render_summary_cards([
 ])
 
 # ==========================================
+# 💾 项目缓存管理
+# ==========================================
+st.markdown("---")
+c1, c2 = st.columns([3, 1])
+with c1:
+    render_section_intro("项目进度管理", "系统已自动在后台开启数据总线持久化，防止刷新丢失进度。如需开启新项目，请在此清空。", eyebrow="Project State")
+with c2:
+    st.markdown("<br>", unsafe_allow_html=True)
+    if st.button("🗑️ 开启全新项目 (清空缓存)", use_container_width=True, type="primary"):
+        from src.workflow.stage_data_bus import _get_cache_path
+        cache_file = _get_cache_path()
+        if cache_file.exists():
+            try:
+                cache_file.unlink()
+            except Exception:
+                pass
+        if "stage_bus" in st.session_state:
+            del st.session_state["stage_bus"]
+        st.toast("✅ 缓存已清空，系统焕然一新！")
+        import time
+        time.sleep(1)
+        st.rerun()
+
+# ==========================================
 # 🏗️ 模块入口卡片 (四板块分组 · 小型卡片 · 水平单行排版)
 # ==========================================
 render_section_intro("核心模块入口", "按数据准备、前期、中期、后期四大板块进入工作流。", eyebrow="Modules")

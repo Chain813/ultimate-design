@@ -77,7 +77,11 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
         return _select_demo_response(system_prompt)
 
     t0 = time.time()
-    system_prompt = _augment_with_rag(prompt, system_prompt)
+    # RAG augmentation -- graceful degradation on failure
+    try:
+        system_prompt = _augment_with_rag(prompt, system_prompt)
+    except Exception:
+        logger.warning("RAG augmentation failed, proceeding without policy context", exc_info=True)
     config = load_global_config()
 
     from src.config.user_settings import get_effective_setting
@@ -105,28 +109,45 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
         "stream": False,
     }
 
+    max_attempts = 3
     res_text = ""
-    for attempt in range(2):
+    for attempt in range(max_attempts):
         try:
             response = requests.post(url, headers=headers, json=payload, timeout=timeout_val)
             if response.status_code == 200:
                 res_text = response.json().get("choices", [{}])[0].get("message", {}).get("content", "")
                 break
-            res_text = f"DeepSeek 报错: {response.status_code} - {response.text}"
+            res_text = f"DeepSeek \u62a5\u9519: {response.status_code} - {response.text}"
+            if response.status_code >= 500:
+                backoff = min(2 ** attempt, 16)
+                logger.warning("DeepSeek server error %d, retry %d/%d in %ds",
+                               response.status_code, attempt + 1, max_attempts, backoff)
+                time.sleep(backoff)
+                continue
+            break  # Client errors (4xx) are not retryable
         except requests.exceptions.ConnectionError:
-            if attempt == 0:
-                time.sleep(3)
+            backoff = min(2 ** attempt, 16)
+            logger.warning("DeepSeek connection failed, retry %d/%d in %ds",
+                           attempt + 1, max_attempts, backoff)
+            time.sleep(backoff)
+        except requests.exceptions.Timeout:
+            logger.warning("DeepSeek request timed out after %ds", timeout_val)
+            res_text = f"DeepSeek API \u8bf7\u6c42\u8d85\u65f6\uff08{timeout_val}s\uff09\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u6216\u589e\u5927 config.yaml \u4e2d\u7684 timeout\u3002"
+            break
         except Exception as e:
             logger.warning("DeepSeek call failed", exc_info=True)
-            res_text = f"无法连接到 DeepSeek API: {str(e)}"
+            res_text = f"\u65e0\u6cd5\u8fde\u63a5\u5230 DeepSeek API: {e}"
+            break
 
     if not res_text:
-        res_text = "无法连接到 DeepSeek API，请检查网络或代理设置。"
+        res_text = "\u65e0\u6cd5\u8fde\u63a5\u5230 DeepSeek API\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u6216\u4ee3\u7406\u8bbe\u7f6e\u3002"
 
     latency = time.time() - t0
+    logger.info("LLM call completed: model=%s latency=%.1fs response_len=%d", model, latency, len(res_text))
     from src.utils.llm_monitor import log_llm_call
     log_llm_call(model, system_prompt, prompt, res_text, latency)
     return res_text
+
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
@@ -148,7 +169,11 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
         return _demo_gen()
 
     t0 = time.time()
-    system_prompt = _augment_with_rag(prompt, system_prompt)
+    # RAG augmentation -- graceful degradation on failure
+    try:
+        system_prompt = _augment_with_rag(prompt, system_prompt)
+    except Exception:
+        logger.warning("RAG augmentation failed in stream mode, proceeding without policy context", exc_info=True)
     config = load_global_config()
 
     from src.config.user_settings import get_effective_setting

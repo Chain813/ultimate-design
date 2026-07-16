@@ -25,17 +25,29 @@ def _get_cache_path() -> Path:
     return cache_path
 
 
+import time
+
+_last_written_time: float = 0.0
+
 def _save_cache_to_disk(bus_dict: dict):
-    global _last_written_hash
+    global _last_written_hash, _last_written_time
     try:
+        now = time.time()
+        # Throttling: at most 1 write per second
+        if now - _last_written_time < 1.0:
+            return
+            
         # Debounce: skip write if content hasn't changed
         content_hash = hashlib.md5(json.dumps(bus_dict, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         if content_hash == _last_written_hash:
             return
+            
         cache_path = _get_cache_path()
         with open(cache_path, "w", encoding="utf-8") as f:
             json.dump(bus_dict, f, ensure_ascii=False, indent=2)
+            
         _last_written_hash = content_hash
+        _last_written_time = now
     except Exception as e:
         logger.error(f"Failed to write stage data bus cache: {e}")
 

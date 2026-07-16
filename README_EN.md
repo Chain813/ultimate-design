@@ -17,9 +17,12 @@
 
 ---
 
-## 🌟 Overview
+## 🌟 Project Overview
 
-UltimateDESIGN is a **full-stack Streamlit decision support platform** built for urban planning and urban design. Benefiting from a **fully decoupled data-and-logic architecture**, the platform supports importing any city/district data assets (and bundles a 170.2-hectare area surrounding Changchun's Puppet Emperor's Palace as its default verification case study). The platform decomposes urban renewal design into 16 standardized stages — spanning data preparation, site survey, evidence-based diagnostics, multi-agent game-theoretic strategy derivation, overall and specialized system planning, guideline generation, to AIGC inference and agent skill manual export — forming a complete closed loop across **GIS data collection → LLM evidence-based reasoning → vector/raster map generation → AIGC design inference → regulatory guideline delivery**.
+UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 16 standardized stages, streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
+
+> 🎉 **New Feature: Out-of-the-Box Portable Version**
+> The platform now fully supports a fully isolated, portable packaging solution based on **WinPython 3.12+**. All environment dependencies and underlying GIS C++ dynamic libraries are encapsulated within a single folder. Coupled with the built-in `安装向导_UltimateDESIGN.bat` wizard, it enables one-click deployment, pollution-free independent execution, and automatic shortcut generation, drastically lowering the distribution barrier for non-technical designers.
 
 ---
 

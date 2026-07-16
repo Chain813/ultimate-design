@@ -1,4 +1,22 @@
+import pytest
 from src.engines import drawing_prompt_templates as templates
+
+
+@pytest.fixture(autouse=True)
+def mock_spatial_data(monkeypatch):
+    monkeypatch.setattr(
+        "src.engines.spatial_engine.get_hud_statistics",
+        lambda: {"poi_count": 10, "gvi_count": 5, "boundary_ha": 150.0},
+    )
+    monkeypatch.setattr(
+        "src.engines.spatial_engine.get_skyline_features",
+        lambda: {"building_count": 100, "max_height": 20.0, "avg_height": 10.0, "high_rise_ratio": 5.0},
+    )
+    monkeypatch.setattr(
+        "src.engines.site_diagnostic_engine.get_plot_diagnostics",
+        lambda: [],
+    )
+
 
 
 def _manifest_for(asset_ids):

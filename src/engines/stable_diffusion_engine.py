@@ -55,12 +55,25 @@ class SDResult:
 # ============================================================
 
 
-def encode_image(pil_image, max_dim: int = 1024) -> str:
-    """Encode a PIL Image to base64 JPEG string, thumbnailing if needed."""
+def encode_image(pil_image, max_dim: int = 1024, fmt: str = "JPEG") -> str:
+    """Encode a PIL Image to base64 string, thumbnailing if needed.
+
+    Parameters
+    ----------
+    pil_image : PIL.Image.Image
+        The image to encode.
+    max_dim : int
+        Maximum dimension (width or height) before thumbnailing.
+    fmt : str
+        Output format: ``"JPEG"`` (default, lossy) or ``"PNG"`` (lossless,
+        preserves alpha transparency).
+    """
     img_copy = pil_image.copy()
     img_copy.thumbnail((max_dim, max_dim))
+    if fmt.upper() == "JPEG" and img_copy.mode == "RGBA":
+        img_copy = img_copy.convert("RGB")
     buffered = BytesIO()
-    img_copy.save(buffered, format="JPEG")
+    img_copy.save(buffered, format=fmt)
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
@@ -366,8 +379,10 @@ class SDPipeline:
                 if response.status_code == 200:
                     return response.json()
                 elif response.status_code == 503:
-                    logger.warning("SD WebUI busy (503), retrying in 5s...")
-                    time.sleep(5)
+                    backoff = 5 * (attempt + 1)
+                    logger.warning("SD WebUI busy (503), retrying in %ds (attempt %d/%d)...",
+                                   backoff, attempt + 1, max_retries)
+                    time.sleep(backoff)
                     continue
                 else:
                     raise SDAPIError(f"SD API returned {response.status_code}: {response.text[:200]}")

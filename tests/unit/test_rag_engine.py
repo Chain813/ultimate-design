@@ -4,10 +4,15 @@ sys.modules.setdefault("streamlit", type(sys)("streamlit_mock"))
 from src.engines.rag_engine import compute_query_embedding
 
 
-def test_compute_query_embedding_returns_none_when_model_unavailable():
+def test_compute_query_embedding_returns_none_when_model_unavailable(monkeypatch):
     """Without transformers installed, should return None gracefully."""
+    monkeypatch.setattr(
+        "src.engines.rag_engine.load_bge_micro_model",
+        lambda: (None, None),
+    )
     result = compute_query_embedding("测试查询文本")
     assert result is None
+
 
 
 def test_retrieve_rag_context_empty_db(monkeypatch):

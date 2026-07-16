@@ -41,7 +41,16 @@ class PipelineResult:
 
 
 class DrawingPipeline:
-    """End-to-end orchestrator: asset validation -> prompt generation -> SD rendering -> result storage."""
+    """End-to-end orchestration engine for AI architectural drawing generation.
+    
+    This class orchestrates the complete workflow for generating professional
+    urban design drawings. It coordinates:
+    1. Asset validation: Checks if required GIS assets/templates exist.
+    2. Prompt engineering: Uses LLMs to generate high-fidelity SD prompts.
+    3. Rendering: Orchestrates Stable Diffusion with ControlNet constraints.
+    4. Quality Assessment: Evaluates outputs and auto-revises if quality is low.
+    5. State management: Saves successful outputs to the global stage_data_bus.
+    """
 
     def __init__(self, sd_pipeline: SDPipeline = None):
         self.sd = sd_pipeline or SDPipeline()
@@ -200,108 +209,105 @@ class DrawingPipeline:
         """Render with high-resolution upscaling logic and GIS ControlNet constraints."""
         # 1. Base generation at a stable resolution for 8GB VRAM
         self.sd.txt2img(
-            prompt=prompt, 
-            negative_prompt="blurry, messy, low resolution, distorted, organic chaos, text, watermark", 
-            width=1024, 
-            height=768
+            prompt=prompt,
+            negative_prompt="blurry, messy, low resolution, distorted, organic chaos, text, watermark",
+            width=1024,
+            height=768,
         )
 
-        # --- 引入 ControlNet GIS 约束（实现标准制图的关键） ---
+        # 2. Load ControlNet GIS constraints
+        self._load_controlnet_constraints()
+
+        # 3. Professional Upscaling (2x) using Tiled Diffusion logic
+        self.sd.upscale(scale=2, tile_size=512)
+
+        result = self.sd.run(on_progress=on_progress)
+
+        # 4. Post-process: overlay historic building pixels
+        if result and result.images and len(result.images) > 0:
+            self._post_process_overlay(result)
+
+        return result
+
+    def _load_controlnet_constraints(self) -> None:
+        """Load GIS ControlNet constraints from template assets.
+
+        Each constraint type is loaded independently so that a failure
+        in one does not block the others.
+        """
         try:
-            from PIL import Image
+            from PIL import Image as _PILImage
             from src.config import DATA_DIR
             from src.workflow.template_assets import load_template_asset_manifest
-            
+
             manifest = load_template_asset_manifest()
             assets = manifest.get("assets", {})
-            
-            # 1. 路网约束 (Canny) - 保持道路结构绝对准确
-            road_asset = assets.get("road_network")
-            if road_asset:
-                path = DATA_DIR / "template_assets" / road_asset["filename"]
-                if path.exists():
-                    img = Image.open(path).convert("RGB")
-                    self.sd.add_controlnet(img, module="canny", model="control_v11p_sd15_canny", weight=0.8)
-                    
-            # 2. 建筑与用地约束 (Seg) - 保持建筑体量和地块边界准确
-            building_asset = assets.get("building_texture")
-            if building_asset:
-                path = DATA_DIR / "template_assets" / building_asset["filename"]
-                if path.exists():
-                    img = Image.open(path).convert("RGB")
-                    self.sd.add_controlnet(img, module="seg", model="control_v11p_sd15_seg", weight=0.6)
+        except Exception:
+            logger.warning("Failed to load template asset manifest for ControlNet", exc_info=True)
+            return
 
-            # 3. 研究范围约束 (Canny/Lineart) - 绝对锁定项目边界红线
-            scope_asset = assets.get("research_scope")
-            if scope_asset:
-                path = DATA_DIR / "template_assets" / scope_asset["filename"]
-                if path.exists():
-                    img = Image.open(path).convert("RGB")
-                    # 使用 1.0 的最高权重，强制要求 AI 遵循红线边界
-                    self.sd.add_controlnet(img, module="canny", model="control_v11p_sd15_canny", weight=1.0)
-                    
-            # 4. 土地利用/专题属性约束 (Seg) - 可选图层，严格遵循国标用地色块
-            gis_asset = assets.get("gis_theme")
-            if gis_asset:
-                path = DATA_DIR / "template_assets" / gis_asset["filename"]
-                if path.exists():
-                    img = Image.open(path).convert("RGB")
-                    # 使用 0.7 权重，既锁定大面积色块，又允许 AI 发挥材质光影
-                    self.sd.add_controlnet(img, module="seg", model="control_v11p_sd15_seg", weight=0.7)
-                    
-            # 5. 保护建筑/紫线区域约束 (Canny) - 绝对保留历史遗产轮廓
-            historic_asset = assets.get("historic_buildings")
-            if historic_asset:
-                path = DATA_DIR / "template_assets" / historic_asset["filename"]
-                if path.exists():
-                    img = Image.open(path).convert("RGB")
-                    # 使用 1.0 的最高权重，强制要求 AI 绝对保留该区域内的建筑肌理，禁止改建
-                    self.sd.add_controlnet(img, module="canny", model="control_v11p_sd15_canny", weight=1.0)
-                    
-        except Exception as e:
-            logger.error(f"加载 ControlNet 约束失败: {e}")
-        # ----------------------------------------------------
-        
-        # 2. Professional Upscaling (2x) using Tiled Diffusion logic (via Ultimate SD Upscale)
-        # This will output a 2048x1536 high-fidelity drawing
-        self.sd.upscale(scale=2, tile_size=512)
-        
-        result = self.sd.run(on_progress=on_progress)
-        
-        # --- 后期强制叠加（Post-Process Overlay） ---
-        # 针对用户“拆改留中的留在重绘中一定不能改变”的绝对诉求
-        # 我们在 AI 生成的最终图像上，通过 Alpha 混合强制盖回“保护建筑”的原始像素
-        if result and result.images and len(result.images) > 0:
+        constraint_specs = [
+            ("road_network",       "canny", "control_v11p_sd15_canny", 0.8),
+            ("building_texture",   "seg",   "control_v11p_sd15_seg",   0.6),
+            ("research_scope",     "canny", "control_v11p_sd15_canny", 1.0),
+            ("gis_theme",          "seg",   "control_v11p_sd15_seg",   0.7),
+            ("historic_buildings", "canny", "control_v11p_sd15_canny", 1.0),
+        ]
+
+        for asset_id, module, model, weight in constraint_specs:
+            asset_info = assets.get(asset_id)
+            if not asset_info:
+                continue
+            path = DATA_DIR / "template_assets" / asset_info["filename"]
+            if not path.exists():
+                continue
             try:
-                from PIL import Image
-                from src.config import DATA_DIR
-                from src.workflow.template_assets import load_template_asset_manifest
-                
-                manifest = load_template_asset_manifest()
-                assets = manifest.get("assets", {})
-                historic_asset = assets.get("historic_buildings")
-                
-                if historic_asset:
-                    path = DATA_DIR / "template_assets" / historic_asset["filename"]
-                    if path.exists():
-                        overlay_img = Image.open(path).convert("RGBA")
-                        base_img = result.images[0].convert("RGBA")
-                        
-                        # 缩放覆盖层以匹配高清放大后的最终尺寸
-                        overlay_img = overlay_img.resize(base_img.size, Image.Resampling.LANCZOS)
-                        
-                        # 假设用户上传的是带有透明通道的 PNG 遮罩（或黑底白底的特征图）
-                        # 如果没有 Alpha 通道，我们根据像素亮度生成一个 Mask
-                        r, g, b, a = overlay_img.split()
-                        
-                        # 强制叠加：只在有像素（Alpha>0）的地方进行覆盖
-                        final_img = Image.alpha_composite(base_img, overlay_img)
-                        result.images[0] = final_img.convert("RGB")
-            except Exception as e:
-                logger.error(f"强制叠加保护建筑图层失败: {e}")
-        # ----------------------------------------
-        
-        return result
+                img = _PILImage.open(path).convert("RGB")
+                self.sd.add_controlnet(img, module=module, model=model, weight=weight)
+                logger.debug("Loaded ControlNet constraint: %s (weight=%.1f)", asset_id, weight)
+            except FileNotFoundError:
+                logger.warning("ControlNet asset file not found: %s", path)
+            except OSError:
+                logger.warning("ControlNet asset unreadable: %s", path, exc_info=True)
+            except Exception:
+                logger.warning("Failed to load ControlNet constraint: %s", asset_id, exc_info=True)
+
+    def _post_process_overlay(self, result: SDResult) -> None:
+        """Overlay historic building pixels onto the AI-generated image.
+
+        This ensures protected heritage structures are pixel-perfect
+        regardless of what the diffusion model generated.
+        """
+        try:
+            from PIL import Image as _PILImage
+            from src.config import DATA_DIR
+            from src.workflow.template_assets import load_template_asset_manifest
+
+            manifest = load_template_asset_manifest()
+            assets = manifest.get("assets", {})
+            historic_asset = assets.get("historic_buildings")
+
+            if not historic_asset:
+                return
+            path = DATA_DIR / "template_assets" / historic_asset["filename"]
+            if not path.exists():
+                return
+
+            overlay_img = _PILImage.open(path).convert("RGBA")
+            base_img = result.images[0].convert("RGBA")
+            
+            # Scale overlay to match the upscaled final size
+            overlay_img = overlay_img.resize(base_img.size, _PILImage.Resampling.LANCZOS)
+            
+            # Alpha-composite: only overwrite where overlay has opaque pixels
+            final_img = _PILImage.alpha_composite(base_img, overlay_img)
+            result.images[0] = final_img.convert("RGB")
+        except FileNotFoundError:
+            logger.warning("Historic buildings overlay file not found")
+        except OSError:
+            logger.warning("Historic buildings overlay unreadable", exc_info=True)
+        except Exception:
+            logger.warning("Failed to apply historic buildings overlay", exc_info=True)
 
     def _store_result(self, template_name: str, sd_result: SDResult, prompt: str):
         if sd_result.images:

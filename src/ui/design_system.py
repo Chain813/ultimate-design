@@ -104,166 +104,30 @@ def render_summary_cards(cards):
 
 import textwrap
 
+def _load_svg_template(template_name: str) -> str:
+    path = Path(__file__).resolve().parents[2] / "assets" / "svg_templates" / f"{template_name}.html"
+    if path.exists():
+        return path.read_text(encoding="utf-8")
+    return ""
+
 def render_data_pipeline(as_html=False):
-    """渲染专业的数据处理管线图 (Premium Serpentine Flow)"""
-    html_content = textwrap.dedent('''
-    <div class="pipeline-hud">
-        <div class="content-panel-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trending-up"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-            <h3 style="margin:0; font-size: 0.9rem;">全链路数据处理管线与决策逻辑</h3>
-        </div>
-        <div class="pipeline-svg-wrapper-hud">
-            <svg viewBox="0 0 1000 350" preserveAspectRatio="xMidYMid meet" class="pipeline-svg-serpentine">
-                <defs>
-                    <linearGradient id="grad-node-1" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
-                        <stop offset="100%" style="stop-color:#f5f5f7;stop-opacity:1" />
-                    </linearGradient>
-                </defs>
+    """渲染专业的数据处理管线图"""
+    html_content = _load_svg_template("data_pipeline")
+    if html_content:
+        if as_html:
+            return html_content
+        import streamlit as st
+        st.markdown(html_content, unsafe_allow_html=True)
 
-                <!-- 路径导向 -->
-                <path d="M50,200 C200,100 500,300 950,200" fill="none" stroke="rgba(0, 113, 227, 0.05)" stroke-width="6" stroke-linecap="round" />
-
-                <!-- 节点 1: 数据采集 -->
-                <g transform="translate(10, 140)">
-                    <rect width="230" height="150" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#e5e5ea" stroke-width="1" />
-                    <rect width="230" height="40" rx="16" ry="16" fill="#f5f5f7" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">01 数据采集</text>
-                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● GeoJSON 空间矢量</text>
-                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● CSV 属性数据表</text>
-                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 街景图像资源</text>
-                </g>
-
-                <!-- 节点 2: 处理引擎 -->
-                <g transform="translate(260, 20)">
-                    <rect width="240" height="170" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#0071e3" stroke-width="1.2" />
-                    <rect width="240" height="40" rx="16" ry="16" fill="#0071e3" />
-                    <text x="120" y="27" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">02 AI 处理引擎</text>
-                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 空间拓扑关联分析</text>
-                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 视觉语义深度识别</text>
-                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="13">■ 大模型逻辑链推演</text>
-                </g>
-
-                <!-- 节点 3: 数字化评价 -->
-                <g transform="translate(520, 140)">
-                    <rect width="230" height="150" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#e5e5ea" stroke-width="1" />
-                    <rect width="230" height="40" rx="16" ry="16" fill="#f5f5f7" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="115" y="27" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">03 数字化评价</text>
-                    <text x="30" y="75" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 更新潜力多维评分</text>
-                    <text x="30" y="105" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 风貌协调性诊断</text>
-                    <text x="30" y="135" fill="#48484a" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="bold">● 效益平衡预测曲线</text>
-                </g>
-
-                <!-- 节点 4: 更新决策 -->
-                <g transform="translate(760, 40)">
-                    <rect width="230" height="170" rx="16" ry="16" fill="url(#grad-node-1)" stroke="#34c759" stroke-width="1.2" />
-                    <rect width="230" height="40" rx="16" ry="16" fill="#34c759" />
-                    <text x="115" y="27" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="800">04 决策输出</text>
-                    <text x="30" y="75" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 更新序位图谱</text>
-                    <text x="30" y="110" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 生成式方案集</text>
-                    <text x="30" y="145" fill="#34c759" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="800">✔ 行动计划共识</text>
-                </g>
-
-                <!-- 连接箭头 -->
-                <path d="M240,215 L260,105" stroke="rgba(0, 113, 227, 0.3)" stroke-width="2" stroke-dasharray="5,5" />
-                <path d="M500,105 L520,215" stroke="rgba(0, 113, 227, 0.3)" stroke-width="2" stroke-dasharray="5,5" />
-                <path d="M750,215 L760,125" stroke="rgba(0, 113, 227, 0.3)" stroke-width="2" stroke-dasharray="5,5" />
-            </svg>
-        </div>
-    </div>
-    ''')
 def render_mission_decoding_hud(as_html=False):
-    """渲染任务解读专用的‘任务解码 HUD’ (Mission Decoding Star)"""
-    html_content = textwrap.dedent('''
-    <div class="pipeline-hud">
-        <div class="content-panel-header">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fingerprint"><path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.02-.3 3"/><path d="M7 22c-.35-.66-.64-1.4-.87-2.16"/><path d="M10 22c.7-.5 1.2-1.35 1.52-2.15"/><path d="M12 2a10 10 0 0 1 8 10c0 .62-.05 1.22-.15 1.81"/><path d="M15.1 22c.19-.51.3-1.05.35-1.6"/><path d="M18 22c.44-.47.76-1.04.95-1.65"/><path d="M18.8 17.91A10 10 0 0 0 12 2"/><path d="M2 12c0-1.1.15-2.17.43-3.19"/><path d="M20 12c0 .28-.01.56-.03.84"/><path d="M22 12c0-5.52-4.48-10-10-10"/><path d="M4.65 19.34A10 10 0 0 1 2 12"/><path d="M5.07 14.54A6 6 0 0 1 12 6a6 6 0 0 1 6 6c0 .19-.01.38-.03.56"/><path d="M8 22c-.5-1.1-.73-2.28-.73-3.5"/><path d="M9 12c0-.55.45-1 1-1s1 .45 1 1"/><path d="M9 18c0-.55.45-1 1-1s1 .45 1 1"/></svg>
-            <h3 style="margin:0; font-size: 0.9rem;">任务书深度解析与核心目标解码</h3>
-        </div>
-        <div class="pipeline-svg-wrapper-hud">
-            <svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet" class="pipeline-svg-serpentine">
-                <!-- 放射六边形背景网格 -->
-                <polygon points="400,40 540,120 540,280 400,360 260,280 260,120" fill="none" stroke="rgba(0, 0, 0, 0.05)" stroke-width="1" />
-                <polygon points="400,80 500,140 500,260 400,320 300,260 300,140" fill="none" stroke="rgba(0, 0, 0, 0.08)" stroke-width="1" />
-                <polygon points="400,120 460,160 460,240 400,280 340,240 340,160" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" />
-                
-                <!-- 放射轴 (六轴) -->
-                <line x1="400" y1="200" x2="400" y2="40" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
-                <line x1="400" y1="200" x2="540" y2="120" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
-                <line x1="400" y1="200" x2="540" y2="280" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
-                <line x1="400" y1="200" x2="400" y2="360" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
-                <line x1="400" y1="200" x2="260" y2="280" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
-                <line x1="400" y1="200" x2="260" y2="120" stroke="rgba(0, 0, 0, 0.1)" stroke-width="1" stroke-dasharray="4,4" />
+    """渲染任务解码 HUD"""
+    html_content = _load_svg_template("mission_decoding")
+    if html_content:
+        if as_html:
+            return html_content
+        import streamlit as st
+        st.markdown(html_content, unsafe_allow_html=True)
 
-                <!-- 六边形雷达覆盖面 -->
-                <polygon points="400,60 520,130 510,290 400,340 280,270 270,140" fill="rgba(0, 113, 227, 0.08)" stroke="#0071e3" stroke-width="1.5" />
-
-                <!-- 中心核心 -->
-                <circle cx="400" cy="200" r="45" fill="#ffffff" stroke="#0071e3" stroke-width="1.5" />
-                <text x="400" y="198" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="800">MISSION</text>
-                <text x="400" y="213" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="10" font-weight="bold">DECODE</text>
-
-                <!-- 维度标签卡片 -->
-                <!-- 1. 空间尺度 (Top) -->
-                <g transform="translate(310, 10)">
-                    <rect width="180" height="45" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="90" y="28" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="bold">空间尺度: 150ha</text>
-                </g>
-
-                <!-- 2. 核心驱动 (Right Top) -->
-                <g transform="translate(580, 60)">
-                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">核心驱动: 价值重构</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">AI 赋能 / 文脉延续 / 空间激活</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">多源 data 驱动的范式重构</text>
-                </g>
-
-                <!-- 3. AI 介入度 (Right Bottom) -->
-                <g transform="translate(580, 240)">
-                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">AI 介入度: 全流程赋能</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">Gemini/Claude/DeepSeek/GPT/SD</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">多模态语义解析集群</text>
-                </g>
-
-                <!-- 4. 文脉共振 (Bottom) -->
-                <g transform="translate(305, 315)">
-                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">文脉共振: 语义提取</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">历史基因修复 / 建筑语义识别</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#0071e3" font-family="system-ui, -apple-system, sans-serif" font-size="8">历史风貌数字资产映射</text>
-                </g>
-
-                <!-- 5. 交付形态 (Left Bottom) -->
-                <g transform="translate(30, 240)">
-                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">交付形态: 数字孪生</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">孪生底座 / 规划图册 / 交互全景</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="8">A3 (≥60P) + A1 (≥3P)</text>
-                </g>
-
-                <!-- 6. 核心任务 (Left Top) -->
-                <g transform="translate(30, 60)">
-                    <rect width="190" height="75" rx="14" ry="14" fill="#ffffff" stroke="#e5e5ea" stroke-width="1" />
-                    <text x="95" y="25" text-anchor="middle" fill="#1d1d1f" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="bold">核心任务: 城市更新</text>
-                    <text x="95" y="45" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="9">历史遗产保护 / 智慧平台构建</text>
-                    <text x="95" y="60" text-anchor="middle" fill="#86868b" font-family="system-ui, -apple-system, sans-serif" font-size="8">多维价值协同目标解锁</text>
-                </g>
-
-                <!-- 动态光点 -->
-                <circle cx="400" cy="60" r="4" fill="#38bdf8" filter="blur(2px)" />
-                <circle cx="540" cy="120" r="4" fill="#38bdf8" filter="blur(2px)" />
-                <circle cx="400" cy="340" r="4" fill="#38bdf8" filter="blur(2px)" />
-            </svg>
-        </div>
-    </div>
-    ''')
-    # 预先压缩 HTML
-    html_content = "".join(line.strip() for line in html_content.split("\n"))
-    
-    if as_html:
-        return html_content
-    st.markdown(html_content, unsafe_allow_html=True)
 
 def render_rag_pipeline_hud(as_html=False):
     """渲染资料收集专用的‘RAG 语义资产工厂’ HUD"""

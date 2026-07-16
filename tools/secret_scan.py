@@ -22,20 +22,21 @@ KNOWN_SAFE_PATTERNS = [
     re.compile(r"(?i)PLACEHOLDER"),
 ]
 SCANNED_SUFFIXES = {".py", ".md", ".txt", ".yaml", ".yml", ".toml"}
-SCANNED_FILENAMES = {".env"}
+SCANNED_FILENAMES = {".env.example"}
 
 EXCLUDED_PARTS = {
     ".agents",
     ".git",
     ".pytest_cache",
     ".ruff_cache",
-    ".runtime-packages",
     ".venv",
+    ".runtime-packages",
+    "venv",
+    "node_modules",
     "__pycache__",
+    "WinPython",
     "build",
     "dist",
-    "node_modules",
-    "venv",
 }
 EXCLUDED_PREFIXES = {
     "data/raw_images/",

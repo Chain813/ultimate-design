@@ -29,9 +29,12 @@ def test_get_skyline_features_empty_when_files_missing(monkeypatch):
         "src.engines.spatial_engine.resolve_path",
         lambda x: type(sys)("Path")(x),
     )
+    if hasattr(get_skyline_features, "clear"):
+        get_skyline_features.clear()
     features = get_skyline_features()
     assert features["building_count"] == 0
     assert features["max_height"] == 0
+
 
 
 def test_filter_buildings_within_boundary_projects_before_centroid():

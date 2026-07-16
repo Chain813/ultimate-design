@@ -124,3 +124,7 @@ static/atlas_structure.*
 
 # 本地 Real-ESRGAN 二进制可执行文件目录
 tools/realesrgan-ncnn-vulkan/
+
+# Portable Environments
+WinPython/
+.runtime-packages/

@@ -13,6 +13,7 @@ import logging
 import numpy as np
 import pandas as pd
 import streamlit as st
+from typing import Any, Callable, Dict, List, Optional, Union
 
 from src.config import resolve_path, SHP_FILES, DATA_FILES, GIS_FILES
 
@@ -43,7 +44,7 @@ def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     return df1 if not df1.empty else df2
 
 
-def _safe_read_csv(path: str, usecols=None) -> pd.DataFrame:
+def _safe_read_csv(path: str, usecols: Optional[List[str]] = None) -> pd.DataFrame:
     try:
         resolved = resolve_path(path)
         if resolved.exists():
@@ -58,7 +59,7 @@ def _safe_read_csv(path: str, usecols=None) -> pd.DataFrame:
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=1800)
-def get_hud_statistics() -> dict:
+def get_hud_statistics() -> Dict[str, Any]:
     """Aggregate live statistics for the HUD overlay."""
     stats: dict = {}
     stats["poi_count"] = _safe_count(get_merged_poi_data, "N/A")
@@ -68,14 +69,14 @@ def get_hud_statistics() -> dict:
     return stats
 
 
-def _safe_count(getter, fallback):
+def _safe_count(getter: Union[Callable, str], fallback: Any) -> Any:
     try:
         return len(getter()) if callable(getter) else len(pd.read_csv(str(getter), encoding="utf-8-sig"))
     except Exception:
         return fallback
 
 
-def _safe_count_csv(path: str, fallback):
+def _safe_count_csv(path: str, fallback: Any) -> Any:
     try:
         p = resolve_path(path)
         if p.exists():
@@ -85,7 +86,7 @@ def _safe_count_csv(path: str, fallback):
     return fallback
 
 
-def _calc_boundary_ha(geojson_path: str):
+def _calc_boundary_ha(geojson_path: str) -> Union[float, str]:
     try:
         p = resolve_path(geojson_path)
         with p.open("r", encoding="utf-8") as f:
@@ -110,7 +111,7 @@ def _calc_boundary_ha(geojson_path: str):
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=3600, max_entries=20)
-def get_skyline_features() -> dict:
+def get_skyline_features() -> Dict[str, Any]:
     """Extract max height, avg height, high-rise ratio, building count."""
     features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
     try:
@@ -143,7 +144,7 @@ def get_skyline_features() -> dict:
     return features
 
 
-def _filter_buildings_within_boundary(buildings, boundary):
+def _filter_buildings_within_boundary(buildings: Any, boundary: Any) -> Any:
     """Filter buildings by centroid within boundary using a projected CRS."""
     if buildings.empty or boundary.empty:
         return buildings.iloc[0:0].copy()

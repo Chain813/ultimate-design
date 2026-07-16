@@ -11,20 +11,40 @@ if str(root) not in sys.path:
 
 # ── Streamlit mock (must exist before any src module is imported) ──
 _st_mock = MagicMock()
+_test_cache = {}
+
+def _make_cached_decorator(func):
+    def wrapped(*args, **kwargs):
+        key = (func.__name__, str(args), str(sorted(kwargs.items())))
+        if key not in _test_cache:
+            _test_cache[key] = func(*args, **kwargs)
+        return _test_cache[key]
+    
+    def clear():
+        keys_to_remove = [k for k in _test_cache if k[0] == func.__name__]
+        for k in keys_to_remove:
+            del _test_cache[k]
+            
+    wrapped.clear = clear
+    return wrapped
+
+
+
 def _cache_resource(*args, **kwargs):
     def decorator(func):
-        return func
+        return _make_cached_decorator(func)
     if len(args) == 1 and callable(args[0]):
-        return args[0]
+        return _make_cached_decorator(args[0])
     return decorator
 
 
 def _cache_data(*args, **kwargs):
     def decorator(func):
-        return func
+        return _make_cached_decorator(func)
     if len(args) == 1 and callable(args[0]):
-        return args[0]
+        return _make_cached_decorator(args[0])
     return decorator
+
 
 
 _st_mock.cache_resource = _cache_resource
