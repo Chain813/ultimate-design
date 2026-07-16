@@ -64,7 +64,7 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 * **端到端编排管线**：`DrawingPipeline` 负责全流程的管理调度。首先利用大语言模型（LLM）根据图纸模板要求生成最贴合的专业英文 Prompts，然后将其与光栅化的 GIS 图像一同送入 Stable Diffusion 渲染引擎。
 * **双重质量闭环评估**：图纸生成后，系统调用 `Gemma` 视觉大模型评估图纸图像质量，结合 `DeepSeek` 进行文本内容审查，综合评定为 A/B/C/D 四个级别。评级为 C/D 的图纸将被拦截并自动优化提示词参数发起重绘，确保最终产出百分之百符合工程绘图规范。
 
-`mermaid
+```mermaid
 flowchart LR
     A[(GIS 矢量数据)] -->|数据预处理脚本| B(矢量光栅化模块)
     
@@ -84,7 +84,7 @@ flowchart LR
         Q -->|满足规范| Out[专业级规划图纸输出]
         Q -->|不满足规范| P
     end
-`
+```
 
 
 ### 2. 🤝 多主体决策博弈推演系统 (Multi-Agent Negotiation System)
