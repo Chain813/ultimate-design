@@ -130,3 +130,6 @@ tools/realesrgan-ncnn-vulkan/
 # Portable Environments
 WinPython/
 .runtime-packages/
+
+# Lint checks text
+5_Lint (critical checks).txt
