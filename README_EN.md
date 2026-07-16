@@ -6,7 +6,7 @@
 
 **AI-Powered Decision Support Platform for Urban Design & Micro-Renewal**
 
-*Streamlit Full-Stack Engine · Decoupled Data & Logic · 15 Pages · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
+*Streamlit Full-Stack Engine · Decoupled Data & Logic · 17 Logical Stages · 15 Physical Pages · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
@@ -19,7 +19,7 @@
 
 ## 🌟 Project Overview
 
-UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 16 standardized stages, streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
+UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 17 standardized logical stages (00-16), streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
 
 > 🎉 **New Feature: Out-of-the-Box Portable Version**
 > The platform now fully supports a fully isolated, portable packaging solution based on **WinPython 3.12+**. All environment dependencies and underlying GIS C++ dynamic libraries are encapsulated within a single folder. Coupled with the built-in `安装向导_UltimateDESIGN.bat` wizard, it enables one-click deployment, pollution-free independent execution, and automatic shortcut generation, drastically lowering the distribution barrier for non-technical designers.
@@ -30,7 +30,7 @@ UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform
 
 | Capability | Description |
 |---|---|
-| **15-Page Streamlined Workflow** | 15 pages in total (app.py + 14 pages in pages/ with 3 merged stage-groups), focusing on core design flow |
+| **17-Stage Streamlined Workflow** | 17 logical stages (00-16) physically consolidated into app.py + 14 sidebar pages, focusing on core design flow |
 | **26 Drawing Templates** | High-precision vector maps generated via Python and automatically assembled with standard A3 title blocks via PIL |
 | **GIS → AIGC Alignment** | Novel Vector→Raster→ControlNet pipeline eliminates spatial hallucination |
 | **Tri-Stakeholder Simulation** | LLM-driven Resident / Developer / Planner role-play with consensus radar output |
@@ -163,7 +163,7 @@ Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
 
 ```powershell
 python -m pytest                    # 238 unit tests
-python tools/check_env.py           # 15-page integrity check
+python tools/check_env.py           # 15-physical-page integrity check
 python tools/secret_scan.py         # Credential leak scan
 ```
 
@@ -240,7 +240,7 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 ```text
 ultimateDESIGN/
 ├── app.py                              # Entry point / Home / Global map base (1 page)
-├── pages/                              # 14 functional pages (00–16)
+├── pages/                              # 14 physical page files (mapping to stages 00-16)
 ├── src/
 │   ├── config/                         # YAML config / paths / runtime flags
 │   ├── engines/                        # AI & computation (NO UI code)

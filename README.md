@@ -6,7 +6,7 @@
 
 **AI 赋能下的城市设计与微更新规划决策支持平台**
 
-*Streamlit 全栈引擎 · 数据与逻辑解耦 · 15 交互页面 · AIGC 空间对齐制图管线 · 端到端循证工作流*
+*Streamlit 全栈引擎 · 数据与逻辑解耦 · 17 逻辑阶段 · 15 物理页面 · AIGC 空间对齐制图管线 · 端到端循证工作流*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
@@ -19,7 +19,7 @@
 
 ## 🌟 项目概况
 
-UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**设计，支持导入任意城市的规划地块（自带长春伪满皇宫周边 170.2 公顷街区作为验证与实证案例）。它将城市更新设计拆解为 16 个标准化阶段，打通「GIS 数据采集 → LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与图则」的完整数字孪生工作流。
+UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**设计，支持导入任意城市的规划地块（自带长春伪满皇宫周边 170.2 公顷街区作为验证与实证案例）。它将城市更新设计拆解为 17 个标准化逻辑阶段 (00-16)，打通「GIS 数据采集 → LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与图则」的完整数字孪生工作流。
 
 > 🎉 **最新特性：开箱即用的免安装绿色版**
 > 现已支持基于 **WinPython 3.12+** 的全隔离便携式打包方案。所有环境依赖、GIS 底层 C++ 动态库全部封装于单一文件夹内，配合系统自带的 `安装向导_UltimateDESIGN.bat`，可实现**一键释放、防污染独立运行及自动生成快捷方式**，极大降低了项目向非技术型设计师分发的门槛。
@@ -30,7 +30,7 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 
 | 能力 | 说明 |
 |---|---|
-| **15 页面精简工作流** | 包含主入口 app.py 及 14 个功能页面（其中 3 组页面合并），聚焦核心设计流程 |
+| **17 阶段精简工作流** | 包含 17 个逻辑阶段 (00-16)，物理上合并为主入口 app.py 及 14 个侧边栏功能页面 |
 | **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范 of A3 图册 |
 | **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
 | **DesignContext 设计纲要** | 统一提取 19 个阶段 AI 文本输出，LLM 合成结构化设计纲要，驱动图纸生产 |
@@ -152,13 +152,13 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按前期/中期/后期及大屏展示浏览 15 个页面（包含主入口 app.py 及 14 个功能页面）。
+平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按前期/中期/后期及大屏展示浏览 17 个逻辑阶段（映射为 15 个物理页面）。
 
 ### 🩺 3. 健康自检
 
 ```powershell
 python -m pytest                    # 238 项单元测试
-python tools/check_env.py           # 15 页面完整性校验
+python tools/check_env.py           # 15 个物理页面完整性校验
 python tools/data_quality_check.py  # 数据质量评级
 python tools/secret_scan.py         # 敏感信息扫描
 ```
@@ -283,7 +283,7 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 ```text
 ultimateDESIGN/
 ├── app.py                              # 平台入口 / 首页 / 全局地图基底 (1 个页面)
-├── pages/                              # 14 个功能页面 (00 ~ 16)
+├── pages/                              # 14 个物理页面文件 (对应 00~16 共 17 个阶段)
 ├── src/                                # 核心领域代码
 │   ├── config/                         # 配置加载 / 路径注册 / 运行时常量
 │   │   ├── loader.py                   #   YAML 配置解析
