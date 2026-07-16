@@ -64,6 +64,29 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 * **端到端编排管线**：`DrawingPipeline` 负责全流程的管理调度。首先利用大语言模型（LLM）根据图纸模板要求生成最贴合的专业英文 Prompts，然后将其与光栅化的 GIS 图像一同送入 Stable Diffusion 渲染引擎。
 * **双重质量闭环评估**：图纸生成后，系统调用 `Gemma` 视觉大模型评估图纸图像质量，结合 `DeepSeek` 进行文本内容审查，综合评定为 A/B/C/D 四个级别。评级为 C/D 的图纸将被拦截并自动优化提示词参数发起重绘，确保最终产出百分之百符合工程绘图规范。
 
+`mermaid
+flowchart LR
+    A[(GIS 矢量数据)] -->|数据预处理脚本| B(矢量光栅化模块)
+    
+    subgraph Features [空间约束特征图]
+        B --> C1[Canny: 骨架特征]
+        B --> C2[Seg: 语义分割]
+        B --> C3[Tile: 环境底图]
+    end
+    
+    C1 --> SD{视觉生成引擎}
+    C2 --> SD
+    C3 --> SD
+    
+    subgraph Pipeline [智能化制图管线]
+        P[大语言模型提示词引擎] --> SD
+        SD --> Q[多模态双重质量评估]
+        Q -->|满足规范| Out[专业级规划图纸输出]
+        Q -->|不满足规范| P
+    end
+`
+
+
 ### 2. 🤝 多主体决策博弈推演系统 (Multi-Agent Negotiation System)
 系统模拟城市微更新过程中的多方利益交涉，将传统的静态规划升级为“三角色循环博弈模式”。
 * **博弈闭环机制**：在 Stage 07 中，系统启动多 Agent 循环，分别模拟**居民（诉求生活品质与补偿）**、**开发商（诉求商业盈利与容积率）**与**规划师（诉求合规性与公共利益）**。三方围绕特定更新议题进行“Statement（立场陈述）→ Rebuttal（论点反驳）→ Compromise（妥协折中）”三轮博弈谈判。
@@ -95,14 +118,14 @@ sequenceDiagram
 
 ```mermaid
 graph TD
-    subgraph 空间数据底座 (解耦设计)
+    subgraph DataBase [空间数据底座 - 解耦设计]
         D1[三维建筑与形态数据]
         D2[街景与环境感知数据]
         D3[POI与功能业态数据]
         D4[多源舆情与社会数据]
     end
     
-    subgraph 核心分析引擎
+    subgraph Engines [核心分析引擎]
         E1[空间与形态计算模型]
         E2[环境视觉质量分析模型]
         E3[商业活力评估模型]
@@ -114,7 +137,7 @@ graph TD
     D3 -.-> E3
     D4 -.-> E4
     
-    subgraph 决策输出层
+    subgraph Output [决策输出层]
         E1 --> AHP[多维指标融合计算权重]
         E2 --> AHP
         E3 --> AHP

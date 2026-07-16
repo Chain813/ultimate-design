@@ -56,7 +56,7 @@ This platform eliminates spatial hallucination in generative AI for planning by 
 flowchart LR
     A[(GIS Vector Data)] -->|Data Preprocessing Script| B(Vector Rasterization Module)
     
-    subgraph Spatial Constraint Features
+    subgraph Features [Spatial Constraint Features]
         B --> C1[Canny: Skeleton Feature]
         B --> C2[Seg: Semantic Segmentation]
         B --> C3[Tile: Context Basemap]
@@ -66,7 +66,7 @@ flowchart LR
     C2 --> SD
     C3 --> SD
     
-    subgraph Intelligent Mapping Pipeline
+    subgraph Pipeline [Intelligent Mapping Pipeline]
         P[LLM Prompt Engine] --> SD
         SD --> Q[Multimodal Dual Quality Assessment]
         Q -->|Meets Standard| Out[Professional Planning Drawing]
@@ -105,14 +105,14 @@ Adhering to modern software engineering, the system achieves complete decoupling
 
 ```mermaid
 graph TD
-    subgraph Spatial Data Base (Decoupled)
+    subgraph DataBase [Spatial Data Base - Decoupled]
         D1[3D Morphology Data]
         D2[Street View & Context Data]
         D3[POI & Functional Data]
         D4[Social Sentiment Data]
     end
     
-    subgraph Analytical Engines
+    subgraph Engines [Analytical Engines]
         E1[Spatial Computation Model]
         E2[Visual Quality Assessment Model]
         E3[Commercial Vitality Model]
@@ -124,7 +124,7 @@ graph TD
     D3 -.-> E3
     D4 -.-> E4
     
-    subgraph Decision Output Layer
+    subgraph Output [Decision Output Layer]
         E1 --> AHP[Multi-Indicator Weight Fusion]
         E2 --> AHP
         E3 --> AHP
