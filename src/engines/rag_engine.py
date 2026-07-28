@@ -126,8 +126,9 @@ def compute_query_embedding(prompt: str):
 
 @st.cache_data(ttl=600)
 def retrieve_rag_context(query: str, top_k: int = 3) -> list:
-    """Retrieve top-k most relevant regulation chunks for a query.
+    """Retrieve top-k most relevant regulation chunks using RAGFlow Reciprocal Rank Fusion (RRF, k=60).
 
+    Combines dense BGE vector semantic ranking with Jieba keyword BM25 ranking.
     Returns list of (score, content, source) tuples.
     """
     if not query:
@@ -138,25 +139,52 @@ def retrieve_rag_context(query: str, top_k: int = 3) -> list:
         return []
 
     db_embeddings, _ = get_cached_db_embeddings()
-    best_chunks: list = []
+    query_words = [w for w in jieba.cut(query) if len(w) > 1]
 
+    # 1. Rank by Dense Vector Similarity
+    dense_ranks = {}
     if db_embeddings:
         query_emb = compute_query_embedding(query)
         if query_emb is not None:
+            v_scores = []
             for cid, p_info in rag_db.items():
                 if cid in db_embeddings:
                     score = float(np.dot(query_emb, db_embeddings[cid]))
-                    content = p_info.get("content", "") or ""
-                    source = p_info.get("source", "") or ""
-                    best_chunks.append((score, content, source))
+                    v_scores.append((cid, score))
+            v_scores.sort(key=lambda x: x[1], reverse=True)
+            dense_ranks = {cid: rank + 1 for rank, (cid, _) in enumerate(v_scores)}
 
-    if not best_chunks:
-        words = [w for w in jieba.cut(query) if len(w) > 1]
-        for _cid, p_info in rag_db.items():
-            content = p_info.get("content", "") or ""
-            score = sum(1 for w in words if w in content)
-            if score > 0:
-                best_chunks.append((score, content, p_info.get("source", "") or ""))
+    # 2. Rank by Keyword BM25 overlap
+    kw_scores = []
+    for cid, p_info in rag_db.items():
+        content = p_info.get("content", "") or ""
+        score = sum(1 for w in query_words if w in content)
+        if score > 0:
+            kw_scores.append((cid, score))
+    kw_scores.sort(key=lambda x: x[1], reverse=True)
+    kw_ranks = {cid: rank + 1 for rank, (cid, _) in enumerate(kw_scores)}
+
+    # 3. Reciprocal Rank Fusion (RRF with k=60)
+    K = 60.0
+    rrf_map = {}
+    all_cids = set(dense_ranks.keys()).union(set(kw_ranks.keys()))
+
+    for cid in all_cids:
+        rrf_score = 0.0
+        if cid in dense_ranks:
+            rrf_score += 1.0 / (K + dense_ranks[cid])
+        if cid in kw_ranks:
+            rrf_score += 1.0 / (K + kw_ranks[cid])
+        rrf_map[cid] = rrf_score
+
+    best_chunks = []
+    for cid, rrf_score in rrf_map.items():
+        p_info = rag_db.get(cid, {})
+        content = p_info.get("content", "") or ""
+        source = p_info.get("source", "") or ""
+        best_chunks.append((round(rrf_score, 6), content, source))
 
     best_chunks.sort(key=lambda x: x[0], reverse=True)
     return best_chunks[:top_k]
+
+

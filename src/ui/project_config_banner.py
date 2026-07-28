@@ -317,6 +317,12 @@ def render_project_config_banner():
                 env_updates["BAIDU_MAP_AK"] = baidu_ak.strip()
             _write_env(env_updates)
 
+            # 同步写入 user_settings (~/.ultimatedesign/config.json)
+            from src.config.user_settings import load_user_settings, save_user_settings
+            u_settings = load_user_settings()
+            u_settings["DEEPSEEK_API_KEY"] = deepseek_key.strip()
+            save_user_settings(u_settings)
+
             # 同时设置当前进程环境变量
             os.environ["DEEPSEEK_API_KEY"] = deepseek_key.strip()
             if baidu_ak.strip():

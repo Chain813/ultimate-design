@@ -92,3 +92,13 @@ def generate_official_word_doc(title, text_content, aigc_history=None):
     doc.save(f)
     f.seek(0)
     return f
+
+
+def export_statutory_dxf_bundle(gdfs, output_zip_path):
+    """
+    导出法定规划 CAD DXF 图纸与 GeoJSON 打包 ZIP 压缩包。
+    """
+    from src.utils.vector_exporter import VectorExporter
+    exporter = VectorExporter()
+    return exporter.export_bundle(gdfs, output_zip_path)
+

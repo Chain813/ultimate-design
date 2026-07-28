@@ -2,6 +2,30 @@
 
 本项目所有的核心重构与功能更新将记录在此。
 
+## [v6.0.0] - 2026-07-28
+### 🚀 路由单一真理源重构、API Key 静默校验与空间句法引擎扩展 (v6.0 Major Upgrade)
+
+**路由体系重构与单一真理源 (Single Source of Truth for Routing)**
+* 在 `src/config/paths.py` 中引入 `PAGE_ROUTES` 集中式路由映射字典，作为全站 14 个物理页面及 17 个逻辑阶段路径的单一真理源；
+* 深度审计重构 `src/workflow/city_design_workflow.py` 中的 `STAGE_MODULE_MAP` 与 `stage_primary_href` 函数，解耦硬编码 Slug，彻底消除了 12 处指向已弃用旧页面的 404/Missing Page 跳转隐患。
+
+**API Key 本地持久化与静默校验 (API Key Management & Silent Healthcheck)**
+* 在项目主页引入全新的 API Key 交互配置界面 (`src/ui/api_key_validator.py`)，支持一键填写与即时有效性测试；
+* 验证成功后自动写入本地加密/持久化配置，并在每次启动项目时在后台静默检查密钥可用性，提升用户使用体验。
+
+**空间句法与矢量导出引擎扩展 (Spatial Syntax & Vector Exporter)**
+* 新增 `src/engines/spatial_syntax_engine.py` 引擎，支持 DepthMapX 相对不对称性 (RA)、平均深度 (MD)、RRA 整合度以及 Momepy 建筑覆盖率 (BCR)、容积率 (FAR) 与天空可视率 (SVF) 的形态学计算；
+* 新增 `src/utils/vector_exporter.py`，支持将空间分析结果无损导出为 GeoJSON / DXF / SVG 等多格式矢量文件；
+* 新增 `src/engines/osm_fetcher.py` 自动化抓取多源 OpenStreetMap 空间地理要素数据。
+
+**算力引擎缓存与二进制依赖防护 (Performance Caching & Git Cleanliness)**
+* 对 `spatial_syntax_engine.py` 等算力引擎引入 `@st.cache_resource` 装饰器，实现单例缓存复用；
+* 更新 `.gitignore`，新增 `tools/*.zip` 拦截规则，彻底防止 Real-ESRGAN 可执行包等超大二进制压缩包误误入版本库。
+
+**测试套件扩展与 CI/CD 冒烟校验 (239 Unit Tests & Smoke Verification)**
+* 编写了对应的 `test_api_key_validator.py`、`test_osm_fetcher.py`、`test_spatial_syntax.py` 与 `test_vector_exporter.py` 单元测试，测试用例由 238 项扩充至 239 项，达成 **100% PASSED**；
+* 验证并通过了 `python tools/startup_smoke.py` CI 启动冒烟测试与 `python tools/check_env.py` 全量环境自检。
+
 ## [v5.9.0] - 2026-07-16
 ### 🚀 终极部署现代化与项目净化 (P0-P3 Finalization)
 

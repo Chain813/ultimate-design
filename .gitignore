@@ -124,8 +124,9 @@ static/atlas_structure.*
 *.zip
 *.rar
 
-# 本地 Real-ESRGAN 二进制可执行文件目录
+# 本地 Real-ESRGAN 二进制可执行文件目录与包
 tools/realesrgan-ncnn-vulkan/
+tools/*.zip
 
 # Portable Environments
 WinPython/

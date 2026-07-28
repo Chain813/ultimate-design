@@ -41,10 +41,15 @@ def get_page_route(page_path):
 
 # 项目配置检查 — 首次启动时引导填写
 from src.ui.project_config_banner import render_project_config_banner
+from src.ui.api_key_validator import render_api_key_banner_if_needed, silent_check_api_key
 
 _project_ready = render_project_config_banner()
 if not _project_ready:
     st.stop()  # 配置未完成，停止渲染后续内容
+
+_api_key_ready = render_api_key_banner_if_needed()
+if not _api_key_ready:
+    st.stop()  # API Key 未验证，停止渲染后续内容
 
 # 加载顶部导航与系统状态警报
 render_top_nav()
@@ -307,20 +312,22 @@ def render_status_hud(engine_status=None):
     if engine_status is None:
         engine_status = check_engine_status()
     sd_online = engine_status.sd
-    gemma_online = engine_status.gemma
     hud_stats = get_hud_statistics()
 
+    # 静默自检 API Key 状态
+    api_ok, api_msg = silent_check_api_key()
+    gemma_status = "已联机 (静默自检正常)" if api_ok else ("未配置 Key" if "未配置" in api_msg else "密钥失效/余额不足")
+    gemma_color = "#4ADE80" if api_ok else "#EF4444"
+
     sd_status = "已联机" if sd_online else "未挂载"
-    gemma_status = "已联机" if gemma_online else "未挂载"
     sd_color = "#4ADE80" if sd_online else "#EF4444"
-    gemma_color = "#4ADE80" if gemma_online else "#EF4444"
 
     st.markdown(f"""
 <section class="platform-hud" style="--sd-color:{sd_color}; --gemma-color:{gemma_color};">
     <article class="platform-hud-card">
         <div class="platform-hud-title">底层算力设施</div>
-        <div class="platform-hud-row"><span class="status-dot-gemma"></span><b>多主体交互大语言模型</b><em>{gemma_status}</em></div>
-        <p>承担角色推理与政策文书生成，依托 Local Ollama。</p>
+        <div class="platform-hud-row"><span class="status-dot-gemma"></span><b>DeepSeek LLM 智算引擎</b><em>{gemma_status}</em></div>
+        <p>承担角色推理与政策文书生成，自动后台静默检活。</p>
     </article>
     <article class="platform-hud-card">
         <div class="platform-hud-title">视觉渲染引擎</div>

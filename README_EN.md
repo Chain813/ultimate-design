@@ -10,7 +10,7 @@
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-238%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-239%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -39,7 +39,7 @@ UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform
 | **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
 | **Auto-Scrolling Controller** | Resident screen-recording HUD widget at the bottom right corner supporting frame-level smooth pixel-scrolling and shortcuts |
 | **Auto Stage Summary Archiving**| Automatically extracts stage findings/methodologies and incrementally saves them in `output/stage_generation_report.md` sorted by stage order |
-| **238 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **239 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
 
 ---
 
@@ -162,7 +162,7 @@ Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
 ### 🩺 3. Health Check
 
 ```powershell
-python -m pytest                    # 238 unit tests
+python -m pytest                    # 239 unit tests
 python tools/check_env.py           # 15-physical-page integrity check
 python tools/secret_scan.py         # Credential leak scan
 ```
