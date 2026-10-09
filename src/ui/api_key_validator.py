@@ -95,6 +95,9 @@ def render_api_key_banner_if_needed() -> bool:
     """
     current_key = get_effective_setting("DEEPSEEK_API_KEY")
     
+    if st.session_state.get("offline_demo_mode", False):
+        return True
+
     # 1. Quick check: If key exists and session_state confirms validity
     if current_key and st.session_state.get("api_key_validated", False):
         return True
@@ -117,7 +120,7 @@ def render_api_key_banner_if_needed() -> bool:
             🔐 DeepSeek AI 智算引擎 — 密钥联机配置与验证
         </h3>
         <p style="color: #94a3b8; margin: 0; font-size: 14px;">
-            系统需使用有效的大模型 API 密钥以驱动多主体博弈推演与智能导则生成。首次填写并验证通过后，将加密保存在本地环境，以后无需重复输入，每次启动自动后台静默自检。
+            系统可使用 DeepSeek API 驱动多主体博弈实时对话推演与智能导则生成。您也可直接选择<b>「离线演示体验模式」</b>，直接加载全套本地预置的专家规划成果、GIS 拓扑、AutoCAD 矢量导出与成果图册。
         </p>
     </div>
     """, unsafe_allow_html=True)
@@ -131,8 +134,8 @@ def render_api_key_banner_if_needed() -> bool:
         key="homepage_api_key_input"
     )
 
-    col_btn, col_info = st.columns([1, 3])
-    with col_btn:
+    col_btn1, col_btn2, col_info = st.columns([1.2, 1.2, 2.6])
+    with col_btn1:
         if st.button("⚡ 联机验证并保存", type="primary", use_container_width=True):
             if not input_key.strip():
                 st.error("请先输入 API 密钥！")
@@ -152,8 +155,15 @@ def render_api_key_banner_if_needed() -> bool:
                 st.error(message)
                 return False
 
-    with col_info:
-        st.caption("🔒 提示：密钥保存在本地 `~/.ultimatedesign/config.json` 与 `.env`，不会上传至任何第三方服务器。")
+    with col_btn2:
+        if st.button("🚀 离线演示体验模式", help="以离线演示模式进入，直接体验三大工作台与核心成果，无需联网或 API Key", use_container_width=True):
+            st.session_state["api_key_validated"] = True
+            st.session_state["offline_demo_mode"] = True
+            st.info("已切换至离线演示体验模式！")
+            st.rerun()
 
-    st.warning("⚠️ 请先完成 API 密钥验证，系统后步模块才能正常调用智算推演引擎。")
+    with col_info:
+        st.caption("🔒 提示：密钥保存在本地 `~/.ultimatedesign/config.json` 与 `.env`，不会上传至第三方；支持离线开箱即用。")
+
+    st.warning("⚠️ 请输入密钥联机验证，或直接点击上方「🚀 离线演示体验模式」进入系统。")
     return False

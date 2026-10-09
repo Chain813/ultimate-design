@@ -21,7 +21,11 @@ from src.engines.spatial_data_injector import (
 )
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage10_detail_design.config import STAGE10_WORKSPACE
-from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.app_shell import (
+    render_engine_status_alert,
+    render_logic_chain_stepper,
+    render_top_nav,
+)
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.module_summary import render_stage_summary
@@ -817,3 +821,7 @@ def render_page() -> None:
         methodology="基于 DeepSeek V4 Pro 的微观级 LLM 深度策划 + 多维空间数据交叉验证",
         implication="为实施路径（Stage 11）和城市设计导则（Stage 12）提供了详实的落地设计依据",
     )
+
+    # 业务逻辑主线推进导航
+    render_logic_chain_stepper("10")
+

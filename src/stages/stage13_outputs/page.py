@@ -9,7 +9,10 @@ from PIL import Image
 
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage13_outputs.config import STAGE13_WORKSPACE
-from src.ui.app_shell import render_top_nav
+from src.ui.app_shell import (
+    render_logic_chain_stepper,
+    render_top_nav,
+)
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.module_summary import render_stage_summary
 from src.ui.persistent_outputs import register_document_output, register_report_output
@@ -743,3 +746,7 @@ def render_page() -> None:
         methodology="轻量化 Python GIS 制图引擎 + Python PIL 自动化图签、图例与规划说明组装",
         implication="彻底打通城乡规划专业级展板自动排版与汇报图册生产线",
     )
+
+    # 业务逻辑主线推进导航
+    render_logic_chain_stepper("13")
+

@@ -157,9 +157,12 @@ def render_top_nav():
                 f'<div class="apple-dd-modules">{modules_html}</div></div>'
             )
 
+        board_route = _href_to_route("/" + board.get("path", "").replace("pages/", "").replace(".py", ""))
         nav_items_html += (
             f'<div class="apple-nav-item">'
+            f'<a href="{board_route}" target="_self" style="color:inherit;text-decoration:none;display:flex;align-items:center;gap:4px;">'
             f'<span>{escape(display_name)}</span>'
+            f'</a>'
             f'<svg class="apple-nav-chevron" width="10" height="10" viewBox="0 0 10 10" fill="none">'
             f'<path d="M2.5 3.5L5 6.5L7.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>'
             f'</svg>'
@@ -520,11 +523,109 @@ def render_settings_panel():
                 st.error("配置保存失败，请检查写入权限。")
 
 
-from src.ui.chart_theme import (
-    CHART_PALETTE,
-    apply_plotly_polar_theme,
-    apply_plotly_theme,
-    get_chart_palette,
-    rgba_from_hex,
-)
-from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
+
+def render_logic_chain_stepper(current_stage_code: str):
+    """
+    全流程业务逻辑主链条推进组件 (Business Logic Chain Stepper)
+    以强视觉引导与一键流转，将 14 个离散页面编排为一条环环相扣的业务主线：
+    【工作台 1：现状诊断】->【工作台 2：博弈与AIGC工坊】->【工作台 3：数字图则与工程交付】
+    """
+    stepper_config = {
+        "04": {
+            "current_wb": 1,
+            "summary_title": "🎯 现状空间体检完成，优先更新靶向地块已锁定",
+            "summary_desc": "通过 3D 全息底座与 AHP-MPI 多维潜力评价，已精准量化空间潜力、社会需求与环境紧迫度，识别出高潜力更新单元（如伪满皇宫文旅协调区/水产市场）。",
+            "next_wb_title": "工作台 2：多主体博弈与空间 AIGC 工坊",
+            "next_page_path": "pages/07_设计策略.py",
+            "next_label": "将诊断成果带入【工作台 2】多主体博弈与设计策略 (Stage 07)",
+            "next_desc": "将上述空间病灶与靶向地块指标注入多主体博弈引擎，平衡利益并生成《设计纲要》。",
+        },
+        "07": {
+            "current_wb": 2,
+            "summary_title": "🤝 多主体博弈共识达成，空间《设计纲要》已固化",
+            "summary_desc": "居民、运营商与规划师完成三轮博弈，拆改留比例与开发强度平衡方案已存入数据总线，形成指导空间生形的刚性设计纲要。",
+            "next_wb_title": "工作台 2：总体城市设计与空间 AIGC 生形",
+            "next_page_path": "pages/08_总体城市设计.py",
+            "next_label": "基于设计纲要推演【总体空间结构】 (Stage 08)",
+            "next_desc": "落实一轴两带三组团空间骨架，并支持直通重点地段 AIGC 意向推演。",
+        },
+        "08": {
+            "current_wb": 2,
+            "summary_title": "🗺️ 总体空间骨架确立，进入重点地段 AIGC 空间深化",
+            "summary_desc": "全域空间结构与用地优化方案已生成，已具备向微观地块进行 GIS 刚性约束生形与建筑肌理推演的基础。",
+            "next_wb_title": "工作台 2：重点地段深化与 Before/After 对比",
+            "next_page_path": "pages/10_重点地段深化.py",
+            "next_label": "进入【重点地段深化】进行 AIGC 意向生形与 Before/After 卷帘对比 (Stage 10)",
+            "next_desc": "利用 ControlNet 道路线稿与高度深度图约束，生成方案并验证空间合理性。",
+        },
+        "10": {
+            "current_wb": 2,
+            "summary_title": "🎨 重点地段 AIGC 方案推演完成，Before/After 验证通过",
+            "summary_desc": "核心节点已在 GIS 刚性约束下完成空间意向方案渲染，并通过 Before/After 卷帘对比排除了 AI 幻觉，指标已完备。",
+            "next_wb_title": "工作台 3：数字图则与工程交付枢纽",
+            "next_page_path": "pages/13_成果表达.py",
+            "next_label": "进入【工作台 3】数字图则与工程交付枢纽（导出 1:1 CAD 与 Word 导则）",
+            "next_desc": "将空间方案沉淀为法定控规图则，一键导出 1:1 米制 AutoCAD DXF 矢量图纸与汇报图册。",
+        },
+        "12": {
+            "current_wb": 3,
+            "summary_title": "📜 法定数字导则编制就绪，进入最终成果交付汇交",
+            "summary_desc": "地块管控图则与分项风貌控制条文已编制完成，可直接导出为规范的 Word 公文说明书。",
+            "next_wb_title": "工作台 3：成果表达与工程交付",
+            "next_page_path": "pages/13_成果表达.py",
+            "next_label": "前往【成果表达与工程交付】汇交图纸与图册 (Stage 13)",
+            "next_desc": "下载 AutoCAD DXF 矢量工程图纸、A3 规划图册画廊与答辩 PPT。",
+        },
+        "13": {
+            "current_wb": 3,
+            "summary_title": "🎉 全流程业务逻辑闭环达成！工业级工程交付成果已就绪",
+            "summary_desc": "项目已实现从「多源数据诊断」到「多主体博弈 AIGC 推演」，再到「AutoCAD 2000 1:1 米制矢量 DXF + Word 导则 + 161页答辩图册」的完整闭环！",
+            "next_wb_title": "返回系统主页控制中枢",
+            "next_page_path": "app.py",
+            "next_label": "返回【三大工作台控制中枢】查看全域全景",
+            "next_desc": "查看项目总体概况、3D 数字底座与各阶段指标汇总。",
+        },
+    }
+
+    cfg = stepper_config.get(current_stage_code)
+    if not cfg:
+        return
+
+    st.markdown("---")
+    wb_num = cfg["current_wb"]
+
+    st.markdown(f"""
+    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
+                border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 16px; padding: 20px 24px; margin: 20px 0 16px 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">🧭</span>
+                <span style="color: #f8fafc; font-weight: 700; font-size: 15px;">业务逻辑主线推进导航 (Logic Chain Stepper)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
+                <span style="color: {'#38bdf8' if wb_num==1 else '#94a3b8'}; font-weight: {'700' if wb_num==1 else '400'};">① 现状空间诊断</span>
+                <span style="color: #64748b;">➔</span>
+                <span style="color: {'#a855f7' if wb_num==2 else '#94a3b8'}; font-weight: {'700' if wb_num==2 else '400'};">② 博弈与AIGC工坊</span>
+                <span style="color: #64748b;">➔</span>
+                <span style="color: {'#10b981' if wb_num==3 else '#94a3b8'}; font-weight: {'700' if wb_num==3 else '400'};">③ 数字图则与工程交付</span>
+            </div>
+        </div>
+        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 14px 18px; border-left: 4px solid #38bdf8; margin-bottom: 14px;">
+            <div style="color: #f1f5f9; font-weight: 600; font-size: 14px; margin-bottom: 4px;">{cfg['summary_title']}</div>
+            <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">{cfg['summary_desc']}</div>
+        </div>
+        <div style="color: #cbd5e1; font-size: 13px; margin-bottom: 4px;">
+            <b>下一步目标：</b>{cfg['next_wb_title']} · <span style="color: #94a3b8;">{cfg['next_desc']}</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    try:
+        st.page_link(
+            cfg["next_page_path"],
+            label=f"👉 {cfg['next_label']}",
+            help=f"点击无缝流转至 {cfg['next_wb_title']}"
+        )
+    except Exception:
+        st.markdown(f'<a href="/{cfg["next_page_path"].replace("pages/", "").replace(".py", "")}" target="_self">👉 {cfg["next_label"]}</a>', unsafe_allow_html=True)
+

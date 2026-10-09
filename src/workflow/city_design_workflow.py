@@ -30,7 +30,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "early",
         "title": "工作台 1：全息空间诊断与数据沙盘",
-        "path": "pages/00_数据准备与任务解读.py",
+        "path": "pages/01_全息空间诊断与数据沙盘.py",
         "stages": ["00", "01", "02", "03", "04", "05"],
         "accent": "#0071e3",
         "summary": "数据准备、现场调研、3D现状全息底座与MPI潜力诊断沙盘。",
@@ -38,7 +38,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "middle",
         "title": "工作台 2：多主体博弈与空间 AIGC 工坊",
-        "path": "pages/06_目标定位.py",
+        "path": "pages/02_多主体博弈与空间AIGC工坊.py",
         "stages": ["06", "07", "08", "10"],
         "accent": "#8b5cf6",
         "summary": "目标定位、三主体博弈协商、总体城市设计与重点地段深化推演。",
@@ -46,7 +46,7 @@ WORKFLOW_BOARDS = [
     {
         "key": "late",
         "title": "工作台 3：数字图则与工程交付枢纽",
-        "path": "pages/09_专项系统设计.py",
+        "path": "pages/03_数字图则与工程交付枢纽.py",
         "stages": ["09", "11", "12", "13"],
         "accent": "#10b981",
         "summary": "专项系统设计、实施时序路径、城市设计导则与成果工程交付。",

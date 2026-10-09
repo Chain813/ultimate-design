@@ -19,6 +19,9 @@ TARGETS = [
     "pages/14_数据大屏.py",
     "pages/15_AIGC设计推演.py",
     "pages/16_制图与设计智能体Skill手册.py",
+    "pages/01_全息空间诊断与数据沙盘.py",
+    "pages/02_多主体博弈与空间AIGC工坊.py",
+    "pages/03_数字图则与工程交付枢纽.py",
 ]
 
 

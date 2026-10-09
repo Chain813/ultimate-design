@@ -13,7 +13,11 @@ from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_engine import get_hud_statistics, get_skyline_features
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage04_diagnosis.config import STAGE04_WORKSPACE
-from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.app_shell import (
+    render_engine_status_alert,
+    render_logic_chain_stepper,
+    render_top_nav,
+)
 from src.ui.chart_theme import apply_plotly_polar_theme, apply_plotly_theme, get_chart_palette
 from src.ui.design_system import (
     render_analysis_pipeline_hud,
@@ -435,3 +439,7 @@ def render_page() -> None:
         methodology="基于 AHP-MPI 多维潜力指数模型，融合空间潜力、社会需求和环境紧迫度三维加权评价",
         implication="为后续目标定位（Stage 06）和设计策略（Stage 07）提供了数据驱动的优先级依据",
     )
+
+    # 业务逻辑主线推进导航
+    render_logic_chain_stepper("04")
+

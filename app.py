@@ -81,7 +81,7 @@ WORKBENCHES = [
         "accent": "#0071e3",
         "icon": "🏢",
         "image": "assets/04_urban_diagnosis.png",
-        "primary_path": "pages/04_现状分析与问题诊断.py",
+        "primary_path": "pages/01_全息空间诊断与数据沙盘.py",
         "highlights": [
             "16 类空间资产与街景全自动解析入库",
             "AHP-MPI 潜力加权矩阵量化与雷达评估",
@@ -135,7 +135,7 @@ WORKBENCHES = [
         "accent": "#8b5cf6",
         "icon": "🎨",
         "image": "assets/06_llm_consultation_v2.png",
-        "primary_path": "pages/15_AIGC设计推演.py",
+        "primary_path": "pages/02_多主体博弈与空间AIGC工坊.py",
         "highlights": [
             "政府/居民/开发商三主体动态博弈雷达",
             "总体结构/总平用地优化与空间骨架推演",
@@ -197,7 +197,7 @@ WORKBENCHES = [
         "accent": "#10b981",
         "icon": "📐",
         "image": "assets/05_design_inference.png",
-        "primary_path": "pages/13_成果表达.py",
+        "primary_path": "pages/03_数字图则与工程交付枢纽.py",
         "highlights": [
             "交通/公共空间/风貌多专项系统空间叠合",
             "AutoCAD 2000 (AC1015, ANSI_936) 国标图层 DXF 导出",
@@ -376,6 +376,67 @@ render_summary_cards(
         },
     ]
 )
+# ==========================================
+# 🏛️ 三大核心工作台控制中枢 (3 Core Workbenches Hub)
+# ==========================================
+render_section_intro(
+    "三大核心工作台",
+    "系统汇聚三大工作台枢纽，贯穿空间诊断底模、多主体协同 AIGC 推演与数字图则工程交付全流程。",
+    eyebrow="Core Workbenches"
+)
+
+wb_html_parts = ['<div class="workbench-hub-grid">']
+for wb in WORKBENCHES:
+    primary_route = get_page_route(wb["primary_path"])
+
+    highlights_html = "".join([
+        f'<div class="wb-highlight-item"><span class="wb-highlight-dot" style="background:{wb["accent"]};"></span><span>{hl}</span></div>'
+        for hl in wb["highlights"]
+    ])
+
+    steps_html = "".join([
+        f'<a href="/{get_page_route(mod["path"])}" target="_self" class="wb-step-link">'
+        f'<div class="wb-step-left">'
+        f'<span class="wb-step-icon">{mod["icon"]}</span>'
+        f'<span class="wb-step-title">{mod["code"]} {mod["title"]}</span>'
+        f'</div>'
+        f'<span class="wb-step-arrow">›</span>'
+        f'</a>'
+        for mod in wb["modules"]
+    ])
+
+    wb_card_html = (
+        f'<div class="workbench-card">'
+        f'<div class="workbench-card-banner">'
+        f'<div class="wb-meta-row">'
+        f'<span class="wb-number">WORKBENCH {wb["number"]}</span>'
+        f'<span class="wb-badge {wb["badge_class"]}">{wb["badge"]}</span>'
+        f'</div>'
+        f'<h3 class="wb-title">{wb["icon"]} {wb["title"]}</h3>'
+        f'<p class="wb-subtitle">{wb["subtitle"]}</p>'
+        f'</div>'
+        f'<div class="wb-content">'
+        f'<p class="wb-desc">{wb["desc"]}</p>'
+        f'<div class="wb-highlights">{highlights_html}</div>'
+        f'<a href="/{primary_route}" target="_self" class="wb-cta-btn {wb["btn_class"]}">'
+        f'<span>进入工作台枢纽</span>'
+        f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+        f'<line x1="5" y1="12" x2="19" y2="12"></line>'
+        f'<polyline points="12 5 19 12 12 19"></polyline>'
+        f'</svg>'
+        f'</a>'
+        f'<div class="wb-divider"></div>'
+        f'<div class="wb-steps-title">包含核心阶段与工具：</div>'
+        f'<div class="wb-steps-list">{steps_html}</div>'
+        f'</div>'
+        f'</div>'
+    )
+    wb_html_parts.append(wb_card_html)
+
+wb_html_parts.append('</div>')
+st.markdown("".join(wb_html_parts), unsafe_allow_html=True)
+st.markdown("<br>", unsafe_allow_html=True)
+
 st.markdown(
     """
     <div class="content-panel">
@@ -533,67 +594,7 @@ with c2:
         time.sleep(1)
         st.rerun()
 
-# ==========================================
-# 🏛️ 三大核心工作台控制中枢 (3 Core Workbenches Hub)
-# ==========================================
-render_section_intro(
-    "三大核心工作台",
-    "系统汇聚三大工作台枢纽，贯穿空间诊断底模、多主体协同 AIGC 推演与数字图则工程交付全流程。",
-    eyebrow="Core Workbenches"
-)
 
-wb_html_parts = ['<div class="workbench-hub-grid">']
-for wb in WORKBENCHES:
-    primary_route = get_page_route(wb["primary_path"])
-
-    highlights_html = "".join([
-        f'<div class="wb-highlight-item"><span class="wb-highlight-dot" style="background:{wb["accent"]};"></span><span>{hl}</span></div>'
-        for hl in wb["highlights"]
-    ])
-
-    steps_html = "".join([
-        f'<a href="/{get_page_route(mod["path"])}" target="_self" class="wb-step-link">'
-        f'<div class="wb-step-left">'
-        f'<span class="wb-step-icon">{mod["icon"]}</span>'
-        f'<span class="wb-step-title">{mod["code"]} {mod["title"]}</span>'
-        f'</div>'
-        f'<span class="wb-step-arrow">›</span>'
-        f'</a>'
-        for mod in wb["modules"]
-    ])
-
-    wb_card_html = (
-        f'<div class="workbench-card">'
-        f'<div class="workbench-card-banner">'
-        f'<div class="wb-meta-row">'
-        f'<span class="wb-number">WORKBENCH {wb["number"]}</span>'
-        f'<span class="wb-badge {wb["badge_class"]}">{wb["badge"]}</span>'
-        f'</div>'
-        f'<h3 class="wb-title">{wb["icon"]} {wb["title"]}</h3>'
-        f'<p class="wb-subtitle">{wb["subtitle"]}</p>'
-        f'</div>'
-        f'<div class="wb-content">'
-        f'<p class="wb-desc">{wb["desc"]}</p>'
-        f'<div class="wb-highlights">{highlights_html}</div>'
-        f'<a href="/{primary_route}" target="_self" class="wb-cta-btn {wb["btn_class"]}">'
-        f'<span>进入工作台枢纽</span>'
-        f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
-        f'<line x1="5" y1="12" x2="19" y2="12"></line>'
-        f'<polyline points="12 5 19 12 12 19"></polyline>'
-        f'</svg>'
-        f'</a>'
-        f'<div class="wb-divider"></div>'
-        f'<div class="wb-steps-title">包含核心阶段与工具：</div>'
-        f'<div class="wb-steps-list">{steps_html}</div>'
-        f'</div>'
-        f'</div>'
-    )
-    wb_html_parts.append(wb_card_html)
-
-wb_html_parts.append('</div>')
-st.markdown("".join(wb_html_parts), unsafe_allow_html=True)
-
-st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
 # 📊 AI 参与度与性能监控

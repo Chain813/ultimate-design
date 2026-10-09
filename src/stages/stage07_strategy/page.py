@@ -20,7 +20,11 @@ from src.engines.spatial_data_injector import (
 )
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage07_strategy.config import STAGE07_WORKSPACE
-from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.app_shell import (
+    render_engine_status_alert,
+    render_logic_chain_stepper,
+    render_top_nav,
+)
 from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.module_summary import render_stage_summary
@@ -963,3 +967,7 @@ def render_page() -> None:
             ensure_design_brief()
         except Exception:
             pass
+
+    # 业务逻辑主线推进导航
+    render_logic_chain_stepper("07")
+

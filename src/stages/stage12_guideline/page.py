@@ -8,7 +8,11 @@ from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
 from src.engines.spatial_data_injector import get_full_spatial_context
 from src.stages.common.workspace import render_stage_workspace
 from src.stages.stage12_guideline.config import STAGE12_WORKSPACE
-from src.ui.app_shell import render_engine_status_alert, render_top_nav
+from src.ui.app_shell import (
+    render_engine_status_alert,
+    render_logic_chain_stepper,
+    render_top_nav,
+)
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.module_summary import render_stage_summary
 from src.ui.streamlit_compat import stretch_width
@@ -496,3 +500,7 @@ def render_page() -> None:
         methodology="分板块多轮深度生成引擎 + 全域空间数据驱动 + RAG 政策检索",
         implication="为成果表达（Stage 13）提供了可交付的导则文本和管控指标体系",
     )
+
+    # 业务逻辑主线推进导航
+    render_logic_chain_stepper("12")
+

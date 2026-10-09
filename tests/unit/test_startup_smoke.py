@@ -12,8 +12,11 @@ def test_targets_includes_all_pages():
     assert "pages/14_数据大屏.py" in TARGETS
     assert "pages/15_AIGC设计推演.py" in TARGETS
     assert "pages/16_制图与设计智能体Skill手册.py" in TARGETS
-    # Total: app.py + 14 pages = 15
-    assert len(TARGETS) == 15
+    assert "pages/01_全息空间诊断与数据沙盘.py" in TARGETS
+    assert "pages/02_多主体博弈与空间AIGC工坊.py" in TARGETS
+    assert "pages/03_数字图则与工程交付枢纽.py" in TARGETS
+    # Total: app.py + 14 legacy pages + 3 unified workbenches = 18
+    assert len(TARGETS) == 18
 
 
 def test_main_returns_zero():
