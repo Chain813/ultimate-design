@@ -236,33 +236,37 @@ class SDPipeline:
             raise ValueError("Pipeline has no steps -- call txt2img/img2img/inpaint/upscale first")
         self._validate_steps()
 
-        if is_demo_mode() and not self._explicit_base_url:
-            return self.run_demo()
+        try:
+            if is_demo_mode() and not self._explicit_base_url:
+                return self.run_demo()
 
-        start_time = time.time()
-        current_image = None
-        last_seed = -1
-        last_info = {}
+            start_time = time.time()
+            current_image = None
+            last_seed = -1
+            last_info = {}
 
-        for i, step in enumerate(self._steps):
-            if on_progress:
-                on_progress(step_index=i, total_steps=len(self._steps), mode=step.mode)
-            if step.mode == "txt2img":
-                current_image, last_seed, last_info = self._exec_txt2img(step, on_progress)
-            elif step.mode == "img2img":
-                current_image, last_seed, last_info = self._exec_img2img(step, current_image, on_progress)
-            elif step.mode == "inpaint":
-                current_image, last_seed, last_info = self._exec_inpaint(step, current_image, on_progress)
-            elif step.mode == "upscale":
-                current_image = self._exec_upscale(step, current_image, on_progress)
+            for i, step in enumerate(self._steps):
+                if on_progress:
+                    on_progress(step_index=i, total_steps=len(self._steps), mode=step.mode)
+                if step.mode == "txt2img":
+                    current_image, last_seed, last_info = self._exec_txt2img(step, on_progress)
+                elif step.mode == "img2img":
+                    current_image, last_seed, last_info = self._exec_img2img(step, current_image, on_progress)
+                elif step.mode == "inpaint":
+                    current_image, last_seed, last_info = self._exec_inpaint(step, current_image, on_progress)
+                elif step.mode == "upscale":
+                    current_image = self._exec_upscale(step, current_image, on_progress)
 
-        elapsed = time.time() - start_time
-        return SDResult(
-            images=[current_image],
-            seed=last_seed,
-            info=last_info,
-            elapsed_seconds=round(elapsed, 2),
-        )
+            elapsed = time.time() - start_time
+            return SDResult(
+                images=[current_image],
+                seed=last_seed,
+                info=last_info,
+                elapsed_seconds=round(elapsed, 2),
+            )
+        finally:
+            self._steps.clear()
+            self._current_step = None
 
     def _validate_steps(self) -> None:
         has_image = False

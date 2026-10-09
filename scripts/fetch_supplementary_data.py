@@ -24,7 +24,8 @@ import requests
 # 项目根目录
 ROOT_DIR = Path(__file__).parent.parent
 DATA_DIR = ROOT_DIR / "data"
-SHP_DIR = DATA_DIR / "shp"
+GIS_DIR = DATA_DIR / "gis"
+SHP_DIR = GIS_DIR
 
 # ============================================================
 # 配置

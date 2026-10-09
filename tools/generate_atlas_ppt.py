@@ -17,24 +17,19 @@ from pptx.enum.shapes import MSO_SHAPE
 from pptx.enum.text import PP_ALIGN
 from pptx.util import Emu, Inches, Mm, Pt
 
-from src.config.site import get_author_info, get_institution_info
-
 # Force UTF-8 stdout
 sys.stdout.reconfigure(encoding='utf-8')
 
 ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 ATLAS_DIR = ROOT / "static" / "atlas"
 OUTPUT_DIR = ROOT / "static" / "附件"
 OUTPUT_FILE = OUTPUT_DIR / "成果图册汇总_A3.pptx"
 
-# Add scratch to path to import CHAPTERS
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "scratch"))
-
-try:
-    from gen_ppt import CHAPTERS
-except ImportError:
-    CHAPTERS = []
+from src.config.site import get_author_info, get_institution_info
+from src.config.atlas_chapters import CHAPTERS
 
 # Filter CHAPTERS to only contain existing files
 _filtered = []

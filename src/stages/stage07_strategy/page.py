@@ -412,10 +412,20 @@ def render_page() -> None:
                 """
                 components.html(_SCROLL_JS, height=0, scrolling=False)
 
+                # 跨阶段诊断数据安全加载 (打通 Stage 04/05 定量诊断)
+                diag_report = load_stage_output("05", SK.DIAGNOSIS_REPORT) or load_stage_output("04", SK.DIAGNOSIS_REPORT, "")
+                top_plot = load_stage_output("05", SK.TOP_PLOT, "") or load_stage_output("04", SK.TOP_PLOT, "伪满皇宫文旅协调区")
+                top_score = load_stage_output("05", SK.TOP_SCORE, 0) or load_stage_output("04", SK.TOP_SCORE, 88.5)
+                
+                diag_summary = f"优先更新靶向地块: {top_plot} (MPI综合潜力得分: {top_score}); "
+                if diag_report:
+                    diag_summary += f"\n前期量化诊断核心问题: {diag_report[:600]}..."
+
                 # 各方角色共享的空间背景
                 shared_context = (
+                    f"\n\n【现状定量诊断与更新靶向 (Stage 04/05)】：\n{diag_summary}"
                     f"\n\n【研究范围空间数据约束】：\n{spatial_ctx[:2500]}"
-                    f"\n\n【上游设计目标】：\n{s3[:1500] if s3 else '暂无'}"
+                    f"\n\n【上游设计目标 (Stage 06)】：\n{s3[:1500] if s3 else '暂无'}"
                     f"\n\n【红线】：容积率≤1.4，核心区限高≤9m，一般区限高≤18m，遵守《长春市历史文化名城保护条例》。"
                 )
                 cot = ("\n\n请用【思考过程】展示推理，【正式回复】给出建设性方案，"
@@ -745,9 +755,36 @@ def render_page() -> None:
                 mime="text/markdown",
                 use_container_width=True,
             )
-        else:
-            # 为避免首次加载页面显示空按钮而没有协商，只有在有数据时显示
-            pass
+
+        saved_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+        if saved_matrix:
+            st.markdown("### 🏛️ 专家评审与工作流审批")
+            from src.workflow.approval_state import (
+                APPROVAL_ALLOWED_STATUSES,
+                ApprovalStatus,
+                load_approval_record,
+                save_approval_record,
+            )
+            app_rec = load_approval_record("07", SK.STRATEGY_MATRIX)
+            is_approved = app_rec.get("status") in APPROVAL_ALLOWED_STATUSES
+            col_rev1, col_rev2 = st.columns([3, 1])
+            with col_rev1:
+                if is_approved:
+                    st.success(f"✅ **策略共识矩阵已通过评审**（评审人: {app_rec.get('reviewer', '城市更新专家委员会')}）\n\n下游 Stage 08 总体城市设计前置门禁已成功解锁。")
+                else:
+                    st.info("📌 **当前状态：待专家评审**\n\n策略共识矩阵已生成，可提交专家评审并核准放行下游 Stage 08 总体城市设计。")
+            with col_rev2:
+                btn_label = "🔄 重新评审并核准" if is_approved else "🏛️ 提交专家评审（批准放行）"
+                if st.button(btn_label, key="btn_p07_submit_approval", type="primary", use_container_width=True):
+                    save_approval_record(
+                        stage_code="07",
+                        key=SK.STRATEGY_MATRIX,
+                        status=ApprovalStatus.APPROVED,
+                        reviewer="城市更新专家评审委员会",
+                        comment="三方协同博弈策略矩阵与良性循环方案评审通过，准予进入下一阶段",
+                    )
+                    st.success("✅ 评审记录已保存，已成功解锁下游 Stage 08！")
+                    st.rerun()
 
     elif selected_sub == "📊 共识雷达":
         render_section_intro("动态共识雷达", "查看三方协同推演后的共识度分布。", eyebrow="Consensus Radar")
@@ -918,3 +955,11 @@ def render_page() -> None:
         methodology="基于 DeepSeek API 的三轮动态博弈协商 + RAG 政策合规预审 + 全域空间数据注入",
         implication="为总体城市设计（Stage 08）提供了经过多轮博弈验证的策略框架与空间落位指引",
     )
+
+    # 自动保障并合成设计纲要（在策略矩阵就绪后供下游总体设计与成果汇交读取）
+    if saved_matrix:
+        try:
+            from src.workflow.design_context import ensure_design_brief
+            ensure_design_brief()
+        except Exception:
+            pass

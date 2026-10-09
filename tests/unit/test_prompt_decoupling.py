@@ -33,40 +33,23 @@ def mock_spatial_data(monkeypatch):
 
 
 @pytest.fixture
-def mock_config():
-    config_path = resolve_path("config/config.yaml")
-    assert config_path.exists()
-
-    # Backup original config
-    with open(config_path, "r", encoding="utf-8") as f:
-        orig_content = f.read()
-        orig_data = yaml.safe_load(orig_content)
-
-    # Write mock site configuration using correct config.yaml keys
-    mock_data = orig_data.copy()
+def mock_config(monkeypatch):
+    import copy
+    orig_data = copy.deepcopy(load_global_config())
+    mock_data = copy.deepcopy(orig_data)
     mock_data["site"] = {
-        "city_name": "\u6d4b\u8bd5\u5e02",  # 测试市
-        "district_name": "\u6d4b\u8bd5\u533a",  # 测试区
-        "site_name": "\u6d4b\u8bd5\u5730\u5757",  # 测试地块
-        "description": "\u6d4b\u8bd5\u5730\u5757\u7ea699\u516c\u9877",  # 测试地块约99公顷
-        "adjacent_features": "\u6d4b\u8bd5\u5468\u8fb9",  # 测试周边
-        "policies": ["\u6d4b\u8bd5\u653f\u7b56\u4e00", "\u6d4b\u8bd5\u653f\u7b56\u4e8c"]  # 测试政策一, 测试政策二
+        "city_name": "测试市",
+        "district_name": "测试区",
+        "site_name": "测试地块",
+        "description": "测试地块约99公顷",
+        "adjacent_features": "测试周边",
+        "policies": ["测试政策一", "测试政策二"],
     }
 
-    with open(config_path, "w", encoding="utf-8") as f:
-        yaml.safe_dump(mock_data, f, allow_unicode=True)
-
-    # Clear cached resource loaders
-    if hasattr(load_global_config, "clear"):
-        load_global_config.clear()
-
+    monkeypatch.setattr("src.config.loader.load_global_config", lambda: mock_data)
+    monkeypatch.setattr("src.config.site.load_global_config", lambda: mock_data)
+    monkeypatch.setattr("src.config.site._load_project_yaml", lambda: {})
     yield mock_data
-
-    # Restore original config
-    with open(config_path, "w", encoding="utf-8") as f:
-        f.write(orig_content)
-    if hasattr(load_global_config, "clear"):
-        load_global_config.clear()
 
 
 def test_decoupled_guideline_prompt(mock_config):

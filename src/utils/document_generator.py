@@ -40,23 +40,62 @@ def generate_official_word_doc(title, text_content, aigc_history=None):
     # 3. 规划文本注入
     doc.add_heading("一、 微更新规划导则文本", level=1)
 
-    # 简单的文本分段处理
-    for paragraph in text_content.split('\n'):
-        if paragraph.strip() == "":
+    # 文本与表格分段渲染处理
+    lines = text_content.split('\n')
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:
+            i += 1
             continue
-        if paragraph.startswith('#'):
+
+        # 检测 Markdown 表格块
+        if line.startswith('|') and line.endswith('|'):
+            tbl_rows = []
+            while i < len(lines) and lines[i].strip().startswith('|') and lines[i].strip().endswith('|'):
+                row_str = lines[i].strip()
+                cleaned_cells = [c.strip() for c in row_str.strip('|').split('|')]
+                # 跳过对齐分隔行如 | :--- | :--- |
+                if not all(set(c).issubset({'-', ':', ' '}) for c in cleaned_cells):
+                    tbl_rows.append(cleaned_cells)
+                i += 1
+
+            if tbl_rows:
+                num_cols = max(len(r) for r in tbl_rows)
+                try:
+                    tbl = doc.add_table(rows=len(tbl_rows), cols=num_cols)
+                    tbl.style = 'Table Grid'
+                    for r_idx, row_data in enumerate(tbl_rows):
+                        for c_idx in range(num_cols):
+                            cell_val = row_data[c_idx] if c_idx < len(row_data) else ""
+                            cell = tbl.cell(r_idx, c_idx)
+                            cell.text = cell_val
+                            if r_idx == 0:
+                                for cp in cell.paragraphs:
+                                    for cr in cp.runs:
+                                        cr.font.bold = True
+                except Exception:
+                    # 容错降级
+                    for r_data in tbl_rows:
+                        doc.add_paragraph(" | ".join(r_data))
+            continue
+
+        if line.startswith('#'):
             # 处理加粗标题
             p = doc.add_paragraph()
-            run = p.add_run(paragraph.replace('#', '').strip())
+            run = p.add_run(line.replace('#', '').strip())
             run.font.bold = True
             run.font.size = Pt(14)
-        elif paragraph.startswith('-') or paragraph.startswith('*'):
+            i += 1
+        elif line.startswith('-') or line.startswith('*'):
             # 处理列表
-            p = doc.add_paragraph(paragraph.strip(), style='List Bullet')
+            doc.add_paragraph(line.lstrip('-* ').strip(), style='List Bullet')
+            i += 1
         else:
             # 普通段落，首行缩进
-            p = doc.add_paragraph(paragraph.strip())
+            p = doc.add_paragraph(line)
             p.paragraph_format.first_line_indent = Pt(28)
+            i += 1
 
     # 4. AIGC 成果图集注入
     if aigc_history and len(aigc_history) > 0:

@@ -39,14 +39,33 @@ def _save_cache_to_disk(bus_dict: dict):
         if now - _last_written_time < 1.0:
             return
             
+        # Clean dict to ensure only JSON-serializable objects are passed
+        def _sanitize_for_json(obj):
+            if isinstance(obj, (str, int, float, bool)) or obj is None:
+                return obj
+            if hasattr(obj, "save") and hasattr(obj, "size"):
+                # PIL.Image representation
+                return f"[PIL.Image: {obj.size[0]}x{obj.size[1]}]"
+            if isinstance(obj, dict):
+                return {str(k): _sanitize_for_json(v) for k, v in obj.items()}
+            if isinstance(obj, (list, tuple, set)):
+                return [_sanitize_for_json(i) for i in obj]
+            try:
+                json.dumps(obj)
+                return obj
+            except Exception:
+                return str(obj)
+
+        safe_bus = _sanitize_for_json(bus_dict)
+
         # Debounce: skip write if content hasn't changed
-        content_hash = hashlib.md5(json.dumps(bus_dict, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        content_hash = hashlib.md5(json.dumps(safe_bus, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
         if content_hash == _last_written_hash:
             return
             
         cache_path = _get_cache_path()
         with open(cache_path, "w", encoding="utf-8") as f:
-            json.dump(bus_dict, f, ensure_ascii=False, indent=2)
+            json.dump(safe_bus, f, ensure_ascii=False, indent=2)
             
         _last_written_hash = content_hash
         _last_written_time = now

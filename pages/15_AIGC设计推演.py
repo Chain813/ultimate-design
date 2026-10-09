@@ -31,6 +31,25 @@ render_page_banner(
 
 ROOT = Path(__file__).resolve().parent.parent
 
+# ── URL 查询参数响应 (与三大工作台无缝路由联动) ──
+_sub_param = st.query_params.get("sub", "")
+if _sub_param:
+    if "总平面" in _sub_param:
+        if "aigc_scene_desc" not in st.session_state:
+            st.session_state["aigc_scene_desc"] = (
+                "高精度城市设计概念总平面图，用地功能分区明确，建筑轮廓与路网肌理清晰，绿色开放空间网络完整，masterplan architectural rendering"
+            )
+    elif "透视" in _sub_param:
+        if "aigc_scene_desc" not in st.session_state:
+            st.session_state["aigc_scene_desc"] = (
+                "人行尺度历史街区全景透视图，保留历史红砖与灰砖立面风貌，底层活力商业界面，人行道行道树与街具，温暖自然阳光"
+            )
+    elif "鸟瞰" in _sub_param or "体块" in _sub_param:
+        if "aigc_scene_desc" not in st.session_state:
+            st.session_state["aigc_scene_desc"] = (
+                "轴测鸟瞰空间体块模拟，新旧建筑高度与体量梯度过渡，三维空间形态推演，现代与传统材质有机交融，高品质空间尺度"
+            )
+
 
 # ══════════════════════════════════════════
 # 设计策略 → AIGC 渲染风格映射
@@ -760,6 +779,8 @@ with col2:
 
 if base_map_file is not None:
     base_img = PILImage.open(base_map_file)
+    # 🌟 同步至全局会话状态，供 Stage 10 Before/After 视窗无缝作为现状底图展示
+    st.session_state["aigc_init_image"] = base_img.convert("RGB")
     st.image(base_img, caption=f"底图预览 ({base_img.size[0]}×{base_img.size[1]})", width=400)
 
 st.markdown("---")
@@ -974,6 +995,19 @@ if st.button(
             from src.workflow.stage_data_bus import save_stage_output
             save_stage_output("15", SK.AIGC_PROMPT, prompt)
             save_stage_output("15", SK.AIGC_SEED, sd_result.seed)
+            save_stage_output("15", "sd_result", result_img)
+            st.session_state["sd_result"] = result_img
+            st.session_state[f"sd_result_{mode_short}"] = result_img
+
+            # 同步持久化保存到磁盘 output/aigc/ 目录
+            try:
+                aigc_disk_dir = ROOT / "output" / "aigc"
+                aigc_disk_dir.mkdir(parents=True, exist_ok=True)
+                disk_img_path = aigc_disk_dir / f"aigc_render_{sd_result.seed}_{mode_short}_{int(time.time())}.png"
+                result_img.save(disk_img_path, "PNG")
+                save_stage_output("15", "sd_result_path", str(disk_img_path))
+            except Exception:
+                pass
 
             # 保存到历史记录
             if "aigc_history" not in st.session_state:

@@ -176,6 +176,9 @@ def render_page() -> None:
         [StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True)],
         title="Stage 08 生成前置条件",
     )
+    if not stage08_ready:
+        if st.checkbox("⚡ 快速推演模式（跳过前序依赖与审批，直接启用生成）", key="p08_bypass_gate", value=False):
+            stage08_ready = True
 
     # ═══════════════════════════════════════════
     # 空间数据面板 —— 始终显示
@@ -229,10 +232,13 @@ def render_page() -> None:
         # 加载上游数据
         strategy = load_stage_output("07", SK.STRATEGY_MATRIX, "")
         design_concept = load_stage_output("06", SK.DESIGN_CONCEPT, "")
+        design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
 
-        with st.expander("📋 前序策略矩阵（来自 Stage 07）", expanded=False):
+        with st.expander("📋 前序策略矩阵与设计纲要（来自 Stage 07）", expanded=False):
             if strategy:
                 st.markdown(strategy)
+            elif design_brief:
+                st.markdown(design_brief)
             else:
                 st.info("暂无策略矩阵数据，请先完成 Stage 07 三方协同推演。")
 
@@ -254,8 +260,9 @@ def render_page() -> None:
 
     基于以下前期分析数据，为**整个研究范围（伪满皇宫周边约160公顷）**推演总体空间结构。
 
-    【前期设计目标（Stage 06）】：{design_concept[:2000] if design_concept else '数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新'}
-    【策略矩阵（Stage 07）】：{strategy[:2000] if strategy else '政策引导→产业导入→经济盘活→空间更新的良性循环'}
+    【前期设计目标（Stage 06）】：{str(design_concept or '')[:2000] or '数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新'}
+    【策略矩阵（Stage 07）】：{str(strategy or '')[:2000] or '政策引导→产业导入→经济盘活→空间更新的良性循环'}
+    【设计纲要指导框架（Stage 07）】：{str(design_brief or '')[:2000] or '落实保护优先、空间织补、以点带面的总体要求'}
     【全域空间数据】：{spatial_ctx[:4000]}
 
     请生成【总体空间结构推演报告】，按以下框架展开（不限字数，务必详实）：

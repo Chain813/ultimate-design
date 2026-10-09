@@ -23,21 +23,35 @@ def _build_nav_tree():
                 seen_titles[title] = {"title": title, "href": stage_primary_href(code), "modules": []}
             for mod in STAGE_MODULE_MAP.get(code, []):
                 seen_titles[title]["modules"].append({"title": mod["title"], "href": mod["href"]})
+
+        # 将对应扩展工具与大屏无缝融入对应三大核心工作台
+        if board["key"] == "early":
+            seen_titles["数据大屏"] = {
+                "title": "全屏空间数据大屏",
+                "href": "/数据大屏",
+                "modules": [{"title": "全屏监控看板", "href": "/数据大屏"}],
+            }
+        elif board["key"] == "middle":
+            seen_titles["AIGC设计推演"] = {
+                "title": "空间 AIGC 推演工坊",
+                "href": "/AIGC设计推演",
+                "modules": [
+                    {"title": "概念总平面图生形", "href": "/AIGC设计推演?sub=概念总平面图生形"},
+                    {"title": "街区全景透视推演", "href": "/AIGC设计推演?sub=街区全景透视推演"},
+                    {"title": "轴测鸟瞰空间体块模拟", "href": "/AIGC设计推演?sub=轴测鸟瞰空间体块模拟"},
+                ],
+            }
+        elif board["key"] == "late":
+            seen_titles["智能体Skill手册"] = {
+                "title": "制图智能体 Skill 手册",
+                "href": "/制图与设计智能体Skill手册",
+                "modules": [
+                    {"title": "制图技能规范", "href": "/制图与设计智能体Skill手册"},
+                    {"title": "多主体博弈沙盘", "href": "/制图与设计智能体Skill手册"},
+                ],
+            }
+
         tree.append({"label": board["title"], "groups": list(seen_titles.values())})
-    tree.append({"label": "智能工具", "groups": [
-        {"title": "AIGC设计推演", "href": "/AIGC设计推演", "modules": [
-            {"title": "概念总平面图生形", "href": "/AIGC设计推演?sub=概念总平面图生形"},
-            {"title": "街区全景透视推演", "href": "/AIGC设计推演?sub=街区全景透视推演"},
-            {"title": "轴测鸟瞰空间体块模拟", "href": "/AIGC设计推演?sub=轴测鸟瞰空间体块模拟"},
-        ]},
-        {"title": "智能体Skill手册", "href": "/制图与设计智能体Skill手册", "modules": [
-            {"title": "制图技能规范", "href": "/制图与设计智能体Skill手册"},
-            {"title": "多主体博弈沙盘", "href": "/制图与设计智能体Skill手册"},
-        ]},
-        {"title": "数据大屏", "href": "/数据大屏", "modules": [
-            {"title": "全屏监控看板", "href": "/数据大屏"},
-        ]},
-    ]})
     return tree
 
 
@@ -78,16 +92,29 @@ def _href_to_route(href):
 
 # ── 板块显示名称 & 配色 ──
 _BOARD_DISPLAY_NAMES = {
-    "前期数据获取与现状分析": "前期分析诊断",
-    "中期概念生成与应对策略": "中期策略生成",
-    "后期设计生成与成果表达": "后期成果表达",
-    "智能工具":               "智能工具",
+    "工作台 1：全息空间诊断与数据沙盘": "空间诊断与数据沙盘",
+    "工作台 2：多主体博弈与空间 AIGC 工坊": "多主体博弈与AIGC工坊",
+    "工作台 3：数字图则与工程交付枢纽": "数字图则与交付枢纽",
+    "全息空间诊断与数据沙盘": "空间诊断与数据沙盘",
+    "多主体博弈与空间 AIGC 工坊": "多主体博弈与AIGC工坊",
+    "数字图则与工程交付枢纽": "数字图则与交付枢纽",
+    # 兼容旧名称
+    "前期数据获取与现状分析": "空间诊断与数据沙盘",
+    "中期概念生成与应对策略": "多主体博弈与AIGC工坊",
+    "后期设计生成与成果表达": "数字图则与交付枢纽",
+    "智能工具": "智能工具",
 }
 _BOARD_COLORS = {
-    "前期数据获取与现状分析": "#86868b",
-    "中期概念生成与应对策略": "#a1a1a6",
-    "后期设计生成与成果表达": "#98989d",
-    "智能工具":               "#a78bfa",
+    "工作台 1：全息空间诊断与数据沙盘": "#0071e3",
+    "工作台 2：多主体博弈与空间 AIGC 工坊": "#8b5cf6",
+    "工作台 3：数字图则与工程交付枢纽": "#10b981",
+    "全息空间诊断与数据沙盘": "#0071e3",
+    "多主体博弈与空间 AIGC 工坊": "#8b5cf6",
+    "数字图则与工程交付枢纽": "#10b981",
+    "前期数据获取与现状分析": "#0071e3",
+    "中期概念生成与应对策略": "#8b5cf6",
+    "后期设计生成与成果表达": "#10b981",
+    "智能工具": "#a78bfa",
 }
 
 

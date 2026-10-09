@@ -46,7 +46,16 @@ render_page_banner(
 render_evidence_chain_bar("02", ["01", "02", "03", "04", "05"])
 
 SUB_OPTIONS = ["📑 语义萃取引擎", "⚙️ 空间数据资产管理", "📍 现场调研", "🧩 固定制图模板"]
-selected_sub = resolve_subpage_value(SUB_OPTIONS)
+_current_sub = resolve_subpage_value(SUB_OPTIONS)
+_init_idx = SUB_OPTIONS.index(_current_sub) if _current_sub in SUB_OPTIONS else 0
+selected_sub = st.radio(
+    "功能模块切换",
+    SUB_OPTIONS,
+    index=_init_idx,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="p02_sub_radio",
+)
 st.markdown("---")
 
 
@@ -83,11 +92,14 @@ if selected_sub == "📑 语义萃取引擎":
         save_stage_output("02", "extracted_docs", len(res_list))
         st.success("语义萃取完成。")
 
-    if "extraction_res" in st.session_state:
-        results = st.session_state["extraction_res"]
-        sel_file = st.selectbox("选择预览", [r["file"] for r in results])
-        selected_text = next(r["text"] for r in results if r["file"] == sel_file)
+    results = st.session_state.get("extraction_res", [])
+    if results:
+        sel_options = [r.get("file", f"文档_{i+1}") for i, r in enumerate(results)]
+        sel_file = st.selectbox("选择预览", sel_options)
+        selected_text = next((r.get("text", "") for r in results if r.get("file") == sel_file), "")
         st.text_area("Markdown 预览", value=selected_text, height=420)
+    else:
+        st.info("💡 暂无提取文本，请先上传规划文档并点击「启动语义萃取」。")
 
 
 # ============================================================

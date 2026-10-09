@@ -65,61 +65,199 @@ if st.session_state.get("presentation_mode", False):
     st.markdown('<div class="presentation-active"></div>', unsafe_allow_html=True)
 
 # ==========================================
-# 📊 模块配置数据 (按四板块分组)
+# 🏛️ 三大核心工作台配置 (3 Core Workbenches)
 # ==========================================
-MODULE_SECTIONS = [
+WORKBENCHES = [
     {
-        "label": "数据准备",
+        "id": "workbench_1",
+        "number": "01",
+        "title": "全息空间诊断与数据沙盘",
+        "short_title": "全息空间诊断与数据沙盘",
+        "subtitle": "多源底模治理 · AHP-MPI 量化评估 · 3D 全息沙盘",
+        "desc": "全域 GIS 空间资产解析、现状白模孪生底座、街景视觉指标分析与 AHP-MPI 潜力诊断，直通全屏数字沙盘。",
+        "badge": "全息底座 · MPI潜力 · 3D沙盘",
         "badge_class": "badge-data",
+        "btn_class": "btn-data",
+        "accent": "#0071e3",
+        "icon": "🏢",
+        "image": "assets/04_urban_diagnosis.png",
+        "primary_path": "pages/04_现状分析与问题诊断.py",
+        "highlights": [
+            "16 类空间资产与街景全自动解析入库",
+            "AHP-MPI 潜力加权矩阵量化与雷达评估",
+            "全息 3D 数字孪生底模与全屏监控看板",
+        ],
         "modules": [
             {
+                "code": "00",
                 "title": "数据准备与任务解读",
-                "desc": "上传原始数据、查阅获取教程、锁定研究范围与任务要求。",
+                "desc": "上传原始数据、数据质量校验、锁定研究范围与任务目标。",
                 "image": "assets/03_digital_twin.png",
                 "path": "pages/00_数据准备与任务解读.py",
+                "icon": "📦",
             },
-        ],
-    },
-    {
-        "label": "前期",
-        "badge_class": "badge-early",
-        "modules": [
             {
+                "code": "02",
                 "title": "资料收集与现场调研",
-                "desc": "语义萃取、空间数据资产管理、街景核验、固定制图模板。",
+                "desc": "语义法规萃取、空间资产挂载、街景绿视率与开阔度复核。",
                 "image": "assets/04_urban_diagnosis.png",
                 "path": "pages/02_资料收集与现场调研.py",
+                "icon": "📷",
+            },
+            {
+                "code": "04",
+                "title": "现状分析与问题诊断",
+                "desc": "3D 全息底座分析、MPI 潜力评估、地块多维雷达与 AI 报告。",
+                "image": "assets/04_urban_diagnosis.png",
+                "path": "pages/04_现状分析与问题诊断.py",
+                "icon": "🏗️",
+            },
+            {
+                "code": "14",
+                "title": "全屏空间数据大屏",
+                "desc": "全域指标监控、动态空间沙盘与交互式决策大屏。",
+                "image": "assets/03_digital_twin.png",
+                "path": "pages/14_数据大屏.py",
+                "icon": "📊",
             },
         ],
     },
     {
-        "label": "中期",
+        "id": "workbench_2",
+        "number": "02",
+        "title": "多主体博弈与空间 AIGC 工坊",
+        "short_title": "多主体博弈与空间 AIGC 工坊",
+        "subtitle": "居民/规划师/资本多主体协商 · ControlNet 空间意向生形",
+        "desc": "基于多智能体博弈达成多方共识，联动 ControlNet 多条件扩散生形管线，实现从设计意图到空间风貌的高保真推演。",
+        "badge": "多主体博弈 · ControlNet · 生形渲染",
         "badge_class": "badge-mid",
+        "btn_class": "btn-mid",
+        "accent": "#8b5cf6",
+        "icon": "🎨",
+        "image": "assets/06_llm_consultation_v2.png",
+        "primary_path": "pages/15_AIGC设计推演.py",
+        "highlights": [
+            "政府/居民/开发商三主体动态博弈雷达",
+            "总体结构/总平用地优化与空间骨架推演",
+            "ControlNet 空间约束生形与 Before/After 对比",
+        ],
         "modules": [
             {
-                "title": "中期概念生成与应对策略",
-                "desc": "目标定位、设计策略、案例借鉴、协商共识。",
+                "code": "06",
+                "title": "目标定位与愿景体系",
+                "desc": "设计愿景理念提炼、目标体系构建与开题标杆案例借鉴。",
                 "image": "assets/06_llm_consultation_v2.png",
                 "path": "pages/06_目标定位.py",
+                "icon": "🎯",
+            },
+            {
+                "code": "07",
+                "title": "设计策略与博弈协商",
+                "desc": "问题-策略矩阵对应推演、三主体协商共识与动态雷达。",
+                "image": "assets/06_llm_consultation_v2.png",
+                "path": "pages/07_设计策略.py",
+                "icon": "🤝",
+            },
+            {
+                "code": "08",
+                "title": "总体城市设计",
+                "desc": "空间结构推演、用地优化沙盘与概念总平面生形入口。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/08_总体城市设计.py",
+                "icon": "🗺️",
+            },
+            {
+                "code": "10",
+                "title": "重点地段深化设计",
+                "desc": "核心节点诊断、控规反推与节点 Before/After 对比推演。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/10_重点地段深化.py",
+                "icon": "🔍",
+            },
+            {
+                "code": "15",
+                "title": "空间 AIGC 设计推演",
+                "desc": "总平面图/全景透视/鸟瞰体块 ControlNet 空间意向生形。",
+                "image": "assets/06_llm_consultation_v2.png",
+                "path": "pages/15_AIGC设计推演.py",
+                "icon": "✨",
             },
         ],
     },
     {
-        "label": "后期",
+        "id": "workbench_3",
+        "number": "03",
+        "title": "数字图则与工程交付枢纽",
+        "short_title": "数字图则与工程交付枢纽",
+        "subtitle": "多专项系统深化 · 工业级 AutoCAD DXF · A3 标准成果汇编",
+        "desc": "交通/公共空间多专项叠合、留改拆实施时序规划、法规控制图则生成，直通 AutoCAD 2000 工业级标准 DXF 导出与成果表达。",
+        "badge": "专项系统 · 工业级DXF · 成果表达",
         "badge_class": "badge-late",
+        "btn_class": "btn-late",
+        "accent": "#10b981",
+        "icon": "📐",
+        "image": "assets/05_design_inference.png",
+        "primary_path": "pages/13_成果表达.py",
+        "highlights": [
+            "交通/公共空间/风貌多专项系统空间叠合",
+            "AutoCAD 2000 (AC1015, ANSI_936) 国标图层 DXF 导出",
+            "控制图则条文/A3展板画廊与 Word 说明书一键交付",
+        ],
         "modules": [
             {
-                "title": "后期设计生成与成果表达",
-                "desc": "总体设计、专项系统、重点深化、实施路径、导则和成果表达。",
+                "code": "09",
+                "title": "专项系统设计",
+                "desc": "交通系统、慢行网络、公共空间系统与建筑形态风貌深化。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/08_总体城市设计.py",
+                "path": "pages/09_专项系统设计.py",
+                "icon": "🔧",
+            },
+            {
+                "code": "11",
+                "title": "实施路径与时序",
+                "desc": "六类更新模式划分、三期推进甘特图与留改拆总图。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/11_实施路径.py",
+                "icon": "📅",
+            },
+            {
+                "code": "12",
+                "title": "城市设计数字导则",
+                "desc": "地块控制图则、风貌条文管控与法规说明书 DOCX 导出。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/12_城市设计导则.py",
+                "icon": "📜",
+            },
+            {
+                "code": "13",
+                "title": "成果表达与工程交付",
+                "desc": "工业级标准 DXF 导出、A3 成果画廊与图纸提示词助手。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/13_成果表达.py",
+                "icon": "🎁",
+            },
+            {
+                "code": "16",
+                "title": "智能体 Skill 规范手册",
+                "desc": "规划绘图技能规范、多主体元指令定义与 Skill 导出。",
+                "image": "assets/05_design_inference.png",
+                "path": "pages/16_制图与设计智能体Skill手册.py",
+                "icon": "📖",
             },
         ],
     },
 ]
 
-# Flatten for backward-compatible counting
-MODULES = [mod for section in MODULE_SECTIONS for mod in section["modules"]]
+# 保持对旧引用与计数的完全向后兼容
+MODULE_SECTIONS = [
+    {
+        "label": wb["short_title"],
+        "badge_class": wb["badge_class"],
+        "modules": wb["modules"],
+    }
+    for wb in WORKBENCHES
+]
+MODULES = [mod for wb in WORKBENCHES for mod in wb["modules"]]
 
 # 动态页面标题
 from src.config.site import get_project_info, get_site_city, get_site_name
@@ -139,7 +277,7 @@ render_page_banner(
         {"value": "AHP-MPI", "label": "多维量化评估", "meta": "基于空间、社会与环境特征的更新潜力诊断"},
         {"value": "LLM Agent", "label": "多主体协同决策", "meta": "居民、开发商与规划师在线协商博弈"},
         {"value": "AIGC+CNet", "label": "生成式风貌设计", "meta": "基于空间骨架控制的意向渲染技术"},
-        {"value": "13 阶段", "label": "全链路工作流", "meta": "覆盖数据准备、前、中、后期全套规划"},
+        {"value": "3 大工作台", "label": "核心工作流枢纽", "meta": "空间诊断沙盘 · 博弈AIGC工坊 · 数字图则交付"},
     ],
     image_url=get_inline_static_image_src("research_scope_2d_cropped.png")
 )
@@ -396,34 +534,64 @@ with c2:
         st.rerun()
 
 # ==========================================
-# 🏗️ 模块入口卡片 (四板块分组 · 小型卡片 · 水平单行排版)
+# 🏛️ 三大核心工作台控制中枢 (3 Core Workbenches Hub)
 # ==========================================
-render_section_intro("核心模块入口", "按数据准备、前期、中期、后期四大板块进入工作流。", eyebrow="Modules")
+render_section_intro(
+    "三大核心工作台",
+    "系统汇聚三大工作台枢纽，贯穿空间诊断底模、多主体协同 AIGC 推演与数字图则工程交付全流程。",
+    eyebrow="Core Workbenches"
+)
 
-st.markdown('<div class="module-horizontal-grid">', unsafe_allow_html=True)
-for section in MODULE_SECTIONS:
-    for mod in section["modules"]:
-        page_route = get_page_route(mod["path"])
-        image_name = mod["image"].split("/")[-1]
-        st.markdown(f'''
-        <div class="module-column">
-            <div class="module-section-title" style="margin-bottom: 10px; margin-top: 0;">
-                <span class="section-badge {section['badge_class']}">{section['label']}</span>
-                <span>{section['label']}板块</span>
-            </div>
-            <div class="module-container">
-                <a href="/{page_route}" target="_self" class="module-card">
-                    <img class="card-thumb" src="{get_static_url(image_name)}" alt="{mod['title']}" />
-                    <div class="card-body">
-                        <h4>{mod['title']}</h4>
-                        <p>{mod['desc']}</p>
-                    </div>
-                    <span class="card-arrow">›</span>
-                </a>
-            </div>
-        </div>
-        ''', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
+wb_html_parts = ['<div class="workbench-hub-grid">']
+for wb in WORKBENCHES:
+    primary_route = get_page_route(wb["primary_path"])
+
+    highlights_html = "".join([
+        f'<div class="wb-highlight-item"><span class="wb-highlight-dot" style="background:{wb["accent"]};"></span><span>{hl}</span></div>'
+        for hl in wb["highlights"]
+    ])
+
+    steps_html = "".join([
+        f'<a href="/{get_page_route(mod["path"])}" target="_self" class="wb-step-link">'
+        f'<div class="wb-step-left">'
+        f'<span class="wb-step-icon">{mod["icon"]}</span>'
+        f'<span class="wb-step-title">{mod["code"]} {mod["title"]}</span>'
+        f'</div>'
+        f'<span class="wb-step-arrow">›</span>'
+        f'</a>'
+        for mod in wb["modules"]
+    ])
+
+    wb_card_html = (
+        f'<div class="workbench-card">'
+        f'<div class="workbench-card-banner">'
+        f'<div class="wb-meta-row">'
+        f'<span class="wb-number">WORKBENCH {wb["number"]}</span>'
+        f'<span class="wb-badge {wb["badge_class"]}">{wb["badge"]}</span>'
+        f'</div>'
+        f'<h3 class="wb-title">{wb["icon"]} {wb["title"]}</h3>'
+        f'<p class="wb-subtitle">{wb["subtitle"]}</p>'
+        f'</div>'
+        f'<div class="wb-content">'
+        f'<p class="wb-desc">{wb["desc"]}</p>'
+        f'<div class="wb-highlights">{highlights_html}</div>'
+        f'<a href="/{primary_route}" target="_self" class="wb-cta-btn {wb["btn_class"]}">'
+        f'<span>进入工作台枢纽</span>'
+        f'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">'
+        f'<line x1="5" y1="12" x2="19" y2="12"></line>'
+        f'<polyline points="12 5 19 12 12 19"></polyline>'
+        f'</svg>'
+        f'</a>'
+        f'<div class="wb-divider"></div>'
+        f'<div class="wb-steps-title">包含核心阶段与工具：</div>'
+        f'<div class="wb-steps-list">{steps_html}</div>'
+        f'</div>'
+        f'</div>'
+    )
+    wb_html_parts.append(wb_card_html)
+
+wb_html_parts.append('</div>')
+st.markdown("".join(wb_html_parts), unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
 

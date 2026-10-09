@@ -429,7 +429,19 @@ def render_page() -> None:
                 )
                 st.download_button("📥 下载设计纲要 (Markdown)", design_brief, file_name="设计纲要.md", **stretch_width(st.download_button))
             else:
-                st.info("暂无设计纲要数据，请在 Stage 07 生成。")
+                st.info("暂无设计纲要数据。")
+                if st.button("⚡ 立即从上下文自动合成设计简报", key="btn_s13_auto_brief", **stretch_width(st.button)):
+                    with st.spinner("正在从全域规划上下文自动合成设计简报..."):
+                        try:
+                            from src.workflow.design_context import ensure_design_brief
+                            brief_res = ensure_design_brief(force=True)
+                            if brief_res:
+                                st.success("✅ 设计简报已成功合成并持久化！")
+                                st.rerun()
+                            else:
+                                st.warning("当前上下文信息不足，建议先运行前期规划推演。")
+                        except Exception as e:
+                            st.error(f"合成设计简报失败: {e}")
 
         with col5:
             strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")

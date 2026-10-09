@@ -114,10 +114,12 @@ def get_nlp_data() -> tuple[pd.DataFrame, list[tuple[str, int]]]:
         df = _generate_demo_nlp_data()
 
     if "Sentiment" not in df.columns or "Score" not in df.columns:
-        valid = df["Text"].dropna().astype(str).tolist()
-        labels, scores = classify_sentiment(valid)
-        df["Sentiment"] = labels[:len(df)]
-        df["Score"] = scores[:len(df)]
+        valid = df["Text"].dropna().astype(str)
+        labels, scores = classify_sentiment(valid.tolist())
+        df["Sentiment"] = "neutral"
+        df["Score"] = 0.0
+        df.loc[valid.index, "Sentiment"] = labels
+        df.loc[valid.index, "Score"] = scores
 
     stop_words = {"的", "了", "是", "在", "我", "有", "和", "就", "不", "人", "都", "一", "很", "什么", "我们"}
     all_text = " ".join(df["Text"].dropna().astype(str))

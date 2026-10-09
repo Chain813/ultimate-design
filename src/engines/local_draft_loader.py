@@ -21,11 +21,23 @@ def load_document_from_draft() -> tuple[dict[str, str], dict[str, str]]:
             "references": str
         }
     """
+    from src.config.paths import DOCS_DIR, ROOT_DIR
     from src.config.site import get_author_info
     author = get_author_info()
     author_name = author.get("name", "作者")
     author_id = author.get("id", "编号")
-    path = os.path.join(os.path.expanduser("~"), "Desktop", "项目文档", f"项目设计报告_{author_name}_{author_id}.docx")
+
+    env_draft = os.getenv("DRAFT_DOCX_PATH")
+    if env_draft and os.path.exists(env_draft):
+        path = env_draft
+    else:
+        candidate_paths = [
+            DOCS_DIR / f"项目设计报告_{author_name}_{author_id}.docx",
+            DOCS_DIR / "项目设计报告.docx",
+            ROOT_DIR / "output" / f"项目设计报告_{author_name}_{author_id}.docx",
+            ROOT_DIR / "output" / "项目设计报告.docx",
+        ]
+        path = next((str(p) for p in candidate_paths if p.exists()), str(candidate_paths[0]))
     chapters = {}
     metadata = {
         "abstract_cn": "",
@@ -228,7 +240,18 @@ def get_combined_references(draft_refs_text: str) -> str:
     # 1. 格式化本地 PDF
     local_pdf_entries = []
     seen_entries = set()
-    path = os.path.join(os.path.expanduser("~"), "Desktop", "陈礼冲 毕设", "参考文献")
+    env_ref_dir = os.getenv("REFERENCES_PDF_DIR")
+    if env_ref_dir and os.path.exists(env_ref_dir):
+        path = env_ref_dir
+    else:
+        from src.config.paths import DOCS_DIR
+        candidate_dirs = [
+            DOCS_DIR / "参考文献",
+            DOCS_DIR / "references",
+            DOCS_DIR / "regulations",
+            DOCS_DIR,
+        ]
+        path = next((str(d) for d in candidate_dirs if d.exists() and any(d.glob("*.pdf"))), str(DOCS_DIR))
     if os.path.exists(path):
         try:
             files = [f for f in os.listdir(path) if f.lower().endswith('.pdf')]

@@ -397,10 +397,25 @@ def retrieve_policy_context(query: str = "城市更新 历史文化街区 保护
         from src.engines.rag_engine import retrieve_rag_context
         results = retrieve_rag_context(query, top_k=5)
         if results:
-            return "\n\n".join(
-                f"【{r.get('source', '未知来源')}】\n{r.get('content', '')[:800]}"
-                for r in results
-            )
+            formatted = []
+            for r in results:
+                if isinstance(r, (tuple, list)) and len(r) > 1 and isinstance(r[1], dict):
+                    source = r[1].get('source', '规划法规规范')
+                    content = str(r[0])
+                elif isinstance(r, (tuple, list)) and len(r) >= 3:
+                    source = str(r[2]) if r[2] else '规划法规规范'
+                    content = str(r[1])
+                elif isinstance(r, (tuple, list)) and len(r) >= 1:
+                    source = '规划法规规范'
+                    content = str(r[0])
+                elif isinstance(r, dict):
+                    source = r.get('source', '规划法规规范')
+                    content = r.get('content', '')
+                else:
+                    source = '规划法规规范'
+                    content = str(r)
+                formatted.append(f"【{source}】\n{content[:800]}")
+            return "\n\n".join(formatted)
     except Exception:
         pass
     return ""

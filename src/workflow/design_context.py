@@ -136,12 +136,12 @@ def build_design_context() -> DesignContext:
     ctx = DesignContext()
     ctx.completed_stages = list_completed_stages()
 
-    # Stage 05
-    ctx.diagnosis_report = str(_load_from("05", SK.DIAGNOSIS_REPORT, ""))
-    ctx.mpi_ranking = _load_from("05", SK.MPI_RANKING, [])
-    ctx.top_plot = str(_load_from("05", SK.TOP_PLOT, ""))
-    ctx.top_score = float(_load_from("05", SK.TOP_SCORE, 0) or 0)
-    ctx.radar_data = _load_from("05", SK.RADAR_DATA, {})
+    # Stage 04 / 05 双向回退（修复阶段代号割裂）
+    ctx.diagnosis_report = str(_load_from("04", SK.DIAGNOSIS_REPORT, "") or _load_from("05", SK.DIAGNOSIS_REPORT, ""))
+    ctx.mpi_ranking = _load_from("04", SK.MPI_RANKING, None) or _load_from("05", SK.MPI_RANKING, [])
+    ctx.top_plot = str(_load_from("04", SK.TOP_PLOT, "") or _load_from("05", SK.TOP_PLOT, ""))
+    ctx.top_score = float(_load_from("04", SK.TOP_SCORE, None) or _load_from("05", SK.TOP_SCORE, 0) or 0)
+    ctx.radar_data = _load_from("04", SK.RADAR_DATA, None) or _load_from("05", SK.RADAR_DATA, {})
 
     # Stage 06
     ctx.design_concept = str(_load_from("06", SK.DESIGN_CONCEPT, ""))
@@ -306,14 +306,14 @@ def get_context_for_guideline(ctx: DesignContext | None = None) -> dict:
     }
 
 
-def ensure_design_brief() -> str:
+def ensure_design_brief(force: bool = False) -> str:
     """确保 design_brief 已生成。如果未生成则自动触发合成。"""
     ctx = build_design_context()
-    if ctx.design_brief:
+    if ctx.design_brief and not force:
         return ctx.design_brief
 
-    # 至少需要 Stage 07 完成
-    if "07" not in ctx.completed_stages:
+    # 至少需要 Stage 07 完成或包含策略共识，若强行合成则直接执行
+    if not force and "07" not in ctx.completed_stages and not ctx.strategy_matrix:
         return ""
 
     with st.spinner("🧠 正在合成设计纲要..."):

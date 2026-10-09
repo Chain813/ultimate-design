@@ -61,3 +61,34 @@ def test_retrieve_policy_context_fallback(monkeypatch):
     result = retrieve_policy_context("test query")
     assert isinstance(result, str)
 
+
+def test_retrieve_policy_context_with_tuples(monkeypatch):
+    """retrieve_policy_context correctly unpacks (text, metadata) and (score, text, source) tuples."""
+    mock_results = [
+        ("保护区限高 12 米，严控建筑体量", {"source": "长春市历史文化名城保护条例"}),
+        (0.85, "严禁破坏既有历史街区肌理", "国家历史名城保护规定"),
+    ]
+    monkeypatch.setattr(
+        "src.engines.rag_engine.retrieve_rag_context",
+        lambda *args, **kwargs: mock_results,
+    )
+    result = retrieve_policy_context("历史保护")
+    assert "长春市历史文化名城保护条例" in result
+    assert "保护区限高 12 米" in result
+    assert "国家历史名城保护规定" in result
+    assert "严禁破坏既有历史街区肌理" in result
+
+
+def test_retrieve_policy_context_with_dicts(monkeypatch):
+    """retrieve_policy_context correctly unpacks dict items."""
+    mock_results = [
+        {"content": "微更新原则：小规模、渐进式", "source": "城市更新指导意见"},
+    ]
+    monkeypatch.setattr(
+        "src.engines.rag_engine.retrieve_rag_context",
+        lambda *args, **kwargs: mock_results,
+    )
+    result = retrieve_policy_context("微更新")
+    assert "城市更新指导意见" in result
+    assert "小规模、渐进式" in result
+

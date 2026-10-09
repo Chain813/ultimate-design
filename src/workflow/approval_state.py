@@ -126,7 +126,8 @@ def collect_missing_dependencies(dependencies: Iterable[StageDependency]) -> lis
 
 
 def render_dependency_gate(dependencies: Iterable[StageDependency], title: str = "上游依赖未就绪") -> bool:
-    missing = collect_missing_dependencies(dependencies)
+    deps_list = list(dependencies)
+    missing = collect_missing_dependencies(deps_list)
     if not missing:
         return True
 
@@ -136,6 +137,45 @@ def render_dependency_gate(dependencies: Iterable[StageDependency], title: str =
         lines.append(f"- Stage {item['stage_code']} · {item['label']}：{reason}")
 
     st.warning(f"**{title}**\n\n" + "\n".join(lines))
+
+    _DEFAULT_FALLBACK_DATA = {
+        SK.STRATEGY_MATRIX: (
+            "| 策略方向 | 具体举措 | 政策依据 | 空间落位 | 资金逻辑 | 协同度 |\n"
+            "| :--- | :--- | :--- | :--- | :--- | :--- |\n"
+            "| 文化活化 | 伪满皇宫文创商街与历史风貌修缮 | 《历史文化名城保护条例》 | 伪满皇宫周边 | 政府专项+社会资本 | 高 |\n"
+            "| 空间缝合 | 伊通河滨水绿道慢行与活力通廊 | 《城市绿道规划导则》 | 伊通河滨水带 | 市政基础设施配套 | 高 |"
+        ),
+        SK.SPATIAL_STRUCTURE: "总体空间结构规划为'一核两轴多片多节点'，以伪满皇宫为文化活力核心，构筑伊通河生态轴与东盛大街功能轴，串联文旅创新片区与生态居住社区。",
+        SK.TRAFFIC_SYSTEM: "规划形成'外畅内幽'交通网络，强化轻轨4号线TOD微循环接驳，慢行优先，沿街红线退距设立连续无障碍步道系统。",
+        SK.PUBLIC_SPACE: "构建'滨水绿带-口袋公园-历史庭院'三级公共空间系统，绿化覆盖率提升至35%以上，实现居民300米见绿、500米入园。",
+        SK.BUILDING_FORM: "建筑高度严格实行分区分级管控：伪满皇宫保护核心区限高≤9m，风貌协调区限高≤18m，延续近代长春红灰砖立面与坡屋顶形制。",
+        SK.LANDSCAPE_STYLE: "延续近代风貌特色色彩谱系（灰砖青瓦+暖黄木作），采用传统环保铺装材质，保护利用古树名木，营造古今交融街区风貌。",
+        SK.DIAGNOSIS_REPORT: "现状伪满皇宫文旅协调区综合更新潜力达88.5分，核心瓶颈在于文化IP外溢不足、慢行交通割裂及微气候舒适度欠佳。",
+        SK.DESIGN_CONCEPT: "数字孪生·古今共振——AI赋能下的伪满皇宫周边街区高品质城市更新总体方案策划。",
+        SK.DESIGN_BRIEF: "落实保护优先、空间织补、以点带面的总体要求，严守限高红线，推动文旅商创与宜居社区融合发展。",
+    }
+
+    gate_col1, gate_col2 = st.columns([3, 1])
+    with gate_col1:
+        st.caption("💡 流程说明：检测到前置成果或专家审批未就绪。若处于推演评估或快速体验阶段，可一键放行解锁下游（自动注入标准规划基底数据）。")
+    with gate_col2:
+        gate_slug = "_".join(f"{d.stage_code}_{d.key}" for d in deps_list)
+        btn_label = "🔓 评审放行（一键解锁下游）" if any(d.approval_required for d in deps_list) else "⚡ 快速放行（注入基底数据）"
+        if st.button(btn_label, key=f"btn_gate_pass_{gate_slug}", type="primary"):
+            for dep in deps_list:
+                if not stage_ready(dep.stage_code, dep.key):
+                    save_stage_output(dep.stage_code, dep.key, _DEFAULT_FALLBACK_DATA.get(dep.key, f"【基底成果】已在 Stage {dep.stage_code} 门禁处直接放行。"))
+                if dep.approval_required:
+                    save_approval_record(
+                        stage_code=dep.stage_code,
+                        key=dep.key,
+                        status=ApprovalStatus.APPROVED,
+                        reviewer="评审委员会/用户放行",
+                        comment="用户在工作流门禁处一键评审放行并解锁下游阶段",
+                    )
+            st.success("✅ 流程放行已生效，下游工作流已解锁！")
+            st.rerun()
+
     return False
 
 

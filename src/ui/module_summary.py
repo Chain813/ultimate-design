@@ -172,9 +172,9 @@ def render_stage_summary(
         if auto_fig:
             st.plotly_chart(auto_fig, **stretch_width(st.plotly_chart))
 
-    # ── AI 小结生成按钮 (已关闭) ──
+    # ── AI 小结生成按钮 ──
     if enable_llm:
-        pass
+        _render_llm_summary_button(stage_code, title, dynamic_findings, methodology)
 
     # ── 自动将本阶段总结和方法写入本地文档 ──
     try:
@@ -506,10 +506,15 @@ def _render_llm_summary_button(
 
         # 从数据总线补充 —— 当前阶段
         try:
-            bus_data = st.session_state.get("stage_bus", {}).get(stage_code, {})
+            bus_data = st.session_state.get("stage_bus", {})
+            prefix = f"{stage_code}_"
             for k, v in bus_data.items():
-                if (isinstance(v, str) and len(v) < 500) or isinstance(v, (int, float)):
-                    data_lines.append(f"[本阶段总线] {k}: {v}")
+                if k.startswith(prefix):
+                    field_name = k[len(prefix):]
+                    if (isinstance(v, str) and len(v) < 500) or isinstance(v, (int, float)):
+                        data_lines.append(f"[本阶段总线] {field_name}: {v}")
+                    elif isinstance(v, list) and v and len(v) <= 10:
+                        data_lines.append(f"[本阶段总线] {field_name}: {v}")
         except Exception:
             pass
 
@@ -517,13 +522,13 @@ def _render_llm_summary_button(
 
         # 从数据总线补充 —— 所有已完成的前期阶段
         try:
-            all_bus = st.session_state.get("stage_bus", {})
-            for other_code, other_data in all_bus.items():
-                if other_code == stage_code or not isinstance(other_data, dict):
-                    continue
-                for k, v in other_data.items():
+            bus_data = st.session_state.get("stage_bus", {})
+            for k, v in bus_data.items():
+                if not k.startswith(f"{stage_code}_") and "_" in k:
+                    parts = k.split("_", 1)
+                    other_code, field_name = parts[0], parts[1]
                     if (isinstance(v, str) and len(v) < 300) or isinstance(v, (int, float)):
-                        data_lines.append(f"[Stage {other_code} 总线] {k}: {v}")
+                        data_lines.append(f"[Stage {other_code} 总线] {field_name}: {v}")
         except Exception:
             pass
 

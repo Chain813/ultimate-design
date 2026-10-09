@@ -104,7 +104,16 @@ with st.sidebar:
     )
 
 SUB_OPTIONS = ["📚 案例对标分析", "🎯 全域设计目标策划"]
-selected_sub = resolve_subpage_value(SUB_OPTIONS)
+_current_sub = resolve_subpage_value(SUB_OPTIONS)
+_init_idx = SUB_OPTIONS.index(_current_sub) if _current_sub in SUB_OPTIONS else 0
+selected_sub = st.radio(
+    "功能模块切换",
+    SUB_OPTIONS,
+    index=_init_idx,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="p06_sub_radio",
+)
 
 if "stage2_output" not in st.session_state:
     st.session_state["stage2_output"] = load_stage_output("06", SK.CASE_BENCHMARK, "")

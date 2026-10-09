@@ -214,7 +214,16 @@ st.markdown("---")
 # 子标签选择
 # ============================================================
 SUB_OPTIONS = ["📦 数据上传中心", "📚 数据获取教程", "📋 项目概况与任务要求", "📊 数据质量检查"]
-selected_sub = resolve_subpage_value(SUB_OPTIONS)
+_current_sub = resolve_subpage_value(SUB_OPTIONS)
+_init_idx = SUB_OPTIONS.index(_current_sub) if _current_sub in SUB_OPTIONS else 0
+selected_sub = st.radio(
+    "功能模块切换",
+    SUB_OPTIONS,
+    index=_init_idx,
+    horizontal=True,
+    label_visibility="collapsed",
+    key="p00_sub_radio",
+)
 st.markdown("---")
 
 

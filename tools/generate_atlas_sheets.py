@@ -3,10 +3,14 @@ import os
 import sys
 from pathlib import Path
 
+# Force UTF-8 stdout
+sys.stdout.reconfigure(encoding='utf-8')
+
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT))
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from tools.draw_scope_map import draw_spatial_map, process_a3_layout, wrap_text_by_pixels
 
@@ -25,10 +29,13 @@ def draw_cover(output_path, author=a.get("name",""), author_id=a.get("id",""), o
     cover = Image.new("RGB", (2440, 2000), color=(255, 255, 255))
     draw = ImageDraw.Draw(cover)
     
-    font_large_title = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 64) # Bold YaHei
-    font_sub_title = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 32)
-    font_body = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 24)
-    font_stamp = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 36)
+    try:
+        font_large_title = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 64) # Bold YaHei
+        font_sub_title = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 32)
+        font_body = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 24)
+        font_stamp = ImageFont.truetype('C:/Windows/Fonts/msyhbd.ttc', 36)
+    except OSError:
+        font_large_title = font_sub_title = font_body = font_stamp = ImageFont.load_default()
     
     # Draw decorative lines simulating digital twin networks
     draw.rectangle([100, 260, 140, 1844], fill=(217, 119, 6)) # amber-600 gold strip
@@ -108,18 +115,8 @@ def draw_toc(output_path, author=a.get("name",""), author_id=a.get("id",""), org
         ("DR-002", "图册目录", "本图册的图纸索引与主要编制说明"),
     ]
     
-    # Import CHAPTERS dynamically from gen_ppt
-    try:
-        import sys
-        from pathlib import Path
-        ROOT_DIR = Path(__file__).resolve().parent.parent
-        if str(ROOT_DIR) not in sys.path:
-            sys.path.insert(0, str(ROOT_DIR))
-        if str(ROOT_DIR / "scratch") not in sys.path:
-            sys.path.insert(0, str(ROOT_DIR / "scratch"))
-        from gen_ppt import CHAPTERS
-    except ImportError:
-        CHAPTERS = []
+    # Import canonical CHAPTERS metadata
+    from src.config.atlas_chapters import CHAPTERS
 
     # Build the sheets list dynamically from CHAPTERS
     for ch_name, ch_en, ch_sheets in CHAPTERS:

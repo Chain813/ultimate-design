@@ -407,3 +407,15 @@ def test_engine_registry_exports_sdpipeline():
     from src.engines import engine_registry
     assert hasattr(engine_registry, "SDPipeline")
     assert hasattr(engine_registry, "SDResult")
+
+
+@patch("src.engines.stable_diffusion_engine.requests.post")
+def test_sd_pipeline_clears_steps_after_run(mock_post):
+    from src.engines.stable_diffusion_engine import SDPipeline
+    mock_post.return_value = _make_mock_response()
+    pipe = SDPipeline(base_url="http://test:7860")
+    pipe.txt2img(prompt="test 1", negative_prompt="bad", width=64, height=64)
+    assert len(pipe._steps) == 1
+    pipe.run()
+    assert len(pipe._steps) == 0
+    assert pipe._current_step is None

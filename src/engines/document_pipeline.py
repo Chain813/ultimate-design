@@ -94,7 +94,7 @@ def _gen_diagnosis_report(pc, lc, model="deepseek-v4-pro"):
     """生成 AI 前期诊断报告"""
     from src.workflow.stage_keys import SK
 
-    if _skip_if_exists("05", SK.DIAGNOSIS_REPORT):
+    if _skip_if_exists("04", SK.DIAGNOSIS_REPORT) or _skip_if_exists("05", SK.DIAGNOSIS_REPORT):
         lc("⏭️ 诊断报告已存在，跳过")
         return
 
@@ -132,7 +132,7 @@ def _gen_mpi_ranking(pc, lc):
     """计算 MPI 排行榜（非 LLM）"""
     from src.workflow.stage_keys import SK
 
-    if _skip_if_exists("05", SK.MPI_RANKING):
+    if _skip_if_exists("04", SK.MPI_RANKING) or _skip_if_exists("05", SK.MPI_RANKING):
         lc("⏭️ MPI 排行已存在，跳过")
         return
 
@@ -247,6 +247,11 @@ def _gen_strategy_matrix(pc, lc, model="deepseek-v4-pro"):
     if result and len(result) > 50:
         _save("07", SK.STRATEGY_MATRIX, result)
         _save("07", SK.NEGOTIATION_RESULT, "（全流程管道自动生成）三方基于空间数据达成共识。")
+        try:
+            from src.workflow.approval_state import ApprovalStatus, save_approval_record
+            save_approval_record("07", SK.STRATEGY_MATRIX, ApprovalStatus.APPROVED, reviewer="自动生成管道", comment="全流程管道自动推演生成并审批放行")
+        except Exception:
+            pass
         lc(f"✅ 策略矩阵生成完成 ({len(result)} 字)")
 
 

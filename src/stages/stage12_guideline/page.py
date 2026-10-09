@@ -127,16 +127,21 @@ def render_page() -> None:
             title="Stage 12 导则生成前置条件",
         )
 
-        # 加载前序数据
-        s1 = load_stage_output("05", SK.DIAGNOSIS_REPORT, "")
+        # 加载前序数据 (打通 Stage 04-11 全域设计成果)
+        s1 = load_stage_output("05", SK.DIAGNOSIS_REPORT, "") or load_stage_output("04", SK.DIAGNOSIS_REPORT, "")
         s3 = load_stage_output("06", SK.DESIGN_CONCEPT, "")
         s4 = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+        s8_struct = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
+        s9_traffic = load_stage_output("09", SK.TRAFFIC_SYSTEM, "")
+        s9_bldg = load_stage_output("09", SK.BUILDING_FORM, "")
+        s9_space = load_stage_output("09", SK.PUBLIC_SPACE, "")
+        s11_phasing = load_stage_output("11", "region_phasing", "")
         spatial_ctx = get_full_spatial_context()
 
         # 状态显示
         c1, c2, c3 = st.columns(3)
         c1.metric("诊断报告", "✅" if s1 else "⚠️ 缺失")
-        c2.metric("设计目标", "✅" if s3 else "⚠️ 缺失")
+        c2.metric("总体空间结构", "✅" if s8_struct else "⚠️ 缺失")
         c3.metric("策略矩阵", "✅" if s4 else "⚠️ 缺失")
 
         st.markdown("---")
@@ -198,13 +203,22 @@ def render_page() -> None:
     7. 不得使用「待补充」「TBD」等占位符
 
     ═══ 空间数据（务必引用）═══
-    {spatial_ctx[:3000]}
+    {spatial_ctx[:2500]}
 
-    ═══ 前期诊断（可引用）═══
-    {s1[:1500] if s1 else '暂无'}
+    ═══ 前期诊断与策略（可引用）═══
+    - 现状诊断：{s1[:1000] if s1 else '暂无'}
+    - 策略矩阵：{s4[:1000] if s4 else '暂无'}
 
-    ═══ 策略矩阵（可引用）═══
-    {s4[:1500] if s4 else '暂无'}
+    ═══ 总体空间结构（Stage 08 成果）═══
+    {s8_struct[:1200] if s8_struct else '一核两轴多片多节点，文化核心保护优先'}
+
+    ═══ 专项系统设计（Stage 09 成果）═══
+    - 交通网络系统：{s9_traffic[:600] if s9_traffic else '窄马路密路网、慢行优先、轻轨TOD接驳'}
+    - 建筑形态与风貌：{s9_bldg[:600] if s9_bldg else '核心区限高9m，一般区限高18m，延续近代红灰砖立面'}
+    - 公共空间系统：{s9_space[:600] if s9_space else '滨水绿带与口袋公园体系，300米见绿'}
+
+    ═══ 实施路径与分期（Stage 11 成果）═══
+    {s11_phasing[:800] if s11_phasing else '渐进式微更新，留改拆分类施策'}
 
     ═══ 项目基本信息 ═══
     - 项目：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计
@@ -250,6 +264,7 @@ def render_page() -> None:
                     content = load_stage_output("12", key, "")
                     full_guideline += f"\n\n{'='*50}\n# 第{sec['id']}章 {sec['title']}\n{'='*50}\n\n{content}"
                 save_stage_output("12", SK.DESIGN_GUIDELINE, full_guideline)
+                st.session_state["guideline_compiled_doc"] = full_guideline
                 total_chars = len(full_guideline)
                 register_artifact(
                     stage_code="12",
@@ -262,31 +277,36 @@ def render_page() -> None:
                 )
                 st.success(f"导则汇总完成！总计 {total_chars} 字")
 
-                # 导出
-                col_md, col_word = st.columns(2)
-                with col_md:
-                    st.download_button(
-                        "📥 导出完整导则 (Markdown)",
-                        full_guideline,
-                        file_name="城市设计导则_完整版.md",
-                        use_container_width=True,
+        compiled_doc = st.session_state.get(
+            "guideline_compiled_doc",
+            load_stage_output("12", SK.DESIGN_GUIDELINE, ""),
+        )
+        if compiled_doc:
+            st.markdown("### 📥 完整导则成果导出")
+            col_md, col_word = st.columns(2)
+            with col_md:
+                st.download_button(
+                    "📥 导出完整导则 (Markdown)",
+                    compiled_doc,
+                    file_name="城市设计导则_完整版.md",
+                    use_container_width=True,
+                )
+            with col_word:
+                try:
+                    from src.utils.document_generator import generate_official_word_doc
+                    wb = generate_official_word_doc(
+                        title="伪满皇宫周边街区更新规划设计·城市设计导则",
+                        text_content=compiled_doc,
                     )
-                with col_word:
-                    try:
-                        from src.utils.document_generator import generate_official_word_doc
-                        wb = generate_official_word_doc(
-                            title="伪满皇宫周边街区更新规划设计·城市设计导则",
-                            text_content=full_guideline,
+                    if wb:
+                        st.download_button(
+                            "📥 导出红头公文 (Word)",
+                            wb,
+                            file_name="城市设计导则_正式版.docx",
+                            use_container_width=True,
                         )
-                        if wb:
-                            st.download_button(
-                                "📥 导出红头公文 (Word)",
-                                wb,
-                                file_name="城市设计导则_正式版.docx",
-                                use_container_width=True,
-                            )
-                    except Exception:
-                        logging.debug("Word 文档导出失败", exc_info=True)
+                except Exception:
+                    logging.debug("Word 文档导出失败", exc_info=True)
 
 
     # ═══════════════════════════════════════════

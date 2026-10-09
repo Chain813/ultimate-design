@@ -45,3 +45,24 @@ def test_classify_sentiment_scores_in_range():
     _labels, scores = classify_sentiment(texts)
     for s in scores:
         assert -1.0 <= s <= 1.0
+
+
+def test_get_nlp_data_handles_nan_text(monkeypatch):
+    import pandas as pd
+    from src.engines.nlp_engine import get_nlp_data
+
+    mock_df = pd.DataFrame({
+        "Text": ["这个街区太破旧了，拥堵杂乱，很不安全", None, "历史文化很丰富，很漂亮", float("nan"), "普通街道"]
+    })
+    monkeypatch.setattr("pandas.read_csv", lambda *args, **kwargs: mock_df.copy())
+    if hasattr(get_nlp_data, "clear"):
+        get_nlp_data.clear()
+    df, word_counts = get_nlp_data()
+    assert len(df) == 5
+    assert "Sentiment" in df.columns
+    assert "Score" in df.columns
+    assert df.loc[1, "Sentiment"] == "neutral"
+    assert df.loc[1, "Score"] == 0.0
+    assert df.loc[3, "Sentiment"] == "neutral"
+    assert df.loc[3, "Score"] == 0.0
+    assert df.loc[0, "Sentiment"] == "negative"
