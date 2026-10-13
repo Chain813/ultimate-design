@@ -189,10 +189,14 @@ def _gen_design_concept(pc, lc, model="deepseek-v4-pro"):
     s2 = str(_load("06", SK.CASE_BENCHMARK, "") or "")[:1500]
     spatial = _spatial(4000)
 
+    from src.config.site import get_site_city, get_site_name
+    s_city = get_site_city() or ""
+    s_name = get_site_name() or "城市更新示范区"
+
     prompt = f"""基于：
-【前期诊断问题】{s1 if s1 else '用地结构失衡、交通割裂、老龄化率30%、环境品质匮乏'}
+【前期诊断问题】{s1 if s1 else '用地结构失衡、交通割裂、老龄化与公共服务短板、环境品质匮乏'}
 【案例借鉴经验】{s2 if s2 else '广州永庆坊微改造、北京白塔寺数字织补、伦敦国王十字站城融合'}
-【主题】"数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计"
+【主题】"数字孪生·空间计算——AI赋能下的{s_city}{s_name}更新规划设计"
 【研究范围全域空间数据】：{spatial}
 
 请生成覆盖**整个研究范围**的【全域设计目标策划报告】：
@@ -205,7 +209,7 @@ def _gen_design_concept(pc, lc, model="deepseek-v4-pro"):
   - 对应的策略方向
   - 空间落位指引（具体到哪些地块或区域）
 
-三、区域经济策划方向：如何利用伪满皇宫文化IP进行业态重构与空间织补
+三、区域经济策划方向：如何利用核心空间与文化资产进行业态重构与空间织补
 
 四、土地利用优化建议：基于当前土地利用结构提出功能调整方向"""
 
@@ -319,9 +323,13 @@ def _gen_landuse_sandbox(pc, lc, model="deepseek-v4-pro"):
     if _skip_if_exists("08", SK.LANDUSE_SANDBOX): lc("⏭️ 用地沙盘已存在"); return
 
     landuse_data = _landuse()
+    from src.config.site import get_site_name, get_site_config
+    s_cfg = get_site_config()
+    s_name = get_site_name() or "规划区域"
+    s_area = s_cfg.get("area_ha", 160)
     prompt = f"""评估以下用地结构调整方案。严格基于数据，不得编造未提供的经济指标：
 
-研究范围（伪满皇宫周边约160公顷）现状用地结构：
+研究范围（{s_name}，约{s_area}公顷）现状用地结构：
 {landuse_data}
 
 推荐用地结构调整方向（基于规划设计目标）：
@@ -436,11 +444,14 @@ def _gen_landscape_style(pc, lc, model="deepseek-v4-pro"):
     structure = str(_load("08", SK.SPATIAL_STRUCTURE, "") or "")[:2000]
     spatial = _spatial(3500)
 
+    from src.config.site import get_site_name
+    s_name = get_site_name() or "核心街区"
+
     prompt = f"""基于以下数据设计风貌景观方案。色彩和材质建议与历史建筑特征一致，不编造具体建筑名称或保护等级：
 
 【上游空间结构】：{structure if structure else '一核两轴多片多节点'}
 【全域空间数据】：{spatial}
-【历史背景】：研究范围以伪满皇宫为核心，周边存在大量日伪时期建筑遗存。
+【历史背景】：研究范围以{s_name}为核心，承接历史文脉传承与存量空间品质提升。
 
 请生成【风貌景观设计方案】：
 一、风貌分区（历史保护核心区/风貌协调区/现代发展区）
@@ -480,10 +491,11 @@ def _gen_plot_metrics(pc, lc, plot_name, model="deepseek-v4-pro"):
     key = f"{SK.PLOT_METRICS}_{plot_name}"
     if _skip_if_exists("10", key): lc(f"⏭️ {plot_name} 控规指标已存在"); return
 
-    spatial = _spatial(2000)
+    from src.config.site import get_site_name
+    s_name = get_site_name() or "规划区域"
     prompt = f"""为重点地块【{plot_name}】推演控制性详细规划指标。指标值在合理范围内，不编造来源依据：
 
-【地块】：{plot_name}（伪满皇宫周边重点更新单元）
+【地块】：{plot_name}（{s_name}重点更新单元）
 【空间数据】：{spatial}
 
 请基于该地块的区位条件和更新定位，反推以下控规指标（以表格呈现）：
@@ -516,7 +528,7 @@ def _gen_plot_personas(pc, lc, plot_name, model="deepseek-v4-pro"):
 - 对公共空间的具体需求
 - 消费能力和业态偏好
 
-结合伪满皇宫周边的历史街区特征和城市更新定位。"""
+结合{s_name}的街区特征和城市更新定位。"""
 
     result = _call(model, "你是一个城市社会学分析工具。基于项目定位和地块特征，分析可能的使用人群特征。分析必须基于项目实际情况，不得编造具体人物故事或对话。", prompt)
     if result and len(result) > 30:
@@ -530,9 +542,11 @@ def _gen_plot_design(pc, lc, plot_name, model="deepseek-v4-pro"):
     if _skip_if_exists("10", key): lc(f"⏭️ {plot_name} 深化设计已存在"); return
 
     spatial = _spatial(2000)
+    from src.config.site import get_site_name
+    s_name = get_site_name() or "规划区域"
     prompt = f"""为重点地块【{plot_name}】生成空间深化设计方案。每个方案段落到具体空间要素，不编造建筑类型或空间关系：
 
-【地块】：{plot_name}（伪满皇宫周边重点更新单元）
+【地块】：{plot_name}（{s_name}重点更新单元）
 【空间数据】：{spatial}
 
 请生成详细的【空间深化设计方案】：

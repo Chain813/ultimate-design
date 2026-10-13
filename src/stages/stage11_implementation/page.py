@@ -173,9 +173,15 @@ def render_page() -> None:
             disabled=not stage11_region_ready,
             **stretch_width(st.button),
         ):
+            from src.config.site import get_site_config, get_site_name, get_site_city
+            site_cfg = get_site_config()
+            site_name = get_site_name() or site_cfg.get("name", "示范重点片区") or "示范重点片区"
+            site_city = get_site_city() or site_cfg.get("city", "当地") or "当地"
+            site_area = site_cfg.get("area_ha", 160)
+
             prompt = f"""你是一位资深城市更新实施策划专家。
 
-    基于以下前期分析数据，制定覆盖**整个研究范围（伪满皇宫周边约160公顷）**的全域实施路径。
+    基于以下前期分析数据，制定覆盖**整个研究范围（{site_city}{site_name}，约{site_area}公顷）**的全域实施路径。
 
     【策略矩阵】：{strategy[:2000] if strategy else '政策引导→产业导入→经济盘活→空间更新的良性循环'}
     【空间数据】：{spatial_ctx[:3000]}

@@ -6,7 +6,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Inches, Pt, RGBColor
 
 
-def generate_official_word_doc(title, text_content, aigc_history=None):
+def generate_official_word_doc(title, text_content, aigc_history=None, header_title=None):
     """
     使用 python-docx 纯代码生成带红头的官方公文 Word 格式，
     支持插入 Markdown 转换来的纯文本和 AIGC 推演生成的 Base64 图像。
@@ -16,7 +16,15 @@ def generate_official_word_doc(title, text_content, aigc_history=None):
     # 1. 渲染大红头
     red_head = doc.add_paragraph()
     red_head.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    rh_run = red_head.add_run("长春市历史文化街区微更新规划专项报告")
+    if not header_title:
+        try:
+            from src.config.site import get_site_city, get_site_name
+            city = get_site_city() or ""
+            name = get_site_name() or "城市更新"
+            header_title = f"{city}{name}规划设计专项报告" if (city or name) else "城市更新规划设计专项报告"
+        except Exception:
+            header_title = "城市更新规划设计专项报告"
+    rh_run = red_head.add_run(header_title)
     rh_run.font.size = Pt(22)
     rh_run.font.name = '宋体'
     rh_run.font.color.rgb = RGBColor(255, 0, 0)

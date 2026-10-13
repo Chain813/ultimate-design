@@ -1002,11 +1002,18 @@ def _generate_abstract_from_chapters(chapters: dict[str, str]) -> str:
     """从章节内容生成中文摘要——聚焦LLM与AIGC在城乡规划中的应用"""
     from src.engines.llm_engine import call_llm_engine
 
+    from src.config.site import get_site_city, get_site_district, get_site_name, get_site_config
+    s_city = get_site_city() or ""
+    s_dist = get_site_district() or ""
+    s_name = get_site_name() or "城市更新示范区"
+    s_area = get_site_config().get("area_ha", 160)
+    site_label = f"{s_city}{s_dist}{s_name}" if (s_city or s_dist) else s_name
+
     ctx = _all_chapters_text(chapters)
     prompt = f"""请撰写一份约 400 字的中文学术摘要，严格聚焦于"大语言模型（LLM）与 AIGC 在城乡规划设计中的应用"这一核心主题。
 
-【论文题目】《基于大模型与多模态AI的城市更新空间设计智能推演系统——以长春市宽城区伪满皇宫周边街区为例》
-【研究区域】长春市宽城区伪满皇宫周边街区，约 160 公顷
+【论文题目】《基于大模型与多模态AI的城市更新空间设计智能推演系统——以{site_label}为例》
+【研究区域】{site_label}，约 {s_area} 公顷
 
 【摘要主题定位】
 本设计的核心创新不在于对特定地块的规划方案本身，而在于**提出并验证了一套以大语言模型和生成式AI为核心的城市空间智能推演方法论**。摘要必须以此为纲。
@@ -1047,10 +1054,16 @@ def _extract_keywords_from_chapters(chapters: dict[str, str]) -> str:
     """从章节内容提取中文关键词——突出AI与AIGC主题"""
     from src.engines.llm_engine import call_llm_engine
 
+    from src.config.site import get_site_city, get_site_district, get_site_name
+    s_city = get_site_city() or ""
+    s_dist = get_site_district() or ""
+    s_name = get_site_name() or "城市更新示范区"
+    site_label = f"{s_city}{s_dist}{s_name}" if (s_city or s_dist) else s_name
+
     ctx = _all_chapters_text(chapters, 2000)
     prompt = f"""请根据以下项目设计内容，提取 3-5 个核心中文关键词（用分号分隔）。
 
-项目题目：《基于大模型与多模态AI的城市更新空间设计智能推演系统——以长春市宽城区伪满皇宫周边街区为例》
+项目题目：《基于大模型与多模态AI的城市更新空间设计智能推演系统——以{site_label}为例》
 
 关键词应优先覆盖以下核心维度：
 - 大语言模型（LLM）与多智能体协商

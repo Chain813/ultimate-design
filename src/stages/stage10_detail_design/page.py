@@ -545,7 +545,7 @@ def render_page() -> None:
                         自动聚合 Session 缓存、Stage 15 数据总线及本地磁盘快照，支持无缝前后对比。
                     </div>
                 </div>
-                <a href="/AIGC设计推演" target="_self" style="display:inline-block; padding:8px 16px; background:#6366f1; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; box-shadow:0 2px 8px rgba(99,102,241,0.3);">
+                <a href="/02_多主体博弈与空间AIGC工坊?sub=aigc" target="_self" style="display:inline-block; padding:8px 16px; background:#6366f1; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; box-shadow:0 2px 8px rgba(99,102,241,0.3);">
                     前往 AIGC Studio 调参渲染 ›
                 </a>
             </div>

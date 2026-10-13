@@ -311,7 +311,7 @@ def _build_auto_chart(stage_code: str):
             names = [d.get("地块名称", f"地块{i}") for i, d in enumerate(mpi_data[:10])]
             scores = [d.get("MPI 得分", 0) for d in mpi_data[:10]]
         else:
-            names = ["站前门户区", "中车工业遗产区", "伪满皇宫协调区", "老旧社区微更新区", "光复路商业活力区"]
+            names = ["重点示范更新区", "产业转型活力区", "历史文貌协调区", "老旧组团宜居区", "商业服务发展区"]
             scores = [82.5, 78.3, 74.1, 69.8, 65.2]
         fig = go.Figure(go.Bar(
             x=scores, y=names, orientation="h",
@@ -349,7 +349,7 @@ def _build_auto_chart(stage_code: str):
     if stage_code == "07":
         voting = load_stage_output("07", "voting_scores", None)
         if not voting or not isinstance(voting, dict) or len(voting) < 3:
-            voting = {"👥 居民代表（老王）": 50.0, "💰 文旅运营商（赵总）": 50.0, "📐 规划师（李工）": 50.0}
+            voting = {"👥 居民与使用群体": 50.0, "💰 投资与运营主体": 50.0, "📐 规划与法定义务人": 50.0}
         fig = go.Figure(go.Scatterpolar(
             r=[*list(voting.values()), next(iter(voting.values()))],
             theta=[*list(voting.keys()), next(iter(voting.keys()))],

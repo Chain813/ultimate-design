@@ -132,6 +132,14 @@ def render_page() -> None:
     # 加载 Stage 08 空间结构
     spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
 
+    from src.config.site import get_site_config, get_site_name, get_site_city, get_landmarks
+    site_cfg = get_site_config()
+    site_name = get_site_name() or site_cfg.get("name", "示范重点片区") or "示范重点片区"
+    site_city = get_site_city() or site_cfg.get("city", "当地") or "当地"
+    site_area = site_cfg.get("area_ha", 160)
+    landmarks = get_landmarks()
+    landmark_names = "、".join([lm.get("name", "") for lm in landmarks if lm.get("name")]) if landmarks else "重要公共文化节点"
+
     # ═══════════════════════════════════════════
     # 空间数据面板 —— 始终显示
     # ═══════════════════════════════════════════
@@ -188,7 +196,7 @@ def render_page() -> None:
             spatial_ctx = get_full_spatial_context()
             prompt = f"""你是一位资深交通规划师，精通城市更新中的交通网络优化与 TOD 开发模式。
 
-    基于以下空间数据，为研究范围（伪满皇宫周边约160公顷）制定交通系统设计方案。
+    基于以下空间数据，为研究范围（{site_city}{site_name}，约{site_area}公顷）制定交通系统设计方案。
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【全域空间数据】：{spatial_ctx[:3500]}
@@ -364,7 +372,7 @@ def render_page() -> None:
       - 核心保护区（≤9m）：范围界定、高度红线与退界手法
       - 协调过渡区（≤18m）：范围界定、退台与视廊过渡手法
       - 一般发展区（≤36m）：范围界定、高层布局原则
-      - 天际线视廊保护：从伪满皇宫等历史节点向外透视的视线视廊要求，天际线韵律设计
+      - 天际线视廊保护：从{landmark_names}等历史文化节点向外透视的视线视廊要求，天际线韵律设计
       以表格形式列出各分区的高度上限、适用区域和设计要求。
 
     二、建筑密度与街面控制
@@ -427,12 +435,12 @@ def render_page() -> None:
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【全域空间数据】：{spatial_ctx[:3500]}
-    【历史背景】：研究范围以伪满皇宫为核心，周边存在大量日伪时期建筑遗存。
+    【历史与人文背景】：研究范围以{landmark_names}为核心空间锚点，兼具风貌特征保护与微更新活化需求。
 
     请生成【风貌景观设计方案】（不限字数，务必详实）：
 
     一、风貌分区
-      - 历史保护核心区（伪满皇宫周边）：严格保护策略
+      - 历史保护与风貌传承核心区（{landmark_names}周边）：严格风貌控制与保护更新策略
       - 风貌协调区：新旧对话策略
       - 现代发展区：当代城市设计策略
       以表格形式列出各分区的范围、风貌要求和管控要点
@@ -510,8 +518,8 @@ def render_page() -> None:
     请生成【产业业态规划方案】（不限字数，务必详实）：
 
     一、产业定位与愿景
-      - 基于"古今共振"的产业定位
-      - 与伪满皇宫文旅资源的产业协同
+      - 基于属地文脉与空间优势的特色产业定位
+      - 与{landmark_names}等文旅与公共资源的产业协同
 
     二、业态分区引导
       - 历史风貌区：文化展示、非遗传承、精品民宿

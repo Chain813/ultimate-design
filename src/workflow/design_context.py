@@ -279,7 +279,7 @@ def synthesize_design_brief(ctx: DesignContext) -> str:
         model="deepseek-v4-pro",
     )
 
-    if not result or len(result) < 150:
+    if not result or len(result) < 150 or "## 靶向地块定位与更新指引" not in result:
         result = (
             f"## 靶向地块定位与更新指引\n"
             f"- 靶向地块：{target_name}（MPI: {target_mpi}，{target_priority}）\n"

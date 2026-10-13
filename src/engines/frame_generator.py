@@ -45,7 +45,21 @@ GOLD_COLOR = (245, 185, 60)       # 暖金色
 DIM_COLOR = (148, 163, 184)       # 次要文字
 MAIN_AREA_BG = (20, 30, 48)      # 主图区底色
 
-PROJECT_NAME = "数字孪生·古今共振 — 伪满皇宫周边街区更新规划设计"
+def _get_project_name() -> str:
+    try:
+        from src.config.site import get_project_info, get_site_city, get_site_name
+        p_info = get_project_info()
+        if p_info and p_info.get("name"):
+            return p_info.get("name")
+        city = get_site_city()
+        name = get_site_name()
+        if city or name:
+            return f"数字孪生·空间计算 — {city}{name}城市设计"
+    except Exception:
+        pass
+    return "数字孪生·空间计算 — 城市更新规划设计"
+
+PROJECT_NAME = "数字孪生·空间计算 — 城市更新规划设计"
 TEAM_INFO = "UltimateDESIGN · AI-Powered Urban Renewal Platform"
 
 
@@ -121,11 +135,12 @@ def compose_framed_sheet(
         title, fill=TEXT_COLOR, font=font_title,
     )
     # 右侧项目名
-    proj_bbox = draw.textbbox((0, 0), PROJECT_NAME, font=font_body)
+    proj_title = _get_project_name()
+    proj_bbox = draw.textbbox((0, 0), proj_title, font=font_body)
     proj_w = proj_bbox[2] - proj_bbox[0]
     draw.text(
         (SHEET_W - MARGIN - proj_w - 30, MARGIN + 30),
-        PROJECT_NAME, fill=DIM_COLOR, font=font_body,
+        proj_title, fill=DIM_COLOR, font=font_body,
     )
     # 编号
     if drawing_number:

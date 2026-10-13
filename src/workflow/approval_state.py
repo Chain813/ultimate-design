@@ -138,20 +138,27 @@ def render_dependency_gate(dependencies: Iterable[StageDependency], title: str =
 
     st.warning(f"**{title}**\n\n" + "\n".join(lines))
 
+    from src.config.site import get_site_config, get_site_city, get_site_name, get_landmarks
+    s_cfg = get_site_config()
+    s_city = get_site_city() or s_cfg.get("city", "当地") or "当地"
+    s_name = get_site_name() or s_cfg.get("name", "示范街区") or "示范街区"
+    landmarks = get_landmarks()
+    primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name")) else f"{s_name}核心风貌节点"
+
     _DEFAULT_FALLBACK_DATA = {
         SK.STRATEGY_MATRIX: (
             "| 策略方向 | 具体举措 | 政策依据 | 空间落位 | 资金逻辑 | 协同度 |\n"
             "| :--- | :--- | :--- | :--- | :--- | :--- |\n"
-            "| 文化活化 | 伪满皇宫文创商街与历史风貌修缮 | 《历史文化名城保护条例》 | 伪满皇宫周边 | 政府专项+社会资本 | 高 |\n"
-            "| 空间缝合 | 伊通河滨水绿道慢行与活力通廊 | 《城市绿道规划导则》 | 伊通河滨水带 | 市政基础设施配套 | 高 |"
+            f"| 文化活化 | {primary_lm}文创商街与历史风貌修缮 | 《城市更新规划导则》 | {s_name}核心区 | 政府专项+社会资本 | 高 |\n"
+            "| 空间缝合 | 滨水生态绿道慢行与活力通廊 | 《城市绿道规划导则》 | 滨水慢行通廊 | 市政基础设施配套 | 高 |"
         ),
-        SK.SPATIAL_STRUCTURE: "总体空间结构规划为'一核两轴多片多节点'，以伪满皇宫为文化活力核心，构筑伊通河生态轴与东盛大街功能轴，串联文旅创新片区与生态居住社区。",
-        SK.TRAFFIC_SYSTEM: "规划形成'外畅内幽'交通网络，强化轻轨4号线TOD微循环接驳，慢行优先，沿街红线退距设立连续无障碍步道系统。",
-        SK.PUBLIC_SPACE: "构建'滨水绿带-口袋公园-历史庭院'三级公共空间系统，绿化覆盖率提升至35%以上，实现居民300米见绿、500米入园。",
-        SK.BUILDING_FORM: "建筑高度严格实行分区分级管控：伪满皇宫保护核心区限高≤9m，风貌协调区限高≤18m，延续近代长春红灰砖立面与坡屋顶形制。",
-        SK.LANDSCAPE_STYLE: "延续近代风貌特色色彩谱系（灰砖青瓦+暖黄木作），采用传统环保铺装材质，保护利用古树名木，营造古今交融街区风貌。",
-        SK.DIAGNOSIS_REPORT: "现状伪满皇宫文旅协调区综合更新潜力达88.5分，核心瓶颈在于文化IP外溢不足、慢行交通割裂及微气候舒适度欠佳。",
-        SK.DESIGN_CONCEPT: "数字孪生·古今共振——AI赋能下的伪满皇宫周边街区高品质城市更新总体方案策划。",
+        SK.SPATIAL_STRUCTURE: f"总体空间结构规划为'一核两轴多片多节点'，以{primary_lm}为文化活力核心，构筑生态轴与功能发展轴，串联文旅创新片区与宜居社区。",
+        SK.TRAFFIC_SYSTEM: "规划形成'外畅内幽'交通网络，强化交通枢纽TOD微循环接驳，慢行优先，沿街红线退距设立连续无障碍步道系统。",
+        SK.PUBLIC_SPACE: "构建'滨水绿带-口袋公园-特色庭院'三级公共空间系统，绿化覆盖率提升至30%以上，实现居民300米见绿、500米入园。",
+        SK.BUILDING_FORM: f"建筑高度严格实行分区分级管控：{primary_lm}保护核心区限高≤9-12m，风貌协调区限高≤18m，延续当地地域风貌肌理与坡屋顶形制。",
+        SK.LANDSCAPE_STYLE: "延续地域特色色彩谱系，采用传统环保铺装材质，保护利用古树名木，营造古今交融街区风貌。",
+        SK.DIAGNOSIS_REPORT: f"现状{s_city}{s_name}综合更新潜力达88.5分，核心瓶颈在于功能载体效能不足、慢行交通割裂及微气候舒适度欠佳。",
+        SK.DESIGN_CONCEPT: f"数字孪生·空间计算——AI赋能下的{s_city}{s_name}高品质城市更新总体方案策划。",
         SK.DESIGN_BRIEF: "落实保护优先、空间织补、以点带面的总体要求，严守限高红线，推动文旅商创与宜居社区融合发展。",
     }
 

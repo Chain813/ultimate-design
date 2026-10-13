@@ -64,7 +64,7 @@ GUIDELINE_SECTIONS = [
         "title": "历史文化保护与活化导则",
         "description": "保护对象清单与分级、保护范围划定、风貌协调区管控、"
                        "活化利用策略、工业遗产活化方案",
-        "data_hint": "引用伪满皇宫保护规划、历史建筑名录",
+        "data_hint": "引用属地历史文脉保护规划、建筑遗产名录",
     },
     {
         "id": "7",
@@ -318,15 +318,18 @@ def render_page() -> None:
             with col_word:
                 try:
                     from src.utils.document_generator import generate_official_word_doc
+                    from src.config.site import get_site_config, get_site_name, get_site_city
+                    s_cfg = get_site_config()
+                    doc_title = f"{get_site_city() or s_cfg.get('city', '')}{get_site_name() or s_cfg.get('name', '重点街区')}更新规划设计·城市设计导则"
                     wb = generate_official_word_doc(
-                        title="伪满皇宫周边街区更新规划设计·城市设计导则",
+                        title=doc_title,
                         text_content=compiled_doc,
                     )
                     if wb:
                         st.download_button(
                             "📥 导出红头公文 (Word)",
                             wb,
-                            file_name="城市设计导则_正式版.docx",
+                            file_name=f"{doc_title}.docx",
                             use_container_width=True,
                         )
                 except Exception:
@@ -478,7 +481,7 @@ def render_page() -> None:
         indicators = [
             {"管控类型": "用地功能", "管控内容": "主导功能、兼容功能、禁止功能", "控制要求": "混合用地比例≥30%", "依据": "城市更新政策"},
             {"管控类型": "开发强度", "管控内容": "容积率、建筑密度、绿地率", "控制要求": "容积率≤1.4，绿地率≥25%", "依据": "历史文化名城保护规划"},
-            {"管控类型": "建筑高度", "管控内容": "高度分区、天际线控制", "控制要求": "核心区≤9m，一般区≤18m，站前≤24m", "依据": "伪满皇宫视廊保护"},
+            {"管控类型": "建筑高度", "管控内容": "高度分区、天际线控制", "控制要求": "核心区≤9m，一般区≤18m，综合区≤24m", "依据": "历史风貌与天际线视廊管控"},
             {"管控类型": "建筑界面", "管控内容": "街墙连续性、首层开放度", "控制要求": "街墙连续率≥70%，首层通透率≥60%", "依据": "街道设计导则"},
             {"管控类型": "建筑风貌", "管控内容": "色彩、材质、屋顶形式", "控制要求": "暖灰色调为主，禁止大面积玻璃幕墙", "依据": "风貌协调区管控要求"},
             {"管控类型": "公共空间", "管控内容": "开放空间比例、可达性", "控制要求": "步行5分钟覆盖率≥80%", "依据": "完整社区建设标准"},

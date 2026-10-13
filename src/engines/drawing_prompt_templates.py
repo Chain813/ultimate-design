@@ -993,6 +993,16 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
     from src.engines.design_description_engine import generate_dynamic_design_description
     dyn_strategy, dyn_conclusion = generate_dynamic_design_description(tmpl.name, tmpl.stage)
 
+    main_expr = tmpl.description
+    s_name = get_site_name()
+    if s_name and "伪满" not in s_name:
+        main_expr = (
+            main_expr.replace("长春市—宽城区—伪满皇宫周边", s_name)
+            .replace("伪满皇宫", "重点历史文化节点")
+            .replace("长春站", "交通枢纽")
+            .replace("伊通河", "滨水生态通廊")
+        )
+
     request = ImagePromptRequest(
         chapter=tmpl.chapter,
         drawing_name=tmpl.name,
@@ -1000,10 +1010,10 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
         aspect_ratio="A3横版",
         output_scene="项目图册 / A1 展板 / 方案汇报",
         uploaded_channels=uploaded_channels,
-        main_expression=tmpl.description,
+        main_expression=main_expr,
         must_include=template_requirements,
         legend_content=_default_legend_content(tmpl.name),
-        key_plots=f"研究范围红线、五个重点地块、主要道路、{get_site_name()}周边核心节点、图例区 and 固定图框。",
+        key_plots=f"研究范围红线、重点更新单元、主要道路、{s_name or '项目'}周边核心节点、图例区 and 固定图框。",
         design_strategy=dyn_strategy,
         analysis_conclusion=dyn_conclusion,
         avoid_content="不得重绘底图、不得移动边界、不得改写重点地块、不得改变图框、不得虚构道路和用地分类。",
@@ -1058,7 +1068,7 @@ def generate_drawing_prompt_with_llm(
 
 
 def _extract_template_requirements(prompt_tmpl: str) -> str:
-    """Extract legacy template requirements as content requirements, not as the final prompt."""
+    """Extract template requirements and dynamically adapt them to active site context."""
     text = prompt_tmpl.replace("{data_context}", "").strip()
     markers = ("图纸要求：", "图纸要求:")
     for marker in markers:
@@ -1067,7 +1077,29 @@ def _extract_template_requirements(prompt_tmpl: str) -> str:
             break
     lines = [line.strip() for line in text.splitlines()]
     lines = [line for line in lines if line and not line.startswith("请为以下城市设计项目生成")]
-    return "\n".join(lines)
+    raw_req = "\n".join(lines)
+
+    try:
+        from src.config.site import get_site_name, get_site_city, get_landmarks
+        s_name = get_site_name() or ""
+        s_city = get_site_city() or ""
+        landmarks = get_landmarks()
+        primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name")) else f"{s_name}重点地标"
+
+        if s_name and "伪满" not in s_name:
+            raw_req = (
+                raw_req.replace("伪满皇宫", primary_lm)
+                .replace("长春伪满皇宫周边街区", f"{s_city}{s_name}")
+                .replace("长春站", "交通枢纽")
+                .replace("伊通河", "滨水生态廊道")
+                .replace("铁北老旧社区", "周边老旧社区")
+                .replace("铁北工业遗产", "存量工业遗产")
+                .replace("中车厂区", "特色存量厂区")
+            )
+    except Exception:
+        pass
+
+    return raw_req
 
 
 def _default_legend_content(drawing_name: str) -> str:

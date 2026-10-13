@@ -551,7 +551,7 @@ def _compose_prompt(request: ImagePromptRequest, profile: DrawingProfile, negati
 版式采用{request.layout_structure}。图面需形成清晰的信息层级：主图优先，策略标签次之，图例和说明辅助。避免让装饰性元素压过真实数据和空间关系。
 
 【图例与标注】
-图例内容包括：{request.legend_content or '使用占位符标注图例分类，等待用户后期替换。'}。必须出现的重点地块或空间对象：{request.key_plots or '五个重点地块、研究范围边界、主要道路和伪满皇宫周边核心节点。'}。{schematic_text}
+图例内容包括：{request.legend_content or '使用占位符标注图例分类，等待用户后期替换。'}。必须出现的重点地块或空间对象：{request.key_plots or '重点更新单元、研究范围边界、主要道路和核心风貌节点。'}。{schematic_text}
 
 【风格与图框】
 {request.style_system or UNIFIED_STYLE}
@@ -576,7 +576,7 @@ def _format_content_block(request: ImagePromptRequest) -> str:
         f"- 设计策略：{request.design_strategy or '将问题诊断、价值评估与多主体博弈共识转译为空间响应。'}",
         f"- 分析结论：{request.analysis_conclusion or '如信息不完整，请使用占位符，不要虚构结论。'}",
         f"- 需要强调的问题：{request.emphasized_problem or '交通割裂、用地混杂、公共空间不足、历史风貌保护与开发强度冲突。'}",
-        f"- 需要强调的优势：{request.emphasized_advantage or '伪满皇宫历史文化资源、长春站 TOD 潜力、伊通河生态联系、老城复兴示范价值。'}",
+        f"- 需要强调的优势：{request.emphasized_advantage or '历史文化风貌资源、交通区位枢纽、生态水绿联系、存量更新示范价值。'}",
         f"- 需要避免的内容：{request.avoid_content or '避免虚构边界、虚构道路、虚构政策、虚构统计数据和大段不可读文字。'}",
     ]
     return "\n".join(lines)

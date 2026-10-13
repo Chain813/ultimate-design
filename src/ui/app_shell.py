@@ -538,7 +538,7 @@ def render_logic_chain_stepper(current_stage_code: str):
         "04": {
             "current_wb": 1,
             "summary_title": "🎯 现状空间体检完成，优先更新靶向地块已锁定",
-            "summary_desc": "通过 3D 全息底座与 AHP-MPI 多维潜力评价，已精准量化空间潜力、社会需求与环境紧迫度，识别出高潜力更新单元（如伪满皇宫文旅协调区/水产市场）。",
+            "summary_desc": "通过 3D 全息底座与 AHP-MPI 多维潜力评价，已精准量化空间潜力、社会需求与环境紧迫度，识别出高潜力更新单元与重点针灸地块。",
             "next_wb_title": "工作台 2：多主体博弈与空间 AIGC 工坊",
             "next_page_path": "pages/02_多主体博弈与空间AIGC工坊.py",
             "next_query_params": {"sub": "strategy"},

@@ -239,11 +239,17 @@ def render_page() -> None:
         design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
         target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
 
+        from src.config.site import get_site_config, get_site_name, get_site_city
+        site_cfg = get_site_config()
+        site_name = get_site_name() or site_cfg.get("name", "示范重点片区") or "示范重点片区"
+        site_city = get_site_city() or site_cfg.get("city", "当地") or "当地"
+        site_area = site_cfg.get("area_ha", 160)
+
         with st.expander("📋 前序策略矩阵、设计纲要与靶向地块（来自 Stage 04/07）", expanded=False):
             if target_plot:
                 st.markdown(
-                    f"**🎯 靶向重点地块：** {target_plot.get('name', '长春水产大市场')} | "
-                    f"**MPI 得分：** {target_plot.get('mpi', 88.5)} | "
+                    f"**🎯 靶向重点地块：** {target_plot.get('name', f'{site_name}首选更新单元')} | "
+                    f"**MPI 得分：** {target_plot.get('mpi', 85.0)} | "
                     f"**更新等级：** {target_plot.get('priority', 'P1 优先更新')}"
                 )
                 if target_plot.get("issues"):
@@ -269,19 +275,18 @@ def render_page() -> None:
             **stretch_width(st.button),
         ):
             spatial_ctx = get_full_spatial_context()
-            target_name = target_plot.get("name", "长春水产大市场")
-            target_mpi = target_plot.get("mpi", 88.5)
-            target_issues = "、".join(target_plot.get("issues", ["低效老旧物流", "占道经营阻断滨水视廊", "立面与历史文博区冲突"]))
-            target_consensus = (
-                "新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊，"
-                "容积率控制在1.4以内，建筑高度核心保护区严格限高9m、一般过渡区≤18m"
-            )
+            target_name = target_plot.get("name", f"{site_name}首选更新单元")
+            target_mpi = target_plot.get("mpi", 85.0)
+            target_issues_list = target_plot.get("issues", [])
+            target_issues = "、".join(target_issues_list) if target_issues_list else "空间功能低效闲置、微循环交通不畅、公共空间品质不足"
+            brief_text = str(design_brief or '')
+            target_consensus = brief_text[:200] if brief_text else "因地制宜空间织补、保留重要肌理与风貌特征、完善公共服务配套、严守法定控规红线"
 
             prompt = f"""你是一位资深城市设计总师，精通空间结构分析与功能分区策划。
 
-    基于以下前期分析数据，为**整个研究范围（伪满皇宫周边约160公顷）**推演总体空间结构。
+    基于以下前期分析数据，为**整个研究范围（{site_city}{site_name}，约{site_area}公顷）**推演总体空间结构。
 
-    【前期设计目标（Stage 06）】：{str(design_concept or '')[:2000] or '数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新'}
+    【前期设计目标（Stage 06）】：{str(design_concept or '')[:2000] or f'因地制宜·数智织补——AI赋能下的{site_city}{site_name}微更新规划设计'}
     【策略矩阵（Stage 07）】：{str(strategy or '')[:2000] or '政策引导→产业导入→经济盘活→空间更新的良性循环'}
     【设计纲要指导框架（Stage 07）】：{str(design_brief or '')[:2000] or '落实保护优先、空间织补、以点带面的总体要求'}
     【靶向更新地块与博弈共识】：重点靶向地块【{target_name}】（MPI更新潜力指数：{target_mpi}，现状短板：{target_issues}）。多主体博弈共识：{target_consensus}。
@@ -297,24 +302,24 @@ def render_page() -> None:
       对每个片区/功能区，详细说明：
       - 范围描述（结合具体地块名称和面积数据，重点展开【{target_name}】片区的功能升级）
       - 功能定位（主导功能 + 辅助功能，严格落实"{target_consensus}"）
-      - 开发强度建议（容积率、建筑密度、限高参考，严格落实容积率≤1.4、限高9-18m红线）
+      - 开发强度建议（容积率、建筑密度、限高参考，严格落实属地法定控规红线）
       - 与周边片区的空间关系和交通联系
 
     三、轴线与廊道体系
       - 主轴（功能、空间特征、沿线节点）
-      - 次轴与联络廊道（打通水产大市场至伊通河滨水视廊，缝合铁北与文博核心区）
-      - 绿色廊道与视线通廊（结合天际线保护要求）
+      - 次轴与联络廊道（打通【{target_name}】与周边慢行开放空间渗透走廊，缝合周边街区肌理）
+      - 绿色廊道与视线通廊（结合天际线与视廊保护要求）
 
     四、节点体系
       - 门户节点、文化节点、商业节点、社区节点等
-      - 每个节点的空间定位和功能配置（将【{target_name}】定位为滨水文旅示范触媒节点）
+      - 每个节点的空间定位和功能配置（将【{target_name}】定位为更新示范触媒节点）
 
     五、开发强度分区图则
       以表格形式列出各分区的容积率、建筑密度、绿地率、限高建议。
       | 分区名称 | 主导功能 | 容积率 | 建筑密度 | 绿地率 | 限高 |
 
     六、与前期策略的对应关系
-      说明空间结构如何回应 Stage 06/07 的目标和策略，以及如何贯彻老王（商户）、赵总（开发商）、李工（规划师）的三方博弈共识。
+      说明空间结构如何回应 Stage 06/07 的目标和策略，以及如何贯彻原住居民/使用者、投资开发运营商、规划监督责任人的三方因地制宜博弈共识。
 
     每一条论述都必须引用具体的空间数据（面积、比例、高度、POI 数量等），禁止空泛陈述。"""
 
@@ -574,7 +579,7 @@ def render_page() -> None:
             )
             prompt = f"""你是一位城市规划经济学家，精通城市更新中的用地结构优化。
 
-    研究范围（伪满皇宫周边约160公顷）的现状用地结构为：
+    研究范围（{site_city}{site_name}，约{site_area}公顷）的现状用地结构为：
     {get_landuse_summary()}
 
     规划师拟将用地结构调整为：

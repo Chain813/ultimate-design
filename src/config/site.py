@@ -53,8 +53,37 @@ _KEY_MAP = {
     "policies": "policies",
 }
 
+def _load_custom_site_json() -> dict:
+    """加载当前激活的自定义场地配置（session_state > config/custom_site.json）。"""
+    try:
+        import streamlit as st
+        cs = st.session_state.get("custom_site_context")
+        if cs and isinstance(cs, dict):
+            return cs
+    except Exception:
+        pass
+    custom_path = PROJECT_ROOT / "config" / "custom_site.json"
+    if custom_path.exists():
+        try:
+            import json
+            with open(custom_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if data and isinstance(data, dict):
+                    return data
+        except Exception:
+            pass
+    return {}
+
+
 def _get_merged(key: str, default=None):
-    """project.yaml 优先，否则回退到 config.yaml"""
+    """custom_site.json/session 优先，其次 project.yaml，最后回退到 config.yaml"""
+    # 0. 尝试从动态接入场地 custom_site 获取
+    cs = _load_custom_site_json()
+    if cs:
+        cs_val = _nested_get(cs, key)
+        if cs_val is not None:
+            return cs_val
+
     py = _load_project_yaml()
     if key in ("project", "institution", "author"):
         val = py.get(key)
@@ -115,16 +144,21 @@ def get_author_info() -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════
-# 场地信息（project.yaml > config.yaml > fallback）
+# 场地信息（custom_site > project.yaml > config.yaml > fallback）
 # ═══════════════════════════════════════════════════════════════
 
 def get_site_config() -> dict:
     """返回合并后的 site 配置"""
     site_cfg = load_global_config().get("site", {})
     py = _load_project_yaml().get("site", {})
+    cs = _load_custom_site_json()
     merged = dict(site_cfg)
     # project.yaml 的值覆盖 config.yaml
     for k, v in py.items():
+        if v not in (None, "", [], {}):
+            merged[k] = v
+    # custom_site 的值覆盖 project.yaml
+    for k, v in cs.items():
         if v not in (None, "", [], {}):
             merged[k] = v
     return merged

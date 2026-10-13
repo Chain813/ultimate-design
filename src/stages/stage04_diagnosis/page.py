@@ -266,7 +266,7 @@ def render_page() -> None:
 
     # 保证总线中存在靶向地块结构化数据（若缺失或为陈旧硬编码，则动态选取首选地块）
     current_target = load_stage_output("04", "target_plot", None)
-    if not current_target or current_target.get("name") == "长春水产大市场":
+    if not current_target:
         if active_plots:
             first_p = active_plots[0]
             current_target = select_target_plot_and_diagnose(
