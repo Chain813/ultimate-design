@@ -186,8 +186,8 @@ def project_gdf_to_metric(gdf: gpd.GeoDataFrame, target_crs: Optional[str] = Non
         except AttributeError:
             centroid = gdf.unary_union.centroid
             lon, lat = centroid.x, centroid.y
-        utm_zone = int((lon + 180) / 6) + 1
-        epsg_code = 32600 + utm_zone if lat >= 0 else 32700 + utm_zone
+        from src.engines.context_adaptive_engine import get_utm_epsg_for_coordinates
+        epsg_code = get_utm_epsg_for_coordinates(lon, lat)
         return gdf.to_crs(epsg=epsg_code)
 
     return gdf
@@ -495,4 +495,24 @@ def export_multi_layer_dxf(
         to_metric=to_metric,
         target_crs=target_crs,
     )
+
+
+def export_universal_dxf(
+    gdf_or_gdfs: Union[gpd.GeoDataFrame, Dict[str, gpd.GeoDataFrame]],
+    output_path: str,
+    target_crs: Optional[str] = None,
+) -> str:
+    """通用自适应 DXF 导出接口：自动识别坐标并映射至自适应 UTM 投影带，生成标准 AC1015 DXF。"""
+    exporter = VectorExporter()
+    if isinstance(gdf_or_gdfs, gpd.GeoDataFrame):
+        gdfs = {"01_BOUNDARY": gdf_or_gdfs}
+    else:
+        gdfs = gdf_or_gdfs
+    return exporter.export_to_dxf(
+        gdfs,
+        output_path,
+        to_metric=True,
+        target_crs=target_crs,
+    )
+
 

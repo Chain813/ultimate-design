@@ -25,6 +25,9 @@ def load_design_css():
 
 def render_page_banner(title, description, eyebrow=None, tags=None, metrics=None, image_url=None, graphic_html=None):
     """Render the standard page header with tags, metrics, and an optional decorative image."""
+    if st.session_state.get("_embedded_mode"):
+        render_section_intro(title=title, description=description, eyebrow=eyebrow)
+        return
     load_design_css()
     tags = tags or []
     metrics = metrics or []
@@ -590,3 +593,105 @@ def _tech_arrow_v3():
             </svg>
         </div>
     '''
+
+
+def render_workbench_subnav(
+    options: list[str],
+    option_to_param: dict[str, str],
+    param_to_option: dict[str, str],
+    default_sub: str,
+    widget_key: str = "wb_sub_nav",
+) -> str:
+    """
+    Apple HIG 风格水平分段单选器 (Segmented Control Radio)，
+    支持 Query Params (?sub=...) 双向同步、URL 预选与按需懒加载 (Lazy Rendering)。
+    """
+    load_design_css()
+    st.markdown("""<style>
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] {
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+        background: rgba(15, 23, 42, 0.45);
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(16px);
+        margin: 4px 0 20px 0;
+    }
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label {
+        background: transparent;
+        padding: 8px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        color: #94a3b8;
+        transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        border: 1px solid transparent;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        user-select: none;
+    }
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label:hover {
+        color: #f8fafc;
+        background: rgba(255, 255, 255, 0.06);
+    }
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label:has(input:checked),
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label[data-checked="true"] {
+        background: rgba(0, 113, 227, 0.25);
+        color: #38bdf8;
+        font-weight: 600;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        box-shadow: 0 2px 10px rgba(0, 113, 227, 0.3);
+    }
+    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label > div:first-child {
+        display: none !important;
+    }
+    </style>""", unsafe_allow_html=True)
+
+    query_sub = st.query_params.get("sub", "")
+    if isinstance(query_sub, list):
+        query_sub = query_sub[0] if query_sub else ""
+    query_sub = str(query_sub).strip()
+
+    last_query_key = f"_{widget_key}_last_query"
+
+    if query_sub:
+        matched_option = None
+        q_lower = query_sub.lower()
+        if q_lower in param_to_option:
+            matched_option = param_to_option[q_lower]
+        else:
+            for opt in options:
+                if q_lower in opt.lower() or opt.lower() in q_lower:
+                    matched_option = opt
+                    break
+
+        if matched_option and st.session_state.get(last_query_key) != query_sub:
+            st.session_state[widget_key] = matched_option
+            st.session_state[last_query_key] = query_sub
+
+    # 获取初始选中索引
+    default_opt = param_to_option.get(default_sub, options[0])
+    current_val = st.session_state.get(widget_key, default_opt)
+    init_idx = options.index(current_val) if current_val in options else 0
+
+    selected = st.radio(
+        label=f"{widget_key}_sub_nav",
+        options=options,
+        index=init_idx,
+        horizontal=True,
+        label_visibility="collapsed",
+        key=widget_key,
+    )
+
+    curr_sub_param = option_to_param.get(selected, default_sub)
+    if st.query_params.get("sub") != curr_sub_param:
+        st.query_params["sub"] = curr_sub_param
+    st.session_state[last_query_key] = curr_sub_param
+
+    return selected
+

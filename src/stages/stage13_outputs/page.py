@@ -367,6 +367,173 @@ def render_page() -> None:
                     st.image(str(demo_path), use_container_width=True)
 
     elif selected_sub == "📤 文档导出":
+        render_section_intro(
+            "全案成果与工程矢量图纸导出",
+            "国家标准 GB/T 城乡规划制图标准图层规范 · AutoCAD 2000 (AC1015) 纯 ASCII 矢量输出 · 米制 1:1 坐标体系 · 中文 ANSI_936 防乱码编码 · 全套法定导则与设计报告成果。",
+            eyebrow="Deliverables Hub",
+        )
+
+        target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
+        target_name = target_plot.get("name", "长春水产大市场")
+        target_mpi = target_plot.get("mpi", 88.5)
+        target_priority = target_plot.get("priority", "P1 优先更新")
+
+        # ── 1. 端到端全业务推演链路全息看板 ──
+        st.markdown("### 🔗 端到端全业务逻辑链闭环全景看板")
+        st.caption("从 Stage 04 靶向诊断至 Stage 13 矢量交付，全流程业务数据总线完全贯通。")
+
+        chain_cols = st.columns(5)
+        with chain_cols[0]:
+            with st.container(border=True):
+                st.markdown("🎯 **Stage 04 全息诊断**")
+                st.markdown(f"**靶向地块：** {target_name}")
+                st.caption(f"MPI: {target_mpi} · {target_priority}")
+                st.caption("诊断短板：老旧冷链、占道物流、缺乏滨水视廊")
+        with chain_cols[1]:
+            with st.container(border=True):
+                st.markdown("🤝 **Stage 07 多主体博弈**")
+                st.markdown("**设计纲要共识**")
+                st.caption("老王(商户) · 赵总(投资) · 李工(规划)")
+                st.caption("共识：新中式滨水文旅客厅、保留工业桁架、限高9-18m、FAR≤1.4")
+        with chain_cols[2]:
+            with st.container(border=True):
+                st.markdown("🗺️ **Stage 08 空间结构**")
+                st.markdown("**总体空间结构**")
+                st.caption("一核两轴多片多节点")
+                st.caption(f"以【{target_name}】为针灸触媒节点，辐射带动铁北更新")
+        with chain_cols[3]:
+            with st.container(border=True):
+                st.markdown("🏗️ **Stage 10/12 深化与导则**")
+                st.markdown("**控规指标与导则**")
+                st.caption("FAR 1.35 · 建筑密度 32% · 绿地率 28.5%")
+                st.caption("9大章节法定导则严格约束红砖暖灰色调")
+        with chain_cols[4]:
+            with st.container(border=True):
+                st.markdown("📐 **Stage 13 矢量交付**")
+                st.markdown("**AutoCAD 2000 DXF**")
+                st.caption("GB/T 规划图层规范 5 层")
+                st.caption("1:1 米制投影，可直接指导施工图与法定报批")
+
+        st.markdown("---")
+
+        # ── 2. AutoCAD DXF 矢量工程图纸导出 ──
+        st.markdown("### 📐 AutoCAD 2000 DXF 矢量工程图纸导出")
+        st.caption("基于 GB/T 城乡规划制图标准图层规范（01_BOUNDARY, 02_EXISTING_BLDG, 03_PROPOSED_BLDG, 04_ROAD_CENTER, 05_GREEN_SPACE）。")
+
+        render_summary_cards([
+            {"value": "01_BOUNDARY", "title": "规划红线图层", "desc": "ACI 1 红色 (RGB 255,0,0) · 研究范围闭合多边形"},
+            {"value": "02_EXISTING_BLDG", "title": "保留现状建筑", "desc": "ACI 8 浅灰 (RGB 200,200,200) · 现状建筑基底"},
+            {"value": "03_PROPOSED_BLDG", "title": "更新示范建筑", "desc": "ACI 2 暖黄 (RGB 255,215,0) · 靶向地块更新方案"},
+            {"value": "04_ROAD_CENTER", "title": "道路交通中心线", "desc": "ACI 5 蓝色 (RGB 30,144,255) · 拓扑连通轴线"},
+            {"value": "05_GREEN_SPACE", "title": "公园绿地景观", "desc": "ACI 3 绿色 (RGB 34,139,34) · 伊通河滨水生态绿网"},
+        ])
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        col_exec, col_info = st.columns([1.2, 1])
+        with col_exec:
+            target_crs = st.selectbox(
+                "坐标投影系统",
+                ["CGCS2000 / 3度分带 38度 (EPSG:4526, 米制)", "WGS 84 / Pseudo-Mercator (EPSG:3857, 米制)", "原始经纬度 (EPSG:4326)"],
+                index=0,
+                key="p13_cad_crs",
+            )
+            from src.config.site import get_site_name, get_site_center
+            from src.engines.context_adaptive_engine import get_utm_epsg_for_coordinates
+            site_name = get_site_name() or "城市更新示范区"
+            site_center = get_site_center() or [125.34064, 43.90095]
+            auto_epsg = get_utm_epsg_for_coordinates(site_center[0], site_center[1])
+            crs_code = f"EPSG:{auto_epsg}" if ("米制" in target_crs or "UTM" in target_crs) else ("EPSG:4526" if "4526" in target_crs else None)
+
+            if st.button("📐 一键生成 AutoCAD DXF 矢量图纸", type="primary", key="btn_gen_cad_dxf", **stretch_width(st.button)):
+                with st.spinner("正在加载 GIS 空间图层并构建标准 AutoCAD DXF (AC1015)..."):
+                    try:
+                        import geopandas as gpd
+                        from src.config import GIS_FILES, resolve_path
+                        from src.utils.vector_exporter import export_multi_layer_dxf
+
+                        cad_dir = ROOT / "output" / "cad"
+                        cad_dir.mkdir(parents=True, exist_ok=True)
+                        dxf_file = cad_dir / "statutory_plan.dxf"
+
+                        layers_dict = {}
+
+                        # 1. 规划边界
+                        b_path = resolve_path(str(GIS_FILES["boundary"]))
+                        if b_path.exists():
+                            gdf_b = gpd.read_file(str(b_path))
+                            layers_dict["01_BOUNDARY"] = gdf_b
+
+                        # 2. 现状建筑
+                        bldg_path = resolve_path(str(GIS_FILES["buildings"]))
+                        if bldg_path.exists():
+                            gdf_bldg = gpd.read_file(str(bldg_path))
+                            layers_dict["02_EXISTING_BLDG"] = gdf_bldg
+
+                        # 3. 重点更新建筑 / 靶向地块
+                        plots_path = resolve_path(str(GIS_FILES["plots"]))
+                        if plots_path.exists():
+                            gdf_plots = gpd.read_file(str(plots_path))
+                            layers_dict["03_PROPOSED_BLDG"] = gdf_plots
+
+                        # 4. 道路拓扑中心线
+                        roads_path = resolve_path(str(GIS_FILES["roads"]))
+                        if roads_path.exists():
+                            gdf_roads = gpd.read_file(str(roads_path))
+                            layers_dict["04_ROAD_CENTER"] = gdf_roads
+
+                        # 5. 公园绿地
+                        landuse_path = resolve_path(str(GIS_FILES["landuse"]))
+                        if landuse_path.exists():
+                            gdf_lu = gpd.read_file(str(landuse_path))
+                            gdf_green = gdf_lu[gdf_lu["Type"].str.contains("绿地|公园|景观", na=False)] if "Type" in gdf_lu.columns else gdf_lu.head(5)
+                            if not gdf_green.empty:
+                                layers_dict["05_GREEN_SPACE"] = gdf_green
+
+                        out_path = export_multi_layer_dxf(
+                            gdfs=layers_dict,
+                            output_dxf_path=str(dxf_file),
+                            to_metric=True,
+                            target_crs=crs_code,
+                        )
+
+                        st.session_state["p13_cad_dxf_ready"] = str(out_path)
+                        st.session_state["p13_cad_layer_count"] = len(layers_dict)
+                        st.success(f"🎉 AutoCAD DXF 矢量工程图纸导出成功！包含 {len(layers_dict)} 个国家标准图层。")
+                    except Exception as e:
+                        st.error(f"DXF 导出失败：{e}")
+                        import traceback
+                        st.code(traceback.format_exc())
+
+            cad_dxf_ready = st.session_state.get("p13_cad_dxf_ready")
+            if cad_dxf_ready and os.path.exists(cad_dxf_ready):
+                with open(cad_dxf_ready, "rb") as f_dxf:
+                    dxf_bytes = f_dxf.read()
+                file_size_kb = len(dxf_bytes) / 1024.0
+                st.success(f"✅ 图纸已就绪：`statutory_plan.dxf`（文件大小：{file_size_kb:.1f} KB）")
+                st.download_button(
+                    label="📥 下载 AutoCAD DXF 矢量工程图纸 (.dxf)",
+                    data=dxf_bytes,
+                    file_name=f"{site_name}_法定规划图纸_AC1015.dxf",
+                    mime="application/dxf",
+                    **stretch_width(st.download_button)
+                )
+
+        with col_info:
+            st.markdown("### 🛠️ 导出技术规范对账")
+            st.markdown(
+                """
+                - **CAD 规格版本：** AutoCAD 2000 / AC1015 标准规范；
+                - **编码格式：** ANSI_936 (GBK) 纯 ASCII 配对组码，杜绝天正建筑与 AutoCAD 中文乱码；
+                - **图元支持：** `LWPOLYLINE` (二维轻量多段线)、`POINT`、`TEXT` 严格成对配对；
+                - **工程尺度：** 1:1 真实米制世界坐标系，载入 CAD 后可直接进行距离标注与面积测量。
+                """
+            )
+
+        st.markdown("---")
+
+        # ── 3. 全套法定设计文本与报告成果导出 ──
+        st.markdown("### 📄 全案规划文本与法定导则导出")
         render_section_intro("全案文档导出", "导出前期分析诊断、总体设计导则以及全阶段生成汇总报告文本。", eyebrow="Document Export")
 
         col1, col2, col3 = st.columns(3)

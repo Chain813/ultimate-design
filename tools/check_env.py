@@ -89,7 +89,9 @@ def main():
 
     missing_files = []
     for f in critical_files:
-        if not (project_root / f).exists():
+        target = project_root / f
+        legacy_target = project_root / "src" / "legacy_pages" / Path(f).name
+        if not target.exists() and not legacy_target.exists():
             missing_files.append(f)
 
     if missing_files:

@@ -144,18 +144,57 @@ def render_page() -> None:
             eyebrow="Multi-Round Negotiation",
         )
 
+        # ── 动态因地制宜配置与上游 Stage 04 靶向地块读取 ──
+        from src.config.site import get_site_config
+        from src.engines.context_adaptive_engine import generate_adaptive_personas, infer_plot_diagnostics
+
+        site_cfg = get_site_config()
+        site_city = site_cfg.get("city", "当地") or "当地"
+
+        target_plot_data = load_stage_output("04", "target_plot") or load_stage_output("05", "target_plot")
+        if not target_plot_data or not isinstance(target_plot_data, dict):
+            s_name = site_cfg.get("name", "更新示范地块") or "更新示范地块"
+            target_plot_data = {
+                "name": s_name,
+                "land_use": "综合更新用地",
+                "mpi": 85.0,
+                "priority": "P1 优先更新",
+                "issues": ["空间功能混杂低效", "公共服务设施短缺", "微气候与人居环境待改善"],
+                "far_max": 1.4,
+                "height_max": 18.0,
+                "density_max": 35.0,
+                "green_min": 25.0,
+            }
+
+        target_name = target_plot_data.get("name", "更新示范地块")
+        target_landuse = target_plot_data.get("land_use", target_plot_data.get("type", "综合更新用地"))
+        target_mpi = target_plot_data.get("mpi", 85.0)
+        target_priority = target_plot_data.get("priority", "P1 优先更新")
+        raw_issues = target_plot_data.get("issues", [])
+        if not raw_issues:
+            raw_issues = infer_plot_diagnostics(target_plot_data, site_cfg)
+        target_issues = "、".join(raw_issues) if isinstance(raw_issues, list) else str(raw_issues)
+
+        far_max = target_plot_data.get("far_max", 1.4)
+        height_max = target_plot_data.get("height_max", 18.0)
+        density_max = target_plot_data.get("density_max", 35.0)
+        green_min = target_plot_data.get("green_min", 25.0)
+        target_area = target_plot_data.get("area_ha", target_plot_data.get("area", 2.5))
+
+        # 动态自生式生成该地块的 3 组本土利益相关方
+        adaptive_personas = generate_adaptive_personas(
+            site_context=site_cfg,
+            target_plot=target_plot_data,
+            regulatory_limits={"far_max": far_max, "height_max": height_max, "density_max": density_max, "green_min": green_min}
+        )
+
         # ── 头像/配色/富文本渲染定义 ──
         _avatar_dir = Path("static/avatars")
-        _avatar_map = {
-            "🏠 居民代表（老王）": _avatar_dir / "avatar_laowang.png",
-            "💰 文旅运营商（赵总）": _avatar_dir / "avatar_zhaozong.png",
-            "📐 规划师（李工）": _avatar_dir / "avatar_ligong.png",
-        }
-        _color_map = {
-            "🏠 居民代表（老王）": ("#f59e0b", "#fffbeb", "#b45309"),
-            "💰 文旅运营商（赵总）": ("#10b981", "#ecfdf5", "#065f46"),
-            "📐 规划师（李工）": ("#6366f1", "#eef2ff", "#3730a3"),
-        }
+        _avatar_map = {p["display_name"]: _avatar_dir / p["avatar_file"] for p in adaptive_personas}
+        _color_map = {p["display_name"]: (p["color"], p["bg_color"], p["text_color"]) for p in adaptive_personas}
+        for p in adaptive_personas:
+            _color_map[p["role_title"]] = (p["color"], p["bg_color"], p["text_color"])
+            _avatar_map[p["role_title"]] = _avatar_dir / p["avatar_file"]
 
         def _load_avatar_b64(path: Path) -> str:
             if path.exists():
@@ -257,27 +296,56 @@ def render_page() -> None:
             )
             st.markdown(html_content, unsafe_allow_html=True)
 
-        # 加载上游数据
         s3 = st.session_state.get(
             "stage3_output",
             load_stage_output("06", SK.DESIGN_CONCEPT, ""),
         )
 
-        # 显示空间数据约束
-        with st.expander("📊 本轮推演的空间数据约束", expanded=False):
-            st.text(get_landuse_summary())
-            st.text(get_key_plots_summary())
+        # ── 因地制宜博弈参数面板 ──
+        with st.container(border=True):
+            st.markdown("#### 🎯 因地制宜博弈参数面板")
+            c_meta1, c_meta2, c_meta3, c_meta4 = st.columns(4)
+            c_meta1.metric("当前靶向地块", target_name, help="Stage 04 定量诊断锁定靶向地块")
+            c_meta2.metric("用地属性与规模", f"{target_landuse} ({target_area} ha)")
+            c_meta3.metric("综合潜力评分 (MPI)", f"{target_mpi}", delta=target_priority)
+            c_meta4.metric("法定控规红线", f"FAR ≤ {far_max} | 限高 ≤ {height_max}m")
+            
+            st.caption(f"🚨 **现状核心痛点**：{target_issues}")
+            st.caption(f"📏 **法定控制红线**：容积率≤{far_max}，建筑限高≤{height_max}m，建筑密度≤{density_max}%，绿地率≥{green_min}%")
 
-        # 策划议题：基于上游目标自动生成
+            st.markdown("##### 👥 三主体角色配置与谈判筹码（根据地块属性现场自生）")
+            c_r1, c_r2, c_r3 = st.columns(3)
+            for col, p in zip([c_r1, c_r2, c_r3], adaptive_personas):
+                with col:
+                    st.markdown(
+                        f"""
+                        <div style="background:{p['bg_color']}; border-left:4px solid {p['color']}; padding:10px 14px; border-radius:6px; margin-bottom:6px;">
+                            <strong style="color:{p['text_color']}; font-size:14px;">{p['display_name']}</strong>
+                            <div style="font-size:12px; color:#475569; margin-top:4px;"><b>身份：</b>{p['identity']}</div>
+                            <div style="font-size:12px; color:#334155; margin-top:4px;"><b>切身诉求：</b>{p['core_demands'][:90]}...</div>
+                            <div style="font-size:11px; color:#64748b; margin-top:4px;"><b>谈判筹码：</b>{p['bargaining_chips']}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
+
+        # 策划议题：严格锚定靶向地块
         default_proposal = ""
         if s3:
             default_proposal = s3[:300]
+        else:
+            default_proposal = (
+                f"围绕 Stage 04 锁定的靶向更新地块【{target_name}】（{site_city}，用地性质：{target_landuse}，MPI综合评分 {target_mpi}，紧迫度 {target_priority}，核心痛点：{target_issues}），"
+                f"在严格遵守法定控规红线（容积率≤{far_max}、建筑限高≤{height_max}m、绿地率≥{green_min}%）的前提下，"
+                f"三主体展开因地制宜自治博弈协商：\n"
+                f"1. {adaptive_personas[0]['role_title']}重点争取改善{target_issues}，配建普惠公共服务与适老无障碍活动空间；\n"
+                f"2. {adaptive_personas[1]['role_title']}主张通过功能复合与活力商业业态保障投资回报与长效运营造血；\n"
+                f"3. {adaptive_personas[2]['role_title']}坚守规划法定红线与视廊风貌，构建'政策引导→产业造血→经济反哺社区→空间针灸微更新'的最优共识解。"
+            )
         proposal = st.text_area(
-            "✍️ 策划议题（基于 Stage 06 设计目标自动填充，可修改）",
-            value=default_proposal if default_proposal else
-                  "如何利用伪满皇宫文化IP与区位优势，通过政策引导、产业导入和空间更新的协同，"
-                  "盘活整个研究范围的经济活力，并使其辐射至全区乃至全城？",
-            height=120,
+            "✍️ 策划议题（已严格锚定 Stage 04 靶向地块与因地制宜博弈焦点，可修改）",
+            value=default_proposal,
+            height=130,
         )
 
         if enable_policy and proposal:
@@ -416,12 +484,13 @@ def render_page() -> None:
                 """
                 components.html(_SCROLL_JS, height=0, scrolling=False)
 
-                # 跨阶段诊断数据安全加载 (打通 Stage 04/05 定量诊断)
+                # 跨阶段诊断数据安全加载 (打通 Stage 04/05 定量诊断与靶向地块)
                 diag_report = load_stage_output("05", SK.DIAGNOSIS_REPORT) or load_stage_output("04", SK.DIAGNOSIS_REPORT, "")
-                top_plot = load_stage_output("05", SK.TOP_PLOT, "") or load_stage_output("04", SK.TOP_PLOT, "伪满皇宫文旅协调区")
-                top_score = load_stage_output("05", SK.TOP_SCORE, 0) or load_stage_output("04", SK.TOP_SCORE, 88.5)
-                
-                diag_summary = f"优先更新靶向地块: {top_plot} (MPI综合潜力得分: {top_score}); "
+                diag_summary = (
+                    f"优先更新靶向地块: 【{target_name}】 (MPI综合潜力得分: {target_mpi}, 紧迫度: {target_priority});\n"
+                    f"用地性质: {target_landuse} (占地约 {target_area} ha);\n"
+                    f"地块现状核心痛点: {target_issues}"
+                )
                 if diag_report:
                     diag_summary += f"\n前期量化诊断核心问题: {diag_report[:600]}..."
 
@@ -430,55 +499,25 @@ def render_page() -> None:
                     f"\n\n【现状定量诊断与更新靶向 (Stage 04/05)】：\n{diag_summary}"
                     f"\n\n【研究范围空间数据约束】：\n{spatial_ctx[:2500]}"
                     f"\n\n【上游设计目标 (Stage 06)】：\n{s3[:1500] if s3 else '暂无'}"
-                    f"\n\n【红线】：容积率≤1.4，核心区限高≤9m，一般区限高≤18m，遵守《长春市历史文化名城保护条例》。"
+                    f"\n\n【法定控规红线】：容积率≤{far_max}，建筑限高≤{height_max}m，建筑密度≤{density_max}%，绿地率≥{green_min}%。"
                 )
                 cot = ("\n\n请用【思考过程】展示推理，【正式回复】给出建设性方案，"
                        "末行<SCORE:数值>打分(0-100)表示对方案的支持度。"
-                       "注意：三方立场是相辅相成的，共同推动良性循环。")
+                       "注意：三方立场围绕靶向地块各抒诉求、相辅相成，共同推动良性循环。")
 
                 roles = {
-                    "🏠 居民代表（老王）": {
-                        "system": (
-                            "你是老王，在伪满皇宫周边住了30年的社区代表。"
-                            "你支持改造，期盼更好的菜市场、社区医院和绿化。"
-                            "你关注政策如何让改造惠及原住民、改善老年人生活。"
-                            "你的立场是与开发商和规划师协同合作，共同推动社区更新。"
-                            + shared_context + cot
-                        ),
-                        "color": "#f59e0b",
-                    },
-                    "💰 文旅运营商（赵总）": {
-                        "system": (
-                            "你是赵总，专注文旅商业运营的企业家。"
-                            "你看好伪满皇宫的文化IP和区位价值。"
-                            "你想导入文创品牌、特色餐饮和精品民宿。"
-                            "你理解容积率1.4的红线约束，但你认为通过文旅品牌溢价可以实现投资回报。"
-                            "你的核心观点是'政策引导+产业导入→经济盘活→反哺公共空间'的良性循环。"
-                            "你与居民和规划师相辅相成，共同构建可持续运营模式。"
-                            + shared_context + cot
-                        ),
-                        "color": "#10b981",
-                    },
-                    "📐 规划师（李工）": {
-                        "system": (
-                            "你是李工，注册规划师，精通城市更新法规和空间分析。"
-                            "你基于空间数据进行科学研判，关注天际线视廊保护和历史风貌。"
-                            "你认为通过精准的政策工具（如历史风貌保护红利、文旅税收优惠）"
-                            "可以引导开发商和居民实现共赢。"
-                            "你的任务是将各方诉求整合为有法定依据、有空间落位的策略。"
-                            "你与居民和运营商相辅相成，确保方案既合规又可行。"
-                            + shared_context + cot
-                        ),
-                        "color": "#6366f1",
-                    },
+                    p["display_name"]: {
+                        "system": p["system_prompt"] + shared_context + cot,
+                        "color": p["color"],
+                        "role_title": p["role_title"],
+                    }
+                    for p in adaptive_personas
                 }
+
                 # 动态满意度计算逻辑
                 def calculate_dynamic_satisfaction(memory_text: str):
-                    scores = {
-                        "👥 居民代表（老王）": 50.0,
-                        "💰 文旅运营商（赵总）": 50.0,
-                        "📐 规划师（李工）": 50.0
-                    }
+                    p_names = [p["display_name"] for p in adaptive_personas]
+                    scores = {k: 50.0 for k in p_names}
                     # 尝试通过 LLM 语义评分
                     try:
                         from src.engines.llm_engine import call_llm_engine
@@ -488,9 +527,9 @@ def render_page() -> None:
                         分析以下三个主体关于城市更新协商的对话文本，从语义上评估三方角色对当前方案的满意度得分（0-100分）。
                         
                         各方利益关注点：
-                        - 👥 居民代表：绿化、配套、生活便利、社区医疗、菜场养老等民生品质。
-                        - 💰 文旅运营商：投资回报、文旅商业品牌、容积率可行性、经济收益及活化运营。
-                        - 📐 规划师：历史文化名城保护、限高合规、视廊控制、指标红线合规。
+                        - {p_names[0]}：{adaptive_personas[0]['core_demands']}
+                        - {p_names[1]}：{adaptive_personas[1]['core_demands']}
+                        - {p_names[2]}：{adaptive_personas[2]['core_demands']}
                         
                         协商对话文本：
                         {memory_text}
@@ -498,9 +537,9 @@ def render_page() -> None:
                         请严格评估三方当前的态度是否在朝良性合作发展，计算出合理的分数。初始分为 50 分。每条满足或推进该角色利益的合理方案加分，损害利益的方案扣分。
                         请仅返回 JSON 格式结果，不要包含任何 markdown 块或多余文字：
                         {{
-                            "👥 居民代表（老王）": 分数(数字),
-                            "💰 文旅运营商（赵总）": 分数(数字),
-                            "📐 规划师（李工）": 分数(数字)
+                            "{p_names[0]}": 分数(数字),
+                            "{p_names[1]}": 分数(数字),
+                            "{p_names[2]}": 分数(数字)
                         }}
                         """
                         resp = call_llm_engine(prompt=prompt, system_prompt="你是一位客观的城市规划博弈审计员。", model="deepseek-v4-flash")
@@ -516,19 +555,16 @@ def render_page() -> None:
                         pass
 
                     # 降级退回到关键词匹配
-                    community_keywords = ["绿", "公园", "配套", "社区", "医院", "菜市", "养老", "口袋", "老年", "居民", "人行道", "活动", "活动中心", "休憩"]
-                    developer_keywords = ["容积率", "收益", "文旅", "商业", "民宿", "运营", "产业", "投资", "回报", "品牌", "特色餐饮", "盈利", "客流", "商铺"]
-                    planner_keywords = ["历史保护", "紫线", "限高", "合规", "风貌", "条例", "保护区", "天际线", "视廊", "数据", "红线", "导则", "退让", "绿地率"]
-                    
-                    for kw in community_keywords:
-                        if kw in memory_text:
-                            scores["👥 居民代表（老王）"] += 7.0
-                    for kw in developer_keywords:
-                        if kw in memory_text:
-                            scores["💰 文旅运营商（赵总）"] += 7.0
-                    for kw in planner_keywords:
-                        if kw in memory_text:
-                            scores["📐 规划师（李工）"] += 7.0
+                    kw_groups = [
+                        ["绿", "公园", "配套", "社区", "医院", "生活", "便民", "养老", "口袋", "老龄", "居民", "人行道", "活动", "休憩", "共享", "适老"],
+                        ["容积率", "收益", "商业", "运营", "产业", "投资", "回报", "品牌", "活力", "盈利", "客流", "商铺", "活化", "复合", "招商"],
+                        ["规划", "控规", "限高", "合规", "风貌", "条例", "视廊", "数据", "红线", "导则", "退让", "绿地率", "密度", "指标", "法定"],
+                    ]
+                    for idx, kws in enumerate(kw_groups):
+                        k_name = p_names[idx]
+                        for kw in kws:
+                            if kw in memory_text:
+                                scores[k_name] += 6.0
                             
                     for k in scores:
                         scores[k] = min(100.0, max(0.0, scores[k]))
@@ -725,8 +761,8 @@ def render_page() -> None:
                 stream = call_llm_engine_stream(
                     prompt=sp,
                     system_prompt=(
-                        "资深城市更新策划师。策略须在容积率≤1.4、"
-                        "核心区限高≤9m约束下，构建政策-经济-空间的良性循环。"
+                        f"资深城市更新策划师。策略须在【{target_name}】容积率≤{far_max}、"
+                        f"建筑限高≤{height_max}m等法定红线约束下，构建政策-经济-空间的良性循环。"
                     ),
                     model=model_tag,
                 )
@@ -734,7 +770,22 @@ def render_page() -> None:
                 if isinstance(summary, str):
                     st.session_state["stage4_output"] = summary
                     save_stage_output("07", SK.STRATEGY_MATRIX, summary)
+                    save_stage_output("07", "target_plot", target_plot_data)
                     register_report_output(label="策略共识矩阵", content=summary, stage_code="07", key="strategy_matrix")
+
+                    # 自动根据动态博弈结果与真实地块参数合成结构化《设计纲要》
+                    try:
+                        from src.workflow.design_context import build_design_context, synthesize_design_brief
+                        b_ctx = build_design_context()
+                        b_ctx.strategy_matrix = summary
+                        b_ctx.negotiation_result = full_log_content
+                        brief_content = synthesize_design_brief(b_ctx)
+                        if brief_content:
+                            save_stage_output("07", SK.DESIGN_BRIEF, brief_content)
+                            register_report_output(label="设计纲要", content=brief_content, stage_code="07", key="design_brief")
+                    except Exception as e:
+                        logging.warning("Auto synthesize design brief error: %s", e)
+
                     # 自动重新生成重放网页与示意图成果
                     try:
                         from scripts.generate_negotiation_infographic import main as generate_infographic
@@ -867,7 +918,7 @@ def render_page() -> None:
                     prompt = f"""请提炼本研究的设计依据，撰写约500字的文本（将用于压缩为200字正文）。
 
     设计依据应涵盖：
-    1. 上位规划依据（长春市总体规划、历史文化名城保护规划等）
+    1. 上位规划依据（当地总体规划、国土空间规划、更新专项规划等）
     2. 政策法规依据（历史文化保护条例、城市更新政策等）
     3. 案例分析依据（国内外历史街区更新案例经验）
 

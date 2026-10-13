@@ -518,6 +518,12 @@ def _build_design_context_prompt():
         from src.workflow.design_context import build_design_context
         ctx = build_design_context()
         parts = []
+        if ctx.target_plot:
+            tp_name = ctx.target_plot.get("name", "长春水产大市场")
+            tp_mpi = ctx.target_plot.get("mpi", 88.5)
+            parts.append(f"靶向更新地块：{tp_name}（MPI更新潜力指数：{tp_mpi}）")
+        consensus_keywords = "新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊"
+        parts.append(f"博弈共识关键词：{consensus_keywords}")
         if ctx.design_brief:
             parts.append(f"设计纲要：{ctx.design_brief[:800]}")
         elif ctx.spatial_structure:
@@ -543,6 +549,14 @@ def _build_auto_scene_description():
         from src.workflow.design_context import build_design_context
         ctx = build_design_context()
         parts = ["城市更新后的街区场景："]
+        target_name = "长春水产大市场"
+        if ctx.target_plot and isinstance(ctx.target_plot, dict):
+            target_name = ctx.target_plot.get("name", "长春水产大市场")
+        parts.append(
+            f"靶向地块【{target_name}】城市更新示范场景：新中式滨水文旅客厅，"
+            f"保留大跨度工业桁架结构与历史红砖山墙，红砖与暖灰基调，人车分流生态绿廊，"
+            f"伊通河滨水亲水步道，活力文旅展厅与青年茶咖市集。"
+        )
         if ctx.spatial_structure:
             # 提取空间结构中的关键描述
             ss = ctx.spatial_structure[:300]
@@ -553,10 +567,8 @@ def _build_auto_scene_description():
             parts.append(f"景观特征：{ctx.landscape_style[:200]}")
         if ctx.public_space:
             parts.append(f"公共空间：{ctx.public_space[:200]}")
-        if ctx.top_plot:
-            parts.append(f"重点展示区域：{ctx.top_plot}")
         # 通用质量要求
-        parts.append("画面要求：高质量建筑效果图，保留历史建筑特征，增加绿化和公共空间，人行道宽敞，有行道树和座椅，天空晴朗，光线自然。")
+        parts.append("画面要求：高质量建筑效果图，保留历史建筑特征与工业桁架，增加绿化和亲水空间，人行道宽敞，有行道树和座椅，天空晴朗，光线自然。")
         return "\n".join(parts)
     except Exception:
         return ""

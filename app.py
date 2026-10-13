@@ -33,11 +33,9 @@ from src.utils.service_check import check_engine_status
 
 def get_page_route(page_path):
     """将文件路径转换为 Streamlit 路由 URL"""
-    name = os.path.basename(page_path)
-    if "_" in name and name.split("_")[0].isdigit():
-        name = name.split("_", 1)[1]
-    name = name.replace(".py", "")
+    name = os.path.basename(page_path).replace(".py", "")
     return name
+
 
 # 项目配置检查 — 首次启动时引导填写
 from src.ui.project_config_banner import render_project_config_banner
@@ -93,7 +91,8 @@ WORKBENCHES = [
                 "title": "数据准备与任务解读",
                 "desc": "上传原始数据、数据质量校验、锁定研究范围与任务目标。",
                 "image": "assets/03_digital_twin.png",
-                "path": "pages/00_数据准备与任务解读.py",
+                "path": "pages/01_全息空间诊断与数据沙盘.py",
+                "url": "/01_全息空间诊断与数据沙盘?sub=assets",
                 "icon": "📦",
             },
             {
@@ -101,7 +100,8 @@ WORKBENCHES = [
                 "title": "资料收集与现场调研",
                 "desc": "语义法规萃取、空间资产挂载、街景绿视率与开阔度复核。",
                 "image": "assets/04_urban_diagnosis.png",
-                "path": "pages/02_资料收集与现场调研.py",
+                "path": "pages/01_全息空间诊断与数据沙盘.py",
+                "url": "/01_全息空间诊断与数据沙盘?sub=assets",
                 "icon": "📷",
             },
             {
@@ -109,7 +109,8 @@ WORKBENCHES = [
                 "title": "现状分析与问题诊断",
                 "desc": "3D 全息底座分析、MPI 潜力评估、地块多维雷达与 AI 报告。",
                 "image": "assets/04_urban_diagnosis.png",
-                "path": "pages/04_现状分析与问题诊断.py",
+                "path": "pages/01_全息空间诊断与数据沙盘.py",
+                "url": "/01_全息空间诊断与数据沙盘?sub=diagnosis",
                 "icon": "🏗️",
             },
             {
@@ -117,7 +118,8 @@ WORKBENCHES = [
                 "title": "全屏空间数据大屏",
                 "desc": "全域指标监控、动态空间沙盘与交互式决策大屏。",
                 "image": "assets/03_digital_twin.png",
-                "path": "pages/14_数据大屏.py",
+                "path": "pages/01_全息空间诊断与数据沙盘.py",
+                "url": "/01_全息空间诊断与数据沙盘?sub=datav",
                 "icon": "📊",
             },
         ],
@@ -147,7 +149,8 @@ WORKBENCHES = [
                 "title": "目标定位与愿景体系",
                 "desc": "设计愿景理念提炼、目标体系构建与开题标杆案例借鉴。",
                 "image": "assets/06_llm_consultation_v2.png",
-                "path": "pages/06_目标定位.py",
+                "path": "pages/02_多主体博弈与空间AIGC工坊.py",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=strategy",
                 "icon": "🎯",
             },
             {
@@ -155,7 +158,8 @@ WORKBENCHES = [
                 "title": "设计策略与博弈协商",
                 "desc": "问题-策略矩阵对应推演、三主体协商共识与动态雷达。",
                 "image": "assets/06_llm_consultation_v2.png",
-                "path": "pages/07_设计策略.py",
+                "path": "pages/02_多主体博弈与空间AIGC工坊.py",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=strategy",
                 "icon": "🤝",
             },
             {
@@ -163,7 +167,8 @@ WORKBENCHES = [
                 "title": "总体城市设计",
                 "desc": "空间结构推演、用地优化沙盘与概念总平面生形入口。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/08_总体城市设计.py",
+                "path": "pages/02_多主体博弈与空间AIGC工坊.py",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=master_plan",
                 "icon": "🗺️",
             },
             {
@@ -171,7 +176,8 @@ WORKBENCHES = [
                 "title": "重点地段深化设计",
                 "desc": "核心节点诊断、控规反推与节点 Before/After 对比推演。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/10_重点地段深化.py",
+                "path": "pages/02_多主体博弈与空间AIGC工坊.py",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
                 "icon": "🔍",
             },
             {
@@ -179,7 +185,8 @@ WORKBENCHES = [
                 "title": "空间 AIGC 设计推演",
                 "desc": "总平面图/全景透视/鸟瞰体块 ControlNet 空间意向生形。",
                 "image": "assets/06_llm_consultation_v2.png",
-                "path": "pages/15_AIGC设计推演.py",
+                "path": "pages/02_多主体博弈与空间AIGC工坊.py",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
                 "icon": "✨",
             },
         ],
@@ -209,7 +216,8 @@ WORKBENCHES = [
                 "title": "专项系统设计",
                 "desc": "交通系统、慢行网络、公共空间系统与建筑形态风貌深化。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/09_专项系统设计.py",
+                "path": "pages/03_数字图则与工程交付枢纽.py",
+                "url": "/03_数字图则与工程交付枢纽?sub=systems",
                 "icon": "🔧",
             },
             {
@@ -217,7 +225,8 @@ WORKBENCHES = [
                 "title": "实施路径与时序",
                 "desc": "六类更新模式划分、三期推进甘特图与留改拆总图。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/11_实施路径.py",
+                "path": "pages/03_数字图则与工程交付枢纽.py",
+                "url": "/03_数字图则与工程交付枢纽?sub=timing",
                 "icon": "📅",
             },
             {
@@ -225,7 +234,8 @@ WORKBENCHES = [
                 "title": "城市设计数字导则",
                 "desc": "地块控制图则、风貌条文管控与法规说明书 DOCX 导出。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/12_城市设计导则.py",
+                "path": "pages/03_数字图则与工程交付枢纽.py",
+                "url": "/03_数字图则与工程交付枢纽?sub=guideline",
                 "icon": "📜",
             },
             {
@@ -233,7 +243,8 @@ WORKBENCHES = [
                 "title": "成果表达与工程交付",
                 "desc": "工业级标准 DXF 导出、A3 成果画廊与图纸提示词助手。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/13_成果表达.py",
+                "path": "pages/03_数字图则与工程交付枢纽.py",
+                "url": "/03_数字图则与工程交付枢纽?sub=delivery",
                 "icon": "🎁",
             },
             {
@@ -241,7 +252,8 @@ WORKBENCHES = [
                 "title": "智能体 Skill 规范手册",
                 "desc": "规划绘图技能规范、多主体元指令定义与 Skill 导出。",
                 "image": "assets/05_design_inference.png",
-                "path": "pages/16_制图与设计智能体Skill手册.py",
+                "path": "pages/03_数字图则与工程交付枢纽.py",
+                "url": "/03_数字图则与工程交付枢纽?sub=delivery",
                 "icon": "📖",
             },
         ],
@@ -395,7 +407,7 @@ for wb in WORKBENCHES:
     ])
 
     steps_html = "".join([
-        f'<a href="/{get_page_route(mod["path"])}" target="_self" class="wb-step-link">'
+        f'<a href="{mod.get("url") or ("/" + get_page_route(mod["path"]))}" target="_self" class="wb-step-link">'
         f'<div class="wb-step-left">'
         f'<span class="wb-step-icon">{mod["icon"]}</span>'
         f'<span class="wb-step-title">{mod["code"]} {mod["title"]}</span>'

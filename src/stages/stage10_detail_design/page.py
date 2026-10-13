@@ -128,12 +128,25 @@ def render_page() -> None:
         st.stop()
 
     diags_sorted = sorted(diags, key=lambda x: x["mpi_score"], reverse=True)
+    plot_names = [d["name"] for d in diags_sorted]
 
-    # 地块选择器 —— 在所有模块中共用
+    # 读取靶向地块并自动匹配优先默认索引
+    target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
+    target_name = target_plot.get("name", "")
+    target_alias = target_plot.get("alias", "")
+    default_idx = 0
+    if target_name:
+        for idx, p_name in enumerate(plot_names):
+            if p_name == target_name or (target_alias and p_name == target_alias) or target_name in p_name or p_name in target_name:
+                default_idx = idx
+                break
+
+    # 地块选择器 —— 在所有模块中共用（默认锚定 Stage 04 靶向地块）
     selected_plot = st.selectbox(
         "选择重点地块",
-        [d["name"] for d in diags_sorted],
-        format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})",
+        plot_names,
+        index=default_idx,
+        format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})" + (" [🎯 靶向更新地块]" if (target_name and (n == target_name or n in target_name or target_name in n)) else ""),
         key="p10_plot_selector",
     )
     d = next(dd for dd in diags_sorted if dd["name"] == selected_plot)
@@ -394,12 +407,15 @@ def render_page() -> None:
         public_space = load_stage_output("09", SK.PUBLIC_SPACE, "")
         building_form = load_stage_output("09", SK.BUILDING_FORM, "")
         landscape = load_stage_output("09", SK.LANDSCAPE_STYLE, "")
+        design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
+        strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
         plot_metrics = load_stage_output("10", f"{SK.PLOT_METRICS}_{selected_plot}", "")
         plot_personas = load_stage_output("10", f"{SK.PLOT_PERSONAS}_{selected_plot}", "")
         plot_ctx = get_plot_context(selected_plot)
 
         with st.expander("📊 前序数据汇总", expanded=False):
             data_status = {
+                "Stage 07 设计纲要与博弈共识": "✅" if design_brief else "❌",
                 "Stage 08 空间结构": "✅" if spatial_structure else "❌",
                 "Stage 09 交通系统": "✅" if traffic else "❌",
                 "Stage 09 公共空间": "✅" if public_space else "❌",
@@ -423,7 +439,8 @@ def render_page() -> None:
             # 组装上下文（截取以控制 token 用量）
             upstream = f"""
     【地块诊断】：{plot_ctx}
-    【控规指标】：{plot_metrics[:1000] if plot_metrics else '容积率≤1.4，核心区限高≤9m'}
+    【设计纲要与博弈共识（Stage 07）】：{design_brief[:1000] if design_brief else '基于多主体博弈共识：落实针灸式更新、保留特色空间肌理、营造连续慢行生态通廊、严格遵守法定控规红线'}
+    【控规指标】：{plot_metrics[:1000] if plot_metrics else '容积率≤1.4，限高≤18m，建筑密度≤35%，绿地率≥25%'}
     【人群画像】：{plot_personas[:1500] if plot_personas else '暂无'}
     【空间结构】：{spatial_structure[:800] if spatial_structure else '暂无'}
     【交通策略】：{traffic[:500] if traffic else '暂无'}
@@ -442,18 +459,18 @@ def render_page() -> None:
 
     一、地块定位与角色
       - 在全域空间结构中的角色定位
-      - 核心设计理念（一句话 + 300 字阐释）
-      - 与地块名称所蕴含的功能定位的呼应
+      - 核心设计理念（贯彻 Stage 07 博弈共识，兼顾属地文化传承与活力再造）
+      - 与地块名称所蕴含的功能定位呼应，平衡群众民生诉求、产业运营商收益与规划法定底线
 
     二、空间布局方案
-      - 功能分区（生活区、商业区、公共活动区、绿化区等）
-      - 主要出入口与内部流线
-      - 建筑布局原则（围合式/散点式/沿街式）
+      - 功能分区（核心功能活力区、特色风貌展示区、便民服务配套区、生态景观慢行带）
+      - 主要出入口与人车分流内部流线
+      - 建筑布局与微气候设计原则（考虑日照间距、夏季导风与冬季防寒）
 
     三、功能业态策划
       - 主导业态与支撑业态配比
-      - 首层商业业态引导（基于人群画像需求）
-      - 文化功能植入策略（结合伪满皇宫文化IP）
+      - 首层商业与公共服务业态引导（基于人群画像需求）
+      - 文化功能与产业微集群植入策略
 
     四、交通组织
       - 车行/步行/自行车的交通分流
@@ -715,7 +732,7 @@ def render_page() -> None:
                         unsafe_allow_html=True,
                     )
                     st.image(after_img, use_container_width=True)
-                    st.caption("✨ 更新成效：历史风貌转译、底层骑楼活力商业、植入口袋绿化 (预期 GVI: 36.5%)。")
+                    st.caption("✨ 更新成效：历史风貌转译、新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊 (预期 GVI: 36.5%)。")
 
             else:  # 单视窗快速切换
                 toggle_choice = st.segmented_control("视角切换：", ["🔴 改造前现状 (Before)", "🟢 AIGC更新方案 (After)"], default="🟢 AIGC更新方案 (After)")

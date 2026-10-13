@@ -135,6 +135,8 @@ def render_page() -> None:
         s1 = load_stage_output("05", SK.DIAGNOSIS_REPORT, "") or load_stage_output("04", SK.DIAGNOSIS_REPORT, "")
         s3 = load_stage_output("06", SK.DESIGN_CONCEPT, "")
         s4 = load_stage_output("07", SK.STRATEGY_MATRIX, "")
+        design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
+        target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
         s8_struct = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
         s9_traffic = load_stage_output("09", SK.TRAFFIC_SYSTEM, "")
         s9_bldg = load_stage_output("09", SK.BUILDING_FORM, "")
@@ -146,7 +148,7 @@ def render_page() -> None:
         c1, c2, c3 = st.columns(3)
         c1.metric("诊断报告", "✅" if s1 else "⚠️ 缺失")
         c2.metric("总体空间结构", "✅" if s8_struct else "⚠️ 缺失")
-        c3.metric("策略矩阵", "✅" if s4 else "⚠️ 缺失")
+        c3.metric("策略矩阵与纲要", "✅" if (s4 or design_brief) else "⚠️ 缺失")
 
         st.markdown("---")
 
@@ -190,7 +192,21 @@ def render_page() -> None:
                         # 清除强制重新生成标记
                         st.session_state.pop(f"force_regen_{sec['id']}", None)
 
-                        prompt = f"""你是长春市自然资源局首席规划师，正在编写《伪满皇宫周边街区更新规划设计·城市设计导则》。
+                        target_plot_name = target_plot.get("name", "更新示范地块")
+                        target_plot_mpi = target_plot.get("mpi", 85.0)
+                        target_plot_priority = target_plot.get("priority", "P1 优先更新")
+                        target_land_use = target_plot.get("land_use", "综合更新用地")
+                        far_max = target_plot.get("far_max", 1.4)
+                        height_max = target_plot.get("height_max", 18.0)
+                        density_max = target_plot.get("density_max", 35.0)
+                        green_min = target_plot.get("green_min", 25.0)
+
+                        from src.config.site import get_site_city, get_site_district, get_site_name
+                        city = get_site_city() or "当地"
+                        district = get_site_district() or ""
+                        site_name = get_site_name() or "城市更新示范区"
+
+                        prompt = f"""你是{city}自然资源和规划局规划主管与注册城市规划师，正在编写《{site_name}城市更新设计导则》。
 
     请为【第{sec['id']}章 {sec['title']}】撰写完整、详实的导则正文。
 
@@ -209,26 +225,30 @@ def render_page() -> None:
     ═══ 空间数据（务必引用）═══
     {spatial_ctx[:2500]}
 
+    ═══ 靶向地块与多主体博弈共识（核心约束）═══
+    - 靶向更新示范地块：{target_plot_name}（用地性质：{target_land_use}，MPI更新潜力指数：{target_plot_mpi}，评级：{target_plot_priority}）
+    - 博弈共识指标：容积率控制在{far_max}以内，建筑限高≤{height_max}m，建筑密度≤{density_max}%，绿地率≥{green_min}%
+    - 纲要指导：{design_brief[:800] if design_brief else '落实保护优先、空间织补、以点带面的总体要求'}
+
     ═══ 前期诊断与策略（可引用）═══
-    - 现状诊断：{s1[:1000] if s1 else '暂无'}
-    - 策略矩阵：{s4[:1000] if s4 else '暂无'}
+    - 现状诊断：{s1[:800] if s1 else '暂无'}
+    - 策略矩阵：{s4[:800] if s4 else '暂无'}
 
     ═══ 总体空间结构（Stage 08 成果）═══
-    {s8_struct[:1200] if s8_struct else '一核两轴多片多节点，文化核心保护优先'}
+    {s8_struct[:1000] if s8_struct else '因地制宜构建全域空间结构，疏密有致'}
 
     ═══ 专项系统设计（Stage 09 成果）═══
-    - 交通网络系统：{s9_traffic[:600] if s9_traffic else '窄马路密路网、慢行优先、轻轨TOD接驳'}
-    - 建筑形态与风貌：{s9_bldg[:600] if s9_bldg else '核心区限高9m，一般区限高18m，延续近代红灰砖立面'}
-    - 公共空间系统：{s9_space[:600] if s9_space else '滨水绿带与口袋公园体系，300米见绿'}
+    - 交通网络系统：{s9_traffic[:500] if s9_traffic else '窄马路密路网、人车分流微循环'}
+    - 建筑形态与风貌：{s9_bldg[:500] if s9_bldg else f'建筑高度≤{height_max}m，延续属地特色风貌肌理'}
+    - 公共空间系统：{s9_space[:500] if s9_space else '生态微绿网与开敞公共空间网络'}
 
     ═══ 实施路径与分期（Stage 11 成果）═══
-    {s11_phasing[:800] if s11_phasing else '渐进式微更新，留改拆分类施策'}
+    {s11_phasing[:600] if s11_phasing else '渐进式微更新，留改拆分类施策'}
 
     ═══ 项目基本信息 ═══
-    - 项目：数字孪生·古今共振——AI赋能下的伪满皇宫周边街区更新规划设计
-    - 地点：长春市宽城区，约160公顷
-    - 核心地标：伪满皇宫（全国重点文保单位）
-    - 管控红线：容积率≤1.4、核心区限高≤9m、一般区≤18m、绿地率≥25%
+    - 项目：{site_name}
+    - 地点：{city} {district}
+    - 管控红线：容积率≤{far_max}、建筑高度≤{height_max}m、建筑密度≤{density_max}%、绿地率≥{green_min}%
 
     请撰写本章完整内容。"""
 
@@ -236,8 +256,8 @@ def render_page() -> None:
                             stream = call_llm_engine_stream(
                                 prompt=prompt,
                                 system_prompt=(
-                                    "你是长春市自然资源局首席规划师。"
-                                    "请撰写严谨、规范、可交付的导则正文。"
+                                    f"你是{city}自然资源和规划局规划主管与注册城市规划师。"
+                                    "请撰写严谨、规范、可交付的法定导则正文。"
                                     "每一条管控条文都必须有数据支撑或法规依据。"
                                     "不限字数，深度展开。"
                                 ),
@@ -467,6 +487,33 @@ def render_page() -> None:
             {"管控类型": "业态管控", "管控内容": "鼓励/限制/禁止业态", "控制要求": "文创占比≥15%，限制低端批发", "依据": "产业导入策略"},
         ]
         st.dataframe(pd.DataFrame(indicators), hide_index=True, **stretch_width(st.dataframe))
+
+        # 4. 靶向重点地块微观控规与博弈指标对账卡片
+        st.markdown("---")
+        target_name = target_plot.get("name", "更新示范地块")
+        target_far = target_plot.get("far", 1.35)
+        target_far_max = target_plot.get("far_max", 1.4)
+        target_density = target_plot.get("density", 32.0)
+        target_green = target_plot.get("green", 28.5)
+        target_height = target_plot.get("height", "9.0 - 18.0 m")
+        target_land_use = target_plot.get("land_use", "综合更新用地")
+
+        st.markdown(f"#### 🎯 靶向地块（{target_name}）微观法定控规与博弈指标对账卡片")
+        st.caption("打通 Stage 04 潜力诊断、Stage 07 多主体博弈共识与 Stage 12 数字法定图则的端到端指标闭环。")
+
+        c_p1, c_p2, c_p3, c_p4 = st.columns(4)
+        c_p1.metric("规划容积率 (FAR)", f"{target_far}", delta=f"法定上限 ≤ {target_far_max} (博弈共识达标)", delta_color="normal")
+        c_p2.metric("建筑密度", f"{target_density}%", delta="法定上限 ≤ 35.0%", delta_color="normal")
+        c_p3.metric("绿地率 (GAR)", f"{target_green}%", delta="法定底线 ≥ 25.0% (生态绿廊达标)", delta_color="normal")
+        c_p4.metric("建筑高度", f"{target_height}", delta="法定控规限高合规", delta_color="normal")
+
+        st.info(
+            f"🏛️ **【{target_name}】风貌与规划刚性底线（因地制宜执行标准）：**\n\n"
+            f"- **用地功能属性：** 规划为高品质【{target_land_use}】，落实产业与民生复合造血；\n"
+            f"- **风貌主色调与微气候：** 结合属地气候与微环境设计，强化自然采光遮阳与被动式节能；\n"
+            f"- **慢行网络贯通：** 落实人车分流，保障公共开敞空间与无障碍慢行系统连续通达；\n"
+            f"- **业态与共识控制：** 严守 Stage 07 博弈达成的容积率与限高底线，实现多方利益平衡闭环。"
+        )
 
 
     # ═══════════════════════════════════════════

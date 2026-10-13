@@ -50,9 +50,22 @@ def _cache_data(*args, **kwargs):
 _st_mock.cache_resource = _cache_resource
 _st_mock.cache_data = _cache_data
 _st_mock.session_state = {}
+_st_mock.query_params = {}
 _st_mock.set_page_config = MagicMock()
 _st_mock.markdown = MagicMock()
-_st_mock.columns = MagicMock(return_value=[MagicMock()])
+def _mock_columns(spec=2, *args, **kwargs):
+    if isinstance(spec, (list, tuple)):
+        count = len(spec)
+    elif isinstance(spec, int):
+        count = spec
+    else:
+        count = 2
+    return [MagicMock() for _ in range(max(1, count))]
+
+_st_mock.columns = MagicMock(side_effect=_mock_columns)
+_st_mock.tabs = MagicMock(side_effect=lambda tabs, *args, **kwargs: [MagicMock() for _ in range(len(tabs))])
+_st_mock.file_uploader = MagicMock(return_value=None)
+_st_mock.button = MagicMock(return_value=False)
 _st_mock.expander = MagicMock(return_value=MagicMock())
 _st_mock.radio = MagicMock(return_value="mock")
 _st_mock.checkbox = MagicMock(return_value=True)

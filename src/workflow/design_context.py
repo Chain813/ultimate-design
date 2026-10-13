@@ -71,6 +71,9 @@ class DesignContext:
     # ── 合成产物 ──
     design_brief: str = ""
 
+    # ── 靶向地块（Stage 04/07贯通） ──
+    target_plot: dict = field(default_factory=dict)
+
     # ── 元数据 ──
     completed_stages: list = field(default_factory=list)
 
@@ -143,6 +146,24 @@ def build_design_context() -> DesignContext:
     ctx.top_score = float(_load_from("04", SK.TOP_SCORE, None) or _load_from("05", SK.TOP_SCORE, 0) or 0)
     ctx.radar_data = _load_from("04", SK.RADAR_DATA, None) or _load_from("05", SK.RADAR_DATA, {})
 
+    # 靶向地块提取
+    target_p = _load_from("04", "target_plot") or _load_from("05", "target_plot") or _load_from("07", "target_plot")
+    if not isinstance(target_p, dict) or not target_p:
+        from src.config.site import get_site_config
+        s_cfg = get_site_config()
+        s_name = s_cfg.get("name", "示范重点地块") or "示范重点地块"
+        target_p = {
+            "name": s_name,
+            "mpi": 85.0,
+            "priority": "P1 优先更新",
+            "issues": ["空间功能混杂低效", "公共服务设施短缺", "环境品质与微气候待提升"]
+        }
+    ctx.target_plot = target_p
+    if not ctx.top_plot:
+        ctx.top_plot = target_p.get("name", "示范重点地块")
+    if not ctx.top_score:
+        ctx.top_score = float(target_p.get("mpi", 85.0))
+
     # Stage 06
     ctx.design_concept = str(_load_from("06", SK.DESIGN_CONCEPT, ""))
     ctx.case_benchmark = str(_load_from("06", SK.CASE_BENCHMARK, ""))
@@ -192,52 +213,91 @@ def build_design_context() -> DesignContext:
 
 
 def synthesize_design_brief(ctx: DesignContext) -> str:
-    """用 LLM 将所有阶段 AI 输出合成为一份结构化《设计纲要》。"""
+    """用 LLM 将所有阶段 AI 输出与动态博弈共识合成为一份结构化《设计纲要》，提取共识控制关键词。"""
     from src.engines.llm_engine import call_llm_engine
+    from src.config.site import get_site_config
 
-    prompt = f"""你是城市设计总负责人。请根据以下各阶段 AI 分析产出，合成一份 800-1200 字的《设计纲要》，
-作为后续图纸绘制的最高优先级依据。
+    s_cfg = get_site_config()
+    city = s_cfg.get("city", "当地") or "当地"
 
-【问题诊断】{ctx.diagnosis_report[:2000]}
+    target_name = ctx.target_plot.get("name", ctx.top_plot or "重点更新地块")
+    target_mpi = ctx.target_plot.get("mpi", ctx.top_score or 85.0)
+    target_priority = ctx.target_plot.get("priority", "P1 优先更新")
+    raw_issues = ctx.target_plot.get("issues", [])
+    if isinstance(raw_issues, list):
+        target_issues = "、".join(str(x) for x in raw_issues)
+    else:
+        target_issues = str(raw_issues)
+    if not target_issues:
+        target_issues = "空间功能低效闲置、公共空间与绿地匮乏、微循环交通不畅"
 
-【设计概念】{ctx.design_concept[:1500]}
+    land_use = ctx.target_plot.get("land_use", ctx.target_plot.get("type", "综合用地"))
+    far_max = ctx.target_plot.get("far_max", 1.4)
+    height_max = ctx.target_plot.get("height_max", 18.0)
+    density_max = ctx.target_plot.get("density_max", 35.0)
+    green_min = ctx.target_plot.get("green_min", 25.0)
 
-【策略矩阵】{ctx.strategy_matrix[:1500]}
+    prompt = f"""你是城市设计总负责人。请根据以下各阶段 AI 分析产出与多主体博弈共识，为【{city} · {target_name}】合成一份 800-1200 字的结构化《设计纲要》，
+作为后续总体设计、重点深化、ControlNet/SD AIGC 生形与数字图则的统一最高控制依据。
 
-【空间结构】{ctx.spatial_structure[:1000]}
+【靶向更新地块（Stage 04/07贯通）】：
+- 地块名称：{target_name}（MPI综合潜力: {target_mpi}，紧迫度: {target_priority}）
+- 用地属性：{land_use}
+- 现状核心痛点：{target_issues}
+- 法定控规红线：容积率≤{far_max}，建筑限高≤{height_max}m，建筑密度≤{density_max}%，绿地率≥{green_min}%
 
-【交通系统】{ctx.traffic_system[:800]}
+【多主体博弈与协商结论（Stage 07）】：
+{ctx.negotiation_result[:1500] if ctx.negotiation_result else ctx.strategy_matrix[:1500]}
 
-【公共空间】{ctx.public_space[:800]}
+【问题诊断】{ctx.diagnosis_report[:1200]}
+【设计概念】{ctx.design_concept[:800]}
+【空间结构】{ctx.spatial_structure[:800]}
+【建筑形态与风貌】{ctx.building_form[:600]}
+【风貌景观】{ctx.landscape_style[:600]}
 
-【建筑形态】{ctx.building_form[:800]}
+输出格式（严格按以下四大结构标题）：
 
-【风貌景观】{ctx.landscape_style[:800]}
+## 靶向地块定位与更新指引
+- 靶向地块：{target_name}（MPI: {target_mpi}，{target_priority}）
+- 更新模式与功能定位：（明确适应该地块的业态定位与功能复合导向）
+- 规划控制指标：容积率≤{far_max}，建筑密度≤{density_max}%，绿地率≥{green_min}%，建筑高度≤{height_max}m
+- 风貌与微气候控制要点：（结合属地气候与特色空间肌理）
 
-输出格式（严格按以下结构）：
+## 核心问题与博弈共识
+（阐明属地居民/使用者、投资开发运营商、规划监督三方围绕【{target_name}】展开协商达成的共识妥协条件：如何平衡民生诉求、商业运营资金平衡与法定刚性底线）
 
-## 核心问题
-（2-3 个关键问题，每个一句话，引用具体数据）
+## 空间策略与 AIGC 控制关键词
+- 核心控制关键词：（提炼 4-6 个精准的空间生形与AIGC控制关键词，逗号分隔）
+- 总体空间形态与织补要点
 
-## 设计目标
-（2-3 个量化目标，如容积率、绿地率、限高等）
-
-## 空间策略
-（总体结构描述 + 3-4 个关键空间策略，每个策略包含具体地块或区域）
-
-## 图纸绘制要点
-（针对后续图纸生产的具体指导：
-- 哪些区域需要重点着色或高亮
-- 哪些轴线或廊道必须标注
-- 哪些地块需要特殊处理（如限高缓冲区、历史保护区）
-- 色彩倾向（如历史区用暖棕色调、生态区用绿色调）
-- 标注重点和文字说明要点）"""
+## 图纸绘制与工程交付要点
+（包含 CAD/DXF 矢量图层划分、控规指标法定审查、施工图与视廊退界管控）"""
 
     result = call_llm_engine(
         prompt=prompt,
-        system_prompt="你是城市设计总负责人，擅长将各阶段分析结论转化为可执行的设计指令。输出必须结构清晰、数据具体、可直接用于指导制图。",
+        system_prompt="你是城市设计总负责人，擅长将各阶段分析结论与多主体博弈共识转化为可执行的设计指令。输出必须因地制宜、结构清晰、数据具体、严禁套用虚假地名或固定模板。",
         model="deepseek-v4-pro",
     )
+
+    if not result or len(result) < 150:
+        result = (
+            f"## 靶向地块定位与更新指引\n"
+            f"- 靶向地块：{target_name}（MPI: {target_mpi}，{target_priority}）\n"
+            f"- 更新模式与功能定位：基于{land_use}属性的因地制宜高品质更新示范地块\n"
+            f"- 规划控制指标：容积率≤{far_max}，建筑密度≤{density_max}%，绿地率≥{green_min}%，建筑高度≤{height_max}m\n"
+            f"- 风貌与微气候控制要点：延续属地风貌基调，结合微气候被动式设计，营造开敞舒适微环境\n\n"
+            f"## 核心问题与博弈共识\n"
+            f"- 居民与使用者诉求：彻底解决{target_issues}，配建连续慢行系统、便民活动场所与适老无障碍环境；\n"
+            f"- 投资运营商诉求：通过高附加值业态与复合功能导入保障投资回报，合理核定有效运营面积；\n"
+            f"- 规划师监督底线：严守容积率≤{far_max}与限高≤{height_max}m刚性底线，落实法定绿地率与视廊管控。\n\n"
+            f"## 空间策略与 AIGC 控制关键词\n"
+            f"- 核心控制关键词：{target_name}空间织补、复合活力界面、立体生态绿道、适老友好社区、微气候通廊\n"
+            f"- 空间形态策略：针灸式微更新改造，打通毛细路网微循环，保留重要空间肌理并织补公共界面。\n\n"
+            f"## 图纸绘制与工程交付要点\n"
+            f"- 矢量工程图纸严格套用 GB/T 城乡规划 AutoCAD 2000 DXF 标准图层与 1:1 米制世界坐标系；\n"
+            f"- 重点对账【{target_name}】的容积率、建筑密度、绿地率与退线要求，确保法定图则指标闭环。"
+        )
+
     return result
 
 

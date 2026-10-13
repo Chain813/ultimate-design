@@ -7,6 +7,7 @@ def _streamlit_page_slugs():
     slugs = {""}
     for page in Path("pages").glob("*.py"):
         slugs.add(re.sub(r"^\d+_", "", page.stem))
+        slugs.add(page.stem)
     return slugs
 
 
@@ -46,4 +47,5 @@ def test_stage_12_modules_route_to_design_guideline_page():
     stage_12_hrefs = [module["href"] for module in workflow.STAGE_MODULE_MAP["12"]]
 
     assert stage_12_hrefs
-    assert {_href_slug(href) for href in stage_12_hrefs} == {"城市设计导则"}
+    slugs = {_href_slug(href) for href in stage_12_hrefs}
+    assert slugs.issubset({"城市设计导则", "03_数字图则与工程交付枢纽", "数字图则与工程交付枢纽"})

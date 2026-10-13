@@ -28,30 +28,30 @@ def _build_nav_tree():
         if board["key"] == "early":
             seen_titles["数据大屏"] = {
                 "title": "全屏空间数据大屏",
-                "href": "/数据大屏",
-                "modules": [{"title": "全屏监控看板", "href": "/数据大屏"}],
+                "href": "/01_全息空间诊断与数据沙盘?sub=datav",
+                "modules": [{"title": "全屏监控看板", "href": "/01_全息空间诊断与数据沙盘?sub=datav"}],
             }
         elif board["key"] == "middle":
             seen_titles["AIGC设计推演"] = {
                 "title": "空间 AIGC 推演工坊",
-                "href": "/AIGC设计推演",
+                "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
                 "modules": [
-                    {"title": "概念总平面图生形", "href": "/AIGC设计推演?sub=概念总平面图生形"},
-                    {"title": "街区全景透视推演", "href": "/AIGC设计推演?sub=街区全景透视推演"},
-                    {"title": "轴测鸟瞰空间体块模拟", "href": "/AIGC设计推演?sub=轴测鸟瞰空间体块模拟"},
+                    {"title": "概念总平面图生形", "href": "/02_多主体博弈与空间AIGC工坊?sub=master_plan"},
+                    {"title": "街区全景透视推演", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc"},
+                    {"title": "轴测鸟瞰空间体块模拟", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc"},
                 ],
             }
         elif board["key"] == "late":
             seen_titles["智能体Skill手册"] = {
                 "title": "制图智能体 Skill 手册",
-                "href": "/制图与设计智能体Skill手册",
+                "href": "/03_数字图则与工程交付枢纽?sub=delivery",
                 "modules": [
-                    {"title": "制图技能规范", "href": "/制图与设计智能体Skill手册"},
-                    {"title": "多主体博弈沙盘", "href": "/制图与设计智能体Skill手册"},
+                    {"title": "制图技能规范", "href": "/03_数字图则与工程交付枢纽?sub=delivery"},
+                    {"title": "多主体博弈沙盘", "href": "/03_数字图则与工程交付枢纽?sub=delivery"},
                 ],
             }
 
-        tree.append({"label": board["title"], "groups": list(seen_titles.values())})
+        tree.append({"label": board["title"], "path": board.get("path", ""), "groups": list(seen_titles.values())})
     return tree
 
 
@@ -120,6 +120,8 @@ _BOARD_COLORS = {
 
 def render_top_nav():
     """Apple HIG 风格固定顶部导航栏 — 纯 CSS 悬浮展开"""
+    if st.session_state.get("_embedded_mode"):
+        return
     load_global_css()
     nav_tree = _build_nav_tree()
     apple_css = _load_apple_nav_css()
@@ -248,35 +250,35 @@ def render_auto_tour():
         const TOUR_STAGES = [
             {url:"/", label:"🏠 主页 - 项目概览", duration:45,
              desc:"展示项目名称、研究范围、四大核心能力卡片、算力HUD、3D数字孪生底座、模块入口"},
-            {url:"/数据准备与任务解读?sub=数据上传中心", label:"📦 00 数据准备", duration:30,
+            {url:"/01_全息空间诊断与数据沙盘?sub=assets", label:"📦 00 数据准备", duration:30,
              desc:"展示数据上传中心，说明16类空间/文本/街景数据的接入"},
-            {url:"/资料收集与现场调研?sub=语义萃取引擎", label:"📋 01-02 资料收集", duration:25,
+            {url:"/01_全息空间诊断与数据沙盘?sub=assets", label:"📋 01-02 资料收集", duration:25,
              desc:"展示语义萃取引擎，PDF/Markdown解析和空间数据资产管理"},
-            {url:"/资料收集与现场调研?sub=现场调研", label:"📷 03 现场调研", duration:25,
+            {url:"/01_全息空间诊断与数据沙盘?sub=assets", label:"📷 03 现场调研", duration:25,
              desc:"展示街景样本库，四方向全景照片和绿视率指标"},
-            {url:"/现状分析与问题诊断?sub=3D现状全息底座", label:"🏗️ 04 现状分析", duration:50,
+            {url:"/01_全息空间诊断与数据沙盘?sub=diagnosis", label:"🏗️ 04 现状分析", duration:50,
              desc:"3D全息底座：建筑图层、POI热力、街景品质柱体、天际线；操作：缓慢旋转/缩放地图"},
-            {url:"/现状分析与问题诊断?sub=MPI更新潜力评估", label:"📊 05 问题诊断", duration:40,
+            {url:"/01_全息空间诊断与数据沙盘?sub=diagnosis", label:"📊 05 问题诊断", duration:40,
              desc:"AHP权重滑块、MPI潜力排行、地块雷达图、一键导出诊断报告"},
-            {url:"/目标定位", label:"🎯 06 目标定位", duration:25,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=strategy", label:"🎯 06 目标定位", duration:25,
              desc:"设计理念提炼、愿景目标体系、案例对标借鉴"},
-            {url:"/设计策略?sub=阶段四：问题-策略对应", label:"🤝 07 设计策略", duration:50,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=strategy", label:"🤝 07 设计策略", duration:50,
              desc:"三主体博弈推演：居民/开发商/规划师对话、共识雷达、策略矩阵"},
-            {url:"/总体城市设计", label:"🗺️ 08 总体城市设计", duration:40,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=master_plan", label:"🗺️ 08 总体城市设计", duration:40,
              desc:"空间结构推演、用地优化沙盘、AIGC总平面图生形"},
-            {url:"/专项系统设计", label:"🔧 09 专项系统设计", duration:35,
+            {url:"/03_数字图则与工程交付枢纽?sub=systems", label:"🔧 09 专项系统设计", duration:35,
              desc:"交通/TOD/生活圈/天际线/风貌景观四大专项"},
-            {url:"/重点地段深化", label:"🔍 10 重点地段深化", duration:45,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=aigc", label:"🔍 10 重点地段深化", duration:45,
              desc:"5个重点地块：诊断雷达、控规反推、人群画像、Before/After推演"},
-            {url:"/实施路径", label:"📅 11 实施路径", duration:25,
+            {url:"/03_数字图则与工程交付枢纽?sub=timing", label:"📅 11 实施路径", duration:25,
              desc:"六种更新模式、三期时序甘特图、留改拆总图"},
-            {url:"/城市设计导则", label:"📐 12 城市设计导则", duration:25,
+            {url:"/03_数字图则与工程交付枢纽?sub=guideline", label:"📐 12 城市设计导则", duration:25,
              desc:"RAG政策检索、控制图则、Word说明书导出"},
-            {url:"/成果表达", label:"🎁 13 成果表达", duration:30,
+            {url:"/03_数字图则与工程交付枢纽?sub=delivery", label:"🎁 13 成果表达", duration:30,
              desc:"A3图册成果画廊、图纸提示词助手、核心指标汇总"},
-            {url:"/AIGC设计推演?sub=概念总平面图生形", label:"🎨 15 AIGC推演", duration:35,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=aigc", label:"🎨 15 AIGC推演", duration:35,
              desc:"ControlNet空间约束、SD渲染管线、Before/After对比"},
-            {url:"/制图与设计智能体Skill手册", label:"📖 16 智能体手册", duration:20,
+            {url:"/03_数字图则与工程交付枢纽?sub=delivery", label:"📖 16 智能体手册", duration:20,
              desc:"规划绘图Skill元指令定义与导出"}
         ];
 
@@ -466,6 +468,8 @@ def render_auto_tour():
 
 
 def render_engine_status_alert():
+    if st.session_state.get("_embedded_mode"):
+        return
     status = check_engine_status()
     if not status.sd or not status.gemma:
         alerts = []
@@ -527,7 +531,7 @@ def render_settings_panel():
 def render_logic_chain_stepper(current_stage_code: str):
     """
     全流程业务逻辑主链条推进组件 (Business Logic Chain Stepper)
-    以强视觉引导与一键流转，将 14 个离散页面编排为一条环环相扣的业务主线：
+    以强视觉引导与一键流转，将 14 个离散阶段编排为一条环环相扣的业务主线：
     【工作台 1：现状诊断】->【工作台 2：博弈与AIGC工坊】->【工作台 3：数字图则与工程交付】
     """
     stepper_config = {
@@ -536,7 +540,9 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_title": "🎯 现状空间体检完成，优先更新靶向地块已锁定",
             "summary_desc": "通过 3D 全息底座与 AHP-MPI 多维潜力评价，已精准量化空间潜力、社会需求与环境紧迫度，识别出高潜力更新单元（如伪满皇宫文旅协调区/水产市场）。",
             "next_wb_title": "工作台 2：多主体博弈与空间 AIGC 工坊",
-            "next_page_path": "pages/07_设计策略.py",
+            "next_page_path": "pages/02_多主体博弈与空间AIGC工坊.py",
+            "next_query_params": {"sub": "strategy"},
+            "next_url": "/02_多主体博弈与空间AIGC工坊?sub=strategy",
             "next_label": "将诊断成果带入【工作台 2】多主体博弈与设计策略 (Stage 07)",
             "next_desc": "将上述空间病灶与靶向地块指标注入多主体博弈引擎，平衡利益并生成《设计纲要》。",
         },
@@ -545,7 +551,9 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_title": "🤝 多主体博弈共识达成，空间《设计纲要》已固化",
             "summary_desc": "居民、运营商与规划师完成三轮博弈，拆改留比例与开发强度平衡方案已存入数据总线，形成指导空间生形的刚性设计纲要。",
             "next_wb_title": "工作台 2：总体城市设计与空间 AIGC 生形",
-            "next_page_path": "pages/08_总体城市设计.py",
+            "next_page_path": "pages/02_多主体博弈与空间AIGC工坊.py",
+            "next_query_params": {"sub": "master_plan"},
+            "next_url": "/02_多主体博弈与空间AIGC工坊?sub=master_plan",
             "next_label": "基于设计纲要推演【总体空间结构】 (Stage 08)",
             "next_desc": "落实一轴两带三组团空间骨架，并支持直通重点地段 AIGC 意向推演。",
         },
@@ -554,7 +562,9 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_title": "🗺️ 总体空间骨架确立，进入重点地段 AIGC 空间深化",
             "summary_desc": "全域空间结构与用地优化方案已生成，已具备向微观地块进行 GIS 刚性约束生形与建筑肌理推演的基础。",
             "next_wb_title": "工作台 2：重点地段深化与 Before/After 对比",
-            "next_page_path": "pages/10_重点地段深化.py",
+            "next_page_path": "pages/02_多主体博弈与空间AIGC工坊.py",
+            "next_query_params": {"sub": "aigc"},
+            "next_url": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
             "next_label": "进入【重点地段深化】进行 AIGC 意向生形与 Before/After 卷帘对比 (Stage 10)",
             "next_desc": "利用 ControlNet 道路线稿与高度深度图约束，生成方案并验证空间合理性。",
         },
@@ -563,7 +573,9 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_title": "🎨 重点地段 AIGC 方案推演完成，Before/After 验证通过",
             "summary_desc": "核心节点已在 GIS 刚性约束下完成空间意向方案渲染，并通过 Before/After 卷帘对比排除了 AI 幻觉，指标已完备。",
             "next_wb_title": "工作台 3：数字图则与工程交付枢纽",
-            "next_page_path": "pages/13_成果表达.py",
+            "next_page_path": "pages/03_数字图则与工程交付枢纽.py",
+            "next_query_params": {"sub": "delivery"},
+            "next_url": "/03_数字图则与工程交付枢纽?sub=delivery",
             "next_label": "进入【工作台 3】数字图则与工程交付枢纽（导出 1:1 CAD 与 Word 导则）",
             "next_desc": "将空间方案沉淀为法定控规图则，一键导出 1:1 米制 AutoCAD DXF 矢量图纸与汇报图册。",
         },
@@ -572,7 +584,9 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_title": "📜 法定数字导则编制就绪，进入最终成果交付汇交",
             "summary_desc": "地块管控图则与分项风貌控制条文已编制完成，可直接导出为规范的 Word 公文说明书。",
             "next_wb_title": "工作台 3：成果表达与工程交付",
-            "next_page_path": "pages/13_成果表达.py",
+            "next_page_path": "pages/03_数字图则与工程交付枢纽.py",
+            "next_query_params": {"sub": "delivery"},
+            "next_url": "/03_数字图则与工程交付枢纽?sub=delivery",
             "next_label": "前往【成果表达与工程交付】汇交图纸与图册 (Stage 13)",
             "next_desc": "下载 AutoCAD DXF 矢量工程图纸、A3 规划图册画廊与答辩 PPT。",
         },
@@ -582,6 +596,8 @@ def render_logic_chain_stepper(current_stage_code: str):
             "summary_desc": "项目已实现从「多源数据诊断」到「多主体博弈 AIGC 推演」，再到「AutoCAD 2000 1:1 米制矢量 DXF + Word 导则 + 161页答辩图册」的完整闭环！",
             "next_wb_title": "返回系统主页控制中枢",
             "next_page_path": "app.py",
+            "next_query_params": {},
+            "next_url": "/",
             "next_label": "返回【三大工作台控制中枢】查看全域全景",
             "next_desc": "查看项目总体概况、3D 数字底座与各阶段指标汇总。",
         },
@@ -624,8 +640,10 @@ def render_logic_chain_stepper(current_stage_code: str):
         st.page_link(
             cfg["next_page_path"],
             label=f"👉 {cfg['next_label']}",
-            help=f"点击无缝流转至 {cfg['next_wb_title']}"
+            help=f"点击无缝流转至 {cfg['next_wb_title']}",
+            query_params=cfg.get("next_query_params") or None,
         )
     except Exception:
-        st.markdown(f'<a href="/{cfg["next_page_path"].replace("pages/", "").replace(".py", "")}" target="_self">👉 {cfg["next_label"]}</a>', unsafe_allow_html=True)
+        target_href = cfg.get("next_url") or f'/{cfg["next_page_path"].replace("pages/", "").replace(".py", "")}'
+        st.markdown(f'<a href="{target_href}" target="_self">👉 {cfg["next_label"]}</a>', unsafe_allow_html=True)
 
