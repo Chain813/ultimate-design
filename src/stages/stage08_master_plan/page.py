@@ -68,17 +68,19 @@ def load_raw_landuse_gdf():
     cx_s = centroids.x
     cy_s = centroids.y
     
-    # Predefine centers in EPSG:3857
-    def get_xy(lon, lat):
-        p = gpd.GeoSeries([Point(lon, lat)], crs="EPSG:4326").to_crs(epsg=3857)
-        return p.iloc[0].x, p.iloc[0].y
-        
+    # Dynamically derive functional attraction centers from current site extent
+    minx, miny, maxx, maxy = gdf_proj.total_bounds
+    midx = (minx + maxx) / 2.0
+    midy = (miny + maxy) / 2.0
+    dx = (maxx - minx) if (maxx - minx) > 0 else 1000.0
+    dy = (maxy - miny) if (maxy - miny) > 0 else 1000.0
+
     centers = {
-        "居住用地": get_xy(125.3350, 43.9030),      # 社区中西侧居住组团
-        "商业服务业": get_xy(125.3475, 43.9017),    # 商业街区/光复路
-        "商业办公": get_xy(125.3250, 43.9080),      # 长春站站前枢纽
-        "公园与绿地": get_xy(125.3590, 43.9010),    # 伊通河沿岸生态带
-        "公共设施": get_xy(125.3422, 43.9036)       # 伪满皇宫核心区
+        "居住用地": (midx - 0.2 * dx, midy),
+        "商业服务业": (midx + 0.15 * dx, midy - 0.15 * dy),
+        "商业办公": (midx - 0.25 * dx, midy + 0.25 * dy),
+        "公园与绿地": (midx + 0.3 * dx, midy + 0.1 * dy),
+        "公共设施": (midx, midy)
     }
     
     # Precompute distance decay for each category

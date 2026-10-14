@@ -443,7 +443,7 @@ def render_page() -> None:
             {"value": "02_EXISTING_BLDG", "title": "保留现状建筑", "desc": "ACI 8 浅灰 (RGB 200,200,200) · 现状建筑基底"},
             {"value": "03_PROPOSED_BLDG", "title": "更新示范建筑", "desc": "ACI 2 暖黄 (RGB 255,215,0) · 靶向地块更新方案"},
             {"value": "04_ROAD_CENTER", "title": "道路交通中心线", "desc": "ACI 5 蓝色 (RGB 30,144,255) · 拓扑连通轴线"},
-            {"value": "05_GREEN_SPACE", "title": "公园绿地景观", "desc": "ACI 3 绿色 (RGB 34,139,34) · 伊通河滨水生态绿网"},
+            {"value": "05_GREEN_SPACE", "title": "公园绿地景观", "desc": "ACI 3 绿色 (RGB 34,139,34) · 滨水与公园生态绿网"},
         ])
 
         st.markdown("<br>", unsafe_allow_html=True)

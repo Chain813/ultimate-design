@@ -297,7 +297,11 @@ def build_document_context() -> dict[str, str]:
     # ── RAG 政策依据 ──
     try:
         from src.engines.rag_engine import retrieve_rag_context
-        chunks = retrieve_rag_context("长春市历史街区保护规划设计导则", top_k=5)
+        from src.config.site import get_site_city, get_site_name
+        s_city = get_site_city()
+        s_name = get_site_name()
+        query_kw = f"{s_city}{s_name}城市更新与历史风貌保护规划设计导则" if (s_city or s_name) else "城市更新与空间设计法定导则"
+        chunks = retrieve_rag_context(query_kw, top_k=5)
         if chunks:
             ctx["rag_policy"] = "\n\n".join(f"[{c[2]}]: {c[1]}" for c in chunks)
     except Exception:

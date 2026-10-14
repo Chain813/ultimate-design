@@ -287,7 +287,7 @@ def get_combined_references(draft_refs_text: str) -> str:
                         break
 
                 if not matched:
-                    entry = f"{author}. {title}[D]. 长春: 吉林建筑大学, 2023."
+                    entry = f"{author}. {title}[R/D]. 城市更新与规划研究成果汇编, 2024."
                     if entry not in seen_entries:
                         local_pdf_entries.append(entry)
                         seen_entries.add(entry)

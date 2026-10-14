@@ -141,7 +141,7 @@ def render_project_config_banner():
         )
         proj_subtitle = st.text_input(
             "项目副标题", value=project.get("subtitle", ""),
-            placeholder="如：——以长春市宽城区伪满皇宫周边街区为例",
+            placeholder="如：——以老城示范单元更新规划为例",
             help="显示在页面标题下方",
         )
 
@@ -162,16 +162,16 @@ def render_project_config_banner():
         with col_a:
             site_city = st.text_input(
                 "城市", value=site.get("city", ""),
-                placeholder="如：长春",
+                placeholder="如：北京市、成都市、广州市...",
             )
             site_district = st.text_input(
                 "行政区", value=site.get("district", ""),
-                placeholder="如：宽城区",
+                placeholder="如：海淀区、锦江区、越秀区...",
             )
         with col_b:
             site_name = st.text_input(
                 "地块名称", value=site.get("name", ""),
-                placeholder="如：伪满皇宫周边街区",
+                placeholder="如：老工业厂区更新单元、滨水街区",
             )
             site_area = st.number_input(
                 "面积（公顷）", value=site.get("area_ha", 0),
@@ -202,7 +202,7 @@ def render_project_config_banner():
 
         site_desc = st.text_area(
             "场地描述", value=site.get("description", ""),
-            placeholder="如：由长春大街、长白路、东九条、亚泰快速路围合而成，研究范围约160公顷。",
+            placeholder="如：由城市主干道与滨水绿带围合而成，总研究范围约150公顷。",
             height=80,
         )
 

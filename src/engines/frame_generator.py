@@ -59,6 +59,18 @@ def _get_project_name() -> str:
         pass
     return "数字孪生·空间计算 — 城市更新规划设计"
 
+
+def _get_project_location() -> str:
+    try:
+        from src.config.site import get_site_city, get_site_district, get_site_name
+        city = get_site_city()
+        district = get_site_district()
+        name = get_site_name()
+        loc = f"{city}{district}" if (city or district) else (name or "规划研究范围")
+        return loc
+    except Exception:
+        return "规划研究范围"
+
 PROJECT_NAME = "数字孪生·空间计算 — 城市更新规划设计"
 TEAM_INFO = "UltimateDESIGN · AI-Powered Urban Renewal Platform"
 
@@ -286,9 +298,10 @@ def compose_framed_sheet(
         (SHEET_W - MARGIN - team_w - 30, bar_top + 15),
         TEAM_INFO, fill=DIM_COLOR, font=font_body,
     )
+    loc_text = _get_project_location()
     draw.text(
         (SHEET_W - MARGIN - team_w - 30, bar_top + 60),
-        "长春市宽城区 · EPSG:4326 · AI-Generated Data Visualization",
+        f"{loc_text} · EPSG:4326 · AI-Generated Data Visualization",
         fill=DIM_COLOR, font=font_small,
     )
 

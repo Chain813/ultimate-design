@@ -1125,15 +1125,15 @@ df["ID"] = df.index + 1
 df = df[["ID", "Lng", "Lat"]]
 
 # 保存
-df.to_csv("data/csv/Changchun_Precise_Points.csv", index=False)
-df.to_excel("data/csv/Changchun_Precise_Points.xlsx", index=False)
+df.to_csv("data/csv/Site_Precise_Points.csv", index=False)
+df.to_excel("data/csv/Site_Precise_Points.xlsx", index=False)
 
 print(f"生成了 {len(df)} 个采样点")''',
-                    "tip": "间距 0.000625 度约等于 50 米 (在长春纬度)。",
+                    "tip": "采样间距可根据场地尺度与精度需求灵活调整（如 50m 或 100m 网格）。",
                 },
             ],
-            "sample_fields": "ID: 1, Lng: 125.3398763, Lat: 43.89209257",
-            "reference": "参考文件：data/csv/Changchun_Precise_Points.csv",
+            "sample_fields": "ID: 1, Lng: 125.3398, Lat: 43.8920",
+            "reference": "参考文件：data/csv/Site_Precise_Points.csv",
         },
     },
     {
@@ -1166,9 +1166,9 @@ import json
 # 1. 加载 PDF 文档
 pdf_files = [
     "docs/中共中央办公厅国务院办公厅关于持续推进城市更新行动的意见.pdf",
-    "docs/伪满皇宫保护规划.pdf",
-    "docs/历史文化名城保护规划规范.pdf",
-    "docs/长春市历史文化名城保护条例.pdf",
+    "docs/历史文化名城名镇名村保护规划规范.pdf",
+    "docs/地方国土空间总体规划与城市更新导则.pdf",
+    "docs/地方历史文化街区保护规划条例.pdf",
     # ... 更多 PDF
 ]
 
@@ -1355,18 +1355,18 @@ python scripts/fetch_supplementary_data.py --traffic --multi-time''',
                     "steps": [
                         "1. 调用百度地图交通态势 API",
                         "2. 接口: https://api.map.baidu.com/traffic/v1/road",
-                        "3. 参数: road_name=道路名&city=长春&ak=你的密钥",
+                        "3. 参数: road_name=道路名&city=你的城市&ak=你的密钥",
                         "4. 返回拥堵等级 (0-4) 和速度",
                     ],
                     "code_example": '''import requests
 
 API_KEY = "your_baidu_key"
 
-def get_road_status(road_name):
+def get_road_status(road_name, city="北京市"):
     url = "https://api.map.baidu.com/traffic/v1/road"
     params = {
         "road_name": road_name,
-        "city": "长春",
+        "city": city,
         "ak": API_KEY,
         "output": "json"
     }
@@ -1381,15 +1381,15 @@ def get_road_status(road_name):
         }
     return None
 
-# 获取路况
-roads = ["人民大街", "新发路", "光复路", "长白路", "亚泰大街"]
+# 获取路况（输入目标片区主要道路）
+roads = ["主干道A", "主干道B", "主要商业街", "滨水路", "交通走廊"]
 for road in roads:
     status = get_road_status(road)
     print(f"{road}: {status}")''',
                     "tip": "路况数据实时变化，建议在不同时段多次采集。",
                 },
             ],
-            "sample_fields": "road_name: 人民大街, congestion_level: 2, congestion_desc: 缓行, speed: 25",
+            "sample_fields": "road_name: 核心道路, congestion_level: 2, congestion_desc: 缓行, speed: 25",
             "reference": "参考文件：data/csv/Traffic_Flow.csv",
         },
     },
@@ -1473,7 +1473,7 @@ python scripts/fetch_supplementary_data.py --price''',
                 {
                     "name": "方法二：政府网站查询",
                     "steps": [
-                        "1. 访问长春市自然资源局官网",
+                        "1. 访问当地自然资源与规划局官网",
                         "2. 搜索「基准地价」公示文件",
                         "3. 下载基准地价表",
                         "4. 提取研究区域对应的地价数据",
@@ -1481,7 +1481,7 @@ python scripts/fetch_supplementary_data.py --price''',
                     "tip": "基准地价通常每2-3年更新一次。",
                 },
             ],
-            "sample_fields": "zone: 一级地, description: 人民大街沿线, base_price: 4500",
+            "sample_fields": "zone: 一级地, description: 核心干道沿线, base_price: 4500",
             "reference": "参考文件：data/csv/Land_Prices.csv",
         },
     },
@@ -1512,7 +1512,7 @@ python scripts/fetch_supplementary_data.py --history''',
                     "name": "方法二：Google Earth Pro (推荐)",
                     "steps": [
                         "1. 下载安装 Google Earth Pro (免费)",
-                        "2. 搜索「长春市宽城区」",
+                        "2. 搜索目标规划片区或坐标",
                         "3. 点击工具栏时钟图标 (历史影像)",
                         "4. 选择年份: 2000, 2005, 2010, 2015, 2020, 2024",
                         "5. 文件 → 保存 → 保存图像",
@@ -1573,8 +1573,8 @@ python scripts/fetch_supplementary_data.py --sunshine
                     "code_example": '''import pvlib
 import pandas as pd
 
-# 长春位置
-location = pvlib.location.Location(43.89, 125.34, tz='Asia/Shanghai')
+# 场地位置（根据实际经纬度设置）
+location = pvlib.location.Location(lat, lon, tz='Asia/Shanghai')
 
 # 计算冬至日太阳位置
 times = pd.date_range('2024-12-21', periods=24, freq='h', tz='Asia/Shanghai')

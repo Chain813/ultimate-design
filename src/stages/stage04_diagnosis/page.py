@@ -62,7 +62,7 @@ def select_target_plot_and_diagnose(
     """核心接口：选定任意地块为更新靶向地块，并现场动态推导量化痛点画像，存入总线。
     
     参数:
-        plot_name: 地块名称（如 '农贸水产市场', '老铸造车间', '市一中北侧' 等）
+        plot_name: 地块名称（如 '社区农贸市场', '老铸造车间', '市一中北侧' 等）
         land_use: 现状用地性质
         mpi_score: MPI 更新潜力综合得分
         area_ha: 占地面积 (公顷)

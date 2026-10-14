@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from src.config import get_site_name
+from src.config import get_site_name, get_site_city
 from src.engines.drawing_prompt_engine import (
     BOOK_CHAPTERS,
     ImagePromptRequest,
@@ -995,12 +995,15 @@ def build_drawing_prompt(template_name: str) -> tuple[str, str]:
 
     main_expr = tmpl.description
     s_name = get_site_name()
-    if s_name and "伪满" not in s_name:
+    s_city = get_site_city()
+    if s_name and ("伪满" not in s_name or "长春" not in s_city):
         main_expr = (
-            main_expr.replace("长春市—宽城区—伪满皇宫周边", s_name)
+            main_expr.replace("长春市—宽城区—伪满皇宫周边", f"{s_city}{s_name}")
             .replace("伪满皇宫", "重点历史文化节点")
             .replace("长春站", "交通枢纽")
             .replace("伊通河", "滨水生态通廊")
+            .replace("光复路商业街", "特色商业街区")
+            .replace("光复路", "商业街区")
         )
 
     request = ImagePromptRequest(
@@ -1086,15 +1089,22 @@ def _extract_template_requirements(prompt_tmpl: str) -> str:
         landmarks = get_landmarks()
         primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name")) else f"{s_name}重点地标"
 
-        if s_name and "伪满" not in s_name:
+        if s_name and ("伪满" not in s_name or "长春" not in s_city):
             raw_req = (
                 raw_req.replace("伪满皇宫", primary_lm)
+                .replace("长春市—宽城区—伪满皇宫周边", f"{s_city}{s_name}")
                 .replace("长春伪满皇宫周边街区", f"{s_city}{s_name}")
+                .replace("长春市历史文化名城保护规划", f"{s_city or '当地'}历史文化与风貌保护相关规划")
+                .replace("长春市国土空间总体规划", f"{s_city or '当地'}国土空间总体规划")
                 .replace("长春站", "交通枢纽")
+                .replace("长春大街、亚泰大街", "城市主干道与主要交通走廊")
                 .replace("伊通河", "滨水生态廊道")
                 .replace("铁北老旧社区", "周边老旧社区")
                 .replace("铁北工业遗产", "存量工业遗产")
-                .replace("中车厂区", "特色存量厂区")
+                .replace("中车老厂区", "重点更新厂区")
+                .replace("中车厂区", "重点更新厂区")
+                .replace("光复路商业街", "特色商业街区")
+                .replace("光复路", "商业街区")
             )
     except Exception:
         pass

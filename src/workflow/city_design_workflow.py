@@ -847,7 +847,7 @@ PROJECT_FUNCTION_MAP = [
         "function": "Word 成果导出",
         "stages": ["13"],
         "description": "将导则文本和 AIGC 图集写入带红头样式的 Word 文件。",
-        "output": "宽城区历史文化街区微更新规划导则 DOCX。",
+        "output": "城市设计法定导则与实施技术文件 DOCX。",
     },
     {
         "page_key": "page05",

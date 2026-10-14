@@ -327,16 +327,28 @@ def _get_adaptive_baseline_value(full_key: str):
         landmarks = get_landmarks()
         primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name")) else f"{s_name}核心风貌节点"
 
+        custom_plot = None
         raw_val = BASELINE_STAGE_DATA.get(full_key)
         if raw_val is None:
-            return None
+            # Check prefix matching for Stage 10 plot dynamic keys
+            if full_key.startswith("10_plot_metrics_"):
+                raw_val = BASELINE_STAGE_DATA.get("10_plot_metrics_长春水产大市场")
+                custom_plot = full_key[len("10_plot_metrics_"):]
+            elif full_key.startswith("10_plot_personas_"):
+                raw_val = BASELINE_STAGE_DATA.get("10_plot_personas_长春水产大市场")
+                custom_plot = full_key[len("10_plot_personas_"):]
+            elif full_key.startswith("10_plot_design_"):
+                raw_val = BASELINE_STAGE_DATA.get("10_plot_design_长春水产大市场")
+                custom_plot = full_key[len("10_plot_design_"):]
+            else:
+                return None
 
         # 检查是否为默认的长春基准配置
         is_changchun_default = "伪满" in s_name or "长春" in s_city
-        if is_changchun_default:
+        if is_changchun_default and not custom_plot:
             return raw_val
 
-        target_name = f"{s_name}重点更新单元"
+        target_name = custom_plot if custom_plot else f"{s_name}重点更新单元"
 
         # 对非长春自定义场地，进行动态上下文自适应适配
         if isinstance(raw_val, dict):

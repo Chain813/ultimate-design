@@ -476,8 +476,8 @@ def render_site_ingestion_panel():
 
         col_b1, col_b2 = st.columns([1, 2])
         with col_b1:
-            city_input = st.text_input("城市名称", value=current_site.get("city", "长春市"), placeholder="如：长春市、成都市、广州市...")
-            site_label = st.text_input("场地名称", value=current_site.get("name", "示范更新单元"), placeholder="如：老工业厂区更新单元")
+            city_input = st.text_input("城市名称", value=current_site.get("city", ""), placeholder="如：北京市、上海市、广州市、成都市...")
+            site_label = st.text_input("场地名称", value=current_site.get("name", ""), placeholder="如：老工业厂区更新单元、滨水街区")
 
         with col_b2:
             col_b_lon, col_b_lat, col_b_rad = st.columns(3)
