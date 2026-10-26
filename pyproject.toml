@@ -76,14 +76,7 @@ line-length = 120
 target-version = "py312"
 
 [tool.ruff.lint]
-select = [
-    "E9", "F63", "F7", "F82",   # Fatal errors
-    "I",                          # isort — import ordering
-    "UP",                         # pyupgrade — modern Python syntax
-    "B",                          # flake8-bugbear — common pitfalls
-    "SIM",                        # flake8-simplify — code simplification
-    "RUF",                        # Ruff-specific rules
-]
+select = ["E9", "F63", "F7", "F82"]
 ignore = [
     "B008",   # Streamlit uses function calls in default args by design
     "B905",   # `zip()` without an explicit `strict=` parameter

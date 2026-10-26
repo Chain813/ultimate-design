@@ -1,6 +1,7 @@
 """Stage 07: structured page renderer for strategy negotiation."""
 
 import base64
+import logging
 import re
 import time
 from pathlib import Path
