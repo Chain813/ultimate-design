@@ -901,24 +901,38 @@ def _normalize_label(value):
     return value.lower()
 
 
-def resolve_subpage_option(options, default_index=0, aliases=None):
-    requested = st.query_params.get("sub")
-    if isinstance(requested, list):
-        requested = requested[0] if requested else None
+def resolve_subpage_option(options, default_index=0, aliases=None, query_params=None):
+    qp = query_params if query_params is not None else st.query_params
     aliases = {**SUBPAGE_ALIASES, **(aliases or {})}
-    if requested:
-        target = aliases.get(requested, requested)
-        target_norm = _normalize_label(target)
-        for idx, option in enumerate(options):
-            option_norm = _normalize_label(option)
-            if option == target or option_norm == target_norm or target_norm in option_norm or option_norm in target_norm:
-                return idx
+    for param_key in ("tab", "sub"):
+        requested = qp.get(param_key)
+        if isinstance(requested, list):
+            requested = requested[0] if requested else None
+        if requested:
+            target = aliases.get(requested, requested)
+            target_norm = _normalize_label(target)
+            if not target_norm:
+                continue
+            for idx, option in enumerate(options):
+                option_norm = _normalize_label(option)
+                if option == target or option_norm == target_norm or target_norm in option_norm or option_norm in target_norm:
+                    return idx
     return default_index
 
 
-def resolve_subpage_value(options, default_index=0, aliases=None):
-    idx = resolve_subpage_option(options, default_index, aliases)
+def resolve_subpage_value(options, default_index=0, aliases=None, query_params=None):
+    idx = resolve_subpage_option(options, default_index, aliases, query_params=query_params)
     return options[idx] if idx < len(options) else options[default_index]
+
+
+def resolve_active_subpage(spec, default_index=0, requested_subpage=None, query_params=None):
+    from src.stages.common.workspace import resolve_active_subpage as _resolve_ws_subpage
+    return _resolve_ws_subpage(
+        spec,
+        default_index=default_index,
+        requested_subpage=requested_subpage,
+        query_params=query_params,
+    )
 
 
 

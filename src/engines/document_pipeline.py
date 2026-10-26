@@ -108,6 +108,15 @@ def _gen_diagnosis_report(pc, lc, model="deepseek-v4-pro"):
         diags = [{"name": "重点更新单元", "area_ha": 10, "mpi_score": 65, "poi_count": 150, "gvi_mean": 12}]
 
     selected = diags[0]
+    from src.config.site import get_site_city, get_site_name
+    s_name = get_site_name() or ""
+    s_city = get_site_city() or ""
+    if "伪满" in s_name or "长春" in s_city:
+        pain_points_line = "2. 结合四大核心痛点：用地混杂、交通割裂、老龄化率30%、环境品质匮乏"
+    else:
+        site_tag = f"{s_city}{s_name}" if (s_city or s_name) else "研究范围"
+        pain_points_line = f"2. 结合{site_tag}核心痛点：用地混杂与存量低效、慢行交通割裂、公共服务短板、环境品质与绿视率匮乏"
+
     prompt = f"""基于以下项目真实数据，生成一份严格基于数据的前期问题诊断报告。不得编造数据中未出现的具体事实：
 - 地块名称：{selected.get('name', '重点更新单元')}
 - 面积：{selected.get('area_ha', 10)} 公顷
@@ -117,7 +126,7 @@ def _gen_diagnosis_report(pc, lc, model="deepseek-v4-pro"):
 
 请生成【前期问题诊断报告】。要求：
 1. 列出 4-6 个具体问题，每个含：【问题名称】【数据依据】【政策依据】【严重程度】
-2. 结合四大核心痛点：用地混杂、交通割裂、老龄化率30%、环境品质匮乏
+{pain_points_line}
 3. 最后给出问题优先级排序"""
 
     result = _call(model, "你是一个城市规划数据分析和报告生成工具。严格基于提供的数据进行诊断，只输出提供数据中能够支撑的结论。不得编造数据、地名、案例或政策条文编号。", prompt)
@@ -419,13 +428,24 @@ def _gen_building_form(pc, lc, model="deepseek-v4-pro"):
     structure = str(_load("08", SK.SPATIAL_STRUCTURE, "") or "")[:2000]
     spatial = _spatial(3500)
 
+    from src.config.site import get_site_city, get_site_config, get_site_name
+    s_cfg = get_site_config() or {}
+    s_name = get_site_name() or s_cfg.get("name") or ""
+    s_city = get_site_city() or s_cfg.get("city") or ""
+    if "伪满" in s_name or "长春" in s_city:
+        height_ctrl_line = "一、高度分区控制（核心区≤9m/一般区≤18m/站前区≤24m）"
+    else:
+        reg = s_cfg.get("regulatory_limits") or {}
+        h_lim = reg.get("height_limit", s_cfg.get("height_limit", 36))
+        height_ctrl_line = f"一、高度分区控制（法定限高上限≤{h_lim}m，核心保护区/风貌协调区/现代发展区梯度管控）"
+
     prompt = f"""基于以下数据设计建筑形态控制方案。高度分区和风貌指引与上游空间结构一致，不得自行发挥：
 
 【上游空间结构】：{structure if structure else '一核两轴多片多节点'}
 【全域空间数据】：{spatial}
 
 请生成【建筑形态、风貌与立面控制方案】：
-一、高度分区控制（核心区≤9m/一般区≤18m/站前区≤24m）
+{height_ctrl_line}
 二、建筑体量控制（街墙连续性、塔楼退线、裙房高度）
 三、立面风格导引（历史区/风貌协调区/现代发展区各不同）
 四、屋顶形式控制（坡屋顶/平屋顶/退台组合）
@@ -472,17 +492,46 @@ def _gen_landscape_style(pc, lc, model="deepseek-v4-pro"):
 
 def _get_plot_names() -> list:
     """获取重点地块名称列表"""
+    import re
+
+    # 1. 优先从自定义接入场地或 get_active_candidate_plots 获取
+    try:
+        import streamlit as st
+        from src.ui.site_ingestion_panel import get_active_candidate_plots, load_custom_site
+
+        is_mocked = (
+            hasattr(get_active_candidate_plots, "_mock_name")
+            or getattr(get_active_candidate_plots, "__module__", "") != "src.ui.site_ingestion_panel"
+        )
+        has_custom = bool(st.session_state.get("custom_site_context") or load_custom_site())
+        if is_mocked or has_custom:
+            cand_plots = get_active_candidate_plots() or []
+            cand_names = [
+                str(p.get("name") or p.get("Name")).strip()
+                for p in cand_plots
+                if isinstance(p, dict) and (p.get("name") or p.get("Name"))
+            ]
+            if cand_names:
+                return cand_names[:5]
+    except Exception:
+        pass
+
+    # 2. 从 get_key_plots_summary() 解析（同时支持【】/「」括号格式与 "- 地块名: 面积" 列表格式）
     try:
         from src.engines.spatial_data_injector import get_key_plots_summary
-        summary = get_key_plots_summary()
-        # 从摘要中提取地块名
-        import re
-        names = re.findall(r'[「【](.+?)[」】]', summary)
+        summary = get_key_plots_summary() or ""
+        bracket_names = [n.strip() for n in re.findall(r'[「【](.+?)[」】]', summary) if n.strip()]
+        bullet_names = [n.strip() for n in re.findall(r'-\s*([^:\n：]+?)\s*[:：]\s*面积', summary) if n.strip()]
+        names = []
+        for n in bracket_names + bullet_names:
+            if n not in names:
+                names.append(n)
         if names:
             return names[:5]
     except Exception:
         pass
-    # 默认地块列表
+
+    # 3. 默认地块列表回退
     return ["老水产批发市场", "中车旧厂区", "食品调料市场", "清禾市场", "石油公司地块"]
 
 
@@ -491,8 +540,24 @@ def _gen_plot_metrics(pc, lc, plot_name, model="deepseek-v4-pro"):
     key = f"{SK.PLOT_METRICS}_{plot_name}"
     if _skip_if_exists("10", key): lc(f"⏭️ {plot_name} 控规指标已存在"); return
 
-    from src.config.site import get_site_name
-    s_name = get_site_name() or "规划区域"
+    from src.config.site import get_site_city, get_site_config, get_site_name
+    s_cfg = get_site_config() or {}
+    s_name = get_site_name() or s_cfg.get("name") or "规划区域"
+    s_city = get_site_city() or s_cfg.get("city") or ""
+    spatial = _spatial(1500)
+
+    if "伪满" in s_name or "长春" in s_city:
+        redline_note = "注意：历史核心区容积率≤1.4、限高≤9m；一般区限高≤18m；站前区限高≤24m。"
+    else:
+        reg = s_cfg.get("regulatory_limits") or {}
+        far_lim = reg.get("far", s_cfg.get("far", 2.5))
+        h_lim = reg.get("height_limit", s_cfg.get("height_limit", 36))
+        bd_lim = reg.get("building_density_max", s_cfg.get("building_density_max", 0.35))
+        bd_pct = int(bd_lim * 100) if isinstance(bd_lim, (int, float)) and bd_lim <= 1.0 else bd_lim
+        gr_lim = reg.get("greenery_ratio_min", s_cfg.get("greenery_ratio_min", 0.30))
+        gr_pct = int(gr_lim * 100) if isinstance(gr_lim, (int, float)) and gr_lim <= 1.0 else gr_lim
+        redline_note = f"注意：法定红线控制要求容积率≤{far_lim}、限高≤{h_lim}m、建筑密度≤{bd_pct}%、绿地率≥{gr_pct}%。"
+
     prompt = f"""为重点地块【{plot_name}】推演控制性详细规划指标。指标值在合理范围内，不编造来源依据：
 
 【地块】：{plot_name}（{s_name}重点更新单元）
@@ -507,7 +572,7 @@ def _gen_plot_metrics(pc, lc, plot_name, model="deepseek-v4-pro"):
 | 停车位配比 | | |
 | 配套设施面积 | | |
 
-注意：历史核心区容积率≤1.4、限高≤9m；一般区限高≤18m；站前区限高≤24m。"""
+{redline_note}"""
 
     result = _call(model, "你是一个控规指标分析工具。严格基于提供的空间数据和地块特征推演控规指标，指标值必须在合理的规范范围内，不得编造具体数值的来源依据。", prompt)
     if result and len(result) > 30:
@@ -520,6 +585,8 @@ def _gen_plot_personas(pc, lc, plot_name, model="deepseek-v4-pro"):
     key = f"{SK.PLOT_PERSONAS}_{plot_name}"
     if _skip_if_exists("10", key): lc(f"⏭️ {plot_name} 人群画像已存在"); return
 
+    from src.config.site import get_site_name
+    s_name = get_site_name() or "规划区域"
     prompt = f"""分析重点地块【{plot_name}】的可能使用人群特征。分析基于项目定位，不编造具体人物故事：
 
 请分析该地块可能吸引的用户群体，生成 3 组人群画像，每组包含：

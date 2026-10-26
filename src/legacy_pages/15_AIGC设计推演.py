@@ -14,41 +14,23 @@ import streamlit as st
 from PIL import Image as PILImage
 from PIL import ImageDraw
 
+from src.config.site import get_site_city, get_site_name
 from src.ui.app_shell import render_top_nav
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.stage_keys import SK
 
-st.set_page_config(page_title="AIGC 设计推演", layout="wide", initial_sidebar_state="collapsed")
-render_top_nav()
+if not st.session_state.get("_embedded_mode"):
+    st.set_page_config(page_title="AIGC 设计推演", layout="wide", initial_sidebar_state="collapsed")
+    render_top_nav()
 
-render_page_banner(
-    title="AIGC 设计推演",
-    description="AI 润色提示词，ControlNet 锁定路网与建筑轮廓，深度图定义精确空间尺度。支持设计纲要自动注入。",
-    eyebrow="AIGC Studio",
-    tags=["AI 润色", "ControlNet", "深度图", "设计纲要"],
-)
+ROOT = Path(__file__).resolve().parents[2]
 
-ROOT = Path(__file__).resolve().parent.parent
 
-# ── URL 查询参数响应 (与三大工作台无缝路由联动) ──
-_sub_param = st.query_params.get("sub", "")
-if _sub_param:
-    if "总平面" in _sub_param:
-        if "aigc_scene_desc" not in st.session_state:
-            st.session_state["aigc_scene_desc"] = (
-                "高精度城市设计概念总平面图，用地功能分区明确，建筑轮廓与路网肌理清晰，绿色开放空间网络完整，masterplan architectural rendering"
-            )
-    elif "透视" in _sub_param:
-        if "aigc_scene_desc" not in st.session_state:
-            st.session_state["aigc_scene_desc"] = (
-                "人行尺度历史街区全景透视图，保留历史红砖与灰砖立面风貌，底层活力商业界面，人行道行道树与街具，温暖自然阳光"
-            )
-    elif "鸟瞰" in _sub_param or "体块" in _sub_param:
-        if "aigc_scene_desc" not in st.session_state:
-            st.session_state["aigc_scene_desc"] = (
-                "轴测鸟瞰空间体块模拟，新旧建筑高度与体量梯度过渡，三维空间形态推演，现代与传统材质有机交融，高品质空间尺度"
-            )
+def _is_changchun_default_site() -> bool:
+    s_name = get_site_name()
+    s_city = get_site_city()
+    return ("伪满" in s_name) or ("长春" in s_city and "水产" in s_name) or (s_city == "长春市" and "伪满皇宫" in s_name)
 
 
 # ══════════════════════════════════════════
@@ -206,6 +188,7 @@ def _get_style_params(styles: list[str]) -> dict:
         "negative_extra": ", ".join(filter(None, negative_extras)),
     }
 
+
 # 道路等级对应的现实宽度 (米)
 ROAD_WIDTH_METERS = {1: 30, 2: 20, 3: 12, 4: 6}
 
@@ -232,6 +215,17 @@ CONTROLNET_MODULES = {
     "depth (深度)": "depth",
     "seg (语义分割)": "seg",
 }
+
+# ControlNet 模型映射：根据预处理器自动选择对应模型
+CN_MODEL_MAP = {
+    "canny": "control_v11p_sd15_canny",
+    "lineart_realistic": "control_v11p_sd15_lineart",
+    "lineart_anime": "control_v11p_sd15s2_lineart_anime",
+    "scribble_xdog": "control_v11p_sd15_scribble",
+    "depth": "control_v11f1p_sd15_depth",
+    "seg": "control_v11p_sd15_seg",
+}
+
 
 # SD 模型缓存
 @st.cache_data(ttl=300)
@@ -324,7 +318,7 @@ def render_depth_map(road_path: str, building_path: str,
     meters_per_deg_lat = 110540
     lng_range_m = (lng_max - lng_min) * meters_per_deg_lng
     lat_range_m = (lat_max - lat_min) * meters_per_deg_lat
-    pixels_per_meter_x = width / lng_range_m
+    pixels_per_meter_x = width / max(1.0, lng_range_m)
 
     img = PILImage.new("L", (width, height), 0)
     draw = ImageDraw.Draw(img)
@@ -499,8 +493,9 @@ def _draw_geometry_filled(draw, geometry, to_pixel, color):
 
 
 def _get_boundary_range():
-    """从 Boundary_Scope.geojson 计算统一坐标范围。"""
-    boundary_path = ROOT / "data/gis/Boundary_Scope.geojson"
+    """从当前激活边界或 Boundary_Scope.geojson 计算统一坐标范围。"""
+    from src.config import GIS_FILES
+    boundary_path = GIS_FILES.get("boundary", ROOT / "data/gis/Boundary_Scope.geojson")
     if boundary_path.exists():
         with open(boundary_path, "r", encoding="utf-8") as f:
             bdata = json.load(f)
@@ -512,31 +507,45 @@ def _get_boundary_range():
     return None, None
 
 
+def _is_stale_changchun_text(text: object, is_cc: bool) -> bool:
+    if is_cc or not text:
+        return False
+    s = str(text)
+    return any(kw in s for kw in ("长春", "伪满", "伊通河", "水产大市场"))
+
+
 def _build_design_context_prompt():
     """从 DesignContext 构建场景描述的补充上下文。"""
     try:
         from src.workflow.design_context import build_design_context
         ctx = build_design_context()
+        is_cc = _is_changchun_default_site()
+        default_plot_name = "长春水产大市场" if is_cc else f"{get_site_name()}核心更新地块"
         parts = []
         if ctx.target_plot:
-            tp_name = ctx.target_plot.get("name", "长春水产大市场")
+            raw_tp_name = ctx.target_plot.get("name", default_plot_name)
+            tp_name = default_plot_name if _is_stale_changchun_text(raw_tp_name, is_cc) else raw_tp_name
             tp_mpi = ctx.target_plot.get("mpi", 88.5)
             parts.append(f"靶向更新地块：{tp_name}（MPI更新潜力指数：{tp_mpi}）")
-        consensus_keywords = "新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊"
+        consensus_keywords = (
+            "新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊"
+            if is_cc
+            else f"{get_site_city()}{get_site_name()}有机更新、微空间活化、慢行友好街道、生态绿色基底"
+        )
         parts.append(f"博弈共识关键词：{consensus_keywords}")
-        if ctx.design_brief:
+        if ctx.design_brief and not _is_stale_changchun_text(ctx.design_brief, is_cc):
             parts.append(f"设计纲要：{ctx.design_brief[:800]}")
-        elif ctx.spatial_structure:
+        elif ctx.spatial_structure and not _is_stale_changchun_text(ctx.spatial_structure, is_cc):
             parts.append(f"空间结构：{ctx.spatial_structure[:400]}")
-        if ctx.design_concept:
+        if ctx.design_concept and not _is_stale_changchun_text(ctx.design_concept, is_cc):
             parts.append(f"设计概念：{ctx.design_concept[:300]}")
-        if ctx.strategy_matrix:
+        if ctx.strategy_matrix and not _is_stale_changchun_text(ctx.strategy_matrix, is_cc):
             parts.append(f"设计策略：{ctx.strategy_matrix[:300]}")
-        if ctx.top_plot:
+        if ctx.top_plot and not _is_stale_changchun_text(ctx.top_plot, is_cc):
             parts.append(f"重点地块：{ctx.top_plot}")
-        if ctx.building_form:
+        if ctx.building_form and not _is_stale_changchun_text(ctx.building_form, is_cc):
             parts.append(f"建筑形态：{ctx.building_form[:200]}")
-        if ctx.landscape_style:
+        if ctx.landscape_style and not _is_stale_changchun_text(ctx.landscape_style, is_cc):
             parts.append(f"风貌要求：{ctx.landscape_style[:200]}")
         return "\n".join(parts) if parts else ""
     except Exception:
@@ -548,289 +557,308 @@ def _build_auto_scene_description():
     try:
         from src.workflow.design_context import build_design_context
         ctx = build_design_context()
+        is_cc = _is_changchun_default_site()
         parts = ["城市更新后的街区场景："]
-        target_name = "长春水产大市场"
+        default_plot_name = "长春水产大市场" if is_cc else f"{get_site_name()}核心更新地块"
+        target_name = default_plot_name
         if ctx.target_plot and isinstance(ctx.target_plot, dict):
-            target_name = ctx.target_plot.get("name", "长春水产大市场")
-        parts.append(
-            f"靶向地块【{target_name}】城市更新示范场景：新中式滨水文旅客厅，"
-            f"保留大跨度工业桁架结构与历史红砖山墙，红砖与暖灰基调，人车分流生态绿廊，"
-            f"伊通河滨水亲水步道，活力文旅展厅与青年茶咖市集。"
-        )
-        if ctx.spatial_structure:
-            # 提取空间结构中的关键描述
+            raw_tp_name = ctx.target_plot.get("name", default_plot_name)
+            target_name = default_plot_name if _is_stale_changchun_text(raw_tp_name, is_cc) else raw_tp_name
+        if is_cc:
+            parts.append(
+                f"靶向地块【{target_name}】城市更新示范场景：新中式滨水文旅客厅，"
+                f"保留大跨度工业桁架结构与历史红砖山墙，红砖与暖灰基调，人车分流生态绿廊，"
+                f"伊通河滨水亲水步道，活力文旅展厅与青年茶咖市集。"
+            )
+        else:
+            parts.append(
+                f"靶向地块【{target_name}】（{get_site_city()}·{get_site_name()}）城市更新示范场景："
+                f"保留在地建筑肌理与空间记忆，织补社区口袋公园与慢行绿道，"
+                f"首层复合商业与公共文化空间，人车分流生态街巷。"
+            )
+        if ctx.spatial_structure and not _is_stale_changchun_text(ctx.spatial_structure, is_cc):
             ss = ctx.spatial_structure[:300]
             parts.append(f"空间结构：{ss}")
-        if ctx.building_form:
+        if ctx.building_form and not _is_stale_changchun_text(ctx.building_form, is_cc):
             parts.append(f"建筑风貌：{ctx.building_form[:200]}")
-        if ctx.landscape_style:
+        if ctx.landscape_style and not _is_stale_changchun_text(ctx.landscape_style, is_cc):
             parts.append(f"景观特征：{ctx.landscape_style[:200]}")
-        if ctx.public_space:
+        if ctx.public_space and not _is_stale_changchun_text(ctx.public_space, is_cc):
             parts.append(f"公共空间：{ctx.public_space[:200]}")
-        # 通用质量要求
-        parts.append("画面要求：高质量建筑效果图，保留历史建筑特征与工业桁架，增加绿化和亲水空间，人行道宽敞，有行道树和座椅，天空晴朗，光线自然。")
+        parts.append("画面要求：高质量建筑效果图，保留历史建筑特征与空间肌理，增加绿化和公共开放空间，人行道宽敞，有行道树和座椅，天空晴朗，光线自然。")
         return "\n".join(parts)
     except Exception:
         return ""
 
 
-# ══════════════════════════════════════════
-# 侧边栏：SD 参数配置
-# ══════════════════════════════════════════
-with st.sidebar:
-    st.markdown("### ⚙️ SD 渲染参数")
-    render_mode = st.selectbox(
-        "渲染模式",
-        ["img2img (图生图)", "txt2img (纯文生图)", "inpainting (局部重绘)"],
-        key="aigc_mode",
+def render_page() -> None:
+    """渲染 AIGC 设计推演主界面（支持独立访问与工作台内嵌调用）。"""
+    render_page_banner(
+        title="AIGC 设计推演",
+        description="AI 润色提示词，ControlNet 锁定路网与建筑轮廓，深度图定义精确空间尺度。支持设计纲要自动注入。",
+        eyebrow="AIGC Studio",
+        tags=["AI 润色", "ControlNet", "深度图", "设计纲要"],
     )
 
-    # 模型选择
-    st.markdown("### 🧠 SD 模型")
-    sd_models = _fetch_sd_models()
-    if sd_models:
-        sd_model = st.selectbox("选择模型", sd_models, key="aigc_sd_model")
-    else:
-        sd_model = st.text_input("模型名称 (SD WebUI 未连接)", value="", key="aigc_sd_model_manual")
-        st.caption("启动 SD WebUI 后可自动获取模型列表")
+    # ── URL 查询参数响应 (与三大工作台无缝路由联动) ──
+    _sub_param = st.query_params.get("tab", "") or st.query_params.get("sub", "")
+    if _sub_param:
+        if "总平面" in _sub_param:
+            if "aigc_scene_desc" not in st.session_state:
+                st.session_state["aigc_scene_desc"] = (
+                    "高精度城市设计概念总平面图，用地功能分区明确，建筑轮廓与路网肌理清晰，绿色开放空间网络完整，masterplan architectural rendering"
+                )
+        elif "透视" in _sub_param:
+            if "aigc_scene_desc" not in st.session_state:
+                st.session_state["aigc_scene_desc"] = (
+                    "人行尺度历史街区全景透视图，保留历史红砖与灰砖立面风貌，底层活力商业界面，人行道行道树与街具，温暖自然阳光"
+                )
+        elif "鸟瞰" in _sub_param or "体块" in _sub_param:
+            if "aigc_scene_desc" not in st.session_state:
+                st.session_state["aigc_scene_desc"] = (
+                    "轴测鸟瞰空间体块模拟，新旧建筑高度与体量梯度过渡，三维空间形态推演，现代与传统材质有机交融，高品质空间尺度"
+                )
 
-    st.markdown("---")
+    # ══════════════════════════════════════════
+    # 侧边栏：SD 参数配置
+    # ══════════════════════════════════════════
+    with st.sidebar:
+        st.markdown("### ⚙️ SD 渲染参数")
+        render_mode = st.selectbox(
+            "渲染模式",
+            ["img2img (图生图)", "txt2img (纯文生图)", "inpainting (局部重绘)"],
+            key="aigc_mode",
+        )
 
-    # 硬件模式
-    hw_mode = st.radio("硬件模式", ["⚡ 低配模式", "🎮 标准模式", "🚀 高清模式"], index=1, key="aigc_hw_mode")
-    if hw_mode.startswith("⚡"):
-        default_res, default_steps, default_cfg = "⚡ 低配 512×384", 12, 5.0
-    elif hw_mode.startswith("🚀"):
-        default_res, default_steps, default_cfg = "高清 1536×864 (16:9)", 30, 8.0
-    else:
-        default_res, default_steps, default_cfg = "标准 1024×768 (4:3)", 20, 7.0
+        # 模型选择
+        st.markdown("### 🧠 SD 模型")
+        sd_models = _fetch_sd_models()
+        if sd_models:
+            sd_model = st.selectbox("选择模型", sd_models, key="aigc_sd_model")
+        else:
+            sd_model = st.text_input("模型名称 (SD WebUI 未连接)", value="", key="aigc_sd_model_manual")
+            st.caption("启动 SD WebUI 后可自动获取模型列表")
 
-    st.markdown("### 🎛️ 渲染参数")
-    res_label = st.selectbox("输出分辨率", list(RESOLUTION_PRESETS.keys()),
-                             index=list(RESOLUTION_PRESETS.keys()).index(default_res) if default_res in RESOLUTION_PRESETS else 2,
-                             key="aigc_resolution")
-    output_w, output_h = RESOLUTION_PRESETS[res_label]
-    denoising = st.slider("重绘强度", 0.1, 1.0, 0.55, 0.05, key="aigc_denoising")
-    steps = st.slider("采样步数", 5, 50, default_steps, 1, key="aigc_steps")
-    cfg_scale = st.slider("CFG Scale", 1.0, 15.0, default_cfg, 0.5, key="aigc_cfg")
-    sampler = st.selectbox("采样器", ["DPM++ 2M Karras", "Euler a", "DPM++ SDE Karras", "DDIM", "UniPC"], key="aigc_sampler")
-    seed = st.number_input("种子 (-1=随机)", value=-1, min_value=-1, key="aigc_seed")
+        st.markdown("---")
 
-    # ControlNet 预处理器选择
-    st.markdown("---")
-    st.markdown("### 🔧 ControlNet 预处理器")
-    cn_module_label = st.selectbox("空间约束预处理器", list(CONTROLNET_MODULES.keys()), key="aigc_cn_module")
-    cn_module = CONTROLNET_MODULES[cn_module_label]
-    cn_depth_module = st.selectbox("深度图预处理器", ["depth (深度)", "lineart_realistic (写实线稿)"], key="aigc_cn_depth_module")
-    cn_depth_module_val = CONTROLNET_MODULES.get(cn_depth_module.split(" ")[0], "depth")
+        # 硬件模式
+        hw_mode = st.radio("硬件模式", ["⚡ 低配模式", "🎮 标准模式", "🚀 高清模式"], index=1, key="aigc_hw_mode")
+        if hw_mode.startswith("⚡"):
+            default_res, default_steps, default_cfg = "⚡ 低配 512×384", 12, 5.0
+        elif hw_mode.startswith("🚀"):
+            default_res, default_steps, default_cfg = "高清 1536×864 (16:9)", 30, 8.0
+        else:
+            default_res, default_steps, default_cfg = "标准 1024×768 (4:3)", 20, 7.0
 
-# 统一坐标范围（始终计算，确保所有约束图对齐）
-preview_lng, preview_lat = _get_boundary_range()
+        st.markdown("### 🎛️ 渲染参数")
+        res_label = st.selectbox("输出分辨率", list(RESOLUTION_PRESETS.keys()),
+                                 index=list(RESOLUTION_PRESETS.keys()).index(default_res) if default_res in RESOLUTION_PRESETS else 2,
+                                 key="aigc_resolution")
+        output_w, output_h = RESOLUTION_PRESETS[res_label]
+        denoising = st.slider("重绘强度", 0.1, 1.0, 0.55, 0.05, key="aigc_denoising")
+        steps = st.slider("采样步数", 5, 50, default_steps, 1, key="aigc_steps")
+        cfg_scale = st.slider("CFG Scale", 1.0, 15.0, default_cfg, 0.5, key="aigc_cfg")
+        sampler = st.selectbox("采样器", ["DPM++ 2M Karras", "Euler a", "DPM++ SDE Karras", "DDIM", "UniPC"], key="aigc_sampler")
+        seed = st.number_input("种子 (-1=随机)", value=-1, min_value=-1, key="aigc_seed")
 
-# ══════════════════════════════════════════
-# 主区域
-# ══════════════════════════════════════════
+        # ControlNet 预处理器选择
+        st.markdown("---")
+        st.markdown("### 🔧 ControlNet 预处理器")
+        cn_module_label = st.selectbox("空间约束预处理器", list(CONTROLNET_MODULES.keys()), key="aigc_cn_module")
+        cn_module = CONTROLNET_MODULES[cn_module_label]
+        cn_depth_module = st.selectbox("深度图预处理器", ["depth (深度)", "lineart_realistic (写实线稿)"], key="aigc_cn_depth_module")
+        cn_depth_module_val = CONTROLNET_MODULES.get(cn_depth_module.split(" ")[0], "depth")
 
-# ---- 1. 空间约束 ----
-render_section_intro(
-    "空间约束 (ControlNet)",
-    "自动加载路网、建筑轮廓、研究边界、用地类型，渲染时自动注入 ControlNet 锁定不变。",
-    eyebrow="Spatial Lock",
-)
+    # 统一坐标范围（始终计算，确保所有约束图对齐）
+    preview_lng, preview_lat = _get_boundary_range()
 
-SPATIAL_DATA = {
-    "boundary": {"path": ROOT / "data/gis/Boundary_Scope.geojson", "label": "🔲 研究边界", "default_weight": 1.0},
-    "roads": {"path": ROOT / "static/road_clipped.geojson", "label": "🛣️ 道路网络", "default_weight": 0.9},
-    "buildings": {"path": ROOT / "static/buildings.geojson", "label": "🏢 建筑轮廓", "default_weight": 0.8},
-    "plots": {"path": ROOT / "data/gis/Key_Plots_District.json", "label": "✴️ 重点地块", "default_weight": 1.0},
-    "landuse": {"path": ROOT / "data/gis/landuse_clipped.geojson", "label": "🗺️ 用地类型", "default_weight": 0.6},
-}
-# ControlNet 模型映射：根据预处理器自动选择对应模型
-CN_MODEL_MAP = {
-    "canny": "control_v11p_sd15_canny",
-    "lineart_realistic": "control_v11p_sd15_lineart",
-    "lineart_anime": "control_v11p_sd15s2_lineart_anime",
-    "scribble_xdog": "control_v11p_sd15_scribble",
-    "depth": "control_v11f1p_sd15_depth",
-    "seg": "control_v11p_sd15_seg",
-}
-available_constraints = {k: v for k, v in SPATIAL_DATA.items() if v["path"].exists()}
+    # ══════════════════════════════════════════
+    # 主区域
+    # ══════════════════════════════════════════
 
-col_checks = st.columns(min(5, len(available_constraints)) if available_constraints else 1)
-cn_enabled_keys = []
-for i, (key, info) in enumerate(available_constraints.items()):
-    with col_checks[i % len(col_checks)]:
-        default_on = key in ("boundary", "buildings")
-        if st.checkbox(info["label"], value=default_on, key=f"cn_{key}"):
-            cn_enabled_keys.append(key)
+    # ---- 1. 空间约束 ----
+    render_section_intro(
+        "空间约束 (ControlNet)",
+        "自动加载路网、建筑轮廓、研究边界、用地类型，渲染时自动注入 ControlNet 锁定不变。",
+        eyebrow="Spatial Lock",
+    )
 
-if cn_enabled_keys:
-    weight_cols = st.columns(len(cn_enabled_keys))
+    from src.config import GIS_FILES
+    SPATIAL_DATA = {
+        "boundary": {"path": GIS_FILES.get("boundary", ROOT / "data/gis/Boundary_Scope.geojson"), "label": "🔲 研究边界", "default_weight": 1.0},
+        "roads": {"path": GIS_FILES.get("roads", ROOT / "static/road_clipped.geojson"), "label": "🛣️ 道路网络", "default_weight": 0.9},
+        "buildings": {"path": GIS_FILES.get("buildings", ROOT / "static/buildings.geojson"), "label": "🏢 建筑轮廓", "default_weight": 0.8},
+        "plots": {"path": GIS_FILES.get("plots", ROOT / "data/gis/Key_Plots_District.json"), "label": "✴️ 重点地块", "default_weight": 1.0},
+        "landuse": {"path": GIS_FILES.get("landuse", ROOT / "data/gis/landuse_clipped.geojson"), "label": "🗺️ 用地类型", "default_weight": 0.6},
+    }
+    available_constraints = {k: v for k, v in SPATIAL_DATA.items() if v["path"].exists()}
+
+    col_checks = st.columns(min(5, len(available_constraints)) if available_constraints else 1)
+    cn_enabled_keys = []
+    for i, (key, info) in enumerate(available_constraints.items()):
+        with col_checks[i % len(col_checks)]:
+            default_on = key in ("boundary", "buildings")
+            if st.checkbox(info["label"], value=default_on, key=f"cn_{key}"):
+                cn_enabled_keys.append(key)
+
     cn_weights = {}
-    for i, key in enumerate(cn_enabled_keys):
-        info = available_constraints[key]
-        with weight_cols[i]:
-            cn_weights[key] = st.slider(info["label"].split(" ")[-1], 0.0, 2.0, info["default_weight"], 0.1, key=f"cn_w_{key}")
-
-# 深度图
-st.markdown("---")
-render_section_intro(
-    "深度图 (Depth)",
-    "根据图纸类型自动适配：平面类用空间尺度约束，透视类用远近深度关系。",
-    eyebrow="Depth Map",
-)
-
-col_depth1, col_depth2, col_depth3 = st.columns(3)
-with col_depth1:
-    enable_depth = st.checkbox("启用深度图约束", value=True, key="aigc_depth_on")
-    depth_weight = st.slider("深度图权重", 0.0, 2.0, 0.8, 0.1, key="aigc_depth_weight", disabled=not enable_depth)
-with col_depth2:
-    depth_mode = st.radio(
-        "图纸类型",
-        ["平面类 (总平面/分析图)", "透视类 (街道/鸟瞰)"],
-        key="aigc_depth_mode",
-        disabled=not enable_depth,
-    )
-with col_depth3:
-    if depth_mode.startswith("平面"):
-        st.markdown("**空间尺度约束**")
-        st.caption("道路宽度按等级换算为米数")
-        st.caption("建筑高度按楼层数换算")
-        for level, meters in ROAD_WIDTH_METERS.items():
-            label = {1: "主干道", 2: "次干道", 3: "支路", 4: "其他"}[level]
-            st.caption(f"  L{level} {label}: {meters}m")
-    else:
-        st.markdown("**远近深度关系**")
-        st.caption("前景 (近) = 亮，背景 (远) = 暗")
-        st.caption("基于道路等级和建筑高度生成")
-
-# 预览
-with st.expander("预览约束图与深度图", expanded=False):
-    show_previews = st.checkbox("🔍 显示实时渲染的控制特征图与深度图", value=False, key="aigc_show_previews")
-    if show_previews:
-        total_cols = len(cn_enabled_keys) + (1 if enable_depth else 0)
-        preview_cols = st.columns(min(3, max(1, total_cols)))
-        cn_images = {}
-        for i, key in enumerate(cn_enabled_keys[:3]):
+    if cn_enabled_keys:
+        weight_cols = st.columns(len(cn_enabled_keys))
+        for i, key in enumerate(cn_enabled_keys):
             info = available_constraints[key]
-            with preview_cols[i % len(preview_cols)]:
-                if key == "landuse":
-                    img = render_landuse_overlay(str(info["path"]), width=512, height=384,
-                                                 lng_range=preview_lng, lat_range=preview_lat)
-                else:
-                    img = render_geojson_to_image(str(info["path"]), width=512, height=384,
-                                                  lng_range=preview_lng, lat_range=preview_lat)
-                cn_images[key] = img
-                st.image(img, caption=info["label"], width=256)
+            with weight_cols[i]:
+                cn_weights[key] = st.slider(info["label"].split(" ")[-1], 0.0, 2.0, info["default_weight"], 0.1, key=f"cn_w_{key}")
 
-        if enable_depth:
-            road_path = str(ROOT / "static/road_clipped.geojson")
-            bldg_path = str(ROOT / "static/buildings.geojson")
-            d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
-            with preview_cols[(len(cn_enabled_keys)) % len(preview_cols)]:
-                depth_img = render_depth_map(road_path, bldg_path, width=512, height=384,
-                                             lng_range=preview_lng, lat_range=preview_lat, mode=d_mode)
-                st.image(depth_img, caption=f"深度图 ({'空间尺度' if d_mode == 'plan' else '远近关系'})", width=256)
-                st.caption("亮=近/高，暗=远/低")
+    # 深度图
+    st.markdown("---")
+    render_section_intro(
+        "深度图 (Depth)",
+        "根据图纸类型自动适配：平面类用空间尺度约束，透视类用远近深度关系。",
+        eyebrow="Depth Map",
+    )
 
-st.markdown("---")
+    col_depth1, col_depth2, col_depth3 = st.columns(3)
+    with col_depth1:
+        enable_depth = st.checkbox("启用深度图约束", value=True, key="aigc_depth_on")
+        depth_weight = st.slider("深度图权重", 0.0, 2.0, 0.8, 0.1, key="aigc_depth_weight", disabled=not enable_depth)
+    with col_depth2:
+        depth_mode = st.radio(
+            "图纸类型",
+            ["平面类 (总平面/分析图)", "透视类 (街道/鸟瞰)"],
+            key="aigc_depth_mode",
+            disabled=not enable_depth,
+        )
+    with col_depth3:
+        if depth_mode.startswith("平面"):
+            st.markdown("**空间尺度约束**")
+            st.caption("道路宽度按等级换算为米数")
+            st.caption("建筑高度按楼层数换算")
+            for level, meters in ROAD_WIDTH_METERS.items():
+                label = {1: "主干道", 2: "次干道", 3: "支路", 4: "其他"}[level]
+                st.caption(f"  L{level} {label}: {meters}m")
+        else:
+            st.markdown("**远近深度关系**")
+            st.caption("前景 (近) = 亮，背景 (远) = 暗")
+            st.caption("基于道路等级和建筑高度生成")
 
-# ---- 1.5 设计策略风格 ----
-render_section_intro(
-    "设计策略风格",
-    "根据前期设计决策自动匹配渲染风格，也可手动选择。风格影响提示词、色彩、材质和光影。",
-    eyebrow="Style Strategy",
-)
+    # 预览
+    cn_images = {}
+    with st.expander("预览约束图与深度图", expanded=False):
+        show_previews = st.checkbox("🔍 显示实时渲染的控制特征图与深度图", value=False, key="aigc_show_previews")
+        if show_previews:
+            total_cols = len(cn_enabled_keys) + (1 if enable_depth else 0)
+            preview_cols = st.columns(min(3, max(1, total_cols)))
+            for i, key in enumerate(cn_enabled_keys[:3]):
+                info = available_constraints[key]
+                with preview_cols[i % len(preview_cols)]:
+                    if key == "landuse":
+                        img = render_landuse_overlay(str(info["path"]), width=512, height=384,
+                                                     lng_range=preview_lng, lat_range=preview_lat)
+                    else:
+                        img = render_geojson_to_image(str(info["path"]), width=512, height=384,
+                                                      lng_range=preview_lng, lat_range=preview_lat)
+                    cn_images[key] = img
+                    st.image(img, caption=info["label"], width=256)
 
-# 自动检测策略
-try:
-    from src.workflow.design_context import build_design_context as _bdc
-    _ctx = _bdc()
-    auto_styles = _detect_strategy_from_context(_ctx)
-except Exception:
-    auto_styles = ["微更新修补"]
+            if enable_depth:
+                road_path = str(SPATIAL_DATA["roads"]["path"])
+                bldg_path = str(SPATIAL_DATA["buildings"]["path"])
+                d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
+                with preview_cols[(len(cn_enabled_keys)) % len(preview_cols)]:
+                    depth_img = render_depth_map(road_path, bldg_path, width=512, height=384,
+                                                 lng_range=preview_lng, lat_range=preview_lat, mode=d_mode)
+                    st.image(depth_img, caption=f"深度图 ({'空间尺度' if d_mode == 'plan' else '远近关系'})", width=256)
+                    st.caption("亮=近/高，暗=远/低")
 
-# 风格选择（支持多选）
-style_options = list(STRATEGY_STYLES.keys())
-default_selection = [s for s in auto_styles if s in style_options] or ["微更新修补"]
+    st.markdown("---")
 
-selected_styles = st.multiselect(
-    "选择渲染风格（可多选组合）",
-    style_options,
-    default=default_selection,
-    key="aigc_styles",
-    help="选择的设计策略将自动影响提示词中的建筑风格、材质、色彩和氛围描述",
-)
+    # ---- 1.5 设计策略风格 ----
+    render_section_intro(
+        "设计策略风格",
+        "根据前期设计决策自动匹配渲染风格，也可手动选择。风格影响提示词、色彩、材质和光影。",
+        eyebrow="Style Strategy",
+    )
 
-# 显示选中风格的详细信息
-if selected_styles:
-    cols = st.columns(min(3, len(selected_styles)))
-    for i, style_name in enumerate(selected_styles):
-        style = STRATEGY_STYLES[style_name]
-        with cols[i % len(cols)], st.container(border=True):
-            st.markdown(f"**{style_name}**")
-            st.caption(f"🎨 色彩: {style['colors']}")
-            st.caption(f"🧱 材质: {style['materials'][:60]}...")
-            st.caption(f"💡 光影: {style['lighting'][:60]}...")
+    try:
+        from src.workflow.design_context import build_design_context as _bdc
+        _ctx = _bdc()
+        auto_styles = _detect_strategy_from_context(_ctx)
+    except Exception:
+        auto_styles = ["微更新修补"]
 
-st.markdown("---")
+    style_options = list(STRATEGY_STYLES.keys())
+    default_selection = [s for s in auto_styles if s in style_options] or ["微更新修补"]
 
-# ---- 2. 底图上传 ----
-render_section_intro("底图上传", "提供图生图的基础图像。", eyebrow="Upload")
+    selected_styles = st.multiselect(
+        "选择渲染风格（可多选组合）",
+        style_options,
+        default=default_selection,
+        key="aigc_styles",
+        help="选择的设计策略将自动影响提示词中的建筑风格、材质、色彩和氛围描述",
+    )
 
-mode_short = render_mode.split(" ")[0]
-col1, col2 = st.columns(2)
-with col1:
-    base_map_file = st.file_uploader("底图 / 参考图", type=["png", "jpg", "jpeg", "webp"], key="aigc_base_map")
-with col2:
-    if mode_short == "inpainting":
-        mask_file = st.file_uploader("蒙版 (Mask)", type=["png", "jpg", "jpeg"], key="aigc_mask")
-    else:
-        mask_file = None
-        st.caption("蒙版仅在局部重绘模式下需要")
+    if selected_styles:
+        cols = st.columns(min(3, len(selected_styles)))
+        for i, style_name in enumerate(selected_styles):
+            style = STRATEGY_STYLES[style_name]
+            with cols[i % len(cols)], st.container(border=True):
+                st.markdown(f"**{style_name}**")
+                st.caption(f"🎨 色彩: {style['colors']}")
+                st.caption(f"🧱 材质: {style['materials'][:60]}...")
+                st.caption(f"💡 光影: {style['lighting'][:60]}...")
 
-if base_map_file is not None:
-    base_img = PILImage.open(base_map_file)
-    # 🌟 同步至全局会话状态，供 Stage 10 Before/After 视窗无缝作为现状底图展示
-    st.session_state["aigc_init_image"] = base_img.convert("RGB")
-    st.image(base_img, caption=f"底图预览 ({base_img.size[0]}×{base_img.size[1]})", width=400)
+    st.markdown("---")
 
-st.markdown("---")
+    # ---- 2. 底图上传 ----
+    render_section_intro("底图上传", "提供图生图的基础图像。", eyebrow="Upload")
 
-# ---- 3. 提示词 ----
-render_section_intro("提示词", "写场景描述后可直接渲染，也可先 AI 润色获得更专业的提示词。", eyebrow="Prompt")
+    mode_short = render_mode.split(" ")[0]
+    col1, col2 = st.columns(2)
+    with col1:
+        base_map_file = st.file_uploader("底图 / 参考图", type=["png", "jpg", "jpeg", "webp"], key="aigc_base_map")
+    with col2:
+        if mode_short == "inpainting":
+            mask_file = st.file_uploader("蒙版 (Mask)", type=["png", "jpg", "jpeg"], key="aigc_mask")
+        else:
+            mask_file = None
+            st.caption("蒙版仅在局部重绘模式下需要")
 
-# 从 DesignContext 自动生成场景描述
-auto_desc = _build_auto_scene_description()
-design_ctx_text = _build_design_context_prompt()
-default_scene = auto_desc if auto_desc else "城市更新后的街道透视图，保留历史建筑，增加绿化和公共空间，人行道宽敞，有行道树和座椅"
+    if base_map_file is not None:
+        base_img = PILImage.open(base_map_file)
+        st.session_state["aigc_init_image"] = base_img.convert("RGB")
+        st.image(base_img, caption=f"底图预览 ({base_img.size[0]}×{base_img.size[1]})", width=400)
 
-scene_description = st.text_area(
-    "场景描述 (中文即可)",
-    value=st.session_state.get("aigc_scene_desc", default_scene),
-    height=150,
-    key="aigc_scene_desc",
-)
+    st.markdown("---")
 
-# 显示设计上下文摘要
-if design_ctx_text:
-    with st.expander("📋 当前设计上下文（来自 DesignContext）", expanded=False):
-        st.caption(design_ctx_text[:1000])
+    # ---- 3. 提示词 ----
+    render_section_intro("提示词", "写场景描述后可直接渲染，也可先 AI 润色获得更专业的提示词。", eyebrow="Prompt")
 
-col_ai, col_model = st.columns([3, 1])
-with col_ai:
-    ds_model = st.text_input("AI 模型", value="deepseek-v4-flash", key="aigc_ds_model", label_visibility="collapsed")
+    auto_desc = _build_auto_scene_description()
+    design_ctx_text = _build_design_context_prompt()
+    default_scene = auto_desc if auto_desc else "城市更新后的街道透视图，保留历史建筑，增加绿化和公共空间，人行道宽敞，有行道树和座椅"
 
-if st.button("🧠 AI 润色提示词", type="secondary", key="aigc_polish", **stretch_width(st.button)):
-    from src.engines.llm_engine import call_llm_engine
-    with st.spinner("AI 润色中..."):
-        # 注入设计上下文 + 策略风格到润色 prompt
-        ctx_block = f"\n\n设计背景：\n{design_ctx_text[:600]}" if design_ctx_text else ""
-        style_block = f"\n\n渲染风格要求：\n{_build_style_prompt(selected_styles)}" if selected_styles else ""
-        style_params = _get_style_params(selected_styles)
-        negative_extra = style_params.get("negative_extra", "")
+    scene_description = st.text_area(
+        "场景描述 (中文即可)",
+        value=st.session_state.get("aigc_scene_desc", default_scene),
+        height=150,
+        key="aigc_scene_desc",
+    )
 
-        polish_prompt = f"""你是一位专业的建筑可视化提示词工程师，擅长为 Stable Diffusion 生成高质量提示词。
+    if design_ctx_text:
+        with st.expander("📋 当前设计上下文（来自 DesignContext）", expanded=False):
+            st.caption(design_ctx_text[:1000])
+
+    col_ai, col_model = st.columns([3, 1])
+    with col_ai:
+        ds_model = st.text_input("AI 模型", value="deepseek-v4-flash", key="aigc_ds_model", label_visibility="collapsed")
+
+    if st.button("🧠 AI 润色提示词", type="secondary", key="aigc_polish", **stretch_width(st.button)):
+        from src.engines.llm_engine import call_llm_engine
+        with st.spinner("AI 润色中..."):
+            ctx_block = f"\n\n设计背景：\n{design_ctx_text[:600]}" if design_ctx_text else ""
+            style_block = f"\n\n渲染风格要求：\n{_build_style_prompt(selected_styles)}" if selected_styles else ""
+
+            polish_prompt = f"""你是一位专业的建筑可视化提示词工程师，擅长为 Stable Diffusion 生成高质量提示词。
 请根据以下场景描述和渲染风格要求，生成一段专业的英文提示词。
 
 要求：
@@ -846,228 +874,220 @@ if st.button("🧠 AI 润色提示词", type="secondary", key="aigc_polish", **s
 
 场景描述：{scene_description}{ctx_block}{style_block}"""
 
-        result = call_llm_engine(
-            prompt=polish_prompt,
-            system_prompt="你是专业的建筑可视化提示词专家，精通城市规划和建筑设计领域的英文提示词工程。只输出英文提示词，不要解释。",
-            model=ds_model,
-        )
-
-    if result and isinstance(result, str) and len(result) > 20:
-        if "[Negative]:" in result:
-            parts = result.split("[Negative]:")
-            st.session_state["aigc_prompt"] = parts[0].strip()
-            st.session_state["aigc_neg"] = parts[1].strip()
-        else:
-            st.session_state["aigc_prompt"] = result.strip()
-            st.session_state["aigc_neg"] = "low quality, blurry, distorted, deformed, ugly, watermark, text, oversaturated, cartoon, anime, sketch, lowres, bad anatomy"
-        st.session_state["aigc_prompt_polished"] = True
-        st.rerun()
-    else:
-        st.warning("润色失败，请检查 DeepSeek API 配置。可直接使用场景描述渲染。")
-
-# 显示提示词（润色后可编辑，未润色也可直接使用）
-prompt_polished = st.session_state.get("aigc_prompt_polished", False)
-current_prompt = st.session_state.get("aigc_prompt", "")
-current_neg = st.session_state.get("aigc_neg", "low quality, blurry, distorted, deformed, ugly, watermark, text, oversaturated")
-
-if prompt_polished and current_prompt:
-    st.success("✅ 提示词已润色")
-    col_p, col_n = st.columns(2)
-    with col_p:
-        prompt = st.text_area("正向提示词 (可编辑)", value=current_prompt, height=120, key="aigc_prompt_edit")
-    with col_n:
-        negative_prompt = st.text_area("负向提示词 (可编辑)", value=current_neg, height=120, key="aigc_neg_edit")
-else:
-    # 未润色时也可直接渲染（使用场景描述作为 prompt）
-    st.info("💡 可直接点击渲染（使用场景描述），或先点击「AI 润色」获得更专业的英文提示词。")
-    prompt = scene_description
-    negative_prompt = current_neg
-
-st.markdown("---")
-
-# ---- 4. 渲染 ----
-# 移除强制润色门控：有场景描述即可渲染
-can_render = bool(prompt)
-
-render_section_intro("渲染", "确认参数后点击渲染。", eyebrow="Render")
-
-# 应用策略风格参数
-style_params = _get_style_params(selected_styles)
-effective_denoising = max(0.1, min(1.0, denoising + style_params.get("denoising_boost", 0)))
-cn_weight_adj = style_params.get("cn_weight_boost", 0)
-style_neg_extra = style_params.get("negative_extra", "")
-if style_neg_extra and style_neg_extra not in negative_prompt:
-    negative_prompt = f"{negative_prompt}, {style_neg_extra}"
-
-col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns(6)
-col_s1.metric("模式", mode_short)
-col_s2.metric("分辨率", f"{output_w}×{output_h}")
-col_s3.metric("Denoising", f"{effective_denoising:.2f}")
-col_s4.metric("ControlNet", f"{len(cn_enabled_keys) + (1 if enable_depth else 0)} 层")
-col_s5.metric("风格", "/".join([s[:2] for s in selected_styles]) if selected_styles else "默认")
-col_s6.metric("提示词", "✅ 已润色" if prompt_polished else "📝 场景描述")
-
-if st.button(
-    "🚀 开始渲染",
-    type="primary",
-    key="aigc_render",
-    disabled=not can_render,
-    **stretch_width(st.button),
-):
-    from src.engines.stable_diffusion_engine import SDPipeline
-
-    pipe = SDPipeline()
-
-    # 切换 SD 模型（如果用户选择了不同模型）
-    if sd_model:
-        try:
-            import requests
-            requests.post("http://127.0.0.1:7860/sdapi/v1/options",
-                          json={"sd_model_checkpoint": sd_model}, timeout=10)
-        except Exception:
-            pass  # 模型切换失败不阻断渲染
-
-    if mode_short == "txt2img":
-        pipe.txt2img(prompt, negative_prompt, width=output_w, height=output_h,
-                     steps=steps, cfg_scale=cfg_scale, sampler_name=sampler, seed=seed)
-    else:
-        if base_map_file is not None:
-            init_img = PILImage.open(base_map_file).convert("RGB")
-        else:
-            init_img = PILImage.new("RGB", (output_w, output_h), "#1e293b")
-            st.warning("未上传底图，使用默认黑色画布。")
-
-        if mode_short == "inpainting":
-            if mask_file is not None:
-                mask_img = PILImage.open(mask_file).convert("L")
-                pipe.inpaint(init_img, mask_img, prompt, negative_prompt,
-                             denoising=effective_denoising, steps=steps, cfg_scale=cfg_scale,
-                             sampler_name=sampler, seed=seed)
-            else:
-                st.error("局部重绘模式需要上传蒙版。")
-                st.stop()
-        else:
-            pipe.img2img(init_img, prompt, negative_prompt,
-                         denoising=effective_denoising, steps=steps, cfg_scale=cfg_scale,
-                         sampler_name=sampler, seed=seed)
-
-        # ControlNet 约束（使用用户选择的预处理器和对应模型，应用风格调整）
-        cn_model = CN_MODEL_MAP.get(cn_module, "control_v11p_sd15_canny")
-        for key in cn_enabled_keys:
-            info = available_constraints[key]
-            base_weight = cn_weights.get(key, info["default_weight"])
-            weight = max(0.1, min(2.0, base_weight + cn_weight_adj))
-            if key in cn_images:
-                cn_img = cn_images[key]
-            else:
-                if key == "landuse":
-                    cn_img = render_landuse_overlay(
-                        str(info["path"]), width=init_img.size[0], height=init_img.size[1],
-                        lng_range=preview_lng, lat_range=preview_lat,
-                    )
-                else:
-                    cn_img = render_geojson_to_image(
-                        str(info["path"]), width=init_img.size[0], height=init_img.size[1],
-                        lng_range=preview_lng, lat_range=preview_lat,
-                    )
-            pipe.add_controlnet(cn_img, module=cn_module, model=cn_model, weight=weight)
-
-        # 深度图约束
-        if enable_depth:
-            road_path = str(ROOT / "static/road_clipped.geojson")
-            bldg_path = str(ROOT / "static/buildings.geojson")
-            d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
-            depth_img = render_depth_map(
-                road_path, bldg_path,
-                width=init_img.size[0], height=init_img.size[1],
-                lng_range=preview_lng, lat_range=preview_lat,
-                mode=d_mode,
+            result = call_llm_engine(
+                prompt=polish_prompt,
+                system_prompt="你是专业的建筑可视化提示词专家，精通城市规划和建筑设计领域的英文提示词工程。只输出英文提示词，不要解释。",
+                model=ds_model,
             )
-            depth_cn_model = CN_MODEL_MAP.get(cn_depth_module_val, "control_v11f1p_sd15_depth")
-            pipe.add_controlnet(depth_img, module=cn_depth_module_val, model=depth_cn_model, weight=depth_weight)
 
-    # 执行渲染
-    progress_bar = st.progress(0, text="准备渲染...")
-    def update_progress(**kwargs):
-        step_idx = kwargs.get("step_index", 0)
-        total = kwargs.get("total_steps", 1)
-        progress_bar.progress((step_idx + 0.5) / total, text=f"渲染步骤 {step_idx + 1}/{total}...")
+        if result and isinstance(result, str) and len(result) > 20:
+            if "[Negative]:" in result:
+                parts = result.split("[Negative]:")
+                st.session_state["aigc_prompt"] = parts[0].strip()
+                st.session_state["aigc_neg"] = parts[1].strip()
+            else:
+                st.session_state["aigc_prompt"] = result.strip()
+                st.session_state["aigc_neg"] = "low quality, blurry, distorted, deformed, ugly, watermark, text, oversaturated, cartoon, anime, sketch, lowres, bad anatomy"
+            st.session_state["aigc_prompt_polished"] = True
+            st.rerun()
+        else:
+            st.warning("润色失败，请检查 DeepSeek API 配置。可直接使用场景描述渲染。")
 
-    try:
-        with st.spinner("SD 渲染中，请耐心等待..."):
-            sd_result = pipe.run(on_progress=update_progress)
-        progress_bar.progress(1.0, text="渲染完成!")
-        if sd_result.images:
-            result_img = sd_result.images[0]
-            st.session_state["aigc_result_image"] = result_img
-            st.session_state["aigc_result_seed"] = sd_result.seed
-            st.session_state["aigc_result_time"] = sd_result.elapsed_seconds
+    prompt_polished = st.session_state.get("aigc_prompt_polished", False)
+    current_prompt = st.session_state.get("aigc_prompt", "")
+    current_neg = st.session_state.get("aigc_neg", "low quality, blurry, distorted, deformed, ugly, watermark, text, oversaturated")
 
-            # 保存到 stage_bus
-            from src.workflow.stage_data_bus import save_stage_output
-            save_stage_output("15", SK.AIGC_PROMPT, prompt)
-            save_stage_output("15", SK.AIGC_SEED, sd_result.seed)
-            save_stage_output("15", "sd_result", result_img)
-            st.session_state["sd_result"] = result_img
-            st.session_state[f"sd_result_{mode_short}"] = result_img
+    if prompt_polished and current_prompt:
+        st.success("✅ 提示词已润色")
+        col_p, col_n = st.columns(2)
+        with col_p:
+            prompt = st.text_area("正向提示词 (可编辑)", value=current_prompt, height=120, key="aigc_prompt_edit")
+        with col_n:
+            negative_prompt = st.text_area("负向提示词 (可编辑)", value=current_neg, height=120, key="aigc_neg_edit")
+    else:
+        st.info("💡 可直接点击渲染（使用场景描述），或先点击「AI 润色」获得更专业的英文提示词。")
+        prompt = scene_description
+        negative_prompt = current_neg
 
-            # 同步持久化保存到磁盘 output/aigc/ 目录
+    st.markdown("---")
+
+    # ---- 4. 渲染 ----
+    can_render = bool(prompt)
+
+    render_section_intro("渲染", "确认参数后点击渲染。", eyebrow="Render")
+
+    style_params = _get_style_params(selected_styles)
+    effective_denoising = max(0.1, min(1.0, denoising + style_params.get("denoising_boost", 0)))
+    cn_weight_adj = style_params.get("cn_weight_boost", 0)
+    style_neg_extra = style_params.get("negative_extra", "")
+    if style_neg_extra and style_neg_extra not in negative_prompt:
+        negative_prompt = f"{negative_prompt}, {style_neg_extra}"
+
+    col_s1, col_s2, col_s3, col_s4, col_s5, col_s6 = st.columns(6)
+    col_s1.metric("模式", mode_short)
+    col_s2.metric("分辨率", f"{output_w}×{output_h}")
+    col_s3.metric("Denoising", f"{effective_denoising:.2f}")
+    col_s4.metric("ControlNet", f"{len(cn_enabled_keys) + (1 if enable_depth else 0)} 层")
+    col_s5.metric("风格", "/".join([s[:2] for s in selected_styles]) if selected_styles else "默认")
+    col_s6.metric("提示词", "✅ 已润色" if prompt_polished else "📝 场景描述")
+
+    if st.button(
+        "🚀 开始渲染",
+        type="primary",
+        key="aigc_render",
+        disabled=not can_render,
+        **stretch_width(st.button),
+    ):
+        from src.engines.stable_diffusion_engine import SDPipeline
+
+        pipe = SDPipeline()
+
+        if sd_model:
             try:
-                aigc_disk_dir = ROOT / "output" / "aigc"
-                aigc_disk_dir.mkdir(parents=True, exist_ok=True)
-                disk_img_path = aigc_disk_dir / f"aigc_render_{sd_result.seed}_{mode_short}_{int(time.time())}.png"
-                result_img.save(disk_img_path, "PNG")
-                save_stage_output("15", "sd_result_path", str(disk_img_path))
+                import requests
+                requests.post("http://127.0.0.1:7860/sdapi/v1/options",
+                              json={"sd_model_checkpoint": sd_model}, timeout=10)
             except Exception:
                 pass
 
-            # 保存到历史记录
-            if "aigc_history" not in st.session_state:
-                st.session_state["aigc_history"] = []
-            st.session_state["aigc_history"].append({
-                "image": result_img,
-                "seed": sd_result.seed,
-                "time": sd_result.elapsed_seconds,
-                "prompt": prompt[:100],
-                "mode": mode_short,
-                "timestamp": time.strftime("%H:%M:%S"),
-            })
-            # 限制历史记录数
-            if len(st.session_state["aigc_history"]) > 10:
-                st.session_state["aigc_history"] = st.session_state["aigc_history"][-10:]
+        if mode_short == "txt2img":
+            pipe.txt2img(prompt, negative_prompt, width=output_w, height=output_h,
+                         steps=steps, cfg_scale=cfg_scale, sampler_name=sampler, seed=seed)
         else:
-            st.error("渲染未返回图像。")
-    except Exception as e:
-        st.error(f"SD 渲染失败: {e}")
+            if base_map_file is not None:
+                init_img = PILImage.open(base_map_file).convert("RGB")
+            else:
+                init_img = PILImage.new("RGB", (output_w, output_h), "#1e293b")
+                st.warning("未上传底图，使用默认黑色画布。")
 
-# ---- 渲染结果 ----
-if "aigc_result_image" in st.session_state:
-    st.markdown("---")
-    render_section_intro("渲染结果", "查看渲染结果，支持下载。", eyebrow="Result")
-    result_img = st.session_state["aigc_result_image"]
-    result_seed = st.session_state.get("aigc_result_seed", "N/A")
-    result_time = st.session_state.get("aigc_result_time", 0)
-    col_img, col_info = st.columns([3, 1])
-    with col_img:
-        st.image(result_img, caption="渲染结果", use_container_width=True)
-    with col_info:
-        st.metric("Seed", result_seed)
-        st.metric("耗时", f"{result_time:.1f}s")
-        st.metric("尺寸", f"{result_img.size[0]}×{result_img.size[1]}")
-        buf = io.BytesIO()
-        result_img.save(buf, format="PNG")
-        st.download_button("📥 下载 PNG", buf.getvalue(), file_name=f"aigc_result_{result_seed}.png",
-                           mime="image/png", **stretch_width(st.download_button))
+            if mode_short == "inpainting":
+                if mask_file is not None:
+                    mask_img = PILImage.open(mask_file).convert("L")
+                    pipe.inpaint(init_img, mask_img, prompt, negative_prompt,
+                                 denoising=effective_denoising, steps=steps, cfg_scale=cfg_scale,
+                                 sampler_name=sampler, seed=seed)
+                else:
+                    st.error("局部重绘模式需要上传蒙版。")
+                    st.stop()
+            else:
+                pipe.img2img(init_img, prompt, negative_prompt,
+                             denoising=effective_denoising, steps=steps, cfg_scale=cfg_scale,
+                             sampler_name=sampler, seed=seed)
 
-# ---- 历史记录 ----
-history = st.session_state.get("aigc_history", [])
-if history:
-    st.markdown("---")
-    with st.expander(f"📚 渲染历史 ({len(history)} 张)", expanded=False):
-        for _i, item in enumerate(reversed(history)):
-            col_thumb, col_meta = st.columns([1, 2])
-            with col_thumb:
-                st.image(item["image"], width=200)
-            with col_meta:
-                st.caption(f"**{item['timestamp']}** | Seed: {item['seed']} | {item['time']:.1f}s | {item['mode']}")
-                st.caption(f"Prompt: {item['prompt']}...")
+            cn_model = CN_MODEL_MAP.get(cn_module, "control_v11p_sd15_canny")
+            for key in cn_enabled_keys:
+                info = available_constraints[key]
+                base_weight = cn_weights.get(key, info["default_weight"])
+                weight = max(0.1, min(2.0, base_weight + cn_weight_adj))
+                if key in cn_images:
+                    cn_img = cn_images[key]
+                else:
+                    if key == "landuse":
+                        cn_img = render_landuse_overlay(
+                            str(info["path"]), width=init_img.size[0], height=init_img.size[1],
+                            lng_range=preview_lng, lat_range=preview_lat,
+                        )
+                    else:
+                        cn_img = render_geojson_to_image(
+                            str(info["path"]), width=init_img.size[0], height=init_img.size[1],
+                            lng_range=preview_lng, lat_range=preview_lat,
+                        )
+                pipe.add_controlnet(cn_img, module=cn_module, model=cn_model, weight=weight)
+
+            if enable_depth:
+                road_path = str(SPATIAL_DATA["roads"]["path"])
+                bldg_path = str(SPATIAL_DATA["buildings"]["path"])
+                d_mode = "plan" if depth_mode.startswith("平面") else "perspective"
+                depth_img = render_depth_map(
+                    road_path, bldg_path,
+                    width=init_img.size[0], height=init_img.size[1],
+                    lng_range=preview_lng, lat_range=preview_lat,
+                    mode=d_mode,
+                )
+                depth_cn_model = CN_MODEL_MAP.get(cn_depth_module_val, "control_v11f1p_sd15_depth")
+                pipe.add_controlnet(depth_img, module=cn_depth_module_val, model=depth_cn_model, weight=depth_weight)
+
+        progress_bar = st.progress(0, text="准备渲染...")
+        def update_progress(**kwargs):
+            step_idx = kwargs.get("step_index", 0)
+            total = kwargs.get("total_steps", 1)
+            progress_bar.progress((step_idx + 0.5) / total, text=f"渲染步骤 {step_idx + 1}/{total}...")
+
+        try:
+            with st.spinner("SD 渲染中，请耐心等待..."):
+                sd_result = pipe.run(on_progress=update_progress)
+            progress_bar.progress(1.0, text="渲染完成!")
+            if sd_result.images:
+                result_img = sd_result.images[0]
+                st.session_state["aigc_result_image"] = result_img
+                st.session_state["aigc_result_seed"] = sd_result.seed
+                st.session_state["aigc_result_time"] = sd_result.elapsed_seconds
+
+                from src.workflow.stage_data_bus import save_stage_output
+                save_stage_output("15", SK.AIGC_PROMPT, prompt)
+                save_stage_output("15", SK.AIGC_SEED, sd_result.seed)
+                save_stage_output("15", "sd_result", result_img)
+                st.session_state["sd_result"] = result_img
+                st.session_state[f"sd_result_{mode_short}"] = result_img
+
+                try:
+                    aigc_disk_dir = ROOT / "output" / "aigc"
+                    aigc_disk_dir.mkdir(parents=True, exist_ok=True)
+                    disk_img_path = aigc_disk_dir / f"aigc_render_{sd_result.seed}_{mode_short}_{int(time.time())}.png"
+                    result_img.save(disk_img_path, "PNG")
+                    save_stage_output("15", "sd_result_path", str(disk_img_path))
+                except Exception:
+                    pass
+
+                if "aigc_history" not in st.session_state:
+                    st.session_state["aigc_history"] = []
+                st.session_state["aigc_history"].append({
+                    "image": result_img,
+                    "seed": sd_result.seed,
+                    "time": sd_result.elapsed_seconds,
+                    "prompt": prompt[:100],
+                    "mode": mode_short,
+                    "timestamp": time.strftime("%H:%M:%S"),
+                })
+                if len(st.session_state["aigc_history"]) > 10:
+                    st.session_state["aigc_history"] = st.session_state["aigc_history"][-10:]
+            else:
+                st.error("渲染未返回图像。")
+        except Exception as e:
+            st.error(f"SD 渲染失败: {e}")
+
+    # ---- 渲染结果 ----
+    if "aigc_result_image" in st.session_state:
+        st.markdown("---")
+        render_section_intro("渲染结果", "查看渲染结果，支持下载。", eyebrow="Result")
+        result_img = st.session_state["aigc_result_image"]
+        result_seed = st.session_state.get("aigc_result_seed", "N/A")
+        result_time = st.session_state.get("aigc_result_time", 0)
+        col_img, col_info = st.columns([3, 1])
+        with col_img:
+            st.image(result_img, caption="渲染结果", use_container_width=True)
+        with col_info:
+            st.metric("Seed", result_seed)
+            st.metric("耗时", f"{result_time:.1f}s")
+            st.metric("尺寸", f"{result_img.size[0]}×{result_img.size[1]}")
+            buf = io.BytesIO()
+            result_img.save(buf, format="PNG")
+            st.download_button("📥 下载 PNG", buf.getvalue(), file_name=f"aigc_result_{result_seed}.png",
+                               mime="image/png", **stretch_width(st.download_button))
+
+    # ---- 历史记录 ----
+    history = st.session_state.get("aigc_history", [])
+    if history:
+        st.markdown("---")
+        with st.expander(f"📚 渲染历史 ({len(history)} 张)", expanded=False):
+            for _i, item in enumerate(reversed(history)):
+                col_thumb, col_meta = st.columns([1, 2])
+                with col_thumb:
+                    st.image(item["image"], width=200)
+                with col_meta:
+                    st.caption(f"**{item['timestamp']}** | Seed: {item['seed']} | {item['time']:.1f}s | {item['mode']}")
+                    st.caption(f"Prompt: {item['prompt']}...")
+
+
+if not st.session_state.get("_embedded_mode"):
+    render_page()

@@ -118,11 +118,12 @@ def render_project_config_banner():
     # ── 横幅头部 ──
     st.markdown("---")
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-                border: 1px solid #334155; border-radius: 16px; padding: 24px 28px; margin-bottom: 8px;">
-    <h2 style="color: #f1f5f9; margin: 0 0 4px 0; font-size: 20px;">
+    <div style="background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+                border: 1px solid rgba(0, 113, 227, 0.2); box-shadow: 0 4px 16px rgba(0, 113, 227, 0.06);
+                border-radius: 16px; padding: 24px 28px; margin-bottom: 8px;">
+    <h2 style="color: #1d1d1f; margin: 0 0 4px 0; font-size: 20px;">
         🏗️ 项目初始化配置</h2>
-    <p style="color: #94a3b8; margin: 0; font-size: 14px;">
+    <p style="color: #515154; margin: 0; font-size: 14px;">
         首次启动需要填写项目基本信息、场地参数和 API 密钥。保存后自动生成配置文件，下次启动不再显示。</p>
     </div>
     """, unsafe_allow_html=True)
@@ -336,3 +337,36 @@ def render_project_config_banner():
     # 未保存时，阻止页面其余内容加载，避免使用空配置导致报错
     st.warning("⚠️ 请先完成上方配置，否则系统功能可能无法正常运行。")
     return False
+
+
+_render_wizard = render_project_config_banner
+
+
+def _render_compact_bar(cfg: Optional[dict] = None) -> None:
+    """渲染紧凑型项目配置摘要条 (Apple Light Theme)"""
+    data = cfg if cfg is not None else load_project_config()
+    project = data.get("project", {})
+    site = data.get("site", {})
+    p_name = project.get("name", "城市更新设计平台")
+    s_city = site.get("city", "目标城市")
+    s_name = site.get("name", "核心更新单元")
+    s_area = site.get("area_ha", 0)
+    st.markdown(f"""
+    <div style="background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03); border-radius: 12px;
+                padding: 12px 20px; margin-bottom: 12px; display: flex;
+                align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="color: #1d1d1f; font-weight: 600; font-size: 14px;">🏗️ {p_name}</span>
+            <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;">
+                📍 {s_city} · {s_name}
+            </span>
+            <span style="color: #515154; font-size: 13px;">
+                面积：<strong style="color: #1d1d1f;">{s_area} ha</strong>
+            </span>
+        </div>
+        <span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+            ✅ 配置就绪
+        </span>
+    </div>
+    """, unsafe_allow_html=True)

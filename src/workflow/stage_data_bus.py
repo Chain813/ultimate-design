@@ -510,13 +510,11 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
     """渲染增强型功能胶囊进度条，支持点击跳转页面。"""
     completed = list_completed_stages()
     pills = []
-    for code in required_stages:
+    for idx, code in enumerate(required_stages):
         done = code in completed
         is_current = code == current_stage
         name = STAGE_MAP.get(code, "未知阶段")
         
-        # 修正：Streamlit 默认会自动剥离 "01_" 这种数字前缀
-        # 所以跳转路径应直接使用阶段名称
         import urllib.parse
         page_slug = urllib.parse.quote(name)
         
@@ -524,20 +522,30 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
         
         # 构造 HTML
         label_html = f'<span class="ec-num">{code}</span><span class="ec-divider"></span><span class="ec-name">{name}</span>'
-        
         pill_html = f'<div class="ec-pill {cls}">{label_html}</div>'
         pills.append(pill_html)
+        if idx < len(required_stages) - 1:
+            pills.append('<span class="ec-arrow">→</span>')
 
     # 构造完整的 HTML 并压缩
-    html_container = f'<div class="evidence-chain">{"".join(pills)}</div>'
+    html_container = (
+        f'<div class="evidence-chain evidence-chain-bar">'
+        f'<span style="color:#515154; font-weight:600; font-size:13px; margin-right:4px;">🔗 阶段证据链：</span>'
+        f'{"".join(pills)}</div>'
+    )
     style_html = """
         <style>
-        .evidence-chain { 
+        .evidence-chain, .evidence-chain-bar { 
             display: flex; 
             align-items: center; 
-            gap: 12px; 
+            gap: 10px; 
             margin: 16px 0 24px 0; 
-            flex-wrap: wrap; 
+            flex-wrap: wrap;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+            border-radius: 12px;
+            padding: 10px 16px;
         }
         .ec-pill { 
             display: flex;
@@ -564,24 +572,30 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
         .ec-name { 
             font-weight: 500;
         }
+        .ec-arrow {
+            color: #86868b;
+            font-size: 12px;
+        }
         
         .ec-done { 
-            background: rgba(34, 197, 94, 0.12); 
-            color: #4ade80; 
-            border-color: rgba(34, 197, 94, 0.3); 
+            background: #ecfdf5; 
+            color: #047857; 
+            border: 1px solid #a7f3d0; 
+            font-weight: 500;
         }
         
         .ec-current { 
-            background: rgba(129, 140, 248, 0.2); 
-            color: #a5b4fc; 
-            border-color: rgba(129, 140, 248, 0.6); 
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.25);
+            background: #eff6ff; 
+            color: #0071e3; 
+            border: 1px solid #93c5fd; 
+            font-weight: 600;
+            box-shadow: 0 1px 4px rgba(0, 113, 227, 0.12);
         }
         
         .ec-pending { 
-            background: rgba(148, 163, 184, 0.08); 
-            color: #94a3b8; 
-            border-color: rgba(148, 163, 184, 0.15); 
+            background: #f5f5f7; 
+            color: #86868b; 
+            border: 1px solid rgba(0, 0, 0, 0.06); 
         }
         </style>
     """

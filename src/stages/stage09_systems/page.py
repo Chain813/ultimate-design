@@ -38,6 +38,26 @@ from src.workflow.stage_data_bus import (
 from src.workflow.stage_keys import SK
 
 
+def _get_height_redlines(site_cfg: dict, site_name: str, site_city: str) -> tuple[int, int, int]:
+    """动态读取当前基地的三级高度控制红线 (核心控制区, 协调过渡区, 一般更新区)。"""
+    is_cc = ("伪满" in site_name) or ("长春" in site_city and "水产" in site_name) or (site_city == "长春市" and "伪满皇宫" in site_name)
+    custom_ctx = st.session_state.get("custom_site_context", {}) or {}
+    redlines = custom_ctx.get("redlines", {}) or {}
+    reg_limits = site_cfg.get("regulatory_limits", {}) or {}
+
+    if not is_cc and redlines:
+        base_h = float(redlines.get("height_limit", 24.0) or 24.0)
+        core_h = max(6, int(round(base_h * 0.5)))
+        trans_h = max(9, int(round(base_h)))
+        dev_h = max(18, int(round(base_h * 1.5)))
+        return core_h, trans_h, dev_h
+
+    core_h = int(reg_limits.get("core_zone_height_limit_m", 9 if is_cc else 12))
+    trans_h = int(reg_limits.get("general_zone_height_limit_m", 18 if is_cc else 24))
+    dev_h = max(24, trans_h * 2)
+    return core_h, trans_h, dev_h
+
+
 def render_page() -> None:
     render_top_nav()
     render_engine_status_alert()
@@ -128,17 +148,20 @@ def render_page() -> None:
         [StageDependency("08", SK.SPATIAL_STRUCTURE, "空间结构推演")],
         title="Stage 09 生成前置条件",
     )
+    if not stage09_ready:
+        if st.checkbox("⚡ 快速推演模式（跳过前序依赖，直接启用生成）", key="p09_bypass_gate", value=False):
+            stage09_ready = True
 
     # 加载 Stage 08 空间结构
     spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
 
-    from src.config.site import get_site_config, get_site_name, get_site_city, get_landmarks
+    from src.config.site import get_landmarks, get_site_city, get_site_config, get_site_name
     site_cfg = get_site_config()
     site_name = get_site_name() or site_cfg.get("name", "示范重点片区") or "示范重点片区"
     site_city = get_site_city() or site_cfg.get("city", "当地") or "当地"
     site_area = site_cfg.get("area_ha", 160)
     landmarks = get_landmarks()
-    landmark_names = "、".join([lm.get("name", "") for lm in landmarks if lm.get("name")]) if landmarks else "重要公共文化节点"
+    landmark_names = "、".join([lm.get("name", "") for lm in landmarks if lm.get("name")]) if landmarks else f"{site_name}重要公共文化节点"
 
     # ═══════════════════════════════════════════
     # 空间数据面板 —— 始终显示
@@ -147,28 +170,27 @@ def render_page() -> None:
         c1, c2, c3 = st.columns(3)
         with c1:
             st.markdown("#### 🏘️ 土地利用")
-            st.text(get_landuse_summary())
+            st.code(get_landuse_summary(), language="text")
         with c2:
             st.markdown("#### 📍 POI 分布")
             poi_text = get_poi_summary()
-            st.text(poi_text)
+            st.code(poi_text, language="text")
             if "暂不可用" in poi_text or "为空" in poi_text:
                 st.warning("⚠️ POI 数据可能不完整，设施缺口分析将以现有数据为上限进行估算。")
         with c3:
             st.markdown("#### 🌿 街景品质 (GVI)")
-            st.text(get_gvi_summary())
+            st.code(get_gvi_summary(), language="text")
 
         c4, c5 = st.columns(2)
         with c4:
             st.markdown("#### 🏗️ 建筑形态")
-            st.text(get_building_summary())
+            st.code(get_building_summary(), language="text")
         with c5:
             st.markdown("#### 🚗 交通流量")
             traffic_text = get_traffic_summary()
-            st.text(traffic_text)
+            st.code(traffic_text, language="text")
             if "暂不可用" in traffic_text:
                 st.warning("⚠️ 交通数据有限，分析将基于路网拓扑结构进行推演。")
-
 
     # ═══════════════════════════════════════════
     # 模块一：交通网络与 TOD
@@ -245,7 +267,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的交通系统设计方案", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 模块二：公共空间与 15 分钟生活圈
     # ═══════════════════════════════════════════
@@ -271,7 +292,7 @@ def render_page() -> None:
             spatial_ctx = get_full_spatial_context()
             prompt = f"""你是一位资深景观与公共空间规划师，精通 15 分钟社区生活圈理论。
 
-    基于以下空间数据，为研究范围制定公共空间系统设计方案。
+    基于以下空间数据，为研究范围（{site_city}{site_name}）制定公共空间系统设计方案。
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【全域空间数据】：{spatial_ctx[:3500]}
@@ -300,7 +321,7 @@ def render_page() -> None:
 
     四、开放空间网络
       - 主要开放空间节点及其串联路径
-      - 滨水空间、铁路沿线空间的利用策略
+      - 滨水空间、线性廊道空间的利用策略
       - 与慢行系统的耦合关系
 
     五、适老化与无障碍改造
@@ -325,7 +346,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的公共空间系统设计方案", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 模块三：建筑形态、风貌与立面
     # ═══════════════════════════════════════════
@@ -344,6 +364,16 @@ def render_page() -> None:
             {"value": f"{sky.get('high_rise_ratio', 0)}%", "title": "高层占比", "desc": ">24m"},
         ])
 
+        default_core_h, default_trans_h, default_dev_h = _get_height_redlines(site_cfg, site_name, site_city)
+        with st.expander("📏 基地分级高度控制红线配置（自动同步当前工程参数，支持手动微调）", expanded=False):
+            hc1, hc2, hc3 = st.columns(3)
+            with hc1:
+                core_h_limit = st.number_input("核心风貌/保护区限高 (m)", min_value=3, max_value=60, value=default_core_h, step=3, key="s9_core_h")
+            with hc2:
+                trans_h_limit = st.number_input("协调过渡区限高 (m)", min_value=6, max_value=100, value=default_trans_h, step=3, key="s9_trans_h")
+            with hc3:
+                dev_h_limit = st.number_input("一般发展区限高 (m)", min_value=12, max_value=150, value=default_dev_h, step=6, key="s9_dev_h")
+
         if st.button(
             "🏛️ 生成建筑形态、风貌与立面控制方案",
             type="primary",
@@ -354,7 +384,7 @@ def render_page() -> None:
             spatial_ctx = get_full_spatial_context()
             prompt = f"""你是一位资深城市设计师，精通建筑形态控制、历史风貌塑造与建筑立面设计。
 
-    基于以下空间数据，为研究范围制定建筑形态、风貌与立面控制方案。
+    基于以下空间数据，为研究范围（{site_city}{site_name}）制定建筑形态、风貌与立面控制方案。
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【建筑形态现状】：
@@ -364,15 +394,15 @@ def render_page() -> None:
       - 高层占比(>24m): {sky.get('high_rise_ratio', 0)}%
     【全域空间数据】：{spatial_ctx[:3000]}
 
-    【高度红线约束】：核心保护区限高 ≤9m，一般控制区限高 ≤18m。
+    【高度红线约束】：核心风貌控制区限高 ≤{core_h_limit}m，协调过渡控制区限高 ≤{trans_h_limit}m，一般发展区限高 ≤{dev_h_limit}m。
 
     请生成【建筑形态、风貌与立面控制方案】（不限字数，务必详实）：
 
     一、高度与天际线控制
-      - 核心保护区（≤9m）：范围界定、高度红线与退界手法
-      - 协调过渡区（≤18m）：范围界定、退台与视廊过渡手法
-      - 一般发展区（≤36m）：范围界定、高层布局原则
-      - 天际线视廊保护：从{landmark_names}等历史文化节点向外透视的视线视廊要求，天际线韵律设计
+      - 核心风貌控制区（≤{core_h_limit}m）：范围界定、高度红线与退界手法
+      - 协调过渡区（≤{trans_h_limit}m）：范围界定、退台与视廊过渡手法
+      - 一般发展区（≤{dev_h_limit}m）：范围界定、高层布局原则
+      - 天际线视廊保护：从{landmark_names}等重要空间锚点向外透视的视线视廊要求，天际线韵律设计
       以表格形式列出各分区的高度上限、适用区域和设计要求。
 
     二、建筑密度与街面控制
@@ -381,14 +411,14 @@ def render_page() -> None:
       - 底层架空、沿街退界与界面通透性平衡
 
     三、建筑风貌特征导引
-      - 历史建筑风貌传承（古典比例、坡屋顶设计、檐口收头）
-      - 现代建筑风貌协调（简约线条、现代材质、平屋顶组合）
+      - 历史/在地建筑风貌传承（比例尺度、屋顶形式、檐口收头）
+      - 现代建筑风貌协调（简约线条、现代材质、屋顶组合）
       - 新旧风貌共生过渡手法（建筑质感与色彩的协调、空间虚实呼应）
 
     四、建筑立面管控要点
       - 立面三段式控制：基座、中段、顶部的比例划分与细节做法
       - 墙面虚实比（开窗率/窗墙比控制）：商业街面与住宅立面的开窗率底线
-      - 立面材质：清水红砖、青砖青瓦、陶板、现代铝板、玻璃幕墙的组合与拼贴规则
+      - 立面材质：在地传统材质与现代材质的组合与拼贴规则
       - 立面细部：檐口线脚、雨篷与入口设计、阳台形式、空调外机隐蔽设计、外排水管美化管线等管控要求
 
     每一条建议都必须引用现状建筑数据，并明确空间落位。"""
@@ -408,7 +438,6 @@ def render_page() -> None:
         if saved and not st.session_state.get("s9_building"):
             with st.expander("📋 已生成的建筑形态、风貌与立面控制方案", expanded=True):
                 st.markdown(saved)
-
 
     # ═══════════════════════════════════════════
     # 模块四：风貌景观与文保
@@ -431,7 +460,7 @@ def render_page() -> None:
             spatial_ctx = get_full_spatial_context()
             prompt = f"""你是一位资深风貌景观设计师，精通历史街区保护与风貌修复。
 
-    基于以下空间数据，为研究范围制定风貌景观设计方案。
+    基于以下空间数据，为研究范围（{site_city}{site_name}）制定风貌景观设计方案。
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【全域空间数据】：{spatial_ctx[:3500]}
@@ -446,7 +475,7 @@ def render_page() -> None:
       以表格形式列出各分区的范围、风貌要求和管控要点
 
     二、色彩控制体系
-      - 基于历史建筑色彩提取的主色调谱系（如红砖、灰瓦、米黄墙面）
+      - 基于在地建筑色彩提取的主色调谱系
       - 各风貌分区的色彩导引（允许色/禁止色/强调色）
       - 广告标识与夜景照明的色彩协调
 
@@ -483,7 +512,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的风貌景观设计方案", expanded=True):
                 st.markdown(saved)
 
-
     # ============================================================
     # 模块五：产业业态规划
     # ============================================================
@@ -508,7 +536,7 @@ def render_page() -> None:
         ):
             prompt = f"""你是一位资深城市产业规划师，精通历史街区更新中的产业业态策划。
 
-    基于以下数据，为研究范围制定产业业态规划方案。
+    基于以下数据，为研究范围（{site_city}{site_name}）制定产业业态规划方案。
 
     【上游空间结构（Stage 08）】：{spatial_structure[:2000] if spatial_structure else '一核两轴多片多节点'}
     【用地沙盘】：{landuse_sandbox if landuse_sandbox else '暂无'}
@@ -554,15 +582,14 @@ def render_page() -> None:
             with st.expander("📋 已生成的产业业态规划方案", expanded=True):
                 st.markdown(saved)
 
-
     st.markdown("---")
     render_stage_summary(
         stage_code="09",
         title="四大专项系统深度设计",
         findings=[
-            {"point": f"交通系统覆盖道路分级、慢行网络化、TOD 最后一公里接驳评估", "evidence": "路网拓扑 + POI 空间分析"},
-            {"point": f"公共空间系统完成绿视率盲区诊断与 15 分钟生活圈设施缺口测算", "evidence": "GVI 数据 + POI 设施分类"},
-            {"point": f"建筑形态、风貌与立面控制覆盖高度分区、天际线视廊保护、风貌调性与立面三段式细节", "evidence": "建筑高度与风貌类型统计"},
+            {"point": "交通系统覆盖道路分级、慢行网络化、TOD 最后一公里接驳评估", "evidence": "路网拓扑 + POI 空间分析"},
+            {"point": "公共空间系统完成绿视率盲区诊断与 15 分钟生活圈设施缺口测算", "evidence": "GVI 数据 + POI 设施分类"},
+            {"point": "建筑形态、风貌与立面控制覆盖高度分区、天际线视廊保护、风貌调性与立面三段式细节", "evidence": "建筑高度与风貌类型统计"},
             {"point": "风貌景观建立色彩-材料-历史界面三位一体的设计体系", "evidence": "保护建筑数据 + 用地分类"},
         ],
         methodology="基于 DeepSeek V4 Pro 的四专项并行深度策划，全量注入空间数据",

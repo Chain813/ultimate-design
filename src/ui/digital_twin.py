@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -8,20 +9,75 @@ try:
     import streamlit.components.v1 as components
 except ModuleNotFoundError:
     components = st.components.v1
-from pathlib import Path
 
-from src.config import DATA_FILES, GIS_FILES, get_map_viewport, get_static_url
+from src.config import DATA_FILES, GIS_FILES, STATIC_DIR
+from src.config import get_map_viewport as _base_get_map_viewport
+from src.config import get_static_url
+from src.config.runtime import resolve_path
 from src.engines.spatial_engine import get_hud_statistics, get_merged_poi_data, get_skyline_features
 
 
+def get_map_viewport() -> dict:
+    """返回地图视口参数，优先读取 custom_site.json / session_state 中的 center 坐标，确保 3D 镜头直接飞往新场地。"""
+    vp = dict(_base_get_map_viewport() or {})
+    custom_center = None
+    try:
+        cs = st.session_state.get("custom_site_context")
+        if isinstance(cs, dict) and cs.get("center") and cs.get("center") != [0.0, 0.0]:
+            custom_center = cs["center"]
+    except Exception:
+        pass
+
+    if not custom_center:
+        try:
+            custom_path = resolve_path("config/custom_site.json")
+            if custom_path.exists():
+                with open(custom_path, "r", encoding="utf-8") as f:
+                    cs_disk = json.load(f)
+                if isinstance(cs_disk, dict) and cs_disk.get("center") and cs_disk.get("center") != [0.0, 0.0]:
+                    custom_center = cs_disk["center"]
+        except Exception:
+            pass
+
+    if custom_center and len(custom_center) == 2:
+        vp["center"] = [float(custom_center[0]), float(custom_center[1])]
+    return vp
+
+
+def _versioned_static_url(filename: str) -> str:
+    """Appends ?v={int(mtime)} cache-busting query string to static GeoJSON URLs for Deck.GL reload."""
+    base_url = get_static_url(filename)
+    try:
+        static_file = Path(STATIC_DIR) / filename
+        if not static_file.exists():
+            static_file = Path("static") / filename
+        mtime = int(static_file.stat().st_mtime) if static_file.exists() else 0
+    except Exception:
+        mtime = 0
+    sep = "&" if "?" in base_url else "?"
+    return f"{base_url}{sep}v={mtime}"
+
+
 @st.cache_data(ttl=3600, max_entries=20)
-def load_map_data(file_path):
-    """缓存 GeoJSON 文件读取，避免重复磁盘 IO。"""
+def _load_map_data_cached(file_path: str, _mtime: float = 0.0):
     path = Path(file_path)
     if not path.exists():
         return None
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
+
+
+def load_map_data(file_path):
+    """缓存 GeoJSON 文件读取，包含文件修改时间 _mtime 作为缓存键，避免场地切换后残留旧缓存。"""
+    path = Path(file_path)
+    if not path.exists():
+        return None
+    try:
+        mtime = path.stat().st_mtime
+    except Exception:
+        mtime = 0.0
+    return _load_map_data_cached(str(path), mtime)
+
 
 @st.cache_data(ttl=86400)
 def _load_map_html_template(_mtime: float = 0.0):
@@ -32,18 +88,19 @@ def _load_map_html_template(_mtime: float = 0.0):
     with open(template_path, "r", encoding="utf-8") as f:
         return f.read()
 
+
 @st.cache_data(ttl=3600, max_entries=20)
 def _load_traffic_json():
     """缓存交通数据的 JSON 序列化结果。"""
     try:
-        # 尝试读取交通数据
         path = Path(DATA_FILES["traffic"])
         if path.exists():
-            df_tr = pd.read_csv(path, encoding='utf-8-sig').fillna("")
-            return json.dumps(df_tr[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+            df_tr = pd.read_csv(path, encoding="utf-8-sig").fillna("")
+            return json.dumps(df_tr[["Lng", "Lat", "Name"]].to_dict(orient="records"))
     except Exception:
         pass
     return "null"
+
 
 @st.cache_data(ttl=3600, max_entries=20)
 def _load_poi_json():
@@ -51,10 +108,11 @@ def _load_poi_json():
     try:
         df_poi = get_merged_poi_data().fillna("")
         if not df_poi.empty:
-            return json.dumps(df_poi[['Lng', 'Lat', 'Name']].to_dict(orient="records"))
+            return json.dumps(df_poi[["Lng", "Lat", "Name"]].to_dict(orient="records"))
     except Exception:
         pass
     return "null"
+
 
 def render_skyline_hud():
     """在地图下方渲染横向天际线指标面板"""
@@ -85,6 +143,7 @@ def render_skyline_hud():
     </div>
     """, unsafe_allow_html=True)
 
+
 @st.fragment
 def render_digital_twin_map(height=650, key_suffix=""):
     """使用 @st.fragment 封装地图，图层切换只刷新本块。"""
@@ -95,7 +154,6 @@ def render_digital_twin_map(height=650, key_suffix=""):
     )
     is_3d_mode = "3D" in view_mode
 
-    # ── 图层控制面板：紧凑双行 pill-checkbox 样式 ──────────────────────────
     st.markdown(f"""
     <style>
     [data-testid="stCheckbox"][id^="map_"][id$="_{key_suffix}"] > label {{
@@ -160,19 +218,17 @@ def render_digital_twin_map(height=650, key_suffix=""):
             )
             syntax_metric = "integration_norm" if "整合度" in syntax_type else "choice_norm"
 
-    # 1. 准备序列化数据
-    b_data_json = f"'{get_static_url('buildings.geojson')}'" if show_buildings else "null"
-    shadow_data_json = f"'{get_static_url('building_shadows.geojson')}'" if (show_buildings and show_lighting) else "null"
+    # 1. 准备序列化数据 (带 ?v={mtime} 缓存穿透查询串)
+    b_data_json = f"'{_versioned_static_url('buildings.geojson')}'" if show_buildings else "null"
+    shadow_data_json = f"'{_versioned_static_url('building_shadows.geojson')}'" if (show_buildings and show_lighting) else "null"
     bound_data_json = json.dumps(load_map_data(str(GIS_FILES["boundary"]))) if show_boundary else "null"
     plots_data_json = json.dumps(load_map_data(str(GIS_FILES["plots"]))) if show_plots else "null"
     poi_data_json = _load_poi_json() if show_poi else "null"
     traffic_data_json = _load_traffic_json() if show_traffic else "null"
-    landuse_data_json = f"'{get_static_url('landuse.geojson')}'" if show_landuse else "null"
-    rail_data_json = f"'{get_static_url('rail_clipped.geojson')}'" if show_rail else "null"
-    road_data_json = f"'{get_static_url('road_clipped.geojson')}'" if show_road else "null"
-    import time as _time
-    _syntax_cache_bust = int(_time.time())
-    syntax_data_json = f"'{get_static_url('road_syntax.geojson')}?v={_syntax_cache_bust}'" if show_syntax else "null"
+    landuse_data_json = f"'{_versioned_static_url('landuse.geojson')}'" if show_landuse else "null"
+    rail_data_json = f"'{_versioned_static_url('rail_clipped.geojson')}'" if show_rail else "null"
+    road_data_json = f"'{_versioned_static_url('road_clipped.geojson')}'" if show_road else "null"
+    syntax_data_json = f"'{_versioned_static_url('road_syntax.geojson')}'" if show_syntax else "null"
 
     col_payload_json = "null"
     heat_payload_json = "null"
@@ -202,10 +258,9 @@ def render_digital_twin_map(height=650, key_suffix=""):
 
         try:
             import math
-
             from src.engines.spatial_engine import get_spatial_data
             df_3d = get_spatial_data().copy()
-            
+
             metric_map = {
                 "GVI (绿视率)": "GVI",
                 "SVF (天空开敞度)": "SVF",
@@ -216,30 +271,30 @@ def render_digital_twin_map(height=650, key_suffix=""):
             for c in ["GVI", "SVF", "Enclosure", "Clutter"]:
                 if c not in df_3d.columns:
                     df_3d[c] = 0.0
-            
+
             min_v = df_3d[cur_m].min()
             max_v = df_3d[cur_m].max()
             if min_v == max_v:
                 max_v = min_v + 1.0
-            
+
             df_3d["Dynamic_Color"] = df_3d[cur_m].apply(lambda v: [
                 int(255 * (1 - (v - min_v) / (max_v - min_v))),
                 int(200 * math.sin((v - min_v) / (max_v - min_v) * math.pi)),
                 int(255 * ((v - min_v) / (max_v - min_v))),
                 210
             ])
-            
+
             if quality_mode in ("3D 柱体", "双模融合"):
                 col_payload_json = json.dumps({
-                    "data": df_3d[['Lng', 'Lat', cur_m, 'Dynamic_Color', 'ID']].to_dict(orient='records'),
+                    "data": df_3d[["Lng", "Lat", cur_m, "Dynamic_Color", "ID"]].to_dict(orient="records"),
                     "metric": cur_m,
                     "elevationScale": quality_elev,
                     "radius": quality_rad
                 })
-            
+
             if quality_mode in ("2D 热力图", "双模融合"):
                 heat_payload_json = json.dumps({
-                    "data": df_3d[['Lng', 'Lat', cur_m]].to_dict(orient='records'),
+                    "data": df_3d[["Lng", "Lat", cur_m]].to_dict(orient="records"),
                     "metric": cur_m,
                     "radius": quality_rad
                 })
@@ -272,7 +327,7 @@ def render_digital_twin_map(height=650, key_suffix=""):
         html_template = html_template.replace("/*__HEAT_PAYLOAD__*/null/*__END_HEAT_PAY__*/", heat_payload_json)
         html_template = html_template.replace("/*__HEX_PAYLOAD__*/null/*__END_HEX_PAY__*/", "null")
         html_template = html_template.replace("/*__PIPE_PAYLOAD__*/null/*__END_PIPE__*/", "null")
-        
+
         st.markdown("""<style>
             iframe[title="st.iframe"] { border-radius: 18px !important; overflow: hidden !important; border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04); }
         </style>""", unsafe_allow_html=True)

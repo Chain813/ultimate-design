@@ -106,8 +106,10 @@ def render_stage_summary(
         </section>
         <style>
         .stage-summary-panel {{
-            background: linear-gradient(135deg, rgba(0,113,227,0.04), rgba(52,199,89,0.03));
-            border: 1px solid rgba(0,0,0,0.08);
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #34c759;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
             border-radius: 16px;
             padding: 24px 28px;
             margin: 32px 0 16px 0;
@@ -119,17 +121,18 @@ def render_stage_summary(
             margin: 0; font-size: 18px; font-weight: 800; color: #1d1d1f;
         }}
         .stage-summary-code {{
-            background: rgba(0,113,227,0.1);
-            color: #0071e3;
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
             padding: 4px 12px;
             border-radius: 8px;
             font-size: 13px;
             font-weight: 800;
             letter-spacing: 0.05em;
         }}
-        .stage-summary-method {{
-            color: #86868b; font-size: 13px; margin-bottom: 14px;
-            padding-left: 4px; border-left: 3px solid rgba(0,113,227,0.2);
+        .summary-method, .stage-summary-method {{
+            color: #515154; font-size: 13px; margin-bottom: 14px;
+            border-left: 3px solid rgba(0,113,227,0.25);
             padding: 2px 0 2px 12px;
         }}
         .stage-summary-findings {{
@@ -150,12 +153,12 @@ def render_stage_summary(
             color: #1d1d1f; font-size: 14px; font-weight: 600; line-height: 1.5;
         }}
         .finding-evidence {{
-            color: #86868b; font-size: 12px; margin-top: 2px; line-height: 1.5;
+            color: #515154; font-size: 12px; margin-top: 2px; line-height: 1.5;
         }}
-        .stage-summary-implication {{
-            color: #34c759; font-size: 13px; font-weight: 600;
+        .summary-implication, .stage-summary-implication {{
+            color: #047857; font-size: 13px; font-weight: 600;
             margin-top: 16px; padding-top: 12px;
-            border-top: 1px solid rgba(52,199,89,0.15);
+            border-top: 1px solid rgba(52,199,89,0.2);
         }}
         </style>
         """,
@@ -317,7 +320,7 @@ def _build_auto_chart(stage_code: str):
             x=scores, y=names, orientation="h",
             marker=dict(
                 color=scores,
-                colorscale=[[0, "#1e1b4b"], [0.5, "#6366f1"], [1, "#34d399"]],
+                colorscale=[[0, "#0071e3"], [0.5, "#6366f1"], [1, "#34d399"]],
             ),
             text=[f"{s:.1f}" for s in scores],
             textposition="outside",
@@ -337,7 +340,7 @@ def _build_auto_chart(stage_code: str):
         values = [0, 0, 0, 0, 0, 20, 18, 22, 15, 12, 10, 14, 16]
         fig = go.Figure(go.Treemap(
             labels=labels, parents=parents, values=values,
-            marker=dict(colors=["#1e1b4b", "#818cf8", "#34d399", "#f59e0b", "#f472b6",
+            marker=dict(colors=["#0071e3", "#818cf8", "#34d399", "#f59e0b", "#f472b6",
                                 "#a5b4fc", "#c4b5fd", "#6ee7b7", "#a7f3d0",
                                 "#fcd34d", "#fde68a", "#fda4af", "#fb7185"]),
             textinfo="label+value",
@@ -561,11 +564,11 @@ def _render_llm_summary_button(
 
     if st.session_state.get(session_key):
         st.markdown(
-            f"""<div style="background: rgba(52,211,153,0.06); border: 1px solid rgba(52,211,153,0.2);
-            border-radius: 12px; padding: 16px 20px; margin-top: 12px;">
-            <div style="color: #34d399; font-size: 13px; font-weight: 800; margin-bottom: 8px;">
+            f"""<div style="background: #ecfdf5; border: 1px solid #a7f3d0;
+            border-radius: 12px; padding: 14px 18px; margin-top: 8px;">
+            <div style="color: #047857; font-size: 13px; font-weight: 800; margin-bottom: 8px;">
             🧠 AI 生成的阶段小结 (Stage {escape(stage_code)})</div>
-            <div style="color: #e2e8f0; font-size: 14px; line-height: 1.7;">
+            <div style="color: #1d1d1f; font-size: 14px; line-height: 1.7;">
             {escape(st.session_state[session_key])}</div></div>""",
             unsafe_allow_html=True,
         )
@@ -577,6 +580,78 @@ def _render_llm_summary_button(
             key=f"dl_summary_{stage_code}",
             **stretch_width(st.download_button),
         )
+
+
+render_ai_summary_button = _render_llm_summary_button
+
+
+def render_module_summary(
+    module_id: str,
+    title: str,
+    findings: list | None = None,
+    metrics: dict | None = None,
+    deliverables: list[str] | None = None,
+):
+    """渲染工作台模块结论汇总卡片 (Apple HIG Light Theme)。"""
+    findings = findings or []
+    metrics = metrics or {}
+    deliverables = deliverables or []
+
+    accent_colors = ["#0071e3", "#059669", "#d97706", "#4f46e5"]
+    metrics_html = ""
+    if metrics:
+        cards = []
+        for idx, (k, v) in enumerate(metrics.items()):
+            color = accent_colors[idx % len(accent_colors)]
+            cards.append(
+                f'<div style="background: #f5f5f7; border: 1px solid rgba(0, 0, 0, 0.06); '
+                f'border-radius: 10px; padding: 10px 14px; min-width: 120px;">'
+                f'<div style="color: #515154; font-size: 12px; margin-bottom: 4px;">{escape(str(k))}</div>'
+                f'<div style="color: {color}; font-size: 18px; font-weight: 700;">{escape(str(v))}</div>'
+                f'</div>'
+            )
+        metrics_html = f'<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px;">{"".join(cards)}</div>'
+
+    findings_items = []
+    for item in findings:
+        text = item.get("point", "") if isinstance(item, dict) else str(item)
+        findings_items.append(f'<li style="color: #1d1d1f; font-size: 13.5px; line-height: 1.6; margin-bottom: 4px;">{escape(str(text))}</li>')
+    findings_block = (
+        f'<div style="color: #515154; font-size: 12px; font-weight: 600; margin-bottom: 6px;">核心发现</div>'
+        f'<ul style="margin: 0 0 12px 18px; padding: 0;">{"".join(findings_items)}</ul>'
+        if findings_items else ""
+    )
+
+    deliv_tags = [
+        f'<span style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; '
+        f'padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;">{escape(str(d))}</span>'
+        for d in deliverables
+    ]
+    deliv_block = (
+        f'<div style="color: #515154; font-size: 12px; font-weight: 600; margin-bottom: 6px;">交付成果</div>'
+        f'<div style="display: flex; flex-wrap: wrap; gap: 8px;">{"".join(deliv_tags)}</div>'
+        if deliv_tags else ""
+    )
+
+    st.markdown(
+        f"""
+        <div style="background: #ffffff; border: 1px solid rgba(0, 0, 0, 0.08);
+                    border-left: 4px solid #34c759; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+                    border-radius: 14px; padding: 20px 24px; margin: 20px 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                <h4 style="color: #1d1d1f; margin: 0; font-size: 16px; font-weight: 700;">{escape(title)}</h4>
+                <span style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;
+                             padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;">
+                    Stage {escape(module_id)} 已完成
+                </span>
+            </div>
+            {metrics_html}
+            {findings_block}
+            {deliv_block}
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def generate_stage_summary_text(

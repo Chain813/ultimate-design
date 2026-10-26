@@ -13,7 +13,7 @@
         /* 定制化 Tooltip 样式，保持沉浸感 */
         .deck-tooltip {
             font-family: 'Inter', sans-serif;
-            background: rgba(255, 255, 255, 0.9) !important;
+            background: rgba(255, 255, 255, 0.92) !important;
             backdrop-filter: blur(10px) !important;
             border: 1px solid rgba(0, 0, 0, 0.08) !important;
             border-radius: 8px !important;
@@ -697,9 +697,9 @@
                 // 🏷️ 特殊逻辑：历史建筑增强提示
                 if (layer.id === 'building-layer' && object.properties.is_historical) {
                     return {
-                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🏛️ 重点历史建筑</div>
-                               <b>${object.properties.hist_name}</b><br>
-                               <span style="font-size: 11px; opacity: 0.8;">名录批次: ${object.properties.hist_batch}</span>`
+                        html: `<div style="border-bottom: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #0071e3;">🏛️ 重点历史建筑</div>
+                               <b style="color: #1d1d1f;">${object.properties.hist_name}</b><br>
+                               <span style="font-size: 11px; color: #515154;">名录批次: <b style="color: #b45309;">${object.properties.hist_batch}</b></span>`
                     };
                 }
 
@@ -720,34 +720,34 @@
                     };
                     const cls = object.properties.Class;
                     return {
-                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🧬 规划用地</div>
-                               <b>${LANDUSE_NAMES[cls] || '未知类型'}</b><br>
-                               <span style="font-size: 11px; opacity: 0.8;">EULUC Code: ${cls}</span>`
+                        html: `<div style="border-bottom: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #0071e3;">🧬 规划用地</div>
+                               <b style="color: #1d1d1f;">${LANDUSE_NAMES[cls] || '未知类型'}</b><br>
+                               <span style="font-size: 11px; color: #515154;">EULUC Code: <b style="color: #047857;">${cls}</b></span>`
                     };
                 }
 
                 const name = (object.properties ? (object.properties.Name || object.properties.name) : (object.Name || object.name));
                 
                 if (layer.id === 'poi-layer') {
-                    return { html: `<b>📍 POI点位: ${name || '未知设施'}</b>` };
+                    return { html: `<b style="color: #1d1d1f;">📍 POI点位: ${name || '未知设施'}</b>` };
                 }
                 if (layer.id === 'traffic-layer') {
-                    return { html: `<b>🚥 交通点位: ${name || '拥堵热域'}</b>` };
+                    return { html: `<b style="color: #1d1d1f;">🚥 交通点位: ${name || '拥堵热域'}</b>` };
                 }
                 if (layer.id === 'plots-layer') {
-                    return { html: `<b>🏗️ 重点更新地块: ${name || '未命名'}</b>` };
+                    return { html: `<b style="color: #1d1d1f;">🏗️ 重点更新地块: ${name || '未命名'}</b>` };
                 }
                 if (layer.id === 'rail-layer') {
                     const RAIL_NAMES = { 1: '铁路', 2: '地铁', 3: '轻轨', 4: '其他' };
                     const rname = object.properties.name || '未命名';
                     const rtype = RAIL_NAMES[object.properties.level] || '未知';
-                    return { html: `<b>🚆 ${rtype}: ${rname}</b>` };
+                    return { html: `<b style="color: #1d1d1f;">🚆 ${rtype}: ${rname}</b>` };
                 }
                 if (layer.id === 'road-layer') {
                     const ROAD_NAMES = { 1: '一级道路', 2: '二级道路', 3: '三级道路', 4: '其他道路' };
                     const rname = object.properties.name || '未命名';
                     const rtype = ROAD_NAMES[object.properties.level] || '未知';
-                    return { html: `<b>🛣️ ${rtype}: ${rname}</b>` };
+                    return { html: `<b style="color: #1d1d1f;">🛣️ ${rtype}: ${rname}</b>` };
                 }
                 if (layer.id === 'syntax-layer') {
                     const rname = object.properties.name || '未命名路段';
@@ -755,20 +755,20 @@
                     const valNorm = syntax_metric === 'choice_norm' ? object.properties.choice_norm : object.properties.integration_norm;
                     const metricLabel = syntax_metric === 'choice_norm' ? '全局穿行度 (Choice)' : '全局整合度 (Integration)';
                     return {
-                        html: `<div style="border-bottom: 1px solid #818cf8; margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #a5b4fc;">🔗 空间句法分析</div>
-                               <b>路段: ${rname}</b><br>
-                               <span style="font-size: 11.5px;">${metricLabel}: <b>${parseFloat(valRaw).toFixed(4)}</b> (归一化: ${parseFloat(valNorm).toFixed(4)})</span>`
+                        html: `<div style="border-bottom: 1px solid rgba(0, 0, 0, 0.08); margin-bottom: 5px; padding-bottom: 5px; font-weight: bold; color: #0071e3;">🔗 空间句法分析</div>
+                               <b style="color: #1d1d1f;">路段: ${rname}</b><br>
+                               <span style="font-size: 11.5px; color: #515154;">${metricLabel}: <b style="color: #047857;">${parseFloat(valRaw).toFixed(4)}</b> (归一化: <b style="color: #b45309;">${parseFloat(valNorm).toFixed(4)}</b>)</span>`
                     };
                 }
                 if (layer.id === 'col-layer') {
-                    return { html: `<b>📊 指标采集点 (ID: ${object.ID || 'N/A'})</b><br>数值水平: ${object[col_payload?.metric] ? parseFloat(object[col_payload.metric]).toFixed(3) : '未知'}` };
+                    return { html: `<b style="color: #1d1d1f;">📊 指标采集点 (ID: ${object.ID || 'N/A'})</b><br><span style="color: #515154;">数值水平: <b style="color: #047857;">${object[col_payload?.metric] ? parseFloat(object[col_payload.metric]).toFixed(3) : '未知'}</b></span>` };
                 }
                 if (layer.id === 'hex-layer') {
-                    return { html: `<b>🔮 蜂窝密度聚合区</b><br>聚合强度: ${object.points ? object.points.length : '未知'} 活跃单元` };
+                    return { html: `<b style="color: #1d1d1f;">🔮 蜂窝密度聚合区</b><br><span style="color: #515154;">聚合强度: <b style="color: #b45309;">${object.points ? object.points.length : '未知'}</b> 活跃单元</span>` };
                 }
                 
-                if (name) return { html: `<b>📡 ${name}</b>` };
-                return { html: `<b>🌐 空间探测点</b>` };
+                if (name) return { html: `<b style="color: #1d1d1f;">📡 ${name}</b>` };
+                return { html: `<b style="color: #1d1d1f;">🌐 空间探测点</b>` };
             }
         });
 

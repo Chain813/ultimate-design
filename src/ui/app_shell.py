@@ -34,20 +34,21 @@ def _build_nav_tree():
         elif board["key"] == "middle":
             seen_titles["AIGC设计推演"] = {
                 "title": "空间 AIGC 推演工坊",
-                "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
+                "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc_studio",
                 "modules": [
                     {"title": "概念总平面图生形", "href": "/02_多主体博弈与空间AIGC工坊?sub=master_plan"},
-                    {"title": "街区全景透视推演", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc"},
-                    {"title": "轴测鸟瞰空间体块模拟", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc"},
+                    {"title": "街区全景透视推演", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc_studio"},
+                    {"title": "轴测鸟瞰空间体块模拟", "href": "/02_多主体博弈与空间AIGC工坊?sub=aigc_studio"},
                 ],
             }
         elif board["key"] == "late":
             seen_titles["智能体Skill手册"] = {
                 "title": "制图智能体 Skill 手册",
-                "href": "/03_数字图则与工程交付枢纽?sub=delivery",
+                "href": "/03_数字图则与工程交付枢纽?sub=skill",
                 "modules": [
-                    {"title": "制图技能规范", "href": "/03_数字图则与工程交付枢纽?sub=delivery"},
-                    {"title": "多主体博弈沙盘", "href": "/03_数字图则与工程交付枢纽?sub=delivery"},
+                    {"title": "16类标准图纸一键直出", "href": "/03_数字图则与工程交付枢纽?sub=skill"},
+                    {"title": "控规/总图/城市设计全覆盖", "href": "/03_数字图则与工程交付枢纽?sub=skill"},
+                    {"title": "DWG/PDF/高清图件导出", "href": "/03_数字图则与工程交付枢纽?sub=skill"},
                 ],
             }
 
@@ -221,8 +222,13 @@ def render_copilot_sidebar():
     from src.engines.copilot_engine import get_copilot_response, init_copilot_state
     init_copilot_state()
     with st.sidebar:
-        st.markdown("### 💬 AI 规划助手")
-        st.caption("基于法规 RAG 的全生命周期 AI 助理。")
+        st.markdown(
+            """<div style="background: linear-gradient(135deg, rgba(0, 113, 227, 0.08), rgba(88, 86, 214, 0.08)); border: 1px solid rgba(0, 113, 227, 0.2); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px;">
+            <div style="color: #0071e3; font-weight: 700; font-size: 15px;">💬 AI 规划助手</div>
+            <div style="color: #515154; font-size: 12px; margin-top: 2px;">基于法规 RAG 的全生命周期 AI 助理。</div>
+            </div>""",
+            unsafe_allow_html=True,
+        )
         st.markdown("""<style>.copilot-user{background-color:rgba(0,113,227,0.08);border-left:3px solid #0071e3;padding:8px 12px;border-radius:8px;margin:6px 0;font-size:13px;color:#1d1d1f}.copilot-ai{background-color:rgba(0,0,0,0.02);border-left:3px solid #86868b;padding:8px 12px;border-radius:8px;margin:6px 0;font-size:13px;color:#1d1d1f}</style>""", unsafe_allow_html=True)
         if st.session_state.get("copilot_history") and st.button("🗑️ 清空对话", key="copilot_clear", use_container_width=True):
             st.session_state["copilot_history"] = []; st.rerun()
@@ -276,9 +282,9 @@ def render_auto_tour():
              desc:"RAG政策检索、控制图则、Word说明书导出"},
             {url:"/03_数字图则与工程交付枢纽?sub=delivery", label:"🎁 13 成果表达", duration:30,
              desc:"A3图册成果画廊、图纸提示词助手、核心指标汇总"},
-            {url:"/02_多主体博弈与空间AIGC工坊?sub=aigc", label:"🎨 15 AIGC推演", duration:35,
+            {url:"/02_多主体博弈与空间AIGC工坊?sub=aigc_studio", label:"🎨 15 AIGC推演", duration:35,
              desc:"ControlNet空间约束、SD渲染管线、Before/After对比"},
-            {url:"/03_数字图则与工程交付枢纽?sub=delivery", label:"📖 16 智能体手册", duration:20,
+            {url:"/03_数字图则与工程交付枢纽?sub=skill", label:"📖 16 智能体手册", duration:20,
              desc:"规划绘图Skill元指令定义与导出"}
         ];
 
@@ -611,27 +617,27 @@ def render_logic_chain_stepper(current_stage_code: str):
     wb_num = cfg["current_wb"]
 
     st.markdown(f"""
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
-                border: 1px solid rgba(148, 163, 184, 0.25); border-radius: 16px; padding: 20px 24px; margin: 20px 0 16px 0;">
+    <div style="background: #ffffff;
+                border: 1px solid rgba(0, 0, 0, 0.08); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04); border-radius: 16px; padding: 20px 24px; margin: 20px 0 16px 0;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 18px;">🧭</span>
-                <span style="color: #f8fafc; font-weight: 700; font-size: 15px;">业务逻辑主线推进导航 (Logic Chain Stepper)</span>
+                <span style="color: #1d1d1f; font-weight: 700; font-size: 15px;">业务逻辑主线推进导航 (Logic Chain Stepper)</span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; font-size: 13px;">
-                <span style="color: {'#38bdf8' if wb_num==1 else '#94a3b8'}; font-weight: {'700' if wb_num==1 else '400'};">① 现状空间诊断</span>
-                <span style="color: #64748b;">➔</span>
-                <span style="color: {'#a855f7' if wb_num==2 else '#94a3b8'}; font-weight: {'700' if wb_num==2 else '400'};">② 博弈与AIGC工坊</span>
-                <span style="color: #64748b;">➔</span>
-                <span style="color: {'#10b981' if wb_num==3 else '#94a3b8'}; font-weight: {'700' if wb_num==3 else '400'};">③ 数字图则与工程交付</span>
+                <span style="color: {'#0071e3' if wb_num==1 else '#86868b'}; font-weight: {'700' if wb_num==1 else '400'};">① 现状空间诊断</span>
+                <span style="color: #86868b;">➔</span>
+                <span style="color: {'#7c3aed' if wb_num==2 else '#86868b'}; font-weight: {'700' if wb_num==2 else '400'};">② 博弈与AIGC工坊</span>
+                <span style="color: #86868b;">➔</span>
+                <span style="color: {'#059669' if wb_num==3 else '#86868b'}; font-weight: {'700' if wb_num==3 else '400'};">③ 数字图则与工程交付</span>
             </div>
         </div>
-        <div style="background: rgba(15, 23, 42, 0.65); border-radius: 12px; padding: 14px 18px; border-left: 4px solid #38bdf8; margin-bottom: 14px;">
-            <div style="color: #f1f5f9; font-weight: 600; font-size: 14px; margin-bottom: 4px;">{cfg['summary_title']}</div>
-            <div style="color: #94a3b8; font-size: 13px; line-height: 1.5;">{cfg['summary_desc']}</div>
+        <div style="background: rgba(0, 113, 227, 0.04); border-radius: 12px; padding: 14px 18px; border-left: 4px solid #0071e3; margin-bottom: 14px;">
+            <div style="color: #1d1d1f; font-weight: 600; font-size: 14px; margin-bottom: 4px;">{cfg['summary_title']}</div>
+            <div style="color: #515154; font-size: 13px; line-height: 1.5;">{cfg['summary_desc']}</div>
         </div>
-        <div style="color: #cbd5e1; font-size: 13px; margin-bottom: 4px;">
-            <b>下一步目标：</b>{cfg['next_wb_title']} · <span style="color: #94a3b8;">{cfg['next_desc']}</span>
+        <div style="color: #1d1d1f; font-size: 13px; margin-bottom: 4px;">
+            <b>下一步目标：</b>{cfg['next_wb_title']} · <span style="color: #515154;">{cfg['next_desc']}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)

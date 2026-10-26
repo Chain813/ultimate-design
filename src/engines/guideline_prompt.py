@@ -6,9 +6,12 @@ Usage:
     from src.engines.guideline_prompt import build_guideline_prompt
 """
 
+from typing import Any, Dict
+
 from src.config import (
     get_site_adjacent,
     get_site_city,
+    get_site_config,
     get_site_desc,
     get_site_district,
     get_site_name,
@@ -87,6 +90,54 @@ GUIDELINE_CHAPTERS = [
         "description": "建立实施保障体系和长效管理机制",
     },
 ]
+
+
+def _resolve_redline_controls(site_name: str, city: str, policies: str) -> Dict[str, Any]:
+    """根据当前激活场地配置解析控规红线参数；非长春伪满皇宫场地动态注入用户设定的红线指标。"""
+    s_name = str(site_name or "").strip()
+    s_city = str(city or "").strip()
+    is_changchun_default = ("伪满" in s_name) or ("长春" in s_city) or (not s_name and not s_city)
+
+    site_cfg = get_site_config() or {}
+    redlines = site_cfg.get("redlines") or site_cfg.get("regulatory_limits") or {}
+
+    if is_changchun_default and not redlines:
+        return {
+            "summary_line": "容积率≤1.4、核心区限高≤9m、一般区≤18m、绿地率≥25%",
+            "table_rows": (
+                f"| 开发强度 | 容积率 | ≤1.4 | {policies} |\n"
+                f"| 建筑高度 | 核心保护区限高 | ≤9m | {site_name}视廊保护 |\n"
+                f"| 建筑高度 | 风貌协调区限高 | ≤12m | 天际线控制 |\n"
+                f"| 建筑高度 | 一般更新区限高 | ≤18m | 城市设计导则 |\n"
+                f"| 建筑高度 | 站前服务区限高 | ≤24m | TOD开发要求 |\n"
+                f"| 建筑密度 | 建筑密度 | ≤40% | 居住区设计标准 |\n"
+                f"| 绿地率 | 绿地率 | ≥25% | 居住区设计标准 |"
+            ),
+        }
+
+    far_max = float(redlines.get("far_max", redlines.get("far", 2.5)))
+    height_limit = float(redlines.get("height_limit", 36.0))
+    bd_raw = float(redlines.get("building_density_max", 0.35))
+    green_raw = float(redlines.get("greenery_ratio_min", 0.30))
+
+    bd_pct = int(round(bd_raw * 100)) if bd_raw <= 1.0 else int(round(bd_raw))
+    green_pct = int(round(green_raw * 100)) if green_raw <= 1.0 else int(round(green_raw))
+    core_h = max(6, int(round(height_limit * 0.5)))
+    coord_h = max(9, int(round(height_limit * 0.75)))
+    gen_h = int(round(height_limit))
+
+    policy_ref = policies or f"{s_city or '属地'}控制性详细规划"
+    return {
+        "summary_line": f"容积率≤{far_max}、核心区限高≤{core_h}m、全域限高≤{gen_h}m、建筑密度≤{bd_pct}%、绿地率≥{green_pct}%",
+        "table_rows": (
+            f"| 开发强度 | 容积率 | ≤{far_max} | {policy_ref} |\n"
+            f"| 建筑高度 | 核心风貌区限高 | ≤{core_h}m | {site_name or '核心区'}视廊保护 |\n"
+            f"| 建筑高度 | 风貌协调区限高 | ≤{coord_h}m | 天际线梯度控制 |\n"
+            f"| 建筑高度 | 一般更新区限高 | ≤{gen_h}m | 属地控规红线控制 |\n"
+            f"| 建筑密度 | 建筑密度 | ≤{bd_pct}% | 属地控规与更新标准 |\n"
+            f"| 绿地率 | 绿地率 | ≥{green_pct}% | 属地控规与生态韧性要求 |"
+        ),
+    }
 
 
 def build_outline_prompt(
@@ -189,6 +240,8 @@ def build_expansion_prompt(
     site_name = get_site_name()
     desc = get_site_desc()
     adjacent = get_site_adjacent()
+    policies = "、".join(get_site_policies())
+    redline_ctrl = _resolve_redline_controls(site_name, city, policies)
 
     return f"""你是一位资深城市规划师。以下是一份《城市设计导则》的要素大纲，请将其扩展为完整的导则正文。
 
@@ -222,7 +275,7 @@ def build_expansion_prompt(
 - 地点：{city}市{district}，{desc}
 - 核心地标：{site_name}及周边特色地标
 - 紧邻要素：{adjacent}
-- 核心管控：容积率≤1.4、核心区限高≤9m、一般区≤18m、绿地率≥25%
+- 核心管控：{redline_ctrl["summary_line"]}
 
 请将上述大纲扩展为完整的10章导则正文。每一章都必须有实质内容，条文清晰、数据准确、逻辑连贯。"""
 
@@ -276,6 +329,7 @@ def build_guideline_prompt(
     desc = get_site_desc()
     adjacent = get_site_adjacent()
     policies = "、".join(get_site_policies())
+    redline_ctrl = _resolve_redline_controls(site_name, city, policies)
 
     prompt = f"""你是一位资深的城市规划师，正在为{city}市{district}{site_name}微更新项目编制《城市设计导则》。
 
@@ -307,13 +361,7 @@ def build_guideline_prompt(
 
 | 管控维度 | 指标名称 | 控制要求 | 依据 |
 |---------|---------|---------|------|
-| 开发强度 | 容积率 | ≤1.4 | {policies} |
-| 建筑高度 | 核心保护区限高 | ≤9m | {site_name}视廊保护 |
-| 建筑高度 | 风貌协调区限高 | ≤12m | 天际线控制 |
-| 建筑高度 | 一般更新区限高 | ≤18m | 城市设计导则 |
-| 建筑高度 | 站前服务区限高 | ≤24m | TOD开发要求 |
-| 建筑密度 | 建筑密度 | ≤40% | 居住区设计标准 |
-| 绿地率 | 绿地率 | ≥25% | 居住区设计标准 |
+{redline_ctrl["table_rows"]}
 | 公共空间 | 5分钟覆盖率 | ≥80% | 完整社区建设标准 |
 | 街道界面 | 街墙连续率 | ≥70% | 街道设计导则 |
 | 慢行交通 | 人行道宽度 | ≥2m | 无障碍设计标准 |

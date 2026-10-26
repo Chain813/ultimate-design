@@ -45,18 +45,21 @@ GOLD_COLOR = (245, 185, 60)       # 暖金色
 DIM_COLOR = (148, 163, 184)       # 次要文字
 MAIN_AREA_BG = (20, 30, 48)      # 主图区底色
 
-def _get_project_name() -> str:
+def _get_project_name(site_name: str = "", city_name: str = "") -> str:
     try:
         from src.config.site import get_project_info, get_site_city, get_site_name
-        p_info = get_project_info()
-        if p_info and p_info.get("name"):
-            return p_info.get("name")
-        city = get_site_city()
-        name = get_site_name()
+        city = city_name or get_site_city() or ""
+        name = site_name or get_site_name() or ""
+        p_info = get_project_info() or {}
+        p_name = p_info.get("name", "")
+        is_changchun = ("伪满" in name) or ("长春" in city)
+        if p_name and (is_changchun or ("长春" not in p_name and "伪满" not in p_name)):
+            return p_name
         if city or name:
-            return f"数字孪生·空间计算 — {city}{name}城市设计"
+            return f"数字孪生·空间计算 — {city}{name}城市更新规划设计"
     except Exception:
-        pass
+        if city_name or site_name:
+            return f"数字孪生·空间计算 — {city_name}{site_name}城市更新规划设计"
     return "数字孪生·空间计算 — 城市更新规划设计"
 
 
@@ -100,6 +103,11 @@ def compose_framed_sheet(
     legend_items: list[tuple[str, str]] | None = None,
     drawing_number: str = "",
     scale_text: str = "1:5000",
+    author: str = "",
+    author_id: str = "",
+    organization: str = "",
+    site_name: str = "",
+    city_name: str = "",
 ) -> Image.Image:
     """将主图嵌入标准规划图框，返回合成后的 PIL Image。
 
@@ -111,6 +119,11 @@ def compose_framed_sheet(
         legend_items: 图例条目列表，格式为 [(名称, 十六进制颜色), ...]。
         drawing_number: 图纸编号。
         scale_text: 比例尺文字。
+        author: 制作人姓名。
+        author_id: 制作人编号/学号。
+        organization: 单位/部门。
+        site_name: 场地名称。
+        city_name: 城市名称。
 
     Returns:
         合成后的 A3 尺寸 PIL Image。
@@ -147,7 +160,7 @@ def compose_framed_sheet(
         title, fill=TEXT_COLOR, font=font_title,
     )
     # 右侧项目名
-    proj_title = _get_project_name()
+    proj_title = _get_project_name(site_name=site_name, city_name=city_name)
     proj_bbox = draw.textbbox((0, 0), proj_title, font=font_body)
     proj_w = proj_bbox[2] - proj_bbox[0]
     draw.text(
@@ -291,14 +304,17 @@ def compose_framed_sheet(
         fill=GOLD_COLOR,
     )
 
-    # 右侧：团队信息
-    team_bbox = draw.textbbox((0, 0), TEAM_INFO, font=font_body)
+    # 右侧：团队信息与作者图签
+    org_flat = organization.replace("\n", " · ").strip() if organization else TEAM_INFO
+    author_tag = f"{author} ({author_id})" if (author and author_id) else (author or author_id)
+    right_line_1 = f"{org_flat} | {author_tag}" if author_tag else org_flat
+    team_bbox = draw.textbbox((0, 0), right_line_1, font=font_body)
     team_w = team_bbox[2] - team_bbox[0]
     draw.text(
         (SHEET_W - MARGIN - team_w - 30, bar_top + 15),
-        TEAM_INFO, fill=DIM_COLOR, font=font_body,
+        right_line_1, fill=DIM_COLOR, font=font_body,
     )
-    loc_text = _get_project_location()
+    loc_text = f"{city_name}{site_name}".strip() or _get_project_location()
     draw.text(
         (SHEET_W - MARGIN - team_w - 30, bar_top + 60),
         f"{loc_text} · EPSG:4326 · AI-Generated Data Visualization",
@@ -312,6 +328,192 @@ def compose_framed_sheet(
     )
 
     return sheet
+
+
+def apply_custom_a3_overlay(
+    image_path: str | Path,
+    output_path: str | Path,
+    title: str,
+    subtitle: str = "",
+    desc_list: list[str] | None = None,
+    author: str = "",
+    author_id: str = "",
+    organization: str = "",
+    site_name: str = "",
+    city_name: str = "",
+    drawing_number: str = "",
+) -> Path:
+    """在 NO_FRAME A3 图纸上覆盖重绘自定义标题栏、设计说明卡与工程图签栏。
+
+    解决 dr_*.py 中 NO_FRAME=True 硬编码长春标题、说明文字与图签被跳过的问题，
+    确保学生在 Stage 13 中编辑的标题、说明（1-3条）、姓名、学号、单位与自定义场地名称
+    清晰完整地渲染到最终导出的 A3 图纸 PNG 上。
+    """
+    from src.config.site import get_author_info, get_institution_info, get_site_city, get_site_config, get_site_name
+
+    s_cfg = get_site_config() or {}
+    city = city_name if city_name else (get_site_city() or s_cfg.get("city", ""))
+    site = site_name if site_name else (get_site_name() or s_cfg.get("name", "城市更新示范区"))
+
+    if not author or not author_id:
+        a_info = get_author_info() or {}
+        author = author or a_info.get("name", "规划设计组")
+        author_id = author_id or a_info.get("id", "URBAN-2026")
+
+    if not organization:
+        inst_info = get_institution_info() or {}
+        organization = f"{inst_info.get('name', '建筑与规划学院')}\n{inst_info.get('department', '城乡规划专业')}".strip()
+
+    img = Image.open(image_path).convert("RGB")
+    target_w, target_h = 2240, 1584
+    if img.size != (target_w, target_h):
+        img = img.resize((target_w, target_h), Image.Resampling.LANCZOS)
+
+    draw = ImageDraw.Draw(img)
+
+    def px(x_val: float) -> int:
+        return int(round(x_val / 141.42 * target_w))
+
+    def py(y_val: float) -> int:
+        return int(round((100.0 - y_val) / 100.0 * target_h))
+
+    font_h1 = _try_load_font(34)
+    font_sub = _try_load_font(19)
+    font_card_hdr = _try_load_font(20)
+    font_desc_bold = _try_load_font(18)
+    font_desc = _try_load_font(17)
+    font_stamp_lbl = _try_load_font(14)
+    font_stamp_val = _try_load_font(17)
+    font_stamp_title = _try_load_font(22)
+
+    # ── 1. 顶部标题横幅覆盖 (X: 2.0..139.4, Y: 88.7..96.3) ──
+    hdr_x1, hdr_y1 = px(2.0), py(96.3)
+    hdr_x2, hdr_y2 = px(139.4), py(88.7)
+    draw.rectangle([hdr_x1 + 3, hdr_y1 + 3, hdr_x2 + 3, hdr_y2 + 3], fill=(226, 232, 240))
+    draw.rectangle([hdr_x1, hdr_y1, hdr_x2, hdr_y2], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([hdr_x1, hdr_y1, hdr_x2, py(95.7)], fill=(217, 119, 6))
+
+    draw.text((px(3.5), py(94.8)), title, fill=(15, 23, 42), font=font_h1)
+
+    loc_prefix = f"{city}{site}".strip()
+    sub_text = subtitle or f"展示{loc_prefix}范围内「{title}」的空间现状、规划布局与法定管控要素。"
+    draw.text((px(3.5), py(91.5)), sub_text, fill=(51, 65, 85), font=font_sub)
+
+    proj_title = _get_project_name(site_name=site, city_name=city)
+    p_bbox = draw.textbbox((0, 0), proj_title, font=font_desc_bold)
+    p_w = p_bbox[2] - p_bbox[0]
+    draw.text((hdr_x2 - p_w - 24, py(94.4)), proj_title, fill=(100, 116, 139), font=font_desc_bold)
+
+    if drawing_number:
+        n_str = f"图号 / NO: {drawing_number}"
+        n_bbox = draw.textbbox((0, 0), n_str, font=font_desc_bold)
+        n_w = n_bbox[2] - n_bbox[0]
+        draw.text((hdr_x2 - n_w - 24, py(91.3)), n_str, fill=(217, 119, 6), font=font_desc_bold)
+
+    # ── 2. 右侧说明卡片与工程图签栏覆盖 (X: 101.5..139.4, Y: 4.0..65.3) ──
+    card_x1, card_y1 = px(101.5), py(65.3)
+    card_x2, card_y2 = px(139.4), py(4.0)
+    draw.rectangle([card_x1 + 3, card_y1 + 3, card_x2 + 3, card_y2 + 3], fill=(226, 232, 240))
+    draw.rectangle([card_x1, card_y1, card_x2, card_y2], fill=(255, 255, 255), outline=(203, 213, 225), width=2)
+    draw.rectangle([card_x1, card_y1, card_x2, py(63.8)], fill=(217, 119, 6))
+
+    draw.text((card_x1 + 24, py(62.8)), "规划说明与指标 / DESIGN NOTES", fill=(217, 119, 6), font=font_card_hdr)
+    draw.line([(card_x1 + 20, py(59.6)), (card_x2 - 20, py(59.6))], fill=(226, 232, 240), width=1)
+
+    valid_descs = [d.strip() for d in (desc_list or []) if d and str(d).strip()]
+    if not valid_descs:
+        area_ha = s_cfg.get("area_ha", 150)
+        valid_descs = [
+            f"1. 空间范围：研究范围覆盖{loc_prefix}，总面积约 {area_ha} 公顷。",
+            f"2. 规划导向：围绕「{title}」落实存量空间织补、慢行网络贯通与公服设施提升。",
+            "3. 指标管控：严格执行法定容积率、建筑密度、绿地率与天际线高度分区控制要求。",
+        ]
+
+    cur_y = py(58.4)
+    max_txt_w = (card_x2 - card_x1) - 48
+    stamp_top_y = py(24.5)
+
+    for idx, desc_line in enumerate(valid_descs[:3]):
+        if cur_y > stamp_top_y - 35:
+            break
+        _draw_wrapped_text(
+            draw,
+            desc_line,
+            x=card_x1 + 24,
+            y=cur_y,
+            max_width=max_txt_w,
+            font=font_desc,
+            fill=(30, 41, 59),
+            line_spacing=6,
+        )
+        # Estimate height advanced by wrapped text
+        char_per_line = max(1, max_txt_w // 18)
+        n_lines = max(1, (len(desc_line) + char_per_line - 1) // char_per_line + desc_line.count("\n"))
+        cur_y += n_lines * 25 + 16
+
+    # 法定红线指标摘要条（若上方空间充裕）
+    reg = s_cfg.get("regulatory_limits") or {}
+    far_val = reg.get("far", s_cfg.get("far", 2.0))
+    h_val = reg.get("height_limit", s_cfg.get("height_limit", 24))
+    bd_val = reg.get("building_density_max", 0.35)
+    bd_pct = int(bd_val * 100) if isinstance(bd_val, (int, float)) and bd_val <= 1.0 else bd_val
+    gr_val = reg.get("greenery_ratio_min", 0.30)
+    gr_pct = int(gr_val * 100) if isinstance(gr_val, (int, float)) and gr_val <= 1.0 else gr_val
+    if cur_y + 52 < stamp_top_y - 8:
+        draw.rectangle(
+            [card_x1 + 20, cur_y, card_x2 - 20, cur_y + 46],
+            fill=(248, 250, 252),
+            outline=(203, 213, 225),
+            width=1,
+        )
+        reg_line = f"法定管控：FAR≤{far_val} | 限高≤{h_val}m | 密度≤{bd_pct}% | 绿地≥{gr_pct}%"
+        draw.text((card_x1 + 30, cur_y + 12), reg_line, fill=(29, 78, 216), font=font_desc_bold)
+
+    # ── 3. 标准工程图签栏 (Y: 4.0..24.5) ──
+    draw.rectangle(
+        [card_x1, stamp_top_y, card_x2, card_y2],
+        fill=(241, 245, 249),
+        outline=(15, 23, 42),
+        width=2,
+    )
+    row1_y = stamp_top_y + 72
+    row2_y = row1_y + 78
+    row3_y = row2_y + 82
+    mid_x = (card_x1 + card_x2) // 2
+
+    draw.line([(card_x1, row1_y), (card_x2, row1_y)], fill=(15, 23, 42), width=1)
+    draw.line([(card_x1, row2_y), (card_x2, row2_y)], fill=(15, 23, 42), width=1)
+    draw.line([(card_x1, row3_y), (card_x2, row3_y)], fill=(15, 23, 42), width=1)
+    draw.line([(mid_x, row3_y), (mid_x, card_y2)], fill=(15, 23, 42), width=1)
+
+    # Row 0: 图纸名称 + 图号
+    draw.text((card_x1 + 18, stamp_top_y + 8), "图纸名称 / DRAWING TITLE", fill=(100, 116, 139), font=font_stamp_lbl)
+    draw.text((card_x1 + 18, stamp_top_y + 30), title, fill=(15, 23, 42), font=font_stamp_title)
+    if drawing_number:
+        dn_bbox = draw.textbbox((0, 0), drawing_number, font=font_desc_bold)
+        draw.text((card_x2 - (dn_bbox[2] - dn_bbox[0]) - 18, stamp_top_y + 34), drawing_number, fill=(217, 119, 6), font=font_desc_bold)
+
+    # Row 1: 项目名称
+    draw.text((card_x1 + 18, row1_y + 8), "项目名称 / PROJECT", fill=(100, 116, 139), font=font_stamp_lbl)
+    draw.text((card_x1 + 18, row1_y + 30), f"AI赋能下的{loc_prefix}更新规划设计", fill=(15, 23, 42), font=font_stamp_val)
+
+    # Row 2: 单位/部门
+    draw.text((card_x1 + 18, row2_y + 8), "单位与部门 / ORGANIZATION", fill=(100, 116, 139), font=font_stamp_lbl)
+    org_lines = [line.strip() for line in organization.split("\n") if line.strip()]
+    for i, ol in enumerate(org_lines[:2]):
+        draw.text((card_x1 + 18, row2_y + 28 + i * 24), ol, fill=(15, 23, 42), font=font_stamp_val)
+
+    # Row 3: 制作人 & 学号/编号
+    draw.text((card_x1 + 18, row3_y + 8), "制作人 / AUTHOR", fill=(100, 116, 139), font=font_stamp_lbl)
+    draw.text((card_x1 + 18, row3_y + 32), author, fill=(15, 23, 42), font=font_stamp_val)
+
+    draw.text((mid_x + 18, row3_y + 8), "编号 / ID", fill=(100, 116, 139), font=font_stamp_lbl)
+    draw.text((mid_x + 18, row3_y + 32), author_id, fill=(15, 23, 42), font=font_stamp_val)
+
+    out_p = Path(output_path)
+    out_p.parent.mkdir(parents=True, exist_ok=True)
+    img.save(str(out_p), format="PNG")
+    return out_p
 
 
 def _draw_wrapped_text(

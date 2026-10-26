@@ -184,10 +184,175 @@ def generate_drawing_params(drawing_type: str) -> dict:
     return {}
 
 
+def _render_universal_gis_sheet(
+    ax,
+    roads,
+    buildings,
+    water,
+    rails,
+    key_plots,
+    landuse,
+    boundary,
+    cx,
+    cy,
+    view_w,
+    view_h,
+    get_xy,
+    font_prop,
+    drawing_type: str,
+    s_city: str,
+    s_name: str,
+    s_cfg: dict,
+):
+    """通用高精度 GIS A3 图纸渲染器（适用于非长春的任意自定义场地）。"""
+    import matplotlib.font_manager as fm
+    import matplotlib.patches as mpatches
+
+    fig = ax.get_figure()
+    ax.set_facecolor("#F8FAFC")
+    ax.set_xlim(0, 141.42)
+    ax.set_ylim(0, 100)
+    ax.set_axis_off()
+
+    def _f(size, weight="normal"):
+        return fm.FontProperties(family=font_prop.get("family", "sans-serif"), size=size, weight=weight)
+
+    for x in range(5, 140, 5):
+        ax.plot([x, x], [0, 100], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+    for y in range(5, 100, 5):
+        ax.plot([0, 141.42], [y, y], color="#E2E8F0", linewidth=0.6, alpha=0.5, zorder=0)
+
+    loc_label = f"{s_city}{s_name}".strip() or "规划研究范围"
+    area_ha = s_cfg.get("area_ha", 150)
+
+    # 1. Header Panel
+    ax.add_patch(mpatches.Rectangle((2.3, 88.7), 136.8, 7.3, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 89.0), 136.8, 7.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((2.0, 95.7), 136.8, 0.6, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(3.5, 93.6, drawing_type, color="#0F172A", ha="left", va="center", fontproperties=_f(26, "bold"), zorder=4)
+    ax.text(
+        3.5,
+        90.7,
+        f"展示{loc_label}（约 {area_ha} 公顷）范围内「{drawing_type}」的空间本底、结构体系与规划管控要素。",
+        color="#334155",
+        ha="left",
+        va="center",
+        fontproperties=_f(15.0),
+        zorder=4,
+    )
+
+    # 2. Main Map Container
+    ax.add_patch(mpatches.Rectangle((2.3, 3.7), 98.0, 83.0, facecolor="#E2E8F0", edgecolor="none", zorder=1))
+    ax.add_patch(mpatches.Rectangle((2.0, 4.0), 98.0, 83.0, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+
+    ax_map = fig.add_axes([3.0 / 141.42, 5.0 / 100.0, 96.0 / 141.42, 81.0 / 100.0], facecolor="#F8FAFC", zorder=3)
+    ax_map.set_xlim(cx - view_w / 2, cx + view_w / 2)
+    ax_map.set_ylim(cy - view_h / 2, cy + view_h / 2)
+    ax_map.set_axis_off()
+    ax_map.set_aspect("equal")
+
+    if water is not None and not water.empty:
+        water.plot(ax=ax_map, facecolor="#D0E6F7", edgecolor="none", zorder=1)
+
+    is_landuse_map = any(k in drawing_type for k in ["用地", "总图", "总体", "总平", "绿地", "公共空间", "分期"])
+    is_height_map = "高度" in drawing_type
+    is_road_map = any(k in drawing_type for k in ["交通", "道路", "慢行", "句法"])
+
+    if landuse is not None and not landuse.empty and is_landuse_map:
+        if "Color" in landuse.columns:
+            for color_hex, sub_df in landuse.groupby("Color"):
+                sub_df.plot(ax=ax_map, facecolor=color_hex, edgecolor="#CBD5E1", linewidth=0.25, alpha=0.75, zorder=1.5)
+        else:
+            landuse.plot(ax=ax_map, facecolor="#FEF08A", edgecolor="#CBD5E1", linewidth=0.25, alpha=0.65, zorder=1.5)
+
+    if buildings is not None and not buildings.empty:
+        if is_height_map and "Floor" in buildings.columns:
+            b_copy = buildings.copy()
+            b_copy["Floor_num"] = pd.to_numeric(b_copy["Floor"], errors="coerce").fillna(1)
+            conds = [
+                b_copy["Floor_num"] <= 3,
+                (b_copy["Floor_num"] >= 4) & (b_copy["Floor_num"] <= 7),
+                (b_copy["Floor_num"] >= 8) & (b_copy["Floor_num"] <= 14),
+                b_copy["Floor_num"] >= 15,
+            ]
+            colors = ["#FDE68A", "#F97316", "#EF4444", "#991B1B"]
+            b_copy["_c"] = np.select(conds, colors, default="#FDE68A")
+            b_copy.plot(ax=ax_map, color=b_copy["_c"], edgecolor="#475569", linewidth=0.2, zorder=2.5)
+        else:
+            buildings.plot(ax=ax_map, facecolor="#E2E8F0", edgecolor="#94A3B8", linewidth=0.2, zorder=2.5)
+
+    if roads is not None and not roads.empty:
+        road_color = "#2563EB" if is_road_map else "#94A3B8"
+        roads.plot(ax=ax_map, color=road_color, linewidth=1.8 if is_road_map else 1.2, zorder=3.5)
+
+    if rails is not None and not rails.empty:
+        rails.plot(ax=ax_map, color="#475569", linewidth=1.5, linestyle="--", zorder=4)
+
+    if key_plots is not None and not key_plots.empty:
+        key_plots.plot(ax=ax_map, facecolor="#F59E0B", edgecolor="#D97706", linewidth=1.5, alpha=0.45, zorder=5)
+
+    if boundary is not None and not boundary.empty:
+        boundary.plot(ax=ax_map, facecolor="none", edgecolor="#FF3B30", linewidth=2.8, zorder=7)
+
+    # 3. Right Legend & Explanation Cards
+    ax.add_patch(mpatches.Rectangle((101.5, 67.0), 37.9, 20.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 85.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 82.8, "图例 / LEGEND", color="#D97706", ha="left", va="center", fontproperties=_f(13.5, "bold"), zorder=4)
+
+    legend_entries = [
+        ("规划研究红线", "#FF3B30", False),
+        ("重点更新单元", "#F59E0B", True),
+        ("建筑基底轮廓", "#E2E8F0", True),
+        ("道路交通网络", "#2563EB" if is_road_map else "#94A3B8", False),
+    ]
+    for idx, (lbl, col, is_fill) in enumerate(legend_entries):
+        lx = 103.5 + (idx % 2) * 18.0
+        ly = 79.0 - (idx // 2) * 4.5
+        ax.add_patch(
+            mpatches.Rectangle(
+                (lx, ly - 0.8),
+                2.7,
+                1.7,
+                facecolor=col if is_fill else "none",
+                edgecolor=col,
+                linewidth=1.6,
+                zorder=4,
+            )
+        )
+        ax.text(lx + 3.6, ly, lbl, color="#334155", ha="left", va="center", fontproperties=_f(12.5), zorder=4)
+
+    ax.add_patch(mpatches.Rectangle((101.5, 4.0), 37.9, 61.3, facecolor="#FFFFFF", edgecolor="#CBD5E1", linewidth=1.2, zorder=2))
+    ax.add_patch(mpatches.Rectangle((101.5, 63.8), 37.9, 1.5, facecolor="#D97706", edgecolor="none", zorder=3))
+    ax.text(103.5, 61.0, "规划说明 / DESIGN NOTES", color="#D97706", ha="left", va="center", fontproperties=_f(13.5, "bold"), zorder=4)
+
+    reg = s_cfg.get("regulatory_limits") or {}
+    far_val = reg.get("far", s_cfg.get("far", 2.0))
+    h_val = reg.get("height_limit", s_cfg.get("height_limit", 24))
+    notes = [
+        f"1. 场地概况：本项目位于{loc_label}，规划研究范围约 {area_ha} 公顷。",
+        f"2. 规划重点：围绕「{drawing_type}」开展存量空间织补、交通微循环贯通与公服设施提升。",
+        f"3. 法定管控：严格落实容积率≤{far_val}、建筑限高≤{h_val}m 等控规红线要求。",
+    ]
+    ny = 55.0
+    for note in notes:
+        ax.text(103.5, ny, note[:24], color="#0F172A", ha="left", va="top", fontproperties=_f(13.0), zorder=4)
+        if len(note) > 24:
+            ny -= 3.2
+            ax.text(103.5, ny, note[24:48], color="#334155", ha="left", va="top", fontproperties=_f(13.0), zorder=4)
+        ny -= 5.5
+
+
 def draw_spatial_map(output_path, drawing_type="现状区位图"):
     print(f"Loading spatial data layers for {drawing_type}...")
     
-    # 1. Load layers
+    # 1. Load layers (with dynamic custom_site support)
+    from src.config.site import get_site_center, get_site_city, get_site_config, get_site_name
+    s_cfg = get_site_config() or {}
+    s_city = get_site_city() or s_cfg.get("city", "")
+    s_name = get_site_name() or s_cfg.get("name", "")
+    s_center = get_site_center() or s_cfg.get("center") or [125.34064, 43.90095]
+
+    custom_gis_dir = ROOT / "data" / "custom_site"
     boundary_path = GIS_DIR / "Boundary_Scope.geojson"
     water_path = STATIC_DIR / "water.geojson"
     roads_path = STATIC_DIR / "road_clipped.geojson"
@@ -200,13 +365,50 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
     key_plots_path = GIS_DIR / "Key_Plots_District.json"
     landuse_path = GIS_DIR / "landuse_clipped.geojson"
     
-    boundary = gpd.read_file(boundary_path).to_crs(epsg=3857)
-    water = gpd.read_file(water_path).to_crs(epsg=3857) if water_path.exists() else None
-    roads = gpd.read_file(roads_path).to_crs(epsg=3857) if roads_path.exists() else None
-    rails = gpd.read_file(rails_path).to_crs(epsg=3857) if rails_path.exists() else None
-    buildings = gpd.read_file(buildings_path).to_crs(epsg=3857) if buildings_path.exists() else None
-    key_plots = gpd.read_file(key_plots_path).to_crs(epsg=3857) if key_plots_path.exists() else None
-    landuse = gpd.read_file(landuse_path).to_crs(epsg=3857) if landuse_path.exists() else None
+    boundary_raw = gpd.read_file(boundary_path)
+    if boundary_raw.crs is None:
+        boundary_raw = boundary_raw.set_crs(epsg=4326)
+    b4326 = boundary_raw.to_crs(epsg=4326)
+    b_minx, b_miny, b_maxx, b_maxy = b4326.total_bounds
+    b_cx, b_cy = (b_minx + b_maxx) / 2.0, (b_miny + b_maxy) / 2.0
+
+    bounds_outside_changchun = not (125.0 <= b_cx <= 126.0 and 43.5 <= b_cy <= 44.5)
+    site_outside_changchun = (
+        bool(s_city or s_name)
+        and ("伪满" not in s_name and "长春" not in s_city)
+    ) or (
+        isinstance(s_center, (list, tuple))
+        and len(s_center) >= 2
+        and s_center != [0.0, 0.0]
+        and not (125.0 <= float(s_center[0]) <= 126.0 and 43.5 <= float(s_center[1]) >= 43.5 and float(s_center[1]) <= 44.5)
+    )
+    is_custom_non_changchun = bounds_outside_changchun or site_outside_changchun
+
+    # If site config is outside Changchun but boundary_raw on disk was still the Changchun file, build custom GDFs
+    if is_custom_non_changchun and not bounds_outside_changchun:
+        custom_bbox = s_cfg.get("bbox")
+        if not (isinstance(custom_bbox, (list, tuple)) and len(custom_bbox) == 4 and custom_bbox != [0.0, 0.0, 0.0, 0.0]):
+            c_lon = float(s_center[0]) if (isinstance(s_center, (list, tuple)) and len(s_center) >= 2 and s_center[0]) else 121.48
+            c_lat = float(s_center[1]) if (isinstance(s_center, (list, tuple)) and len(s_center) >= 2 and s_center[1]) else 31.23
+            custom_bbox = [c_lon - 0.006, c_lat - 0.005, c_lon + 0.006, c_lat + 0.005]
+        boundary = gpd.GeoDataFrame([{"geometry": box(*custom_bbox)}], crs="EPSG:4326").to_crs(epsg=3857)
+        c_bldg = custom_gis_dir / "buildings.geojson"
+        c_road = custom_gis_dir / "roads.geojson"
+        c_lu = custom_gis_dir / "landuse.geojson"
+        buildings = gpd.read_file(c_bldg).to_crs(epsg=3857) if c_bldg.exists() else None
+        roads = gpd.read_file(c_road).to_crs(epsg=3857) if c_road.exists() else None
+        landuse = gpd.read_file(c_lu).to_crs(epsg=3857) if c_lu.exists() else None
+        water = None
+        rails = None
+        key_plots = None
+    else:
+        boundary = boundary_raw.to_crs(epsg=3857)
+        water = gpd.read_file(water_path).to_crs(epsg=3857) if water_path.exists() else None
+        roads = gpd.read_file(roads_path).to_crs(epsg=3857) if roads_path.exists() else None
+        rails = gpd.read_file(rails_path).to_crs(epsg=3857) if rails_path.exists() else None
+        buildings = gpd.read_file(buildings_path).to_crs(epsg=3857) if buildings_path.exists() else None
+        key_plots = gpd.read_file(key_plots_path).to_crs(epsg=3857) if key_plots_path.exists() else None
+        landuse = gpd.read_file(landuse_path).to_crs(epsg=3857) if landuse_path.exists() else None
 
     # Calculate center and bounds
     minx, miny, maxx, maxy = boundary.total_bounds
@@ -297,9 +499,15 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
         params = {}
     params["drawing_type"] = drawing_type
 
-    # 4. Plot layers using module or default
+    # 4. Plot layers using universal renderer on custom sites, or module/default on Changchun
     import inspect
-    if module and hasattr(module, "draw_map"):
+    if is_custom_non_changchun:
+        _render_universal_gis_sheet(
+            ax, roads, buildings, water, rails, key_plots, landuse, boundary,
+            cx, cy, view_w, view_h, get_xy, font_prop,
+            drawing_type=drawing_type, s_city=s_city, s_name=s_name, s_cfg=s_cfg,
+        )
+    elif module and hasattr(module, "draw_map"):
         sig = inspect.signature(module.draw_map)
         has_params = "params" in sig.parameters or any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
         if has_params:
@@ -316,12 +524,12 @@ def draw_spatial_map(output_path, drawing_type="现状区位图"):
             else:
                 default_mod.draw_map(ax, roads, buildings, water, rails, key_plots, landuse, boundary, cx, cy, view_w, view_h, get_xy, font_prop)
 
-    # Boundary red line (Apple Red) - skip for parcel detail drawings to keep them clean
-    if not any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
+    # Boundary red line (Apple Red) - skip for parcel detail drawings or NO_FRAME full-page compositions
+    if not has_no_frame and not is_custom_non_changchun and not any(k in drawing_type for k in ["老水产市场", "食品调料市场", "市一中北侧", "清禾集贸市场", "中国石油"]):
         boundary.plot(ax=ax, facecolor="none", edgecolor="#FF3B30", linewidth=2.0, zorder=7.0)
 
-    # 4. Add text annotations for key landmarks (if not AIGC flowchart)
-    if drawing_type != "AIGC技术推演过程图":
+    # 4. Add text annotations for key landmarks (only when not NO_FRAME/custom)
+    if not has_no_frame and not is_custom_non_changchun and drawing_type != "AIGC技术推演过程图":
         from src.config import get_landmarks
         labels = get_landmarks()
         for lm in labels:
@@ -983,10 +1191,27 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
     draw.rectangle([184, 1661, 1887, 1815], fill=(248, 250, 252))
     draw.text((210, 1668), "规划管控指标体系 (Statutory Zoning Control System)", fill=(29, 29, 31), font=font_title)
     
-    indicator_text = "【法定控制要求】 规划总面积：327.8公顷  |  控制容积率：≤ 1.4  |  建筑密度：≤ 35%  |  绿地率要求：≥ 25%  |  高度分区：核心区 ≤ 9m，过渡区 ≤ 18m"
+    from src.config.site import get_site_config, get_site_district, get_site_name
+    s_cfg = get_site_config() or {}
+    site_name = get_site_name() or s_cfg.get("name", "核心更新街区")
+    site_dist = get_site_district() or s_cfg.get("district", "")
+    is_changchun_default = ("伪满" in site_name) or ("长春" in (city_name or ""))
+    if is_changchun_default:
+        indicator_text = "【法定控制要求】 规划总面积：327.8公顷  |  控制容积率：≤ 1.4  |  建筑密度：≤ 35%  |  绿地率要求：≥ 25%  |  高度分区：核心区 ≤ 9m，过渡区 ≤ 18m"
+        notes_text = "【实施导引】 街区更新实行分类整治，严格保护伪满皇宫视廊保护线。对于绿地率（现状2.9%）实行刚性生态修补，盘活工业废弃院落增设口袋公园与微绿地。"
+    else:
+        s_area = s_cfg.get("area_ha", 150.0)
+        reg = s_cfg.get("regulatory_limits") or {}
+        far_v = reg.get("far", s_cfg.get("far", 2.5))
+        h_v = reg.get("height_limit", s_cfg.get("height_limit", 36))
+        bd_v = reg.get("building_density_max", 0.35)
+        bd_p = int(bd_v * 100) if isinstance(bd_v, (int, float)) and bd_v <= 1.0 else bd_v
+        gr_v = reg.get("greenery_ratio_min", 0.30)
+        gr_p = int(gr_v * 100) if isinstance(gr_v, (int, float)) and gr_v <= 1.0 else gr_v
+        indicator_text = f"【法定控制要求】 规划总面积：{s_area}公顷  |  控制容积率：≤ {far_v}  |  建筑密度：≤ {bd_p}%  |  绿地率要求：≥ {gr_p}%  |  建筑限高：≤ {h_v}m"
+        notes_text = f"【实施导引】 {city_name or ''}{site_name}实行分类有机更新，严格落实天际线视廊与高度管控，盘活低效存量用地增设社区口袋公园与公共服务设施。"
+
     draw.text((210, 1715), indicator_text, fill=(29, 78, 216), font=font_body_bold)
-    
-    notes_text = "【实施导引】 街区更新实行分类整治，严格保护伪满皇宫视廊保护线。对于绿地率（现状2.9%）实行刚性生态修补，盘活工业废弃院落增设口袋公园与微绿地。"
     draw.text((210, 1755), notes_text, fill=(100, 116, 139), font=font_body)
             
     # 7. Redraw the entire Title Block [1890, 1394, 2312, 1816]
@@ -1024,8 +1249,12 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
     
     # Project Name
     draw.text((1905, 1472), "项目名称 / PROJECT", fill=(120, 120, 125), font=font_stamp_label)
-    draw.text((1905, 1494), "数字孪生·古今共振——", fill=(15, 23, 42), font=font_stamp_body)
-    draw.text((1905, 1524), "AI赋能下的伪满皇宫周边街区更新规划设计", fill=(15, 23, 42), font=font_stamp_body)
+    if is_changchun_default:
+        draw.text((1905, 1494), "数字孪生·古今共振——", fill=(15, 23, 42), font=font_stamp_body)
+        draw.text((1905, 1524), "AI赋能下的伪满皇宫周边街区更新规划设计", fill=(15, 23, 42), font=font_stamp_body)
+    else:
+        draw.text((1905, 1494), "数字孪生·空间计算——", fill=(15, 23, 42), font=font_stamp_body)
+        draw.text((1905, 1524), f"AI赋能下的{city_name or ''}{site_name}更新规划设计", fill=(15, 23, 42), font=font_stamp_body)
     
     # Unit/Class
     draw.text((1905, 1572), "学校班级 / ORGANIZATION", fill=(120, 120, 125), font=font_stamp_label)
@@ -1067,12 +1296,11 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
             banner_draw.rounded_rectangle([wr_x+2, wr_y+2, wr_x+wr_card_w+2, wr_y+wr_card_h+2], radius=10, fill=(0, 0, 0, 30))
             banner_draw.rounded_rectangle([wr_x, wr_y, wr_x+wr_card_w, wr_y+wr_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
             
-            title_text = "长春市风玫瑰图"
+            title_text = f"{city_name or '当地'}风玫瑰图"
             tb = banner_draw.textbbox((0, 0), title_text, font=font_title_b)
             tw = tb[2] - tb[0]
             banner_draw.text((wr_x + (wr_card_w - tw)//2, wr_y + 12), title_text, fill=(30, 41, 59, 255), font=font_title_b)
             
-            windrose_path = ASSETS_DIR / "长春市风玫瑰.png"
             if windrose_path.exists():
                 windrose = Image.open(windrose_path).convert("RGBA")
                 wr_size = 150
@@ -1118,7 +1346,7 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
             banner_draw.rounded_rectangle([lc_x+2, lc_y+2, lc_x+loc_card_w+2, lc_y+loc_card_h+2], radius=10, fill=(0, 0, 0, 30))
             banner_draw.rounded_rectangle([lc_x, lc_y, lc_x+loc_card_w, lc_y+loc_card_h], radius=10, fill=(255, 255, 255, 240), outline=(200, 200, 200, 255), width=1)
             
-            loc_title = "项目在长春市区位示意"
+            loc_title = f"项目在{city_name or '城市'}区位示意"
             tb = banner_draw.textbbox((0, 0), loc_title, font=font_title_b)
             tw = tb[2] - tb[0]
             banner_draw.text((lc_x + (loc_card_w - tw)//2, lc_y + 12), loc_title, fill=(30, 41, 59, 255), font=font_title_b)
@@ -1158,11 +1386,20 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
                 banner_draw.text((tx, ty+1), text, fill=outline_color, font=font)
                 banner_draw.text((tx, ty), text, fill=fill_color, font=font)
                 
-            draw_text_with_outline_b("绿园区", map_pt(12, 60), font_label_b, (100, 116, 139, 255))
-            draw_text_with_outline_b("朝阳区", map_pt(30, 75), font_label_b, (100, 116, 139, 255))
-            draw_text_with_outline_b("南关区", map_pt(52, 70), font_label_b, (100, 116, 139, 255))
-            draw_text_with_outline_b("二道区", map_pt(72, 48), font_label_b, (100, 116, 139, 255))
-            draw_text_with_outline_b("宽城区 (项目所在区)", map_pt(38, 22), font_label_bold_b, (30, 41, 59, 255))
+            if is_changchun_default:
+                draw_text_with_outline_b("绿园区", map_pt(12, 60), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("朝阳区", map_pt(30, 75), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("南关区", map_pt(52, 70), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("二道区", map_pt(72, 48), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("宽城区 (项目所在区)", map_pt(38, 22), font_label_bold_b, (30, 41, 59, 255))
+                proj_label = " 伪满皇宫项目场地"
+            else:
+                draw_text_with_outline_b("西部片区", map_pt(12, 60), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("西南片区", map_pt(30, 75), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("南部片区", map_pt(52, 70), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b("东部片区", map_pt(72, 48), font_label_b, (100, 116, 139, 255))
+                draw_text_with_outline_b(f"{site_dist or '核心区'} (项目所在区)", map_pt(38, 22), font_label_bold_b, (30, 41, 59, 255))
+                proj_label = f" {site_name}场地"
             
             proj_lx, proj_ly = 57, 43
             proj_x, proj_y = map_pt(proj_lx, proj_ly)
@@ -1170,7 +1407,6 @@ def process_a3_layout(map_path, output_path, view_w, drawing_type="现状区位�
             banner_draw.ellipse([proj_x - 5, proj_y - 5, proj_x + 5, proj_y + 5], fill=(255, 255, 255, 255))
             banner_draw.ellipse([proj_x - 3, proj_y - 3, proj_x + 3, proj_y + 3], fill=(239, 68, 68, 255))
             
-            proj_label = " 伪满皇宫项目场地"
             draw_text_with_outline_b(proj_label, (proj_x + 8, proj_y - 8), font_label_bold_b, (239, 68, 68, 255))
             
             homepage_banner_img = banner_rgba.convert("RGB")

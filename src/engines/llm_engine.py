@@ -1,4 +1,4 @@
-"""LLM engine: local Ollama chat with streaming and RAG-augmented prompts.
+"""LLM engine: local Ollama / DeepSeek API chat with streaming and RAG-augmented prompts.
 
 Usage:
     from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
@@ -69,8 +69,15 @@ def _select_demo_response(system_prompt: str) -> str:
     return _DEFAULT_DEMO
 
 
+def _resolve_api_model(api_url: str, model: str) -> str:
+    """Map logical internal model names to official DeepSeek endpoint model IDs when calling api.deepseek.com."""
+    if "api.deepseek.com" in str(api_url or "").lower() and model in ("deepseek-v4-pro", "deepseek-v4-flash"):
+        return "deepseek-chat"
+    return model
+
+
 # ═══════════════════════════════════════════
-# Ollama API callers
+# Ollama / DeepSeek API callers
 # ═══════════════════════════════════════════
 
 def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
@@ -108,7 +115,7 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
     messages.append({"role": "user", "content": prompt})
 
     payload = {
-        "model": model,
+        "model": _resolve_api_model(url, model),
         "messages": messages,
         "stream": False,
     }
@@ -151,7 +158,6 @@ def call_llm_engine(prompt: str, system_prompt: str = "你是一位专业的城�
     from src.utils.llm_monitor import log_llm_call
     log_llm_call(model, system_prompt, prompt, res_text, latency)
     return res_text
-
 
 
 def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业的城市规划专家。",
@@ -202,7 +208,7 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
     messages.append({"role": "user", "content": prompt})
 
     payload = {
-        "model": model,
+        "model": _resolve_api_model(url, model),
         "messages": messages,
         "stream": True,
     }
@@ -249,7 +255,7 @@ def call_llm_engine_stream(prompt: str, system_prompt: str = "你是一位专业
 
 
 def _augment_with_rag(prompt: str, system_prompt: str) -> str:
-    """Append top RAG chunks to system prompt."""
+    """Append top RAG chunks to system prompt, separating local/national statutes from cross-city precedents."""
     from src.engines.rag_engine import retrieve_rag_context
     # Extract proposal if present to keep the RAG search query clean and cacheable
     search_query = prompt
@@ -261,8 +267,18 @@ def _augment_with_rag(prompt: str, system_prompt: str) -> str:
 
     best_chunks = retrieve_rag_context(search_query, top_k=3)
     if best_chunks:
-        top_context = "\n\n".join(f"[{c[2]}]: {c[1]}" for c in best_chunks)
         from src.config.site import get_site_city
         city = get_site_city() or "属地"
-        system_prompt += f"\n\n【本地{city}规划法规与条例检索库片段，请严格以此时空限定背景作答】：\n{top_context}"
+        local_chunks = [c for c in best_chunks if not str(c[2]).startswith("异地参考先例:")]
+        ref_chunks = [c for c in best_chunks if str(c[2]).startswith("异地参考先例:")]
+
+        if local_chunks:
+            local_ctx = "\n\n".join(f"[{c[2]}]: {c[1]}" for c in local_chunks)
+            system_prompt += f"\n\n【国家规范与本地({city})规划条例检索片段（请严格遵守）】：\n{local_ctx}"
+        if ref_chunks:
+            ref_ctx = "\n\n".join(f"[{c[2]}]: {c[1]}" for c in ref_chunks)
+            system_prompt += (
+                "\n\n【异地同类历史街区参考范例（仅借鉴导则体例与分析方法，严禁照搬其地名与限高/容积率数值）】：\n"
+                f"{ref_ctx}"
+            )
     return system_prompt

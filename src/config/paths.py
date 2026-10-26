@@ -10,6 +10,9 @@ ROOT_DIR = project_root()
 DATA_DIR = ROOT_DIR / "data"
 CSV_DIR = DATA_DIR / "csv"
 GIS_DIR = DATA_DIR / "gis"
+CUSTOM_SITE_DIR = DATA_DIR / "custom_site"
+CUSTOM_SITE_CONFIG = ROOT_DIR / "config" / "custom_site.json"
+BACKUP_CHANGCHUN_DIR = GIS_DIR / "backup_changchun_default"
 ASSETS_DIR = ROOT_DIR / "assets"
 STATIC_DIR = ROOT_DIR / "static"
 DOCS_DIR = ROOT_DIR / "docs"
@@ -61,12 +64,22 @@ SHP_FILES = GIS_FILES
 #    an automatic 404 fallback to /static/ for maximum resilience on Streamlit Cloud.
 STATIC_URL_PREFIX = "/app/static/"
 
-def get_static_url(filename: str) -> str:
+def get_static_url(filename: str, cache_bust: bool = False) -> str:
     """
     Safely generates the internal URL routing path for a static asset.
     Example: get_static_url('buildings.geojson') -> '/app/static/buildings.geojson'
+    When cache_bust=True, appends '?v={mtime}' so the browser reloads updated GeoJSONs.
     """
-    return f"{STATIC_URL_PREFIX}{filename}"
+    base_url = f"{STATIC_URL_PREFIX}{filename}"
+    if cache_bust:
+        try:
+            asset_path = STATIC_DIR / filename
+            if asset_path.exists():
+                mtime = int(asset_path.stat().st_mtime)
+                return f"{base_url}?v={mtime}"
+        except Exception:
+            pass
+    return base_url
 
 # ==========================================
 # 🧭 Single Source of Truth for Page Routes

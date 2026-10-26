@@ -114,12 +114,13 @@ def render_api_key_banner_if_needed() -> bool:
     # 3. If missing or silent check failed, render input card
     st.markdown("---")
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-                border: 1px solid #6366f1; border-radius: 16px; padding: 24px 28px; margin-bottom: 16px;">
-        <h3 style="color: #818cf8; margin: 0 0 8px 0; font-size: 20px;">
+    <div style="background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+                border: 1px solid rgba(88, 86, 214, 0.25); box-shadow: 0 4px 16px rgba(88, 86, 214, 0.06);
+                border-radius: 16px; padding: 24px 28px; margin-bottom: 16px;">
+        <h3 style="color: #4338ca; margin: 0 0 8px 0; font-size: 20px;">
             🔐 DeepSeek AI 智算引擎 — 密钥联机配置与验证
         </h3>
-        <p style="color: #94a3b8; margin: 0; font-size: 14px;">
+        <p style="color: #515154; margin: 0; font-size: 14px;">
             系统可使用 DeepSeek API 驱动多主体博弈实时对话推演与智能导则生成。您也可直接选择<b>「离线演示体验模式」</b>，直接加载全套本地预置的专家规划成果、GIS 拓扑、AutoCAD 矢量导出与成果图册。
         </p>
     </div>
@@ -167,3 +168,29 @@ def render_api_key_banner_if_needed() -> bool:
 
     st.warning("⚠️ 请输入密钥联机验证，或直接点击上方「🚀 离线演示体验模式」进入系统。")
     return False
+
+
+def render_api_key_guide() -> None:
+    """Renders an Apple Light indigo-tinted API Key configuration guide card."""
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #ffffff 0%, #f5f3ff 100%);
+                border: 1px solid rgba(88, 86, 214, 0.25); box-shadow: 0 4px 16px rgba(88, 86, 214, 0.06);
+                border-radius: 16px; padding: 22px 26px; margin-bottom: 16px;">
+        <h4 style="color: #4338ca; margin: 0 0 8px 0; font-size: 17px;">
+            🔑 DeepSeek API Key 快速配置指南
+        </h4>
+        <p style="color: #515154; margin: 0 0 12px 0; font-size: 13.5px;">
+            按照以下步骤即可完成联机配置：
+        </p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;">
+            <div style="background: #ffffff; border: 1px solid rgba(88, 86, 214, 0.15); border-radius: 10px; padding: 12px;">
+                <div style="color: #1d1d1f; font-weight: 600; font-size: 13px; margin-bottom: 4px;">1. 获取密钥</div>
+                <div style="color: #515154; font-size: 12.5px;">访问 <code style="background: #eef2ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">platform.deepseek.com</code> 创建 API Key</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid rgba(88, 86, 214, 0.15); border-radius: 10px; padding: 12px;">
+                <div style="color: #1d1d1f; font-weight: 600; font-size: 13px; margin-bottom: 4px;">2. 填入并验证</div>
+                <div style="color: #515154; font-size: 12.5px;">粘贴 <code style="background: #eef2ff; color: #4338ca; padding: 1px 6px; border-radius: 4px;">sk-...</code> 密钥并点击联机验证</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)

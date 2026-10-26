@@ -101,11 +101,27 @@ html, body, .stApp {
 /* --- Hide Streamlit Framework Elements --- */
 [data-testid="stHeader"] { display: none !important; }
 [data-testid="stSidebarNav"] { display: none !important; }
-[data-testid="collapsedControl"] { display: none !important; }
-[data-testid="stSidebar"] { display: none !important; }
-[data-testid="stSidebarCollapsedControl"] { display: none !important; }
 footer { display: none !important; }
 #MainMenu { display: none !important; }
+
+[data-testid="stSidebar"] {
+    background: rgba(255, 255, 255, 0.92) !important;
+    backdrop-filter: saturate(180%) blur(20px) !important;
+    -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
+    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+    top: 52px !important;
+    height: calc(100vh - 52px) !important;
+    z-index: 999990 !important;
+}
+[data-testid="collapsedControl"],
+[data-testid="stSidebarCollapsedControl"] {
+    top: 60px !important;
+    z-index: 999991 !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
 
 /* --- Layout & Background --- */
 .block-container {
@@ -121,8 +137,8 @@ footer { display: none !important; }
 
 /* --- Typography --- */
 h1 {
-    color: #1d1d1f !important;
-    -webkit-text-fill-color: #1d1d1f !important;
+    color: #1d1d1f;
+    -webkit-text-fill-color: currentColor;
     background: none !important;
     -webkit-background-clip: unset !important;
     background-clip: unset !important;
@@ -132,7 +148,7 @@ h1 {
 }
 
 h2 {
-    color: #1d1d1f !important;
+    color: #1d1d1f;
     font-weight: 700 !important;
     border-left: 4px solid #0071e3;
     padding-left: 12px;
@@ -338,11 +354,11 @@ h2 {
     100% { transform: translateX(100%); }
 }
 
-h3 { color: #1d1d1f !important; font-weight: 700 !important; text-shadow: none !important; }
-h4, h5 { color: #1d1d1f !important; font-weight: 700 !important; text-shadow: none !important; }
+h3 { color: #1d1d1f; font-weight: 700 !important; text-shadow: none !important; }
+h4, h5 { color: #1d1d1f; font-weight: 700 !important; text-shadow: none !important; }
 
 label, .stMarkdown p {
-    color: #48484a !important;
+    color: #48484a;
     line-height: 1.7 !important;
 }
 
@@ -1873,12 +1889,6 @@ div[data-testid="stVerticalBlock"]:has(> div.element-container > .folium-map-anc
     border: 1px solid rgba(0, 0, 0, 0.08) !important;
     backdrop-filter: blur(10px);
     border-radius: 8px !important;
-}
-
-[data-testid="stSidebar"] {
-    background: #f5f5f7 !important;
-    border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
-    backdrop-filter: blur(20px) !important;
 }
 
 hr {

@@ -186,7 +186,7 @@ WORKBENCHES = [
                 "desc": "总平面图/全景透视/鸟瞰体块 ControlNet 空间意向生形。",
                 "image": "assets/06_llm_consultation_v2.png",
                 "path": "pages/02_多主体博弈与空间AIGC工坊.py",
-                "url": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
+                "url": "/02_多主体博弈与空间AIGC工坊?sub=aigc_studio",
                 "icon": "✨",
             },
         ],
@@ -253,7 +253,7 @@ WORKBENCHES = [
                 "desc": "规划绘图技能规范、多主体元指令定义与 Skill 导出。",
                 "image": "assets/05_design_inference.png",
                 "path": "pages/03_数字图则与工程交付枢纽.py",
-                "url": "/03_数字图则与工程交付枢纽?sub=delivery",
+                "url": "/03_数字图则与工程交付枢纽?sub=skill",
                 "icon": "📖",
             },
         ],
@@ -305,24 +305,20 @@ render_summary_cards(
             "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
   <defs>
     <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f5f5f7" />
     </linearGradient>
-    <filter id="glow1" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-  <path d="M 110 35 L 160 35" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" />
-  <path d="M 260 35 L 310 35" stroke="#38bdf8" stroke-width="2" stroke-dasharray="4,4" />
-  <rect x="0" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#475569" stroke-width="1.5" />
-  <text x="55" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">多源空间数据</text>
-  <rect x="160" y="15" width="100" height="40" rx="8" fill="url(#grad1)" stroke="#38bdf8" stroke-width="1.5" filter="url(#glow1)" />
-  <text x="210" y="39" fill="#38bdf8" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">AHP-MPI 测度</text>
-  <rect x="310" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#475569" stroke-width="1.5" />
-  <text x="365" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">潜力排行雷达</text>
-  <polygon points="155,31 160,35 155,39" fill="#38bdf8" />
-  <polygon points="305,31 310,35 305,39" fill="#38bdf8" />
+  <path d="M 110 35 L 160 35" stroke="#0071e3" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M 260 35 L 310 35" stroke="#0071e3" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#0071e3" stroke-opacity="0.35" stroke-width="1.5" />
+  <text x="55" y="39" fill="#1d1d1f" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">多源空间数据</text>
+  <rect x="160" y="15" width="100" height="40" rx="8" fill="rgba(0, 113, 227, 0.08)" stroke="#0071e3" stroke-width="1.5" />
+  <text x="210" y="39" fill="#0071e3" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">AHP-MPI 测度</text>
+  <rect x="310" y="15" width="110" height="40" rx="8" fill="url(#grad1)" stroke="#0071e3" stroke-opacity="0.35" stroke-width="1.5" />
+  <text x="365" y="39" fill="#1d1d1f" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">潜力排行雷达</text>
+  <polygon points="155,31 160,35 155,39" fill="#0071e3" />
+  <polygon points="305,31 310,35 305,39" fill="#0071e3" />
 </svg>"""
         },
         {
@@ -333,27 +329,23 @@ render_summary_cards(
             "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
   <defs>
     <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f5f5f7" />
     </linearGradient>
-    <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-  <path d="M 120 20 L 140 20 L 140 35 L 160 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" fill="none" />
-  <path d="M 120 50 L 140 50 L 140 35 L 160 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" fill="none" />
-  <path d="M 260 35 L 300 35" stroke="#a855f7" stroke-width="2" stroke-dasharray="4,4" />
-  <rect x="0" y="5" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#475569" stroke-width="1" />
-  <text x="60" y="22" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">空间控制 (ControlNet)</text>
-  <rect x="0" y="39" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#475569" stroke-width="1" />
-  <text x="60" y="56" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">AI 润色提示词 (Prompt)</text>
-  <rect x="160" y="15" width="100" height="40" rx="8" fill="url(#grad2)" stroke="#a855f7" stroke-width="1.5" filter="url(#glow2)" />
-  <text x="210" y="39" fill="#a855f7" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">SD 渲染推演</text>
-  <rect x="300" y="15" width="120" height="40" rx="8" fill="url(#grad2)" stroke="#475569" stroke-width="1.5" />
-  <text x="360" y="39" fill="#e2e8f0" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="600">Before/After 街景</text>
-  <polygon points="155,31 160,35 155,39" fill="#a855f7" />
-  <polygon points="295,31 300,35 295,39" fill="#a855f7" />
+  <path d="M 120 20 L 140 20 L 140 35 L 160 35" stroke="#5856d6" stroke-width="2" stroke-dasharray="4,4" fill="none" />
+  <path d="M 120 50 L 140 50 L 140 35 L 160 35" stroke="#5856d6" stroke-width="2" stroke-dasharray="4,4" fill="none" />
+  <path d="M 260 35 L 300 35" stroke="#5856d6" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="5" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#5856d6" stroke-opacity="0.35" stroke-width="1" />
+  <text x="60" y="22" fill="#1d1d1f" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">空间控制 (ControlNet)</text>
+  <rect x="0" y="39" width="120" height="26" rx="6" fill="url(#grad2)" stroke="#5856d6" stroke-opacity="0.35" stroke-width="1" />
+  <text x="60" y="56" fill="#1d1d1f" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">AI 润色提示词 (Prompt)</text>
+  <rect x="160" y="15" width="100" height="40" rx="8" fill="rgba(88, 86, 214, 0.08)" stroke="#5856d6" stroke-width="1.5" />
+  <text x="210" y="39" fill="#4338ca" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="bold">SD 渲染推演</text>
+  <rect x="300" y="15" width="120" height="40" rx="8" fill="url(#grad2)" stroke="#5856d6" stroke-opacity="0.35" stroke-width="1.5" />
+  <text x="360" y="39" fill="#1d1d1f" font-size="12" font-family="sans-serif" text-anchor="middle" font-weight="600">Before/After 街景</text>
+  <polygon points="155,31 160,35 155,39" fill="#5856d6" />
+  <polygon points="295,31 300,35 295,39" fill="#5856d6" />
 </svg>"""
         },
         {
@@ -364,26 +356,22 @@ render_summary_cards(
             "svg_chart": """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 70" width="100%" height="70">
   <defs>
     <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="rgba(30, 41, 59, 0.8)" />
-      <stop offset="100%" stop-color="rgba(15, 23, 42, 0.8)" />
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f5f5f7" />
     </linearGradient>
-    <filter id="glow3" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-    </filter>
   </defs>
-  <path d="M 80 35 L 120 35" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" />
-  <path d="M 280 35 L 320 35" stroke="#10b981" stroke-width="2" stroke-dasharray="4,4" />
-  <rect x="0" y="15" width="80" height="40" rx="8" fill="url(#grad3)" stroke="#475569" stroke-width="1.5" />
-  <text x="40" y="39" fill="#e2e8f0" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">策划议题</text>
-  <rect x="120" y="15" width="160" height="40" rx="8" fill="url(#grad3)" stroke="#10b981" stroke-width="1.5" filter="url(#glow3)" />
-  <text x="200" y="31" fill="#10b981" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">居民/运营商/规划师 协同</text>
-  <text x="200" y="47" fill="#10b981" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">+ RAG 政策校验</text>
-  <rect x="320" y="15" width="100" height="40" rx="8" fill="url(#grad3)" stroke="#475569" stroke-width="1.5" />
-  <text x="370" y="31" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">共识雷达</text>
-  <text x="370" y="47" fill="#e2e8f0" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">&amp; 策略矩阵</text>
-  <polygon points="115,31 120,35 115,39" fill="#10b981" />
-  <polygon points="315,31 320,35 315,39" fill="#10b981" />
+  <path d="M 80 35 L 120 35" stroke="#34c759" stroke-width="2" stroke-dasharray="4,4" />
+  <path d="M 280 35 L 320 35" stroke="#34c759" stroke-width="2" stroke-dasharray="4,4" />
+  <rect x="0" y="15" width="80" height="40" rx="8" fill="url(#grad3)" stroke="#34c759" stroke-opacity="0.35" stroke-width="1.5" />
+  <text x="40" y="39" fill="#1d1d1f" font-size="13" font-family="sans-serif" text-anchor="middle" font-weight="600">策划议题</text>
+  <rect x="120" y="15" width="160" height="40" rx="8" fill="rgba(52, 199, 89, 0.1)" stroke="#34c759" stroke-width="1.5" />
+  <text x="200" y="31" fill="#15803d" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">居民/运营商/规划师 协同</text>
+  <text x="200" y="47" fill="#15803d" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="bold">+ RAG 政策校验</text>
+  <rect x="320" y="15" width="100" height="40" rx="8" fill="url(#grad3)" stroke="#ff9500" stroke-opacity="0.45" stroke-width="1.5" />
+  <text x="370" y="31" fill="#1d1d1f" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">共识雷达</text>
+  <text x="370" y="47" fill="#b45309" font-size="11" font-family="sans-serif" text-anchor="middle" font-weight="600">&amp; 策略矩阵</text>
+  <polygon points="115,31 120,35 115,39" fill="#34c759" />
+  <polygon points="315,31 320,35 315,39" fill="#34c759" />
 </svg>"""
         },
     ]
@@ -588,23 +576,35 @@ render_summary_cards([
 # 💾 项目缓存管理
 # ==========================================
 st.markdown("---")
-c1, c2 = st.columns([3, 1])
+c1, c2 = st.columns([3, 1.2])
 with c1:
-    render_section_intro("项目进度管理", "系统已自动在后台开启数据总线持久化，防止刷新丢失进度。如需开启新项目，请在此清空。", eyebrow="Project State")
+    render_section_intro("项目进度管理", "系统已自动在后台开启数据总线持久化，防止刷新丢失进度。如需开启新项目或切换场地，请在此清空缓存并前往数据沙盘上传新范围。", eyebrow="Project State")
 with c2:
     st.markdown("<br>", unsafe_allow_html=True)
     if st.button("🗑️ 开启全新项目 (清空缓存)", use_container_width=True, type="primary"):
         from src.workflow.stage_data_bus import _get_cache_path
-        cache_file = _get_cache_path()
-        if cache_file.exists():
-            with contextlib.suppress(Exception):
-                cache_file.unlink()
+        for candidate_cache in (_get_cache_path(), Path("output/stage_bus_cache.json")):
+            if candidate_cache.exists():
+                with contextlib.suppress(Exception):
+                    candidate_cache.unlink()
         if "stage_bus" in st.session_state:
             del st.session_state["stage_bus"]
-        st.toast("✅ 缓存已清空，系统焕然一新！")
-        import time
-        time.sleep(1)
-        st.rerun()
+        st.session_state.pop("custom_site_context", None)
+        st.session_state.pop("custom_plot_metrics_overrides", None)
+        st.cache_data.clear()
+        st.toast("✅ 缓存已清空，系统焕然一新！可点击下方入口上传或圈选新场地。")
+        st.session_state["_new_project_cleared"] = True
+
+    st.markdown(
+        '<div style="margin-top:8px; text-align:center;">'
+        '<a href="/01_全息空间诊断与数据沙盘?sub=assets" target="_self" '
+        'style="display:inline-block; width:100%; padding:8px 12px; background:#eff6ff; '
+        'border:1px solid #93c5fd; border-radius:8px; color:#0071e3; font-weight:600; '
+        'font-size:13px; text-decoration:none;">'
+        '🌐 前往数据沙盘上传/抓取新场地 ›'
+        '</a></div>',
+        unsafe_allow_html=True,
+    )
 
 
 

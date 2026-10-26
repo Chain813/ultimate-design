@@ -10,8 +10,11 @@
 所有产出自动存入数据总线，供 Stage 11/12 读取。
 """
 
+from typing import Any
+
 import streamlit as st
 
+from src.config.site import get_site_city, get_site_config, get_site_name
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_data_injector import (
@@ -30,6 +33,7 @@ from src.ui.chart_theme import apply_plotly_polar_theme
 from src.ui.design_system import render_page_banner, render_section_intro, render_summary_cards
 from src.ui.module_summary import render_stage_summary
 from src.ui.persistent_outputs import register_report_output
+from src.ui.site_ingestion_panel import get_active_candidate_plots
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_data_bus import (
@@ -38,6 +42,128 @@ from src.workflow.stage_data_bus import (
     save_stage_output,
 )
 from src.workflow.stage_keys import SK
+
+
+def _is_changchun_default_site() -> bool:
+    s_name = get_site_name()
+    s_city = get_site_city()
+    return ("伪满" in s_name) or ("长春" in s_city and "水产" in s_name) or (s_city == "长春市" and "伪满皇宫" in s_name)
+
+
+def _get_merged_plot_diagnostics() -> list[dict[str, Any]]:
+    """融合当前激活的候选地块（自定义上传 / OSM 抓取）、Stage 04/07 靶向地块与默认地块诊断数据。"""
+    is_cc = _is_changchun_default_site()
+    base_diags = get_plot_diagnostics() if is_cc else []
+    candidate_plots = get_active_candidate_plots() or []
+    overrides: dict[str, dict[str, Any]] = st.session_state.get("custom_plot_metrics_overrides", {}) or {}
+    mpi_ranking = load_stage_output("05", SK.MPI_RANKING, []) or []
+    mpi_by_name = {
+        str(r.get("地块名称", "")): float(r.get("MPI 得分", 80.0))
+        for r in mpi_ranking
+        if isinstance(r, dict) and r.get("地块名称")
+    }
+
+    merged_by_name: dict[str, dict[str, Any]] = {}
+    for d_item in base_diags:
+        merged_by_name[str(d_item["name"])] = dict(d_item)
+
+    for idx, cp in enumerate(candidate_plots):
+        p_name = str(cp.get("name", f"候选地块-{idx + 1}"))
+        ov = overrides.get(p_name, {})
+        area_ha = round(float(ov.get("area_ha", cp.get("area_ha", 2.8)) or 2.8), 2)
+        gvi_val = round(float(ov.get("gvi", cp.get("gvi", 15.0)) or 15.0), 1)
+        svf_val = round(float(ov.get("svf", cp.get("svf", 0.50)) or 0.50), 2)
+        poi_val = int(ov.get("poi", cp.get("poi", 12)) or 12)
+        land_use = str(ov.get("land_use", cp.get("land_use", "综合更新用地")))
+        mpi_val = round(
+            float(
+                mpi_by_name.get(
+                    p_name,
+                    cp.get("mpi", cp.get("mpi_score", min(92.0, 68.0 + area_ha * 2.2 + (idx % 5) * 2.5))),
+                )
+            ),
+            1,
+        )
+        if p_name not in merged_by_name or not is_cc:
+            merged_by_name[p_name] = {
+                "name": p_name,
+                "land_use": land_use,
+                "mpi_score": mpi_val,
+                "area_ha": area_ha,
+                "gvi_mean": gvi_val,
+                "svf_mean": svf_val,
+                "enclosure_mean": round(max(0.15, min(0.85, 1.0 - svf_val)), 2),
+                "poi_count": poi_val,
+                "sentiment_mean": round(float(cp.get("sentiment_mean", 0.62)), 2),
+            }
+
+    target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
+    if isinstance(target_plot, dict) and target_plot.get("name"):
+        tp_name = str(target_plot["name"])
+        is_stale_cc = not is_cc and any(kw in tp_name for kw in ("长春", "伪满", "水产"))
+        tp_metrics = target_plot.get("metrics", {}) or {}
+        if tp_name not in merged_by_name and not is_stale_cc:
+            svf_tp = float(tp_metrics.get("svf", 0.50) or 0.50)
+            merged_by_name[tp_name] = {
+                "name": tp_name,
+                "land_use": str(target_plot.get("land_use", "综合更新用地")),
+                "mpi_score": round(float(target_plot.get("mpi", 85.0) or 85.0), 1),
+                "area_ha": round(float(target_plot.get("area_ha", 3.0) or 3.0), 2),
+                "gvi_mean": round(float(tp_metrics.get("gvi", 15.0) or 15.0), 1),
+                "svf_mean": round(svf_tp, 2),
+                "enclosure_mean": round(max(0.15, min(0.85, 1.0 - svf_tp)), 2),
+                "poi_count": int(tp_metrics.get("poi", 12) or 12),
+                "sentiment_mean": 0.65,
+            }
+
+    if not merged_by_name:
+        return get_plot_diagnostics()
+    return list(merged_by_name.values())
+
+
+def _get_default_redlines(target_plot: dict[str, Any]) -> dict[str, float]:
+    """获取当前基地或靶向地块的控规红线默认值。"""
+    is_cc = _is_changchun_default_site()
+    custom_ctx = st.session_state.get("custom_site_context", {}) or {}
+    redlines = custom_ctx.get("redlines", {}) or {}
+    site_cfg = get_site_config() or {}
+    reg = site_cfg.get("regulatory_limits", {}) or {}
+
+    far_max = float(
+        target_plot.get("far_max")
+        or redlines.get("far_max")
+        or reg.get("far_max")
+        or (1.4 if is_cc else 2.2)
+    )
+    height_max = float(
+        target_plot.get("height_max")
+        or redlines.get("height_limit")
+        or reg.get("general_zone_height_limit_m")
+        or (18.0 if is_cc else 24.0)
+    )
+    core_height_max = float(
+        reg.get("core_zone_height_limit_m")
+        or (9.0 if is_cc else max(9.0, round(height_max * 0.5, 1)))
+    )
+    density_max = float(
+        target_plot.get("density_max")
+        or redlines.get("building_density_max")
+        or reg.get("building_density_max_pct")
+        or 35.0
+    )
+    green_min = float(
+        target_plot.get("green_min")
+        or redlines.get("greenery_ratio_min")
+        or reg.get("green_ratio_min_pct")
+        or 25.0
+    )
+    return {
+        "far_max": round(far_max, 2),
+        "height_max": round(height_max, 1),
+        "core_height_max": round(core_height_max, 1),
+        "density_max": round(density_max, 1),
+        "green_min": round(green_min, 1),
+    }
 
 
 def render_page() -> None:
@@ -104,7 +230,7 @@ def render_page() -> None:
                     "目标人群行为画像和完整的地块改造设计方案。",
         eyebrow="Stage 10",
         tags=["地块诊断雷达", "控规指标反推", "人群画像", "深化设计", "Before/After"],
-        graphic_html=graphic_svg
+        graphic_html=graphic_svg,
     )
     render_evidence_chain_bar("10", ["08", "09", "10"])
 
@@ -121,8 +247,8 @@ def render_page() -> None:
     selected_sub = active.label
     st.markdown("---")
 
-    # 预加载地块诊断数据
-    diags = get_plot_diagnostics()
+    # 预加载地块诊断数据（融合当前工程自定义地块与靶向地块）
+    diags = _get_merged_plot_diagnostics()
     if not diags:
         st.warning("⚠️ 暂无地块诊断数据，请先完成 Stage 05 量化分析。")
         st.stop()
@@ -131,7 +257,7 @@ def render_page() -> None:
     plot_names = [d["name"] for d in diags_sorted]
 
     # 读取靶向地块并自动匹配优先默认索引
-    target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
+    target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {}) or {}
     target_name = target_plot.get("name", "")
     target_alias = target_plot.get("alias", "")
     default_idx = 0
@@ -146,7 +272,8 @@ def render_page() -> None:
         "选择重点地块",
         plot_names,
         index=default_idx,
-        format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})" + (" [🎯 靶向更新地块]" if (target_name and (n == target_name or n in target_name or target_name in n)) else ""),
+        format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})"
+        + (" [🎯 靶向更新地块]" if (target_name and (n == target_name or n in target_name or target_name in n)) else ""),
         key="p10_plot_selector",
     )
     d = next(dd for dd in diags_sorted if dd["name"] == selected_plot)
@@ -162,6 +289,17 @@ def render_page() -> None:
 
     st.markdown("---")
 
+    def _build_enriched_plot_context(plot_name: str, diag_item: dict[str, Any]) -> str:
+        raw_ctx = get_plot_context(plot_name)
+        summary_line = (
+            f"地块名称：{plot_name} | 现状用地：{diag_item.get('land_use', '综合更新用地')} | "
+            f"面积：{diag_item.get('area_ha', 2.5)} ha | MPI 得分：{diag_item.get('mpi_score', 80.0)} | "
+            f"绿视率 GVI：{diag_item.get('gvi_mean', 15.0)}% | 天空开敞度 SVF：{diag_item.get('svf_mean', 0.50)} | "
+            f"周边 POI：{diag_item.get('poi_count', 10)} 处"
+        )
+        if not raw_ctx or "未找到" in raw_ctx or "暂无" in raw_ctx:
+            return summary_line
+        return f"{summary_line}\n{raw_ctx}"
 
     # ═══════════════════════════════════════════
     # 模块一：重点地块诊断雷达图
@@ -174,14 +312,12 @@ def render_page() -> None:
             eyebrow="Plot Diagnostic Radar",
         )
 
-        # 绘制雷达图
         categories = ["MPI 更新潜力", "绿视率(GVI)", "天空可视(SVF)", "围合度", "POI密度"]
-        # 归一化到 0-100
         mpi_norm = min(100, d["mpi_score"])
-        gvi_norm = min(100, d["gvi_mean"] * 2)  # GVI 一般 0-50，放大到 0-100
+        gvi_norm = min(100, d["gvi_mean"] * 2)
         svf_norm = min(100, d["svf_mean"] * 100) if d["svf_mean"] < 1 else d["svf_mean"]
         enc_norm = min(100, d["enclosure_mean"] * 100) if d["enclosure_mean"] < 1 else d["enclosure_mean"]
-        poi_norm = min(100, d["poi_count"] * 5)  # 假设 20 个 POI 为满分
+        poi_norm = min(100, d["poi_count"] * 5)
 
         values = [mpi_norm, gvi_norm, svf_norm, enc_norm, poi_norm]
 
@@ -198,7 +334,6 @@ def render_page() -> None:
         apply_plotly_polar_theme(fig, title=f"{selected_plot} — 多维诊断", height=420, radial_range=[0, 100])
         st.plotly_chart(fig, **stretch_width(st.plotly_chart))
 
-        # 短板诊断
         st.markdown("#### 🔍 短板自动诊断")
         weaknesses = []
         if d["gvi_mean"] < 15:
@@ -206,7 +341,7 @@ def render_page() -> None:
         if d["poi_count"] < 5:
             weaknesses.append(f"📍 POI 仅 {d['poi_count']} 个，商业活力严重不足")
         if d["mpi_score"] > 60:
-            weaknesses.append(f"📈 MPI 得分 {d['mpi_score']}，更新潜力大但现状条件差")
+            weaknesses.append(f"📈 MPI 得分 {d['mpi_score']}，更新潜力大但现状条件亟待改善")
         if d["svf_mean"] and d["svf_mean"] < 0.3:
             weaknesses.append(f"☁️ SVF 仅 {d['svf_mean']}，街道压迫感强，需打开天空视野")
 
@@ -215,7 +350,6 @@ def render_page() -> None:
                 st.warning(w)
         else:
             st.success("✅ 该地块各维度指标均衡，建议以品质提升为主。")
-
 
     # ═══════════════════════════════════════════
     # 模块二：控制性详细指标推演
@@ -230,9 +364,38 @@ def render_page() -> None:
 
         spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
         building_form = load_stage_output("09", SK.BUILDING_FORM, "")
-        plot_ctx = get_plot_context(selected_plot)
+        plot_ctx = _build_enriched_plot_context(selected_plot, d)
+
+        default_rl = _get_default_redlines(target_plot)
+        with st.expander("🎚️ 控规刚性红线与目标参数配置（自动读取当前基地参数，支持交互调节）", expanded=True):
+            rc1, rc2, rc3, rc4, rc5 = st.columns(5)
+            with rc1:
+                cfg_far_max = st.number_input("容积率上限 (FAR)", min_value=0.3, max_value=10.0, value=float(default_rl["far_max"]), step=0.1, key="s10_far_max")
+            with rc2:
+                cfg_density_max = st.number_input("建筑密度上限 (%)", min_value=10.0, max_value=80.0, value=float(default_rl["density_max"]), step=1.0, key="s10_density_max")
+            with rc3:
+                cfg_green_min = st.number_input("绿地率下限 (%)", min_value=5.0, max_value=70.0, value=float(default_rl["green_min"]), step=1.0, key="s10_green_min")
+            with rc4:
+                cfg_core_h = st.number_input("核心区限高 (m)", min_value=3.0, max_value=100.0, value=float(default_rl["core_height_max"]), step=3.0, key="s10_core_height_max")
+            with rc5:
+                cfg_gen_h = st.number_input("一般控制区限高 (m)", min_value=6.0, max_value=150.0, value=float(default_rl["height_max"]), step=3.0, key="s10_height_max")
 
         if st.button(f"📊 推演 {selected_plot} 的控规指标", type="primary", key="s10_metrics", **stretch_width(st.button)):
+            # 同步更新靶向地块的控规约束供 Stage 12 导则直接读取
+            if isinstance(target_plot, dict):
+                updated_tp = dict(target_plot)
+                updated_tp["far_max"] = cfg_far_max
+                updated_tp["density_max"] = cfg_density_max
+                updated_tp["green_min"] = cfg_green_min
+                updated_tp["height_max"] = cfg_gen_h
+                save_stage_output("04", "target_plot", updated_tp)
+                save_stage_output("07", "target_plot", updated_tp)
+
+            redline_clause = (
+                f"核心风貌控制区限高≤{cfg_core_h:.0f}m，一般控制区限高≤{cfg_gen_h:.0f}m，"
+                f"容积率≤{cfg_far_max}，建筑密度≤{cfg_density_max:.0f}%，绿地率≥{cfg_green_min:.0f}%"
+            )
+
             prompt = f"""你是一位注册城乡规划师，精通控制性详细规划指标的确定。
 
     请为重点地块【{selected_plot}】反推控制性详细指标。
@@ -241,9 +404,9 @@ def render_page() -> None:
     {plot_ctx}
 
     【上游空间结构（Stage 08）】：{spatial_structure[:1500] if spatial_structure else '暂无'}
-    【上游建筑形态、风貌与立面控制（Stage 09）】：{building_form[:1500] if building_form else '核心保护区限高≤9m，一般控制区限高≤18m，容积率≤1.4'}
+    【上游建筑形态、风貌与立面控制（Stage 09）】：{building_form[:1500] if building_form else redline_clause}
 
-    【高度红线约束】：核心保护区限高≤9m，一般控制区限高≤18m，容积率≤1.4。此外需严格控制立面虚实比与建筑风貌协调性。
+    【规划控制红线约束】：{redline_clause}。此外需严格控制立面虚实比与建筑风貌协调性。
 
     请生成【控制性详细指标报告】：
 
@@ -289,7 +452,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的控规指标", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 模块三：目标人群与行为画像
     # ═══════════════════════════════════════════
@@ -302,7 +464,7 @@ def render_page() -> None:
             eyebrow="User Personas",
         )
 
-        plot_ctx = get_plot_context(selected_plot)
+        plot_ctx = _build_enriched_plot_context(selected_plot, d)
         poi_summary = get_poi_summary()
 
         if st.button(f"👥 生成 {selected_plot} 的人群画像", type="primary", key="s10_persona", **stretch_width(st.button)):
@@ -379,7 +541,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的人群画像", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 模块四：空间深化设计方案
     # ═══════════════════════════════════════════
@@ -400,18 +561,24 @@ def render_page() -> None:
             ],
             title="Stage 10 深化设计前置条件",
         )
+        if not stage10_design_ready:
+            if st.checkbox("⚡ 快速推演模式（跳过前序依赖，直接启用生成）", key="p10_bypass_gate", value=False):
+                stage10_design_ready = True
 
-        # 加载所有前置数据
         spatial_structure = load_stage_output("08", SK.SPATIAL_STRUCTURE, "")
         traffic = load_stage_output("09", SK.TRAFFIC_SYSTEM, "")
         public_space = load_stage_output("09", SK.PUBLIC_SPACE, "")
         building_form = load_stage_output("09", SK.BUILDING_FORM, "")
         landscape = load_stage_output("09", SK.LANDSCAPE_STYLE, "")
         design_brief = load_stage_output("07", SK.DESIGN_BRIEF, "")
-        strategy_matrix = load_stage_output("07", SK.STRATEGY_MATRIX, "")
         plot_metrics = load_stage_output("10", f"{SK.PLOT_METRICS}_{selected_plot}", "")
         plot_personas = load_stage_output("10", f"{SK.PLOT_PERSONAS}_{selected_plot}", "")
-        plot_ctx = get_plot_context(selected_plot)
+        plot_ctx = _build_enriched_plot_context(selected_plot, d)
+        default_rl = _get_default_redlines(target_plot)
+        fallback_metrics_str = (
+            f"容积率≤{default_rl['far_max']}，限高≤{default_rl['height_max']:.0f}m，"
+            f"建筑密度≤{default_rl['density_max']:.0f}%，绿地率≥{default_rl['green_min']:.0f}%"
+        )
 
         with st.expander("📊 前序数据汇总", expanded=False):
             data_status = {
@@ -436,11 +603,10 @@ def render_page() -> None:
             disabled=not stage10_design_ready,
             **stretch_width(st.button),
         ):
-            # 组装上下文（截取以控制 token 用量）
             upstream = f"""
     【地块诊断】：{plot_ctx}
     【设计纲要与博弈共识（Stage 07）】：{design_brief[:1000] if design_brief else '基于多主体博弈共识：落实针灸式更新、保留特色空间肌理、营造连续慢行生态通廊、严格遵守法定控规红线'}
-    【控规指标】：{plot_metrics[:1000] if plot_metrics else '容积率≤1.4，限高≤18m，建筑密度≤35%，绿地率≥25%'}
+    【控规指标】：{plot_metrics[:1000] if plot_metrics else fallback_metrics_str}
     【人群画像】：{plot_personas[:1500] if plot_personas else '暂无'}
     【空间结构】：{spatial_structure[:800] if spatial_structure else '暂无'}
     【交通策略】：{traffic[:500] if traffic else '暂无'}
@@ -520,7 +686,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的深化设计方案", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 模块五：Before/After 推演
     # ═══════════════════════════════════════════
@@ -528,7 +693,7 @@ def render_page() -> None:
     elif selected_sub == "🔄 Before/After 推演":
         from pathlib import Path
         from PIL import Image as _PILImage
-        from src.config.paths import ROOT_DIR, DATA_DIR, ASSETS_DIR
+        from src.config.paths import ROOT_DIR
 
         render_section_intro(
             "Before/After 街景推演对比",
@@ -545,7 +710,7 @@ def render_page() -> None:
                         自动聚合 Session 缓存、Stage 15 数据总线及本地磁盘快照，支持无缝前后对比。
                     </div>
                 </div>
-                <a href="/02_多主体博弈与空间AIGC工坊?sub=aigc" target="_self" style="display:inline-block; padding:8px 16px; background:#6366f1; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; box-shadow:0 2px 8px rgba(99,102,241,0.3);">
+                <a href="/02_多主体博弈与空间AIGC工坊?sub=aigc_studio" target="_self" style="display:inline-block; padding:8px 16px; background:#6366f1; color:#ffffff; border-radius:6px; text-decoration:none; font-weight:600; font-size:13px; box-shadow:0 2px 8px rgba(99,102,241,0.3);">
                     前往 AIGC Studio 调参渲染 ›
                 </a>
             </div>
@@ -553,10 +718,8 @@ def render_page() -> None:
             unsafe_allow_html=True,
         )
 
-        # 1. 多源汇聚 AIGC 渲染结果 (Session, Stage Bus, 历史记录, 磁盘 output/aigc)
         candidate_renders = []
 
-        # Source A: session_state["aigc_result_image"]
         if "aigc_result_image" in st.session_state and st.session_state["aigc_result_image"] is not None:
             candidate_renders.append({
                 "title": "当前最新方案 (AIGC Studio 实时)",
@@ -565,7 +728,6 @@ def render_page() -> None:
                 "tag": "实时生成",
             })
 
-        # Source B: Stage Bus output from Stage 15
         bus_sd = load_stage_output("15", "sd_result", None) or load_stage_output("15", "sd_result_path", None)
         if bus_sd is not None:
             if hasattr(bus_sd, "size"):
@@ -579,14 +741,13 @@ def render_page() -> None:
                 try:
                     candidate_renders.append({
                         "title": "Stage 15 总线同步成果",
-                        "image": PILImage.open(bus_sd),
+                        "image": _PILImage.open(bus_sd),
                         "meta": "Stage Data Bus [15_sd_result]",
                         "tag": "总线同步",
                     })
                 except Exception:
                     pass
 
-        # Source C: session_state["aigc_history"]
         for idx, item in enumerate(reversed(st.session_state.get("aigc_history", []))):
             if "image" in item and item["image"] is not None:
                 candidate_renders.append({
@@ -596,7 +757,6 @@ def render_page() -> None:
                     "tag": "历史版本",
                 })
 
-        # Source D: 兼容其他 sd_result session keys
         for k in list(st.session_state.keys()):
             if "sd_result" in k and k not in ("sd_result", "aigc_result_image"):
                 val = st.session_state[k]
@@ -608,7 +768,6 @@ def render_page() -> None:
                         "tag": "内存缓存",
                     })
 
-        # Source E: 本地磁盘 output/aigc/ 目录
         disk_aigc_dir = ROOT_DIR / "output" / "aigc"
         if disk_aigc_dir.exists():
             for p in sorted(disk_aigc_dir.glob("*.png"), reverse=True)[:6]:
@@ -623,14 +782,13 @@ def render_page() -> None:
                 except Exception:
                     pass
 
-        # 若无渲染记录，加载高质量示范成果作为兜底
         if not candidate_renders:
             fallback_after = ROOT_DIR / "assets" / "05_design_inference.png"
             if fallback_after.exists():
                 try:
                     with _PILImage.open(fallback_after) as img_fb:
                         candidate_renders.append({
-                            "title": "历史街区立面转译示范方案 (预置)",
+                            "title": "街区立面转译示范方案 (预置)",
                             "image": img_fb.copy(),
                             "meta": "AIGC 街区微更新立面修缮示范成果",
                             "tag": "示范成果",
@@ -638,7 +796,6 @@ def render_page() -> None:
                 except Exception:
                     pass
 
-        # 2. 加载对应的 Before 现状底图
         before_img = None
         before_label = "现状空间基底 / 现场实测街景"
 
@@ -673,7 +830,6 @@ def render_page() -> None:
                     pass
 
             if before_img is None:
-                # 最终兜底：动态生成一个标准 16:9 现状空间诊断基准占位底图，确保 UI 绝不留白
                 try:
                     from PIL import ImageDraw
                     fallback_canvas = _PILImage.new("RGB", (1024, 576), color=(30, 41, 59))
@@ -688,7 +844,6 @@ def render_page() -> None:
                 except Exception:
                     pass
 
-        # 3. 渲染 Before / After 交互组件
         if candidate_renders:
             col_opt1, col_opt2 = st.columns([2, 1])
             with col_opt1:
@@ -719,7 +874,7 @@ def render_page() -> None:
                     else:
                         st.info("尚未挂载现状底图。")
 
-                    st.caption("🔍 现状特征：建筑立面杂乱、绿视率偏低 (GVI: 12.8%)、公共界面缺乏活力。")
+                    st.caption(f"🔍 现状特征：建筑立面杂乱、绿视率偏低 (GVI: {d['gvi_mean']}%)、公共界面缺乏活力。")
 
                 with c_after:
                     st.markdown(
@@ -732,9 +887,14 @@ def render_page() -> None:
                         unsafe_allow_html=True,
                     )
                     st.image(after_img, use_container_width=True)
-                    st.caption("✨ 更新成效：历史风貌转译、新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊 (预期 GVI: 36.5%)。")
+                    after_caption = (
+                        "✨ 更新成效：历史风貌转译、新中式滨水文旅客厅、保留大跨度工业桁架、红砖与暖灰基调、人车分流生态绿廊 (预期 GVI: 36.5%)。"
+                        if _is_changchun_default_site()
+                        else f"✨ 更新成效：围绕【{selected_plot}】落实空间织补、保留在地建筑肌理、提升慢行品质与首层活力 (预期 GVI ≥ 30.0%)。"
+                    )
+                    st.caption(after_caption)
 
-            else:  # 单视窗快速切换
+            else:
                 toggle_choice = st.segmented_control("视角切换：", ["🔴 改造前现状 (Before)", "🟢 AIGC更新方案 (After)"], default="🟢 AIGC更新方案 (After)")
                 if toggle_choice == "🔴 改造前现状 (Before)":
                     if before_img:
@@ -744,17 +904,15 @@ def render_page() -> None:
                 else:
                     st.image(after_img, caption=f"AFTER: {active_render['title']} ({active_render['meta']})", use_container_width=True)
 
-            # 4. 指标增益对比看板
             st.markdown("<br>", unsafe_allow_html=True)
             render_summary_cards([
-                {"value": "+23.7%", "title": "绿视率 GVI 预期跃升", "desc": "12.8% 提升至 36.5%"},
-                {"value": "+110%", "title": "首层开放界面延伸", "desc": "打通连续商业活力展线"},
-                {"value": "98.5%", "title": "风貌基因协调度", "desc": "严格延续历史街区比例与色调"},
+                {"value": "+20%~25%", "title": "绿视率 GVI 预期跃升", "desc": f"现状 {d['gvi_mean']}% 提升至宜居标准"},
+                {"value": "+110%", "title": "首层开放界面延伸", "desc": "打通连续商业与公共活力展线"},
+                {"value": "98.5%", "title": "风貌基因协调度", "desc": "严格延续在地街区比例与色调"},
                 {"value": f"{len(candidate_renders)} 方案", "title": "已沉淀推演成果", "desc": "支持一键比选与图册收录"},
             ])
         else:
             st.warning("暂无 AIGC 渲染结果。请先前往 **AIGC设计推演** 页面生成街景效果图。")
-
 
     # ============================================================
     # 模块六：特色专项研究
@@ -772,6 +930,9 @@ def render_page() -> None:
             ],
             title="Stage 10 特色研究前置条件",
         )
+        if not stage10_special_ready:
+            if st.checkbox("⚡ 快速推演模式（跳过前序依赖，直接启用生成）", key="p10_special_bypass_gate", value=False):
+                stage10_special_ready = True
 
         from src.workflow.design_context import build_design_context
         ctx = build_design_context()
@@ -799,7 +960,7 @@ def render_page() -> None:
     诊断报告：{ctx.diagnosis_report[:1000] if ctx.diagnosis_report else '暂无'}
     空间结构：{ctx.spatial_structure[:1000] if ctx.spatial_structure else '暂无'}
 
-    请用学术论文格式撰写，说明每项特木的研究意义、方法逻辑和应用价值。
+    请用学术论文格式撰写，说明每项技术的研究意义、方法逻辑和应用价值。
     不限定字数，务必详实。"""
 
             stream = call_llm_engine_stream(
@@ -823,7 +984,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的特色专项研究报告", expanded=True):
                 st.markdown(saved)
 
-
     st.markdown("---")
     avg_mpi = sum(d_item["mpi_score"] for d_item in diags) / len(diags) if diags else 0
     render_stage_summary(
@@ -839,6 +999,4 @@ def render_page() -> None:
         implication="为实施路径（Stage 11）和城市设计导则（Stage 12）提供了详实的落地设计依据",
     )
 
-    # 业务逻辑主线推进导航
     render_logic_chain_stepper("10")
-

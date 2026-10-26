@@ -6,15 +6,51 @@ Usage:
 
 import json
 import logging
+from typing import Any
 
 import numpy as np
 import pandas as pd
+import pyproj
 import streamlit as st
+from shapely.geometry import shape
 
 from src.config import DATA_FILES, SHP_FILES
 from src.config.runtime import resolve_path
 
 logger = logging.getLogger("ultimateDESIGN")
+
+
+def _load_custom_site_fallback() -> dict[str, Any]:
+    """Load custom_site.json or session_state['custom_site_context'] if active."""
+    try:
+        cs = st.session_state.get("custom_site_context")
+        if cs and isinstance(cs, dict):
+            return cs
+    except Exception:
+        pass
+    try:
+        p = resolve_path("config/custom_site.json")
+        if p.exists():
+            with p.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict):
+                    return data
+    except Exception:
+        pass
+    return {}
+
+
+def _compute_geodesic_area_m2(geom_dict: dict[str, Any]) -> float:
+    """Dynamically compute geodesic polygon area in m2 using pyproj.Geod(ellps='WGS84')."""
+    try:
+        geom = shape(geom_dict)
+        if geom.is_empty:
+            return 0.0
+        geod = pyproj.Geod(ellps="WGS84")
+        area_val, _ = geod.geometry_area_perimeter(geom)
+        return abs(float(area_val))
+    except Exception:
+        return 0.0
 
 
 # ═══════════════════════════════════════════
@@ -46,6 +82,44 @@ def _load_nlp_data() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def _diagnostics_from_candidate_plots(candidate_plots: list[dict[str, Any]], global_sentiment: float) -> list[dict[str, Any]]:
+    """Build plot diagnostics list from custom_site candidate_plots/plots when Key_Plots_District.json is not updated."""
+    results = []
+    for idx, p in enumerate(candidate_plots):
+        if not isinstance(p, dict):
+            continue
+        name = str(p.get("name") or p.get("Name") or f"地块_{idx + 1}")
+        area_sqm = float(p.get("Shape_Area") or p.get("area_m2") or (float(p.get("area_ha", 0.0)) * 10000.0))
+        if area_sqm <= 0 and p.get("geometry"):
+            area_sqm = _compute_geodesic_area_m2(p["geometry"])
+        if area_sqm <= 0:
+            area_sqm = 35000.0
+
+        poi_count = int(p.get("poi") or p.get("poi_count") or 18)
+        gvi_mean = round(float(p.get("gvi") or p.get("gvi_mean") or 16.0), 2)
+        svf_mean = round(float(p.get("svf") or p.get("svf_mean") or 0.55), 2)
+        enc_mean = round(float(p.get("enclosure_mean") or 0.42), 2)
+        clu_mean = round(float(p.get("clutter_mean") or 0.25), 2)
+
+        s_i = min(1.0, area_sqm / 150000.0)
+        d_i = min(1.0, poi_count / 20.0) if poi_count > 0 else 0.3
+        e_i = gvi_mean / 100.0 if gvi_mean > 0 else 0.3
+        mpi = (0.4 * s_i + 0.3 * d_i + 0.3 * (1.0 - e_i)) * 100.0
+
+        results.append({
+            "name": name,
+            "area_ha": round(area_sqm / 10000.0, 2),
+            "gvi_mean": gvi_mean,
+            "svf_mean": svf_mean,
+            "enclosure_mean": enc_mean,
+            "clutter_mean": clu_mean,
+            "poi_count": poi_count,
+            "sentiment_mean": global_sentiment,
+            "mpi_score": round(mpi, 1),
+        })
+    return results
+
+
 @st.cache_data(ttl=600)
 def get_plot_diagnostics() -> list:
     """Multi-dimensional diagnosis for each key plot.
@@ -54,11 +128,44 @@ def get_plot_diagnostics() -> list:
     enclosure_mean, clutter_mean, poi_count, sentiment_mean, mpi_score.
     """
     plots_path = resolve_path(str(SHP_FILES["plots"]))
+    custom_site = _load_custom_site_fallback()
+    candidate_plots = custom_site.get("candidate_plots") or custom_site.get("plots") or []
+
+    df_nlp = _load_nlp_data()
+    global_sentiment = 0.0
+    if not df_nlp.empty and "Score" in df_nlp.columns:
+        global_sentiment = round(float(df_nlp["Score"].mean()), 3)
+
     if not plots_path.exists():
+        if candidate_plots:
+            return _diagnostics_from_candidate_plots(candidate_plots, global_sentiment)
         return []
 
-    with plots_path.open("r", encoding="utf-8") as f:
-        geo = json.load(f)
+    try:
+        with plots_path.open("r", encoding="utf-8") as f:
+            geo = json.load(f)
+    except Exception:
+        if candidate_plots:
+            return _diagnostics_from_candidate_plots(candidate_plots, global_sentiment)
+        return []
+
+    features = geo.get("features", [])
+    if not features and candidate_plots:
+        return _diagnostics_from_candidate_plots(candidate_plots, global_sentiment)
+
+    # Check if custom_site has candidate_plots for a non-Changchun site while Key_Plots_District.json wasn't updated yet
+    if candidate_plots and features:
+        first_feat_name = str(features[0].get("properties", {}).get("name") or features[0].get("properties", {}).get("Name") or "")
+        cs_city = str(custom_site.get("city", ""))
+        cs_name = str(custom_site.get("name", ""))
+        cand_names = {str(p.get("name") or p.get("Name") or "") for p in candidate_plots if isinstance(p, dict)}
+        if (
+            first_feat_name == "农贸水产市场"
+            and "农贸水产市场" not in cand_names
+            and "长春" not in cs_city
+            and "伪满" not in cs_name
+        ):
+            return _diagnostics_from_candidate_plots(candidate_plots, global_sentiment)
 
     try:
         from src.engines.spatial_engine import get_merged_poi_data
@@ -66,11 +173,8 @@ def get_plot_diagnostics() -> list:
     except Exception:
         df_poi = pd.DataFrame()
 
-    # Use cached loaders instead of re-reading files every call
     df_spatial = _load_spatial_merge()
-    df_nlp = _load_nlp_data()
 
-    # Pre-extract coordinate arrays for vectorized bbox filtering
     poi_coords = None
     if not df_poi.empty and "Lng" in df_poi.columns:
         poi_coords = (df_poi["Lng"].values, df_poi["Lat"].values)
@@ -83,31 +187,64 @@ def get_plot_diagnostics() -> list:
             if col in df_spatial.columns:
                 sp_cols[col] = df_spatial[col].values
 
-    global_sentiment = 0.0
-    if not df_nlp.empty and "Score" in df_nlp.columns:
-        global_sentiment = round(float(df_nlp["Score"].mean()), 3)
-
     results = []
-    for feat in geo.get("features", []):
-        props = feat.get("properties", {})
-        name = props.get("name", f"地块_{props.get('OBJECTID', '?')}")
-        area_sqm = props.get("Shape_Area", 0)
-        coords = feat["geometry"]["coordinates"][0]
-        bbox = (min(c[0] for c in coords), max(c[0] for c in coords),
-                min(c[1] for c in coords), max(c[1] for c in coords))
+    for idx, feat in enumerate(features):
+        props = feat.get("properties") or {}
+        name = props.get("name") or props.get("Name") or props.get("NAME") or f"地块_{props.get('OBJECTID', idx + 1)}"
 
-        # Vectorized bbox filtering
+        raw_area = props.get("Shape_Area") or props.get("area_sqm") or props.get("area_m2") or 0
+        try:
+            area_sqm = float(raw_area)
+        except (ValueError, TypeError):
+            area_sqm = 0.0
+
+        geom_dict = feat.get("geometry")
+        if area_sqm <= 0 and geom_dict:
+            area_sqm = _compute_geodesic_area_m2(geom_dict)
+        if area_sqm <= 0 and props.get("area_ha"):
+            try:
+                area_sqm = float(props["area_ha"]) * 10000.0
+            except (ValueError, TypeError):
+                pass
+
+        # Safely extract bounding box (min_lon, max_lon, min_lat, max_lat) for both Polygon and MultiPolygon
+        bbox = (0.0, 0.0, 0.0, 0.0)
+        if geom_dict:
+            try:
+                geom_obj = shape(geom_dict)
+                minx, miny, maxx, maxy = geom_obj.bounds
+                bbox = (float(minx), float(maxx), float(miny), float(maxy))
+            except Exception:
+                pass
+
         poi_count = _count_in_bbox_vec(poi_coords, bbox)
         gvi_mean, svf_mean, enc_mean, clu_mean = _spatial_means_in_bbox_vec(sp_coords, sp_cols, bbox)
 
-        s_i = min(1.0, area_sqm / 150000)
-        d_i = min(1.0, poi_count / 20) if poi_count > 0 else 0.3
+        # Fallback to feature-level properties if no Changchun CSV points fall inside this plot's bbox
+        if poi_count == 0 and (props.get("poi") or props.get("poi_count")):
+            try:
+                poi_count = int(props.get("poi") or props.get("poi_count"))
+            except (ValueError, TypeError):
+                pass
+        if gvi_mean == 0.0 and (props.get("gvi") or props.get("gvi_mean")):
+            try:
+                gvi_mean = round(float(props.get("gvi") or props.get("gvi_mean")), 2)
+            except (ValueError, TypeError):
+                pass
+        if svf_mean == 0.0 and (props.get("svf") or props.get("svf_mean")):
+            try:
+                svf_mean = round(float(props.get("svf") or props.get("svf_mean")), 2)
+            except (ValueError, TypeError):
+                pass
+
+        s_i = min(1.0, area_sqm / 150000.0)
+        d_i = min(1.0, poi_count / 20.0) if poi_count > 0 else 0.3
         e_i = gvi_mean / 100.0 if gvi_mean > 0 else 0.3
-        mpi = (0.4 * s_i + 0.3 * d_i + 0.3 * (1 - e_i)) * 100
+        mpi = (0.4 * s_i + 0.3 * d_i + 0.3 * (1.0 - e_i)) * 100.0
 
         results.append({
-            "name": name,
-            "area_ha": round(area_sqm / 10000, 2),
+            "name": str(name),
+            "area_ha": round(area_sqm / 10000.0, 2),
             "gvi_mean": gvi_mean,
             "svf_mean": svf_mean,
             "enclosure_mean": enc_mean,
@@ -159,12 +296,11 @@ def generate_policy_matrix(proposal: str) -> list:
     top_clauses = []
     for score, content, source in best_chunks:
         top_clauses.append({
-            "clause": content[:300],  # 保留较长文本供 LLM 理解
+            "clause": content[:300],
             "source": source,
             "relevance_score": score,
         })
 
-    # 尝试使用 LLM 进行合规研判
     try:
         from src.engines.llm_engine import call_llm_engine
         from src.utils.llm_json_parser import parse_llm_json
@@ -202,13 +338,11 @@ def generate_policy_matrix(proposal: str) -> list:
                 if idx is not None and 0 <= idx < len(top_clauses):
                     status = item.get("status", "📋 参考")
                     note = item.get("note", "")
-                    # 如果有具体说明，组合输出
                     top_clauses[idx]["compliance_note"] = f"{status} — {note}"
             return top_clauses
     except Exception:
         pass
 
-    # 降级退回到关键词匹配
     for clause in top_clauses:
         text = clause["clause"]
         if any(kw in text for kw in ("禁止", "不得", "严格控制")):

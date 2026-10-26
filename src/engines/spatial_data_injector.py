@@ -15,6 +15,7 @@ Usage:
 import json
 import logging
 from pathlib import Path
+from typing import Dict, List, Tuple
 
 import pandas as pd
 import streamlit as st
@@ -24,14 +25,107 @@ from src.config import DATA_FILES, GIS_FILES, get_site_city, get_site_district, 
 logger = logging.getLogger("ultimateDESIGN")
 
 
+def _build_dynamic_landuse_judgment(
+    type_items: List[Tuple[str, int, float]],
+    total_count: int,
+    total_area_sqm: float,
+) -> str:
+    """根据实际统计出的用地类型列表 [(type_name, count, area_sqm), ...] 动态生成空间研判结论。"""
+    if not type_items or total_count <= 0:
+        return "【空间研判】暂无足够用地分类数据进行结构研判。"
+
+    use_area = total_area_sqm > 0
+    denom = total_area_sqm if use_area else float(total_count)
+
+    scored: List[Tuple[str, float, int, float]] = []
+    for t_name, cnt, area_sqm in type_items:
+        val = area_sqm if use_area else float(cnt)
+        pct = (val / denom * 100.0) if denom > 0 else 0.0
+        scored.append((str(t_name), pct, int(cnt), float(area_sqm)))
+
+    scored.sort(key=lambda x: x[1], reverse=True)
+    top1_name, top1_pct, _, _ = scored[0]
+
+    parts = [f"场地主导用地类型为「{top1_name}」（占比 {top1_pct:.1f}%）"]
+    if len(scored) >= 2:
+        top2_name, top2_pct, _, _ = scored[1]
+        parts.append(f"次主导类型为「{top2_name}」（占比 {top2_pct:.1f}%）")
+
+    # 识别绿地/开放空间占比
+    green_pct = sum(
+        pct
+        for name, pct, _, _ in scored
+        if any(k in name.lower() for k in ("绿地", "公园", "广场", "green", "park", "grass", "meadow"))
+    )
+    comm_pct = sum(
+        pct
+        for name, pct, _, _ in scored
+        if any(k in name.lower() for k in ("商业", "商务", "办公", "服务", "commercial", "retail", "office"))
+    )
+    ind_pct = sum(
+        pct
+        for name, pct, _, _ in scored
+        if any(k in name.lower() for k in ("工业", "仓储", "厂", "industrial", "warehouse"))
+    )
+
+    if comm_pct > 0:
+        parts.append(f"商业与公共服务类用地合计约 {comm_pct:.1f}%")
+    if ind_pct >= 10.0:
+        parts.append(f"存量工业/仓储用地占 {ind_pct:.1f}%，具备功能置换与产业升级潜力")
+
+    if green_pct < 10.0:
+        parts.append(f"公园绿地与开放空间占比仅 {green_pct:.1f}%，公共生态开敞空间存在短板，建议通过微更新植入口袋公园")
+    else:
+        parts.append(f"生态绿地及开敞空间占比约 {green_pct:.1f}%，具备良好的景观廊道串联基础")
+
+    return "【空间研判】" + "；".join(parts) + "。"
+
+
 # ═══════════════════════════════════════════
 # 土地利用统计
 # ═══════════════════════════════════════════
 
 @st.cache_data(ttl=3600, max_entries=20)
 def get_landuse_summary() -> str:
-    """读取 landuse_clipped.geojson，统计各类用地面积占比，返回可注入 LLM 的文本。"""
-    path = resolve_path(str(GIS_FILES["landuse"]))
+    """读取土地利用矢量或自定义场地地块数据，统计各类用地面积占比，返回动态计算的可注入 LLM 文本。"""
+    # 若激活了非长春的自定义场地且存在自定义 OSM 土地利用或 plots，优先使用自定义场地数据
+    try:
+        from src.config.site import get_site_config
+        site_cfg = get_site_config()
+        s_city = str(site_cfg.get("city") or site_cfg.get("city_name") or "")
+        s_name = str(site_cfg.get("name") or site_cfg.get("site_name") or "")
+        is_custom_non_cc = bool(s_city or s_name) and ("长春" not in s_city) and ("伪满" not in s_name)
+    except Exception:
+        site_cfg = {}
+        is_custom_non_cc = False
+
+    custom_landuse_path = resolve_path("data/custom_site/osm_landuse.geojson")
+    if is_custom_non_cc and custom_landuse_path.exists():
+        path = custom_landuse_path
+    elif is_custom_non_cc and site_cfg.get("plots"):
+        plots = site_cfg.get("plots", [])
+        type_areas: Dict[str, List[float]] = {}
+        for p in plots:
+            lu = str(p.get("land_use") or p.get("type") or "混合用地")
+            area_sqm = float(p.get("area_m2") or (float(p.get("area_ha", 1.0)) * 10000.0))
+            if lu not in type_areas:
+                type_areas[lu] = [0, 0.0]
+            type_areas[lu][0] += 1
+            type_areas[lu][1] += area_sqm
+        total_count = sum(int(v[0]) for v in type_areas.values())
+        total_area = sum(float(v[1]) for v in type_areas.values())
+        lines = [f"研究范围共 {total_count} 个用地地块，总面积约 {total_area / 10000.0:.1f} 公顷："]
+        type_items: List[Tuple[str, int, float]] = []
+        for t, (cnt, area_val) in sorted(type_areas.items(), key=lambda x: -x[1][1]):
+            pct = (area_val / total_area * 100.0) if total_area > 0 else (cnt / max(total_count, 1) * 100.0)
+            lines.append(f"  - {t}: {int(cnt)} 块 ({pct:.1f}%), 面积 {area_val / 10000.0:.1f} ha")
+            type_items.append((t, int(cnt), float(area_val)))
+        lines.append("")
+        lines.append(_build_dynamic_landuse_judgment(type_items, total_count, total_area))
+        return "\n".join(lines)
+    else:
+        path = resolve_path(str(GIS_FILES["landuse"]))
+
     if not path.exists():
         return "土地利用数据暂不可用。"
 
@@ -42,17 +136,26 @@ def get_landuse_summary() -> str:
         # 回退到纯 JSON 解析
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        types = {}
+        types: Dict[str, Tuple[int, float]] = {}
         for feat in data.get("features", []):
-            t = feat.get("properties", {}).get("Type", "未知")
-            types[t] = types.get(t, 0) + 1
-        total = sum(types.values())
+            props = feat.get("properties", {}) or {}
+            t = props.get("Type") or props.get("type") or props.get("landuse") or "未知"
+            area_sqm = float(props.get("Shape_Area") or props.get("area_m2") or props.get("area_sqm") or 0.0)
+            prev_cnt, prev_area = types.get(t, (0, 0.0))
+            types[t] = (prev_cnt + 1, prev_area + area_sqm)
+        total = sum(v[0] for v in types.values())
+        total_area_json = sum(v[1] for v in types.values())
         lines = [f"研究范围共 {total} 个用地地块："]
-        for t, c in sorted(types.items(), key=lambda x: -x[1]):
-            lines.append(f"  - {t}: {c} 块 ({c/total*100:.1f}%)")
+        type_items_json: List[Tuple[str, int, float]] = []
+        for t, (c, a_sqm) in sorted(types.items(), key=lambda x: -x[1][0]):
+            lines.append(f"  - {t}: {c} 块 ({c / max(total, 1) * 100:.1f}%)")
+            type_items_json.append((t, c, a_sqm))
+        lines.append("")
+        lines.append(_build_dynamic_landuse_judgment(type_items_json, total, total_area_json))
         return "\n".join(lines)
 
-    if gdf.empty or "Type" not in gdf.columns:
+    type_col = "Type" if "Type" in gdf.columns else ("type" if "type" in gdf.columns else ("landuse" if "landuse" in gdf.columns else None))
+    if gdf.empty or not type_col:
         return "土地利用数据为空。"
 
     # 尝试计算面积（投影坐标系）
@@ -63,22 +166,24 @@ def get_landuse_summary() -> str:
         gdf["area_sqm"] = 0
 
     total_count = len(gdf)
-    total_area = gdf["area_sqm"].sum()
-    stats = gdf.groupby("Type").agg(
-        count=("Type", "size"),
+    total_area = float(gdf["area_sqm"].sum())
+    stats = gdf.groupby(type_col).agg(
+        count=(type_col, "size"),
         area_sum=("area_sqm", "sum"),
     ).sort_values("count", ascending=False)
 
     lines = [f"研究范围共 {total_count} 个用地地块，总面积约 {total_area/10000:.1f} 公顷："]
+    type_items_gdf: List[Tuple[str, int, float]] = []
     for t, row in stats.iterrows():
-        pct = row["count"] / total_count * 100
-        area_ha = row["area_sum"] / 10000
-        lines.append(f"  - {t}: {int(row['count'])} 块 ({pct:.1f}%), 面积 {area_ha:.1f} ha")
+        cnt = int(row["count"])
+        area_sqm = float(row["area_sum"])
+        pct = (area_sqm / total_area * 100.0) if total_area > 0 else (cnt / max(total_count, 1) * 100.0)
+        area_ha = area_sqm / 10000.0
+        lines.append(f"  - {t}: {cnt} 块 ({row['count'] / total_count * 100:.1f}%), 面积 {area_ha:.1f} ha")
+        type_items_gdf.append((str(t), cnt, area_sqm))
 
     lines.append("")
-    lines.append("【空间研判】居住用地占比过半，说明研究范围以老旧居住区为主体；"
-                 "商业服务业与商业办公合计约24%，但POI密度不足，说明商业活力较弱；"
-                 "公园绿地仅5.5%，公共开放空间严重不足。")
+    lines.append(_build_dynamic_landuse_judgment(type_items_gdf, total_count, total_area))
     return "\n".join(lines)
 
 

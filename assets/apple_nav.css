@@ -108,7 +108,7 @@
 .apple-dd-group-title {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 12px !important; border-radius: 10px !important;
-    font-size: 14px !font-weight: 600; color: #1d1d1f !important;
+    font-size: 14px; font-weight: 600; color: #1d1d1f !important;
     font-weight: 600 !important;
     text-decoration: none !important; transition: all 0.2s ease;
     border: 1px solid transparent;

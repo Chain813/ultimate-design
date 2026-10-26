@@ -23,6 +23,69 @@ def load_design_css():
         st.markdown(f"<style>{css_content}</style>", unsafe_allow_html=True)
 
 
+def inject_custom_css():
+    """Inject Apple HIG Light theme primitive overrides for lineage tags, pipeline nodes, and chips."""
+    load_design_css()
+    st.markdown(
+        """<style>
+        .data-lineage-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #4338ca;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+        .pipeline-node {
+            color: #515154;
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 10px;
+            padding: 8px 12px;
+        }
+        .pipeline-node.active {
+            color: #0071e3;
+            background: rgba(0, 113, 227, 0.12);
+            border-color: rgba(0, 113, 227, 0.28);
+            font-weight: 600;
+        }
+        .param-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            color: #48484a;
+            background: #f5f5f7;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            font-size: 0.78rem;
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
+
+
+def render_alert_banner(message: str, title: str = "", level: str = "info"):
+    """Render an Apple HIG Light alert banner with high-contrast text."""
+    accent_map = {
+        "info": ("#0071e3", "rgba(0, 113, 227, 0.06)", "rgba(0, 113, 227, 0.2)"),
+        "warning": ("#ff9500", "rgba(255, 149, 0, 0.08)", "rgba(255, 149, 0, 0.24)"),
+        "error": ("#ff3b30", "rgba(255, 59, 48, 0.06)", "rgba(255, 59, 48, 0.2)"),
+        "success": ("#34c759", "rgba(52, 199, 89, 0.08)", "rgba(52, 199, 89, 0.24)"),
+    }
+    accent, bg, border = accent_map.get(level, accent_map["info"])
+    title_html = f'<strong style="color: {accent}; display: block; margin-bottom: 4px;">{escape(str(title))}</strong>' if title else ""
+    st.markdown(
+        f'<div style="background: {bg}; border: 1px solid {border}; border-left: 4px solid {accent}; '
+        f'border-radius: 12px; padding: 12px 16px; color: #1d1d1f; font-size: 0.88rem; margin: 10px 0;">'
+        f"{title_html}<span>{escape(str(message))}</span></div>",
+        unsafe_allow_html=True,
+    )
+
+
 def render_page_banner(title, description, eyebrow=None, tags=None, metrics=None, image_url=None, graphic_html=None):
     """Render the standard page header with tags, metrics, and an optional decorative image."""
     if st.session_state.get("_embedded_mode"):
@@ -608,46 +671,45 @@ def render_workbench_subnav(
     """
     load_design_css()
     st.markdown("""<style>
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] {
+    div[data-testid="stRadio"] > div[role="radiogroup"] {
         display: inline-flex;
         flex-direction: row;
         flex-wrap: wrap;
         gap: 6px;
-        background: rgba(15, 23, 42, 0.45);
-        padding: 5px;
+        background: rgba(118, 118, 128, 0.12);
+        border: 1px solid rgba(0, 0, 0, 0.06);
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        backdrop-filter: blur(16px);
+        padding: 4px;
         margin: 4px 0 20px 0;
     }
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label {
-        background: transparent;
-        padding: 8px 18px;
-        border-radius: 8px;
+    div[data-testid="stRadio"] > div[role="radiogroup"] > label {
+        background: transparent !important;
+        color: #48484a !important;
+        font-weight: 500 !important;
+        border-radius: 9px !important;
+        padding: 8px 18px !important;
+        border: 1px solid transparent !important;
         cursor: pointer;
         font-size: 14px;
-        font-weight: 500;
-        color: #94a3b8;
         transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-        border: 1px solid transparent;
         margin: 0;
         display: flex;
         align-items: center;
         user-select: none;
     }
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label:hover {
-        color: #f8fafc;
-        background: rgba(255, 255, 255, 0.06);
+    div[data-testid="stRadio"] > div[role="radiogroup"] > label:hover {
+        background: rgba(255, 255, 255, 0.6) !important;
+        color: #1d1d1f !important;
     }
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label:has(input:checked),
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label[data-checked="true"] {
-        background: rgba(0, 113, 227, 0.25);
-        color: #38bdf8;
-        font-weight: 600;
-        border: 1px solid rgba(56, 189, 248, 0.35);
-        box-shadow: 0 2px 10px rgba(0, 113, 227, 0.3);
+    div[data-testid="stRadio"] > div[role="radiogroup"] > label:has(input:checked),
+    div[data-testid="stRadio"] > div[role="radiogroup"] > label[data-checked="true"] {
+        background: #ffffff !important;
+        color: #0071e3 !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(0, 0, 0, 0.06) !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
     }
-    div[data-testid="stRadio"] > div[role="radiogroup"][aria-label*="sub_nav"] > label > div:first-child {
+    div[data-testid="stRadio"] > div[role="radiogroup"] > label > div:first-child {
         display: none !important;
     }
     </style>""", unsafe_allow_html=True)

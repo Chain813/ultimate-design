@@ -49,8 +49,8 @@ def test_build_stage_workspace_html_contains_subpage_links_and_output_key():
     assert "设计策略" in html
     assert "多主体协同推演" in html
     assert "共识雷达" in html
-    assert "stage_bus: 07_strategy_matrix" in html
-    assert "artifact: report" in html
+    assert "🔗 数据总线：07_strategy_matrix" in html
+    assert "📄 成果形态：图文报告" in html
 
 
 def test_workspace_css_is_scoped_to_stage_workspace_classes():

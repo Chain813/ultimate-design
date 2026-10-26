@@ -6,8 +6,11 @@
 下层（重点地块）必须明确标注其如何服务并驱动上层（全域）目标。
 """
 
+from typing import Any
+
 import streamlit as st
 
+from src.config.site import get_site_city, get_site_config, get_site_name
 from src.engines.llm_engine import call_llm_engine_stream
 from src.engines.site_diagnostic_engine import get_plot_diagnostics
 from src.engines.spatial_data_injector import (
@@ -19,6 +22,7 @@ from src.stages.stage11_implementation.config import STAGE11_WORKSPACE
 from src.ui.app_shell import render_engine_status_alert, render_top_nav
 from src.ui.design_system import render_page_banner, render_section_intro
 from src.ui.module_summary import render_stage_summary
+from src.ui.site_ingestion_panel import get_active_candidate_plots
 from src.ui.streamlit_compat import stretch_width
 from src.workflow.approval_state import StageDependency, render_dependency_gate
 from src.workflow.stage_data_bus import (
@@ -27,6 +31,83 @@ from src.workflow.stage_data_bus import (
     save_stage_output,
 )
 from src.workflow.stage_keys import SK
+
+
+def _is_changchun_default_site() -> bool:
+    s_name = get_site_name()
+    s_city = get_site_city()
+    return ("伪满" in s_name) or ("长春" in s_city and "水产" in s_name) or (s_city == "长春市" and "伪满皇宫" in site_name if (site_name := s_name) else False)
+
+
+def _get_merged_plot_diagnostics() -> list[dict[str, Any]]:
+    """融合当前激活的候选地块（自定义上传 / OSM 抓取）、Stage 04/07 靶向地块与默认地块诊断数据。"""
+    is_cc = _is_changchun_default_site()
+    base_diags = get_plot_diagnostics() if is_cc else []
+    candidate_plots = get_active_candidate_plots() or []
+    overrides: dict[str, dict[str, Any]] = st.session_state.get("custom_plot_metrics_overrides", {}) or {}
+    mpi_ranking = load_stage_output("05", SK.MPI_RANKING, []) or []
+    mpi_by_name = {
+        str(r.get("地块名称", "")): float(r.get("MPI 得分", 80.0))
+        for r in mpi_ranking
+        if isinstance(r, dict) and r.get("地块名称")
+    }
+
+    merged_by_name: dict[str, dict[str, Any]] = {}
+    for d_item in base_diags:
+        merged_by_name[str(d_item["name"])] = dict(d_item)
+
+    for idx, cp in enumerate(candidate_plots):
+        p_name = str(cp.get("name", f"候选地块-{idx + 1}"))
+        ov = overrides.get(p_name, {})
+        area_ha = round(float(ov.get("area_ha", cp.get("area_ha", 2.8)) or 2.8), 2)
+        gvi_val = round(float(ov.get("gvi", cp.get("gvi", 15.0)) or 15.0), 1)
+        svf_val = round(float(ov.get("svf", cp.get("svf", 0.50)) or 0.50), 2)
+        poi_val = int(ov.get("poi", cp.get("poi", 12)) or 12)
+        land_use = str(ov.get("land_use", cp.get("land_use", "综合更新用地")))
+        mpi_val = round(
+            float(
+                mpi_by_name.get(
+                    p_name,
+                    cp.get("mpi", cp.get("mpi_score", min(92.0, 68.0 + area_ha * 2.2 + (idx % 5) * 2.5))),
+                )
+            ),
+            1,
+        )
+        if p_name not in merged_by_name or not is_cc:
+            merged_by_name[p_name] = {
+                "name": p_name,
+                "land_use": land_use,
+                "mpi_score": mpi_val,
+                "area_ha": area_ha,
+                "gvi_mean": gvi_val,
+                "svf_mean": svf_val,
+                "enclosure_mean": round(max(0.15, min(0.85, 1.0 - svf_val)), 2),
+                "poi_count": poi_val,
+                "sentiment_mean": round(float(cp.get("sentiment_mean", 0.62)), 2),
+            }
+
+    target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
+    if isinstance(target_plot, dict) and target_plot.get("name"):
+        tp_name = str(target_plot["name"])
+        is_stale_cc = not is_cc and any(kw in tp_name for kw in ("长春", "伪满", "水产"))
+        tp_metrics = target_plot.get("metrics", {}) or {}
+        if tp_name not in merged_by_name and not is_stale_cc:
+            svf_tp = float(tp_metrics.get("svf", 0.50) or 0.50)
+            merged_by_name[tp_name] = {
+                "name": tp_name,
+                "land_use": str(target_plot.get("land_use", "综合更新用地")),
+                "mpi_score": round(float(target_plot.get("mpi", 85.0) or 85.0), 1),
+                "area_ha": round(float(target_plot.get("area_ha", 3.0) or 3.0), 2),
+                "gvi_mean": round(float(tp_metrics.get("gvi", 15.0) or 15.0), 1),
+                "svf_mean": round(svf_tp, 2),
+                "enclosure_mean": round(max(0.15, min(0.85, 1.0 - svf_tp)), 2),
+                "poi_count": int(tp_metrics.get("poi", 12) or 12),
+                "sentiment_mean": 0.65,
+            }
+
+    if not merged_by_name:
+        return get_plot_diagnostics()
+    return list(merged_by_name.values())
 
 
 def render_page() -> None:
@@ -138,7 +219,6 @@ def render_page() -> None:
     selected_sub = active.label
     st.markdown("---")
 
-
     # ═══════════════════════════════════════════
     # 第一层：全域实施路径
     # ═══════════════════════════════════════════
@@ -154,8 +234,10 @@ def render_page() -> None:
             [StageDependency("07", SK.STRATEGY_MATRIX, "策略共识矩阵", approval_required=True)],
             title="Stage 11 全域实施前置条件",
         )
+        if not stage11_region_ready:
+            if st.checkbox("⚡ 快速推演模式（跳过前序依赖，直接启用生成）", key="p11_region_bypass_gate", value=False):
+                stage11_region_ready = True
 
-        # 加载前序数据
         strategy = load_stage_output("07", SK.STRATEGY_MATRIX, "")
         spatial_ctx = get_full_spatial_context()
 
@@ -173,7 +255,6 @@ def render_page() -> None:
             disabled=not stage11_region_ready,
             **stretch_width(st.button),
         ):
-            from src.config.site import get_site_config, get_site_name, get_site_city
             site_cfg = get_site_config()
             site_name = get_site_name() or site_cfg.get("name", "示范重点片区") or "示范重点片区"
             site_city = get_site_city() or site_cfg.get("city", "当地") or "当地"
@@ -194,11 +275,11 @@ def render_page() -> None:
 
     二、中期建设（3-5年）—— 产业导入与功能升级
       要求：详细列出产业导入策略、功能置换方案、基础设施升级工程等。
-      至少包含：文旅产业集群打造、商业业态升级、交通枢纽对接、公共空间系统建设等。
+      至少包含：特色产业集群打造、商业业态升级、交通枢纽对接、公共空间系统建设等。
 
     三、远期目标（5-10年）—— 品牌运营与持续发展
       要求：详细列出品牌塑造策略、长效运营机制、评估反馈系统等。
-      至少包含：片区整体形象塑造、文旅品牌运营、智慧管理系统、碳中和目标等。
+      至少包含：片区整体形象塑造、品牌运营、智慧管理系统、碳中和目标等。
 
     四、政策组合拳时序表
       以表格形式呈现各阶段需要投放的核心政策工具。
@@ -223,7 +304,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的全域实施路径", expanded=True):
                 st.markdown(saved)
 
-
     # ═══════════════════════════════════════════
     # 第二层：重点地块实施路径
     # ═══════════════════════════════════════════
@@ -236,18 +316,28 @@ def render_page() -> None:
             eyebrow="Plot-level Trigger",
         )
 
-        diags = get_plot_diagnostics()
+        diags = _get_merged_plot_diagnostics()
         if not diags:
             st.warning("暂无地块诊断数据，请先完成 Stage 05 量化分析。")
             st.stop()
 
-        # 按 MPI 排序
         diags_sorted = sorted(diags, key=lambda x: x["mpi_score"], reverse=True)
+        plot_names = [d["name"] for d in diags_sorted]
+        target_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {}) or {}
+        target_name = target_plot.get("name", "")
+        default_idx = 0
+        if target_name:
+            for idx, p_name in enumerate(plot_names):
+                if p_name == target_name or target_name in p_name or p_name in target_name:
+                    default_idx = idx
+                    break
 
         selected_plot = st.selectbox(
             "选择重点地块",
-            [d["name"] for d in diags_sorted],
-            format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})",
+            plot_names,
+            index=default_idx,
+            format_func=lambda n: f"{n} (MPI: {next(d['mpi_score'] for d in diags_sorted if d['name'] == n)})"
+            + (" [🎯 靶向更新地块]" if (target_name and (n == target_name or n in target_name or target_name in n)) else ""),
         )
         stage11_plot_ready = render_dependency_gate(
             [
@@ -256,6 +346,9 @@ def render_page() -> None:
             ],
             title="Stage 11 重点地块实施前置条件",
         )
+        if not stage11_plot_ready:
+            if st.checkbox("⚡ 快速推演模式（跳过前序依赖，直接启用生成）", key="p11_plot_bypass_gate", value=False):
+                stage11_plot_ready = True
 
         d = next(dd for dd in diags_sorted if dd["name"] == selected_plot)
         c1, c2, c3, c4 = st.columns(4)
@@ -301,7 +394,7 @@ def render_page() -> None:
       业态导入方案、功能置换计划、配套设施建设。
 
     四、资金筹措方案
-      明确资金来源：财政拨款、PPP、文旅运营收入、社会资本等配比。
+      明确资金来源：财政拨款、PPP、运营收入、社会资本等配比。
 
     五、业态进驻时间表
       以时间轴表格形式呈现各业态的进驻节点和招商策略。
@@ -326,7 +419,6 @@ def render_page() -> None:
             with st.expander("📋 已生成的重点地块实施路径", expanded=True):
                 st.markdown(saved_plot)
 
-
     # ═══════════════════════════════════════════
     # 更新方式分类
     # ═══════════════════════════════════════════
@@ -350,7 +442,6 @@ def render_page() -> None:
         import pandas as pd
         df = pd.DataFrame(categories)
         st.dataframe(df, hide_index=True, **stretch_width(st.dataframe))
-
 
     st.markdown("---")
     render_stage_summary(

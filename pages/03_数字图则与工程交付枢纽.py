@@ -3,9 +3,11 @@
 聚合模块：
 1. 工业级 AutoCAD DXF 矢量工程图纸导出 (原 Stage 13)
 2. 城市设计数字导则 (Word 规范导出) (原 Stage 12)
-3. 161 页 A3 规划成果图册与答辩 PPT (原 Stage 13)
-4. 多专项系统深化与留改拆实施时序 (原 Stage 09 + 11)
+3. 多专项系统深化与留改拆实施时序 (原 Stage 09 + 11)
+4. 制图与设计智能体 Skill 规范手册 (原 Stage 16)
 """
+
+from pathlib import Path
 
 import streamlit as st
 
@@ -24,6 +26,7 @@ WB3_OPTIONS = [
     "📜 城市设计数字导则 (Word 规范) (Stage 12)",
     "🔧 多专项系统空间叠合 (Stage 09)",
     "📅 留改拆实施时序总图 (Stage 11)",
+    "📖 智能体 Skill 规范手册",
 ]
 
 WB3_OPTION_TO_PARAM = {
@@ -31,6 +34,7 @@ WB3_OPTION_TO_PARAM = {
     WB3_OPTIONS[1]: "guideline",
     WB3_OPTIONS[2]: "systems",
     WB3_OPTIONS[3]: "timing",
+    WB3_OPTIONS[4]: "skill",
 }
 
 WB3_PARAM_TO_OPTION = {
@@ -39,7 +43,6 @@ WB3_PARAM_TO_OPTION = {
     "dxf": WB3_OPTIONS[0],
     "cad": WB3_OPTIONS[0],
     "13": WB3_OPTIONS[0],
-    "16": WB3_OPTIONS[0],
     "成果": WB3_OPTIONS[0],
     "图纸": WB3_OPTIONS[0],
     "guideline": WB3_OPTIONS[1],
@@ -59,7 +62,27 @@ WB3_PARAM_TO_OPTION = {
     "时序": WB3_OPTIONS[3],
     "实施": WB3_OPTIONS[3],
     "留改拆": WB3_OPTIONS[3],
+    "skill": WB3_OPTIONS[4],
+    "skills": WB3_OPTIONS[4],
+    "16": WB3_OPTIONS[4],
+    "手册": WB3_OPTIONS[4],
+    "智能体": WB3_OPTIONS[4],
 }
+
+
+def render_stage16_page() -> None:
+    """安全嵌入执行 Stage 16 制图与设计智能体 Skill 手册，拦截内部重复的 st.set_page_config。"""
+    orig_set_page_config = st.set_page_config
+    try:
+        st.set_page_config = lambda *args, **kwargs: None
+        skill_page_path = Path(__file__).resolve().parents[1] / "src" / "legacy_pages" / "16_制图与设计智能体Skill手册.py"
+        if skill_page_path.exists():
+            code = compile(skill_page_path.read_text(encoding="utf-8"), str(skill_page_path), "exec")
+            exec(code, {"__name__": "__main__", "__file__": str(skill_page_path)})
+        else:
+            st.error(f"未找到 Stage 16 页面文件: {skill_page_path}")
+    finally:
+        st.set_page_config = orig_set_page_config
 
 
 def main():
@@ -68,9 +91,9 @@ def main():
 
     render_page_banner(
         title="数字图则与工程交付枢纽",
-        description="工作台 03：工业级 AutoCAD DXF 矢量导出 · 法定设计导则 (Word) · 161 页答辩图册。实现从概念方案到工业级工程施工图纸与法定公文的真实闭环交付。",
+        description="工作台 03：工业级 AutoCAD DXF 矢量导出 · 法定设计导则 (Word) · 161 页答辩图册 · 智能体 Skill 规范。实现从概念方案到工业级工程施工图纸与法定公文的真实闭环交付。",
         eyebrow="Workbench 03",
-        tags=["AutoCAD 2000 DXF导出", "1:1米制工程图纸", "Word法定导则", "161页答辩图册", "全流程工程闭环"],
+        tags=["AutoCAD 2000 DXF导出", "1:1米制工程图纸", "Word法定导则", "161页答辩图册", "Skill规范手册"],
     )
 
     selected = render_workbench_subnav(
@@ -92,6 +115,8 @@ def main():
             render_stage09_page()
         elif selected == WB3_OPTIONS[3]:
             render_stage11_page()
+        elif selected == WB3_OPTIONS[4]:
+            render_stage16_page()
     finally:
         st.session_state["_embedded_mode"] = False
 

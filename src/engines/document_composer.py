@@ -344,6 +344,11 @@ def get_document_system_prompt() -> str:
     proj = get_project_info()
     proj_name = proj.get("name", "城市设计智能推演平台")
     proj_sub = proj.get("subtitle", f"——以{city}市{district}{site_name}为例")
+    if not ("伪满" in (site_name or "") or "长春" in (city or "")):
+        if "长春" in proj_name or "伪满" in proj_name:
+            proj_name = f"基于大模型与多模态AI的{city or ''}{site_name or '城市更新'}空间设计智能推演系统"
+        if "长春" in proj_sub or "伪满" in proj_sub:
+            proj_sub = f"——以{city or ''}{district or ''}{site_name or '示范区'}为例"
 
     return f"""你是一个严格的数据到文本转换引擎。你的唯一任务是将提供的项目数据
 整理成项目设计报告的正文段落。
@@ -690,6 +695,13 @@ class AuthorInfo:
     college: str = "建筑与规划学院"
     major: str = "城乡规划"
     date: str = "2026年6月"
+    author_id: str = ""
+
+    def __post_init__(self):
+        if self.author_id and not self.student_id:
+            self.student_id = self.author_id
+        elif self.student_id and not self.author_id:
+            self.author_id = self.student_id
 
 
 def load_author_info_json() -> AuthorInfo:
@@ -1090,7 +1102,48 @@ def _extract_keywords_from_chapters(chapters: dict[str, str]) -> str:
 
 def _generate_english_abstract(chapters: dict[str, str]) -> str:
     """生成英文摘要——聚焦LLM与AIGC在城乡规划中的应用"""
+    from src.config.site import (
+        get_project_info,
+        get_site_city,
+        get_site_config,
+        get_site_district,
+        get_site_name,
+    )
     from src.engines.llm_engine import call_llm_engine
+
+    s_cfg = get_site_config() or {}
+    s_city = get_site_city() or s_cfg.get("city", "")
+    s_dist = get_site_district() or s_cfg.get("district", "")
+    s_name = get_site_name() or s_cfg.get("name", "Urban Renewal Area")
+    s_area = s_cfg.get("area_ha", 160)
+    proj_info = get_project_info() or {}
+    proj_name = proj_info.get("name", "")
+
+    is_changchun_default = ("伪满" in s_name) or ("长春" in s_city)
+    if is_changchun_default:
+        paper_title_str = (
+            '"An Intelligent Urban Renewal Spatial Design Inference System Based on '
+            "Large Language Models and Multimodal AI: A Case Study of the Area Surrounding "
+            'the Puppet Emperor\'s Palace in Changchun"'
+        )
+        study_area_str = (
+            f"~{s_area} hectares around the Puppet Emperor's Palace (Weimanhuang Palace), "
+            "Kuancheng District, Changchun"
+        )
+    else:
+        loc_parts = [p for p in (s_city, s_dist, s_name) if p]
+        loc_str = ", ".join(loc_parts) if loc_parts else s_name
+        if proj_name and "长春" not in proj_name and "伪满" not in proj_name:
+            paper_title_str = (
+                f'"{proj_name} (An Intelligent Urban Renewal Spatial Design Inference System '
+                f'Based on Large Language Models and Multimodal AI: A Case Study of {loc_str})"'
+            )
+        else:
+            paper_title_str = (
+                '"An Intelligent Urban Renewal Spatial Design Inference System Based on '
+                f'Large Language Models and Multimodal AI: A Case Study of {loc_str}"'
+            )
+        study_area_str = f"~{s_area} hectares in {loc_str}"
 
     cn_abstract = _generate_abstract_from_chapters(chapters)
     prompt = f"""Translate the following Chinese academic abstract into English (250-350 words),
@@ -1098,8 +1151,8 @@ maintaining the STRONG focus on LLM (Large Language Model) and AIGC (AI-Generate
 in urban-rural planning.
 
 Important:
-- The paper title: "An Intelligent Urban Renewal Spatial Design Inference System Based on Large Language Models and Multimodal AI: A Case Study of the Area Surrounding the Puppet Emperor's Palace in Changchun"
-- Study area: ~160 hectares around the Puppet Emperor's Palace (Weimanhuang Palace), Kuancheng District, Changchun
+- The paper title: {paper_title_str}
+- Study area: {study_area_str}
 - Core innovation: LLM-driven multi-agent negotiation + AIGC (Stable Diffusion + ControlNet) design generation + LLM spatial diagnosis pipeline
 - Preserve the qualitative, methodology-focused tone — do NOT add numbers not in the original
 - Key technical terms: MPI (Micro-renewal Potential Index), GVI (Green View Index), RAG (Retrieval-Augmented Generation), ControlNet, space syntax
@@ -1175,13 +1228,17 @@ def _generate_references_from_chapters(chapters: dict[str, str]) -> str:
 
 def _generate_acknowledgments(student: AuthorInfo) -> str:
     """生成致谢"""
-    from src.config.site import get_institution_info, get_project_info
+    from src.config.site import get_institution_info, get_project_info, get_site_city, get_site_name
     from src.engines.llm_engine import call_llm_engine
     inst = get_institution_info()
     proj = get_project_info()
     inst_name = inst.get("name", "项目单位")
     inst_dept = inst.get("department", "")
     proj_name = proj.get("name", "项目设计")
+    s_city = get_site_city() or ""
+    s_name = get_site_name() or ""
+    if not ("伪满" in s_name or "长春" in s_city) and ("长春" in proj_name or "伪满" in proj_name):
+        proj_name = f"{s_city}{s_name}城市更新规划设计" if (s_city or s_name) else "项目设计"
 
     prompt = f"""请为{proj_name}撰写致谢（约300-500字）。
 

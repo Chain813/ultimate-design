@@ -136,7 +136,7 @@ def render_page() -> None:
             st.markdown("### 2. 设计说明与规划指标")
             
             # Default descriptions helper
-            from src.config.site import get_site_config, get_site_name, get_site_city
+            from src.config.site import get_landmarks, get_site_city, get_site_config, get_site_name
             s_cfg = get_site_config()
             s_city = get_site_city() or s_cfg.get("city", "当地") or "当地"
             s_name = get_site_name() or s_cfg.get("name", "更新规划单元") or "更新规划单元"
@@ -144,7 +144,7 @@ def render_page() -> None:
             t_plot = load_stage_output("04", "target_plot", {}) or load_stage_output("07", "target_plot", {})
             t_name = t_plot.get("name", f"{s_name}重点更新地块")
             landmarks = get_landmarks()
-            primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name")) else f"{s_name}核心风貌区"
+            primary_lm = landmarks[0].get("name") if (landmarks and isinstance(landmarks[0], dict) and landmarks[0].get("name") and ("伪满" in s_name or "长春" in s_city or "伪满" not in landmarks[0].get("name", ""))) else f"{s_name}核心风貌区"
 
             default_desc = {
                 "现状区位图": [
@@ -319,11 +319,23 @@ def render_page() -> None:
                         from tools.draw_scope_map import get_drawing_module
                         module = get_drawing_module(drawing_type)
                         has_no_frame = (module is not None and getattr(module, "NO_FRAME", False))
+                        output_file_path.parent.mkdir(parents=True, exist_ok=True)
                         
                         if has_no_frame:
-                            img = Image.open(temp_map)
-                            img_resized = img.resize((2240, 1584), Image.Resampling.LANCZOS)
-                            img_resized.save(str(output_file_path))
+                            from src.engines.frame_generator import apply_custom_a3_overlay
+                            apply_custom_a3_overlay(
+                                image_path=temp_map,
+                                output_path=str(output_file_path),
+                                title=drawing_title,
+                                subtitle=f"展示{s_city}{s_name}范围内「{drawing_title}」的空间现状、规划布局与法定管控要素。",
+                                desc_list=[desc_1, desc_2, desc_3],
+                                author=author,
+                                author_id=author_id,
+                                organization=organization,
+                                site_name=s_name,
+                                city_name=s_city,
+                                drawing_number=drawing_num,
+                            )
                         else:
                             process_a3_layout(
                                 map_path=temp_map,

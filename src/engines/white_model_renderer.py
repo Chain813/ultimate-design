@@ -82,6 +82,24 @@ PRESET_VIEWS: dict[str, CameraView] = {
         target_lng=125.352, target_lat=43.912,
         fov=40.0, width=1280, height=960,
     ),
+    "overview_south": CameraView(
+        name="鸟瞰_正南",
+        eye_lng=125.352, eye_lat=43.898, eye_alt=800,
+        target_lng=125.352, target_lat=43.912,
+        fov=35.0, width=1280, height=960,
+    ),
+    "overview_southeast": CameraView(
+        name="鸟瞰_东南概览",
+        eye_lng=125.364, eye_lat=43.900, eye_alt=800,
+        target_lng=125.352, target_lat=43.912,
+        fov=35.0, width=1280, height=960,
+    ),
+    "overview_aerial": CameraView(
+        name="鸟瞰_高空正射",
+        eye_lng=125.352, eye_lat=43.908, eye_alt=1200,
+        target_lng=125.352, target_lat=43.912,
+        fov=40.0, width=1280, height=960,
+    ),
 }
 
 
@@ -139,6 +157,9 @@ class WhiteModelRenderer:
         self.buildings: list[Building3D] = []
         self.plots: list[PlotBoundary] = []
         self.bounds: tuple[float, float, float, float] = (0, 0, 0, 0)
+        self.buildings_gdf = None
+        self.boundary_gdf = None
+        self.last_camera_view: CameraView | None = None
         self._loaded = False
 
     # ── 数据加载 ──
@@ -150,11 +171,39 @@ class WhiteModelRenderer:
             max_buildings: 最大加载建筑数 (110k全量会慢, 采样保证性能)
         """
         if self._loaded:
+            if self.bounds == (0, 0, 0, 0):
+                self._refresh_bounds()
             return
+
+        # 如果外部直接注入了 GeoDataFrame (如测试或自定义场地)，优先解析
+        if self.buildings_gdf is not None and not getattr(self.buildings_gdf, "empty", True) and not self.buildings:
+            try:
+                data = json.loads(self.buildings_gdf.to_json())
+                for feat in data.get("features", [])[:max_buildings]:
+                    props = feat.get("properties", {}) or {}
+                    coords = self._extract_polygon(feat.get("geometry", {}))
+                    if not coords or len(coords) < 3:
+                        continue
+                    floors = int(props.get("Floor") or props.get("floors") or 3)
+                    self.buildings.append(Building3D(
+                        building_id=str(props.get("building_id", "")),
+                        footprint=coords,
+                        floors=max(1, floors),
+                        height_m=max(1, floors) * FLOOR_HEIGHT,
+                        is_historical=bool(props.get("is_historical", False)),
+                        prop_style=str(props.get("prop_style", "normal")),
+                        centroid=self._centroid(coords),
+                    ))
+            except Exception as e:
+                logger.debug(f"Failed to parse injected buildings_gdf: {e}")
 
         # 加载建筑
         building_path = self.data_dir / "gis" / "Building_Footprints.geojson"
-        if building_path.exists():
+        if not building_path.exists():
+            alt_bldg = self.data_dir / "buildings.geojson"
+            if alt_bldg.exists():
+                building_path = alt_bldg
+        if not self.buildings and building_path.exists():
             with open(building_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
 
@@ -205,14 +254,38 @@ class WhiteModelRenderer:
                         centroid=self._centroid(coords),
                     ))
 
-        # 计算边界
+        self._refresh_bounds()
+        self._loaded = True
+        logger.info(f"Loaded {len(self.buildings)} buildings, {len(self.plots)} plots")
+
+    def _refresh_bounds(self):
+        """从注入的 GeoDataFrame、建筑列表或边界文件刷新 bounds"""
+        if self.buildings_gdf is not None and not getattr(self.buildings_gdf, "empty", True):
+            tb = self.buildings_gdf.total_bounds
+            self.bounds = (float(tb[0]), float(tb[1]), float(tb[2]), float(tb[3]))
+            return
+        if self.boundary_gdf is not None and not getattr(self.boundary_gdf, "empty", True):
+            tb = self.boundary_gdf.total_bounds
+            self.bounds = (float(tb[0]), float(tb[1]), float(tb[2]), float(tb[3]))
+            return
         if self.buildings:
             all_lngs = [c[0] for b in self.buildings for c in b.footprint]
             all_lats = [c[1] for b in self.buildings for c in b.footprint]
             self.bounds = (min(all_lngs), min(all_lats), max(all_lngs), max(all_lats))
-
-        self._loaded = True
-        logger.info(f"Loaded {len(self.buildings)} buildings, {len(self.plots)} plots")
+            return
+        boundary_path = self.data_dir / "gis" / "Boundary_Scope.geojson"
+        if boundary_path.exists():
+            try:
+                with open(boundary_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if data.get("features"):
+                    coords = self._extract_polygon(data["features"][0]["geometry"])
+                    if coords:
+                        lngs = [c[0] for c in coords]
+                        lats = [c[1] for c in coords]
+                        self.bounds = (min(lngs), min(lats), max(lngs), max(lats))
+            except Exception:
+                pass
 
     @staticmethod
     def _extract_polygon(geom: dict) -> list[tuple[float, float]]:
@@ -519,10 +592,77 @@ class WhiteModelRenderer:
     # 快捷渲染方法
     # ═══════════════════════════════════════════════
 
+    def _resolve_camera_view(self, direction: str = "sw") -> CameraView:
+        """根据当前加载的场地边界动态计算或选择相机视角。
+
+        若边界中心位于长春范围 (125.0..126.0, 43.5..44.5) 之外，则基于实际
+        bounding box 的中心与跨度动态计算 eye_lng, eye_lat, target_lng, target_lat。
+        """
+        self.load_data()
+        self._refresh_bounds()
+
+        if direction in PRESET_VIEWS:
+            view_key = direction
+        elif direction in ("south", "southeast", "aerial"):
+            view_key = f"overview_{direction}"
+        else:
+            view_key = f"birdseye_{direction}"
+
+        default_view = PRESET_VIEWS.get(view_key, PRESET_VIEWS["birdseye_sw"])
+
+        if self.bounds != (0, 0, 0, 0):
+            min_lng, min_lat, max_lng, max_lat = self.bounds
+            center_lng = (min_lng + max_lng) / 2.0
+            center_lat = (min_lat + max_lat) / 2.0
+
+            if not (125.0 <= center_lng <= 126.0 and 43.5 <= center_lat <= 44.5):
+                span_lng = max(max_lng - min_lng, 0.004)
+                span_lat = max(max_lat - min_lat, 0.004)
+
+                if view_key in ("overview_south", "birdseye_south"):
+                    eye_lng = center_lng
+                    eye_lat = center_lat - span_lat * 0.7
+                    eye_alt = 800.0
+                    fov = 35.0
+                elif view_key in ("overview_southeast", "birdseye_se"):
+                    eye_lng = center_lng + span_lng * 0.6
+                    eye_lat = center_lat - span_lat * 0.6
+                    eye_alt = 800.0
+                    fov = 35.0
+                elif view_key in ("overview_aerial", "birdseye_aerial"):
+                    eye_lng = center_lng
+                    eye_lat = center_lat - span_lat * 0.2
+                    eye_alt = 1200.0
+                    fov = 40.0
+                elif view_key == "birdseye_nw":
+                    eye_lng = center_lng - span_lng * 0.6
+                    eye_lat = center_lat + span_lat * 0.6
+                    eye_alt = 600.0
+                    fov = 40.0
+                else:  # birdseye_sw or fallback
+                    eye_lng = center_lng - span_lng * 0.6
+                    eye_lat = center_lat - span_lat * 0.6
+                    eye_alt = 800.0
+                    fov = 35.0
+
+                return CameraView(
+                    name=default_view.name,
+                    eye_lng=round(eye_lng, 6),
+                    eye_lat=round(eye_lat, 6),
+                    eye_alt=eye_alt,
+                    target_lng=round(center_lng, 6),
+                    target_lat=round(center_lat, 6),
+                    fov=fov,
+                    width=default_view.width,
+                    height=default_view.height,
+                )
+
+        return default_view
+
     def render_birdseye(self, output_path: str, direction: str = "sw") -> str:
         """渲染鸟瞰白模"""
-        view_key = f"birdseye_{direction}"
-        view = PRESET_VIEWS.get(view_key, PRESET_VIEWS["birdseye_sw"])
+        view = self._resolve_camera_view(direction)
+        self.last_camera_view = view
         return self.render_view(view, output_path,
                                 highlight_plots=[p.name for p in self.plots])
 
@@ -622,10 +762,63 @@ class WhiteModelRenderer:
 def build_consistent_aigc_prompt(style: str = "historic_renewal") -> tuple[str, str]:
     """构建统一的 AIGC 提示词 (保证所有出图风格一致)
 
+    当当前激活场地为长春/伪满皇宫默认项目时，使用红砖坡屋顶与东侧伊通河、北侧铁路廊道提示词；
+    当激活其他城市或自定义场地时，联动 context_adaptive_engine 生成自适应气候与城市风貌提示词。
+
     Returns:
         (positive_prompt, negative_prompt)
     """
-    # 基于一致的风格基础, 根据场景微调
+    from src.config.site import get_site_center, get_site_city, get_site_config, get_site_name
+
+    s_cfg = get_site_config() or {}
+    s_city = get_site_city() or s_cfg.get("city", "")
+    s_name = get_site_name() or s_cfg.get("name", "")
+    s_center = get_site_center() or s_cfg.get("center") or [125.34064, 43.90095]
+
+    is_changchun = ("伪满" in s_name) or ("长春" in s_city)
+    if not s_city and not s_name and isinstance(s_center, (list, tuple)) and len(s_center) >= 2:
+        is_changchun = (125.0 <= float(s_center[0]) <= 126.0 and 43.5 <= float(s_center[1]) <= 44.5)
+
+    if not is_changchun:
+        from src.engines.context_adaptive_engine import generate_adaptive_aigc_prompt
+
+        site_ctx = {
+            "city": s_city,
+            "name": s_name,
+            "center": s_center,
+        }
+        adaptive = generate_adaptive_aigc_prompt(site_context=site_ctx)
+        base_pos = adaptive.get("prompt", "architectural visualization, high quality urban design renewal")
+        base_neg = adaptive.get("negative_prompt", CONSISTENT_NEGATIVE_PROMPT)
+
+        generic_additions = {
+            "historic_renewal": (
+                "context-sensitive urban renewal, mixed-use neighborhood, "
+                "ground floor active retail with residential or office above, "
+                "pedestrian-friendly streetscape, green infrastructure, pocket parks, "
+                "building heights strictly as modeled, architectural coherence enforced",
+                ""
+            ),
+            "birdseye": (
+                "aerial bird's eye view, isometric perspective, urban masterplan, "
+                "city block scale, roof gardens visible, street network clearly defined, "
+                "unified architectural language across all blocks",
+                "distorted perspective, floating buildings, inconsistent building heights"
+            ),
+            "street_view": (
+                "street level perspective, eye level view, human scale, "
+                "active street frontage, outdoor seating, street trees, "
+                "consistent facade rhythm, uniform window proportions, "
+                "cohesive material palette across all visible buildings",
+                "empty streets, different building styles on same block, suburban character"
+            ),
+        }
+        add_pos, add_neg = generic_additions.get(style, generic_additions["historic_renewal"])
+        pos = f"{base_pos}, {add_pos}" if add_pos else base_pos
+        neg = f"{base_neg}, {add_neg}" if add_neg else base_neg
+        return pos, neg
+
+    # 基于一致的风格基础 (长春默认历史街区), 根据场景微调
     style_additions = {
         "historic_renewal": (
             "historic district urban renewal, adaptive reuse of industrial heritage, "

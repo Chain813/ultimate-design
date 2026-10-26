@@ -46,6 +46,65 @@ from src.workflow.stage_keys import SK
 logger = logging.getLogger("ultimateDESIGN")
 
 
+def _enrich_candidate_plots(raw_plots: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """对缺乏显式 POI/GVI/SVF 属性的自定义或 OSM 候选地块进行差异化合理估算，并合并用户在前端表格中的手动覆盖值。"""
+    overrides: dict[str, dict[str, Any]] = st.session_state.get("custom_plot_metrics_overrides", {}) or {}
+    enriched: list[dict[str, Any]] = []
+    for idx, p in enumerate(raw_plots):
+        item = dict(p)
+        p_name = str(item.get("name", f"候选地块-{idx + 1}"))
+        p_land = str(item.get("land_use", "综合用地"))
+        p_area = float(item.get("area_ha", 2.5) or 2.5)
+
+        raw_poi = item.get("poi")
+        raw_gvi = item.get("gvi")
+        raw_svf = item.get("svf")
+
+        # 判断是否为未赋值的统一默认占位 (poi=10, gvi=15.0, svf=0.5)
+        is_uniform_default = (
+            (raw_poi is None or raw_poi == 10)
+            and (raw_gvi is None or float(raw_gvi) == 15.0)
+            and (raw_svf is None or float(raw_svf) == 0.5)
+        )
+        if is_uniform_default:
+            # 基于用地性质、地块面积与序号生成有区分度且确定性的估算初值
+            if any(k in p_land for k in ["商", "集贸", "市", "retail", "commercial"]):
+                est_poi = int(min(45, max(8, round(14 + p_area * 3.2 + (idx % 5) * 3))))
+                est_gvi = round(max(6.5, 13.5 - (idx % 4) * 1.4), 1)
+                est_svf = round(min(0.75, max(0.32, 0.44 + (idx % 3) * 0.05)), 2)
+            elif any(k in p_land for k in ["工", "仓", "厂", "industrial"]):
+                est_poi = int(min(30, max(4, round(6 + p_area * 1.5 + (idx % 4) * 2))))
+                est_gvi = round(max(8.0, 14.0 - (idx % 5) * 1.1), 1)
+                est_svf = round(min(0.80, max(0.40, 0.56 + (idx % 4) * 0.04)), 2)
+            elif any(k in p_land for k in ["绿", "园", "广场", "park", "grass"]):
+                est_poi = int(min(25, max(5, round(8 + p_area * 1.2 + (idx % 3) * 2))))
+                est_gvi = round(min(48.0, 28.0 + (idx % 5) * 3.2), 1)
+                est_svf = round(min(0.88, 0.68 + (idx % 3) * 0.05), 2)
+            else:
+                est_poi = int(min(40, max(6, round(10 + p_area * 2.2 + (idx % 6) * 2.5))))
+                est_gvi = round(min(35.0, max(9.0, 16.5 + ((idx % 5) - 2) * 2.3)), 1)
+                est_svf = round(min(0.78, max(0.35, 0.48 + ((idx % 4) - 1) * 0.05)), 2)
+            item["poi"] = est_poi
+            item["gvi"] = est_gvi
+            item["svf"] = est_svf
+
+        if p_name in overrides:
+            ov = overrides[p_name]
+            if "poi" in ov and ov["poi"] is not None:
+                item["poi"] = int(ov["poi"])
+            if "gvi" in ov and ov["gvi"] is not None:
+                item["gvi"] = round(float(ov["gvi"]), 1)
+            if "svf" in ov and ov["svf"] is not None:
+                item["svf"] = round(float(ov["svf"]), 2)
+            if "area_ha" in ov and ov["area_ha"] is not None:
+                item["area_ha"] = round(float(ov["area_ha"]), 2)
+            if "land_use" in ov and ov["land_use"]:
+                item["land_use"] = str(ov["land_use"])
+
+        enriched.append(item)
+    return enriched
+
+
 # ═══════════════════════════════════════════════════════════════
 # 1. 靶向地块动态诊断与总线锁定核心接口
 # ═══════════════════════════════════════════════════════════════
@@ -156,73 +215,74 @@ def render_target_plot_card(target_plot: dict[str, Any]) -> None:
     issues = target_plot.get("issues", [])
     metrics = target_plot.get("metrics", {})
 
-    priority_color = "#34d399" if "P1" in priority else ("#fbbf24" if "P2" in priority else "#94a3b8")
-    priority_bg = "rgba(52, 211, 153, 0.15)" if "P1" in priority else ("rgba(251, 191, 36, 0.15)" if "P2" in priority else "rgba(148, 163, 184, 0.15)")
+    priority_color = "#047857" if "P1" in priority else ("#b45309" if "P2" in priority else "#515154")
+    priority_bg = "#ecfdf5" if "P1" in priority else ("#fffbeb" if "P2" in priority else "#f5f5f7")
+    priority_border = "#a7f3d0" if "P1" in priority else ("#fde68a" if "P2" in priority else "#e5e5ea")
 
     issues_html = ""
     for idx, iss in enumerate(issues):
         issues_html += f"""
         <div style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
-            <span style="color: #f87171; font-size: 14px; line-height: 1.4;">⚠️</span>
-            <div style="color: #e2e8f0; font-size: 13px; line-height: 1.5;">{iss}</div>
+            <span style="color: #dc2626; font-size: 14px; line-height: 1.4;">⚠️</span>
+            <div style="color: #1d1d1f; font-size: 13px; line-height: 1.5;">{iss}</div>
         </div>
         """
 
     st.markdown(f"""
-    <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
-                border: 1px solid rgba(129, 140, 248, 0.35); border-radius: 14px; padding: 18px 22px; margin: 18px 0;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);">
-        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px; margin-bottom: 14px;">
+    <div style="background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+                border: 1px solid rgba(22, 163, 74, 0.25); border-radius: 14px; padding: 18px 22px; margin: 18px 0;
+                box-shadow: 0 4px 16px rgba(22, 163, 74, 0.06);">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(0, 0, 0, 0.06); padding-bottom: 12px; margin-bottom: 14px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 24px;">🎯</span>
                 <div>
-                    <div style="color: #f8fafc; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+                    <div style="color: #1d1d1f; font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px;">
                         <span>{name}</span>
-                        <span style="font-size: 12px; font-weight: 600; color: {priority_color}; background: {priority_bg}; padding: 2px 8px; border-radius: 6px; border: 1px solid {priority_color}40;">
+                        <span style="font-size: 12px; font-weight: 600; color: {priority_color}; background: {priority_bg}; padding: 2px 8px; border-radius: 6px; border: 1px solid {priority_border};">
                             {priority}
                         </span>
-                        <span style="font-size: 12px; font-weight: 600; color: #a5b4fc; background: rgba(99, 102, 241, 0.15); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        <span style="font-size: 12px; font-weight: 600; color: #047857; background: rgba(4, 120, 87, 0.08); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(4, 120, 87, 0.25);">
                             MPI: {mpi}
                         </span>
                     </div>
-                    <div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">
-                        现状用地：<span style="color: #cbd5e1; font-weight: 500;">{land_use}</span> ｜ 占地规模：<span style="color: #cbd5e1; font-weight: 500;">{area_ha} ha</span>
+                    <div style="color: #515154; font-size: 12px; margin-top: 2px;">
+                        现状用地：<span style="color: #1d1d1f; font-weight: 600;">{land_use}</span> ｜ 占地规模：<span style="color: #1d1d1f; font-weight: 600;">{area_ha} ha</span>
                     </div>
                 </div>
             </div>
             <div style="text-align: right;">
-                <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">贯通状态</div>
-                <div style="font-size: 13px; color: #38bdf8; font-weight: 600;">已锁定为全流程更新靶向</div>
+                <div style="font-size: 11px; color: #515154; text-transform: uppercase; letter-spacing: 0.5px;">贯通状态</div>
+                <div style="font-size: 13px; color: #047857; font-weight: 600;">已锁定为全流程更新靶向</div>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; background: rgba(15, 23, 42, 0.5); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04);">
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; background: #ffffff; padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(0, 0, 0, 0.06);">
             <div>
-                <div style="font-size: 11px; color: #94a3b8;">绿视率 (GVI)</div>
-                <div style="font-size: 15px; font-weight: 600; color: #f8fafc;">{metrics.get('gvi', 'N/A')}%</div>
+                <div style="font-size: 11px; color: #515154;">绿视率 (GVI)</div>
+                <div style="font-size: 15px; font-weight: 600; color: #1d1d1f;">{metrics.get('gvi', 'N/A')}%</div>
             </div>
             <div>
-                <div style="font-size: 11px; color: #94a3b8;">POI 活力设施</div>
-                <div style="font-size: 15px; font-weight: 600; color: #f8fafc;">{metrics.get('poi', 'N/A')} 处</div>
+                <div style="font-size: 11px; color: #515154;">POI 活力设施</div>
+                <div style="font-size: 15px; font-weight: 600; color: #1d1d1f;">{metrics.get('poi', 'N/A')} 处</div>
             </div>
             <div>
-                <div style="font-size: 11px; color: #94a3b8;">天空开敞度 (SVF)</div>
-                <div style="font-size: 15px; font-weight: 600; color: #f8fafc;">{metrics.get('svf', 'N/A')}</div>
+                <div style="font-size: 11px; color: #515154;">天空开敞度 (SVF)</div>
+                <div style="font-size: 15px; font-weight: 600; color: #1d1d1f;">{metrics.get('svf', 'N/A')}</div>
             </div>
             <div>
-                <div style="font-size: 11px; color: #94a3b8;">街道杂乱度</div>
-                <div style="font-size: 15px; font-weight: 600; color: #f8fafc;">{metrics.get('clutter', '30.0')}%</div>
+                <div style="font-size: 11px; color: #515154;">街道杂乱度</div>
+                <div style="font-size: 15px; font-weight: 600; color: #1d1d1f;">{metrics.get('clutter', '30.0')}%</div>
             </div>
         </div>
 
         <div>
-            <div style="font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <div style="font-size: 13px; font-weight: 600; color: #1d1d1f; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
                 <span>📋</span> 现场算法动态推导空间痛点清单:
             </div>
             {issues_html}
         </div>
 
-        <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 12px; font-size: 11px; color: #64748b;">
+        <div style="border-top: 1px solid rgba(0, 0, 0, 0.06); padding-top: 10px; margin-top: 12px; font-size: 11px; color: #515154;">
             💡 该靶向地块将全局驱动后续目标定位（Stage 06）、多主体博弈（Stage 07）、总体规划（Stage 08）与重点地块深化（Stage 10）。
         </div>
     </div>
@@ -261,12 +321,18 @@ def render_page() -> None:
     selected_sub = active.label
     st.markdown("---")
 
-    # 动态载入候选地块（自动检测当前工程，杜绝死模板）
-    active_plots = get_active_candidate_plots()
+    # 动态载入候选地块并赋能差异化指标与用户手动覆盖值
+    active_plots = _enrich_candidate_plots(get_active_candidate_plots())
 
-    # 保证总线中存在靶向地块结构化数据（若缺失或为陈旧硬编码，则动态选取首选地块）
+    # 保证总线中存在靶向地块结构化数据（若缺失或为跨基地陈旧缓存，则动态选取当前工程首选地块）
     current_target = load_stage_output("04", "target_plot", None)
-    if not current_target:
+    is_cc_site = ("伪满" in site_name) or ("长春" in city_name)
+    is_stale_cc_target = (
+        not is_cc_site
+        and isinstance(current_target, dict)
+        and any(kw in str(current_target.get("name", "")) for kw in ("长春", "伪满", "水产"))
+    )
+    if not current_target or is_stale_cc_target:
         if active_plots:
             first_p = active_plots[0]
             current_target = select_target_plot_and_diagnose(
@@ -319,6 +385,41 @@ def render_page() -> None:
             eyebrow="Multi-dimensional Potential Index",
         )
 
+        # 允许学生在线调整/校准各候选地块的现状观测指标 (POI/GVI/SVF)
+        with st.expander("🛠️ 自定义修改候选地块基础观测指标 (POI / GVI / SVF)", expanded=False):
+            st.caption("当上传的自定义 GeoJSON 缺少完备街景或 POI 实测字段时，可在此表格内直接修改各地块观测值并应用到 MPI 计算：")
+            edit_df = pd.DataFrame([
+                {
+                    "地块名称": p.get("name", "未知地块"),
+                    "现状用地": p.get("land_use", "综合用地"),
+                    "占地面积(ha)": float(p.get("area_ha", 2.5)),
+                    "poi": int(p.get("poi", 10)),
+                    "gvi": float(p.get("gvi", 15.0)),
+                    "svf": float(p.get("svf", 0.50)),
+                }
+                for p in active_plots
+            ])
+            edited_df = st.data_editor(
+                edit_df,
+                disabled=["地块名称"],
+                hide_index=True,
+                key="stage04_plot_metrics_editor",
+                **stretch_width(st.data_editor),
+            )
+            if st.button("💾 应用地块观测指标修改", key="btn_apply_plot_metrics_override"):
+                new_overrides: dict[str, dict[str, Any]] = {}
+                for _, row in edited_df.iterrows():
+                    new_overrides[str(row["地块名称"])] = {
+                        "land_use": str(row["现状用地"]),
+                        "area_ha": float(row["占地面积(ha)"]),
+                        "poi": int(row["poi"]),
+                        "gvi": float(row["gvi"]),
+                        "svf": float(row["svf"]),
+                    }
+                st.session_state["custom_plot_metrics_overrides"] = new_overrides
+                st.toast("✅ 已更新候选地块观测指标并重算 MPI！", icon="📊")
+                st.rerun()
+
         # 构建所有候选地块的基础数据
         plot_rows = []
         for p in active_plots:
@@ -350,16 +451,16 @@ def render_page() -> None:
 
         base_data = pd.DataFrame(plot_rows)
 
-        with st.sidebar:
-            st.markdown("### 🎚️ 专家决策模拟 (AHP)")
-            w_poi = st.slider("🏗️ 空间潜力占比 (%)", 0, 100, 40, key="w_poi")
-            w_soc = st.slider("👥 社会需求占比 (%)", 0, 100, 30, key="w_soc")
-            w_env = st.slider("🌿 环境干预紧迫度 (%)", 0, 100, 30, key="w_env")
-            total_w = w_poi + w_soc + w_env
-            st.caption(f"当前权重总计: {total_w}%")
-            if total_w != 100:
-                st.warning("建议将权重总计调至 100%。")
-            st.markdown("---")
+        st.markdown("##### 🎛️ AHP 层次分析法三维权重动态调节")
+        w_col1, w_col2, w_col3 = st.columns(3)
+        w_poi = w_col1.slider("🏗️ 空间潜力占比 (%)", 0, 100, 40, key="w_poi")
+        w_soc = w_col2.slider("👥 社会需求占比 (%)", 0, 100, 30, key="w_soc")
+        w_env = w_col3.slider("🌿 环境干预紧迫度 (%)", 0, 100, 30, key="w_env")
+        total_w = w_poi + w_soc + w_env
+        f_col1, f_col2 = st.columns([2, 1])
+        with f_col1:
+            st.caption(f"当前权重总计: {total_w}%" + ("（系统自动归一化加权计算）" if total_w == 100 else "（建议将权重总计调至 100%，系统将自动归一化处理）"))
+        with f_col2:
             threshold = st.slider("🎯 仅展示得分高于", 0, 100, 0, key="p5_threshold")
 
         def recalc_mpi(df: pd.DataFrame, w1: int, w2: int, w3: int) -> pd.DataFrame:
@@ -383,7 +484,7 @@ def render_page() -> None:
         ])
 
         st.latex(
-            r"\color{#a5b4fc} MPI_i = \frac{w_{space} \cdot S_i + w_{social} \cdot D_i + w_{env} \cdot (1 - E_i)}{w_{space} + w_{social} + w_{env}} \times 100"
+            r"\color{#0071e3} MPI_i = \omega_{poi} \cdot \left(1 - \widetilde{D}_{poi, i}\right) + \omega_{soc} \cdot \widetilde{P}_{pop, i} + \omega_{env} \cdot \widetilde{E}_{ndvi, i}"
         )
 
         st.dataframe(
@@ -799,6 +900,3 @@ def render_page() -> None:
         methodology="基于 AHP-MPI 多维潜力指数模型，融合空间潜力、社会需求和环境紧迫度三维加权评价",
         implication="为后续目标定位（Stage 06）和设计策略（Stage 07）提供了纯数据驱动的靶向依据",
     )
-
-    # 业务逻辑主线推进导航
-    render_logic_chain_stepper("04")

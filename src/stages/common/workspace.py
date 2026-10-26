@@ -30,39 +30,72 @@ class StageWorkspaceSpec:
 
 def resolve_active_subpage(
     spec: StageWorkspaceSpec,
-    default_index: int = 0,
+    default_index: int | dict[str, str] = 0,
     requested_subpage: str | None = None,
+    query_params: dict[str, str] | None = None,
 ) -> SubpageSpec:
+    if isinstance(default_index, dict):
+        query_params = default_index
+        default_index = 0
+
     alias_map: dict[str, str] = {}
     for subpage in spec.subpages:
         for alias in subpage.aliases:
             alias_map[alias] = subpage.label
+        alias_map[subpage.title] = subpage.label
 
     labels = [subpage.label for subpage in spec.subpages]
-    active_label = (
-        _resolve_label(labels, requested_subpage, default_index, alias_map)
-        if requested_subpage is not None
-        else resolve_subpage_value(labels, default_index=default_index, aliases=alias_map)
-    )
+    if requested_subpage is not None:
+        active_label = _resolve_label(labels, requested_subpage, default_index, alias_map)
+    elif query_params is not None:
+        active_label = resolve_subpage_value(
+            labels, default_index=default_index, aliases=alias_map, query_params=query_params
+        )
+    else:
+        active_label = resolve_subpage_value(labels, default_index=default_index, aliases=alias_map)
+
     for subpage in spec.subpages:
         if subpage.label == active_label:
             return subpage
     return spec.subpages[default_index]
 
 
+ARTIFACT_CATEGORY_LABELS: dict[str, str] = {
+    "report": "图文报告",
+    "guideline": "管控图则",
+    "data": "量化数据",
+    "package": "工程交付包",
+}
+
+
 def build_stage_workspace_html(spec: StageWorkspaceSpec, active: SubpageSpec) -> str:
+    raw_sub = st.query_params.get("sub", "")
+    if isinstance(raw_sub, list):
+        raw_sub = raw_sub[0] if raw_sub else ""
+    current_sub = str(raw_sub).strip()
+
     nav_items = []
     for subpage in spec.subpages:
         cls = "stage-workspace-tab is-active" if subpage.label == active.label else "stage-workspace-tab"
+        if current_sub:
+            href = f"?sub={escape(current_sub)}&tab={escape(subpage.label)}"
+        else:
+            href = f"?tab={escape(subpage.label)}"
         nav_items.append(
-            f'<a class="{cls}" href="?sub={escape(subpage.label)}" target="_self">{escape(subpage.title)}</a>'
+            f'<a class="{cls}" href="{href}" target="_self">{escape(subpage.title)}</a>'
         )
 
     output_parts = []
     if active.output_key:
-        output_parts.append(f"stage_bus: {escape(spec.stage_code)}_{escape(active.output_key)}")
-    if active.artifact_category:
-        output_parts.append(f"artifact: {escape(active.artifact_category)}")
+        bus_key = f"{escape(spec.stage_code)}_{escape(active.output_key)}"
+        output_parts.append(f"🔗 数据总线：{bus_key}")
+    elif getattr(spec, "stage_bus_key", ""):
+        output_parts.append(f"🔗 数据总线：{escape(str(getattr(spec, 'stage_bus_key', '')))}")
+
+    raw_artifact = active.artifact_category or getattr(spec, "artifact_type", "")
+    if raw_artifact:
+        artifact_label = ARTIFACT_CATEGORY_LABELS.get(str(raw_artifact).lower(), escape(str(raw_artifact)))
+        output_parts.append(f"📄 成果形态：{artifact_label}")
     output_html = "".join(f'<span class="stage-workspace-meta-pill">{part}</span>' for part in output_parts)
 
     return (
