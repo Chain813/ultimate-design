@@ -168,3 +168,67 @@
 
 - 任何提交到远程代码库的脚本均不得含有任何开发者个人的本地绝对路径前缀。
 - 所有自动化编译引擎应能够在全新部署的机器上直接一键执行通过。
+
+
+---
+
+## 📚 Part 9: RAG Legal Knowledge Base Territory-Independence & Zero-Preset Persistence (RAG 法规库跨项目永久保留规范)
+
+### 触发条件
+当对平台进行跨城市地块迁移、导入全新规划基地、执行零预设重构或重构 RAG 检索管线时。
+
+### 执行动作
+1. **法规向量库地区无关性**：国家与行业规划规范（如日照间距、消防通道、限高红线、海绵城市等）具有全国/普适通用性。无论导入何种全新地块，**严禁重置、清空或覆盖原有的 `rag_knowledge.json` 及其向量化存储**。
+2. **检索与存储解耦**：升级切片策略（如文档级上下文分块 `contextual_chunker.py`、父子块追溯、BM25 + 密集向量混合检索）时，必须保持底层现有向量特征的向前兼容性，新旧切片并行共存，确保召回精度提升的同时零数据丢失。
+3. **空间数据与文本法规分离**：地块切换仅更新 `data/gis/` 空间底座与 CSV 统计指标，RAG 法规引擎作为通用支撑基础设施全局共享。
+
+### 约束限制
+- 绝对禁止在新建地块项目或更新基地数据时删除或清空已存在的政策法规向量文件。
+
+---
+
+## 🎨 Part 10: Streamlit CSS Layering, Theme Locking & Contrast Safety (Streamlit 样式层叠、主题锁定与对比度规范)
+
+### 触发条件
+当编写、调整或重构 Streamlit 页面前端样式、CSS 样式表（`style.css` / `apple_nav.css`）或自定义 HTML/SVG 卡片时。
+
+### 执行动作
+1. **禁止全局文本样式滥用 `!important`**：
+   - 外部样式表（如 `assets/style.css`）中的 `h1–h5`、`label`、`.stMarkdown p` 等全局选择器**绝对禁止设置 `color: ... !important`**。
+   - 否则会导致外部样式直接击穿覆盖所有内联 HTML 卡片的文本颜色，在深色背景容器中造成致命的“黑底黑字”不可读缺陷。
+2. **显式锁定 Streamlit 原生主题**：
+   - 当项目采用特定主色调（如 Apple HIG 浅色主题）时，必须在 `.streamlit/config.toml` 中显式锁定 `[theme] base = "light"`，设置匹配的 `backgroundColor` 与 `secondaryBackgroundColor`。
+   - 彻底防止客户端操作系统或浏览器在深色模式（Dark Mode）下导致 Streamlit 原生 Canvas 表格（`st.dataframe`）、下拉单选框和弹窗变黑而与外部浅色 CSS 产生视觉割裂。
+3. **侧边栏结构保护**：
+   - 若要隐藏原生多页面列表，必须精确靶向 `[data-testid="stSidebarNav"] { display: none !important; }`。
+   - **绝对禁止全局隐藏 `[data-testid="stSidebar"]` 或其折叠控件**，确保 AI 副驾、全局设置以及模型调节面板可随时展开使用；且必须配置 `top: 52px` 避免与顶部导航栏冲突。
+4. **拒绝 UI 底层变量外露**：
+   - 面向规划师与学生的展示界面，严禁直接展示诸如 `stage_bus: 04_diagnosis_report`、`artifact: report` 等底层代码标识，必须映射为优雅的中文业务胶囊（如 `🔗 数据总线：空间诊断报告`、`📄 成果形态：图文报告`）。
+5. **高对比度双重核验**：
+   - 浅色毛玻璃背景上严格杜绝使用 `#e2e8f0` / `#f8fafc` 等浅白浅灰正文；深色卡片需配套独立 scoped 的高对比度文字样式。
+
+### 约束限制
+- 任何 UI 组件的文字与背景对比度必须满足 WCAG AA 级以上可读性标准。
+
+---
+
+## ⚡ Part 11: Multi-Agent Parallel File Boundary Isolation & Documentation Sync (并行智能体文件互斥切分与文档同步规范)
+
+### 触发条件
+当采用并行子智能体（Parallel Subagents）协同执行大规模重构、或完成关键开发里程碑准备提交时。
+
+### 执行动作
+1. **独占文件所有权切分（Exclusive File Ownership）**：
+   - 在启动并行 Subagents 前，必须在主智能体层面对所有涉及的文件进行严格的**排他性所有权切分**，确保同一文件在同一时间仅被一个子智能体持有写权限，杜绝 Git 写入冲突与覆盖。
+   - 每个子智能体在其独立范围完成后，必须执行对应模块的专项目标测试命令进行验证。
+2. **发布前说明文档全量同步**：
+   - 在执行 Git 提交前，必须主动检查并同步更新 4 份核心说明文档：
+     - `README.md` & `README_EN.md`：同步最新测试通过数量（如 356 项）、最新工作台架构与技术亮点；
+     - `CHANGELOG.md`：记录最新版本号、改动文件清单与核心突破；
+     - `docs/WORKFLOW.md`：保持操作步骤与当前页面结构（三大工作台）100% 对齐。
+3. **推送前预校验（Dry-run Verification）**：
+   - 在执行 `git push origin main` 之前，必须先在终端运行 `git push --dry-run origin main`，确认网络、鉴权凭据与分支映射无误后，再正式执行推送。
+
+### 约束限制
+- 严禁在未划分文件归属的情况下让多个 Subagents 并行修改同一批代码。
+- 重大重构完成后，严禁遗漏说明文档的同步更新。

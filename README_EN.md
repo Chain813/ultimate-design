@@ -6,11 +6,11 @@
 
 **AI-Powered Decision Support Platform for Urban Design & Micro-Renewal**
 
-*Streamlit Full-Stack Engine · Decoupled Data & Logic · 17 Logical Stages · 15 Physical Pages · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
+*Streamlit Full-Stack Engine · Decoupled Data & Logic · 17 Logical Stages · 3 Core Workbenches · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-239%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-356%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -30,7 +30,7 @@ UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform
 
 | Capability | Description |
 |---|---|
-| **17-Stage Streamlined Workflow** | 17 logical stages (00-16) physically consolidated into app.py + 14 sidebar pages, focusing on core design flow |
+| **3 Core Workbenches** | Consolidated into Spatial Diagnosis Sandbox, Multi-Agent & AIGC Studio, and Digital Guidelines & Delivery Hub, covering 17 logical stages (00-16) |
 | **26 Drawing Templates** | High-precision vector maps generated via Python and automatically assembled with standard A3 title blocks via PIL |
 | **GIS → AIGC Alignment** | Novel Vector→Raster→ControlNet pipeline eliminates spatial hallucination |
 | **Tri-Stakeholder Simulation** | LLM-driven Resident / Developer / Planner role-play with consensus radar output |
@@ -39,7 +39,10 @@ UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform
 | **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
 | **Auto-Scrolling Controller** | Resident screen-recording HUD widget at the bottom right corner supporting frame-level smooth pixel-scrolling and shortcuts |
 | **Auto Stage Summary Archiving**| Automatically extracts stage findings/methodologies and incrementally saves them in `output/stage_generation_report.md` sorted by stage order |
-| **239 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **356 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **Apple HIG Light Theme** | Implements Apple Human Interface Guidelines (#f5f5f7 / #ffffff) with glassmorphism blur and collapsible AI Copilot |
+| **Contextual Hybrid RAG** | Document-level contextual chunker, parent-child retrieval, BM25 + dense vector search with 100% vector store preservation |
+| **Platform Skills & Rules** | Standardized [SKILLS.md](./SKILLS.md) at root defining legal DB persistence, CSS contrast safety, and multi-agent standards |
 
 ---
 

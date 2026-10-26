@@ -6,11 +6,11 @@
 
 **AI 赋能下的城市设计与微更新规划决策支持平台**
 
-*Streamlit 全栈引擎 · 数据与逻辑解耦 · 17 逻辑阶段 · 15 物理页面 · AIGC 空间对齐制图管线 · 端到端循证工作流*
+*Streamlit 全栈引擎 · 数据与逻辑解耦 · 17 逻辑阶段 · 3 核心工作台 · AIGC 空间对齐制图管线 · 端到端循证工作流*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-239%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-356%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -30,7 +30,7 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 
 | 能力 | 说明 |
 |---|---|
-| **17 阶段精简工作流** | 包含 17 个逻辑阶段 (00-16)，物理上合并为主入口 app.py 及 14 个侧边栏功能页面 |
+| **三大核心工作台** | 物理上收敛为全息空间诊断沙盘、多主体博弈与AIGC工坊、数字图则与工程交付枢纽三大工作台，承载 17 个标准化逻辑阶段 (00-16) |
 | **26 张专业图纸模板** | 基于 Python 空间矢量绘图与 PIL 自动排版引擎，高精度生成符合国标与工程规范 of A3 图册 |
 | **GIS → AIGC 空间对齐** | 首创「矢量→光栅→ControlNet」管线，消除 AI 制图的空间幻觉 |
 | **DesignContext 设计纲要** | 统一提取 19 个阶段 AI 文本输出，LLM 合成结构化设计纲要，驱动图纸生产 |
@@ -40,7 +40,10 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 | **后台缓存预加载** | daemon 线程静默预热 37MB GeoJSON、RAG 模型等，页面切换秒开 |
 | **引擎懒加载** | `__getattr__` 模式延迟加载 pandas/numpy/PIL，启动速度提升 |
 | **录屏自动滑动组件** | 页面右下角常驻防穿帮录屏控制器，支持帧率级平滑像素滚动与快捷键交互 |
-| **239 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **356 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **Apple HIG 浅色设计** | 遵循 Apple 人机交互指南（#f5f5f7 / #ffffff），全站高对比度与毛玻璃质感，内置可折叠 AI 规划副驾 |
+| **408-helper 级 RAG 架构** | 文档级上下文增强切片（Contextual Chunker）、父子块追溯、BM25 + 密集向量双路召回，100% 保留国家政策法规知识库 |
+| **专属研发规范与技能** | 根目录配备 [SKILLS.md](./SKILLS.md)，固化法规库持久化、CSS 对比度安全与多智能体并行守则 |
 
 ---
 

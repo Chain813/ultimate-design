@@ -2,6 +2,31 @@
 
 本项目所有的核心重构与功能更新将记录在此。
 
+## [v6.4.0] - 2026-10-26
+### 🚀 Apple HIG 浅色视觉重构、408-helper 级 RAG 架构升级与零预设全流程闭环 (v6.4 Major Upgrade)
+
+**Apple HIG Light 浅色设计系统与前端对比度全面修复 (Apple HIG Light Theme & Contrast Overhaul)**
+* **消除黑底黑字与全局样式冲突**：全面移除 `assets/style.css` 中 `h1–h5` 与 `label, .stMarkdown p` 上的全局 `color: ... !important` 强行覆盖规则，将基地导入面板、项目配置向导、API 密钥引导卡片全面升级为 Apple HIG 浅色优雅卡片；
+* **消除白底白字低对比度隐患**：重构 `src/ui/module_summary.py` 的 AI 阶段小结卡片，将浅底近白字修正为高对比度深绿与炭黑文本（`#047857` / `#1d1d1f`）；更新跨阶段证据链状态条与 3D 沙盘白底 Tooltip 文本色系；
+* **恢复可折叠侧边栏与 AI 规划副驾**：解除了 `assets/style.css` 对 `[data-testid="stSidebar"]` 的永久屏蔽，增加顶部 `52px` 避让偏移与 Apple 磨砂毛玻璃背景，确保 AI 规划副驾、大模型切换与全局设置随手可用；
+* **Stage 04 AHP 权重滑块主面板化**：将 `w_poi`、`w_soc`、`w_env` 三维动态滑块从侧边栏移入主工作区面板，结合 `#0071e3` 高清 LaTeX 公式，实现更新潜力（MPI）的实时动态推演；
+* **原生主题锁定与胶囊分段控制器**：在 `.streamlit/config.toml` 中显式锁定 `[theme] base = "light"`，彻底杜绝操作系统 Dark Mode 导致的 Streamlit 原生表格变黑污染；将工作台导航升级为 macOS/iOS 浅灰轨道 + 纯白悬浮选中胶囊；
+* **消除深色孤岛**：将首页三大核心模块 SVG 流程图、工作台一候选地块栏与 16 类资产卡片、靶向地块锁定卡片统一为 Apple Light 风格。
+
+**408-helper 级 RAG 上下文切片与混合检索架构 (Contextual Chunker & Hybrid RAG)**
+* **借鉴与架构迁移**：吸收 `408-helper` 的文档级上下文分块架构，新增 `src/engines/contextual_chunker.py`，实现结构化文档的大块切分与上下文前缀动态注入；
+* **法规向量库 100% 保留与地区无关性**：严格保持既有政策法规向量库的向前兼容性，新旧切片并行检索，实现 BM25 稀疏关键词 + 密集向量的双路召回与多轮查询意图重写；
+* **维护工具增强**：升级 `tools/rebuild_rag.py`，支持带上下文富文本的索引离线预编译与增量维护。
+
+**三大工作台深度收敛与全流程数据总线闭环 (3 Core Workbenches & Stage Data Bus)**
+* **物理架构深度断舍离**：将原 14 个散装侧边栏页面深度重构并收敛为三大核心工作台：`01_全息空间诊断与数据沙盘`、`02_多主体博弈与空间AIGC工坊`、`03_数字图则与工程交付枢纽`；
+* **全流程数据总线贯通**：升级 `src/workflow/stage_data_bus.py`，打通 Stage 04–13 及 15 的全生命周期状态流转与审批门禁，支持 CAD 综合指标与图文报告一键打包交付；
+* **规范中文成果标识**：在 `src/stages/common/workspace.py` 中将底层技术键名转化为面向城乡规划师与学生的规范中文成果形态标签。
+
+**测试套件扩充与专属研发规范固化 (356 Unit Tests & SKILLS.md)**
+* **自动化测试大扩充**：编写并新增了 `test_rag_hybrid_upgrade.py`、`test_custom_site_pipeline.py`、`test_deliverables_and_report.py` 与 `test_workbench_routing_and_stages.py`，测试用例由 239 项大幅扩充至 **356 项，达成 100% PASSED**；
+* **专属规范固化至根目录**：将平台专属研发规范同步复制至根目录 [**`SKILLS.md`**](./SKILLS.md)，正式收录 RAG 法规库跨项目永久保留规范、Streamlit 样式层叠与对比度守则、多智能体互斥切分交付标准。
+
 ## [v6.0.0] - 2026-07-28
 ### 🚀 路由单一真理源重构、API Key 静默校验与空间句法引擎扩展 (v6.0 Major Upgrade)
 
