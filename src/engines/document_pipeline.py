@@ -496,14 +496,14 @@ def _get_plot_names() -> list:
 
     # 1. 优先从自定义接入场地或 get_active_candidate_plots 获取
     try:
-        import streamlit as st
+        from src.core.runtime_adapter import get_state
         from src.ui.site_ingestion_panel import get_active_candidate_plots, load_custom_site
 
         is_mocked = (
             hasattr(get_active_candidate_plots, "_mock_name")
             or getattr(get_active_candidate_plots, "__module__", "") != "src.ui.site_ingestion_panel"
         )
-        has_custom = bool(st.session_state.get("custom_site_context") or load_custom_site())
+        has_custom = bool(get_state("custom_site_context") or load_custom_site())
         if is_mocked or has_custom:
             cand_plots = get_active_candidate_plots() or []
             cand_names = [

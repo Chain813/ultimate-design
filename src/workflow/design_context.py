@@ -22,6 +22,7 @@ from typing import Optional
 
 import streamlit as st
 
+from src.core.runtime_adapter import runtime_state
 from src.workflow.stage_keys import SK
 
 logger = logging.getLogger("ultimateDESIGN")
@@ -184,7 +185,8 @@ def build_design_context() -> DesignContext:
     ctx.landscape_style = str(_load_from("09", SK.LANDSCAPE_STYLE, ""))
 
     # Stage 10 — 地块数据使用动态 key
-    bus = st.session_state.get("stage_bus", {})
+    from src.workflow.stage_data_bus import get_stage_bus
+    bus = get_stage_bus()
     for key, val in bus.items():
         if key.startswith("10_"):
             parts = key.split("_", 1)

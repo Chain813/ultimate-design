@@ -54,10 +54,11 @@ _KEY_MAP = {
 }
 
 def _load_custom_site_json() -> dict:
-    """加载当前激活的自定义场地配置（session_state > config/custom_site.json）。"""
+    """加载当前激活的自定义场地配置（runtime_state/session_state > config/custom_site.json）。"""
     try:
-        import streamlit as st
-        cs = st.session_state.get("custom_site_context")
+        from src.core.runtime_adapter import get_state
+
+        cs = get_state("custom_site_context")
         if cs and isinstance(cs, dict):
             return cs
     except Exception:

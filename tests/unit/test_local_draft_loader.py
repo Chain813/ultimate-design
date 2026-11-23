@@ -1,6 +1,6 @@
 import os
 
-from src.engines.local_draft_loader import get_combined_references, load_document_from_draft
+from tools.archive.local_draft_loader import get_combined_references, load_document_from_draft
 
 
 def test_load_document_from_draft():

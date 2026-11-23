@@ -6,11 +6,13 @@
 
 **AI-Powered Decision Support Platform for Urban Design & Micro-Renewal**
 
-*Streamlit Full-Stack Engine · Decoupled Data & Logic · 17 Logical Stages · 3 Core Workbenches · GIS-to-AIGC Spatial Alignment · End-to-End Evidence-Based Workflow*
+*Electron + React 19 Native Desktop Studio & Streamlit Dual-Mode Engine · DuckDB Spatial + rustworkx Spatial Fusion · 17 Logical Stages · 3 Core Workbenches · GIS-to-AIGC Spatial Alignment*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
+[![Electron](https://img.shields.io/badge/Desktop-Electron%20%2B%20React%2019-47848F?logo=electron)](./desktop/)
+[![DuckDB Spatial](https://img.shields.io/badge/Spatial-DuckDB%20%2B%20rustworkx-FFF000?logo=duckdb)](./src/core/spatial_engine_v2.py)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-356%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-382%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -19,7 +21,7 @@
 
 ## 🌟 Project Overview
 
-UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring a **strict decoupling of data and logic**, it supports the import of planning plots for any city. The platform deconstructs urban renewal design into 17 standardized logical stages (00-16), streamlining a complete digital twin workflow: GIS Data Collection → LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
+UltimateDESIGN is a **Local Native Desktop Workstation (Electron + React 19 + MapLibre GL / Deck.GL + FastAPI + DuckDB Spatial & rustworkx) and Streamlit Dual-Mode Intelligent Decision Support Platform** tailored for urban planning and micro-renewal design. Featuring **ACID multi-project spatial workspaces (`workspace.duckdb`)** and a **strict decoupling of data and logic**, it supports lossless project creation and switching for any city. The platform deconstructs urban renewal design into 17 standardized logical stages (00-16), streamlining a complete digital twin workflow: Vectorized Multi-Source Spatial Fusion → Full-Network Space Syntax & LLM Evidence-Based Reasoning → Vector/Raster Mapping → AIGC Conceptual Redrawing → Intelligent Delivery.
 
 > 🎉 **New Feature: Out-of-the-Box Portable Version**
 > The platform now fully supports a fully isolated, portable packaging solution based on **WinPython 3.12+**. All environment dependencies and underlying GIS C++ dynamic libraries are encapsulated within a single folder. Coupled with the built-in `安装向导_UltimateDESIGN.bat` wizard, it enables one-click deployment, pollution-free independent execution, and automatic shortcut generation, drastically lowering the distribution barrier for non-technical designers.
@@ -39,7 +41,10 @@ UltimateDESIGN is a **Streamlit Full-Stack Intelligent Decision Support Platform
 | **HyperFrames Video** | One-click ~9 min defense video with 3D layered displays and GSAP animations |
 | **Auto-Scrolling Controller** | Resident screen-recording HUD widget at the bottom right corner supporting frame-level smooth pixel-scrolling and shortcuts |
 | **Auto Stage Summary Archiving**| Automatically extracts stage findings/methodologies and incrementally saves them in `output/stage_generation_report.md` sorted by stage order |
-| **356 Automated Tests** | Pytest + CI integration: lint / secret scan / smoke test / data quality check |
+| **Spatial Syntax & Morphometrics** | Full-network `rustworkx` multi-radius DepthMapX integration (R400m/R800m/Rn) & Brandes betweenness choice (eliminating the 300-segment cap) + Momepy BCR/FAR/SVF |
+| **DuckDB Spatial Fusion & MVT** | Embedded C++ SIMD spatial engine performing vectorized spatial joins across 110k+ buildings and streaming native `ST_AsMVT` vector tiles + binary Float32Array buffers to MapLibre GL & Deck.GL |
+| **sc-datav Dual-Monitor Bigscreen** | Dual-mode `sc-datav` dashboard & 3D sandbox with native Electron secondary-monitor pop-out window support |
+| **382 Automated Tests** | Pytest + CI integration (including desktop spatial engine v2, SPA bundle serving & FastAPI 7-router integration suite): lint / secret scan / smoke test / data quality check |
 | **Apple HIG Light Theme** | Implements Apple Human Interface Guidelines (#f5f5f7 / #ffffff) with glassmorphism blur and collapsible AI Copilot |
 | **Contextual Hybrid RAG** | Document-level contextual chunker, parent-child retrieval, BM25 + dense vector search with 100% vector store preservation |
 | **Platform Skills & Rules** | Standardized [SKILLS.md](./SKILLS.md) at root defining legal DB persistence, CSS contrast safety, and multi-agent standards |
@@ -160,13 +165,13 @@ streamlit run app.py
 # or double-click run.bat
 ```
 
-Navigate via the **top navigation bar**, stages `[00]` through `[14]`.
+Navigate via the **top navigation bar** across the **3 Core Workbenches** (covering 17 logical stages `00`–`16`).
 
 ### 🩺 3. Health Check
 
 ```powershell
-python -m pytest                    # 239 unit tests
-python tools/check_env.py           # 15-physical-page integrity check
+python -m pytest                    # 361 unit tests
+python tools/check_env.py           # 3 workbenches & 10 stage modules integrity check
 python tools/secret_scan.py         # Credential leak scan
 ```
 
@@ -242,8 +247,8 @@ Converts GeoJSON vector data into ControlNet guidance maps (road skeleton / land
 
 ```text
 ultimateDESIGN/
-├── app.py                              # Entry point / Home / Global map base (1 page)
-├── pages/                              # 14 physical page files (mapping to stages 00-16)
+├── app.py                              # Entry point / Home / Global map base (1 control hub)
+├── pages/                              # 3 core workbench physical pages (hosting stages 00-16)
 ├── src/
 │   ├── config/                         # YAML config / paths / runtime flags
 │   ├── engines/                        # AI & computation (NO UI code)
@@ -255,14 +260,16 @@ ultimateDESIGN/
 │   │   ├── engine_registry.py         #   AI engine registry
 │   │   ├── quality_assessor.py        #   Dual quality assessment
 │   │   ├── spatial_engine.py          #   GIS parsing / MPI / skyline
-│   │   └── ...                        #   (20 engine modules total)
+│   │   ├── spatial_syntax_engine.py   #   DepthMapX integration & Momepy morphometrics
+│   │   └── ...                        #   (20+ engine modules)
+│   ├── stages/                         # 10 standardized stage modules (stage04-stage16)
 │   ├── ui/                             # Streamlit components & theming
 │   ├── utils/                          # I/O, geo transform, service checks
 │   └── workflow/                       # 17-stage state machine (00-16) & data bus
 ├── scripts/                            # Automation (data fetch / GIS render)
 ├── tools/                              # DevOps (env check / secret scan / QA)
 │   ├── drawings/                      #   A3 layout rendering modules (dr_004.py ~ dr_slow_traffic.py)
-├── tests/                              # 40 modules / 238 test cases
+├── tests/                              # 67 modules / 361 test cases
 ├── data/                               # Spatial & tabular assets (decoupled)
 └── .github/workflows/ci.yml           # CI pipeline
 ```

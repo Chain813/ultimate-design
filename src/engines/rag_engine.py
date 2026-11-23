@@ -35,6 +35,7 @@ import streamlit as st
 
 from src.config.loader import load_global_config, load_rag_knowledge
 from src.config.runtime import resolve_path
+from src.core.runtime_adapter import cache_data, cache_resource
 from src.engines.contextual_chunker import (
     AcademicContextualChunker,
     clean_pdf_noise,
@@ -224,7 +225,7 @@ def classify_chunk_scope(source: str, content: str = "", explicit_scope: str = "
 # ─────────────────────────────────────────────────────────────
 # 4. 原生 BGE 向量嵌入接口 (100% 保持向后兼容)
 # ─────────────────────────────────────────────────────────────
-@st.cache_resource
+@cache_resource
 def load_bge_micro_model():
     """Lazily load BAAI/bge-micro-zh-v4 for vector retrieval."""
     try:
@@ -242,7 +243,7 @@ def load_bge_micro_model():
         return None, None
 
 
-@st.cache_resource
+@cache_resource
 def get_cached_db_embeddings():
     """Pre-compute and cache vector embeddings for all RAG chunks."""
     rag_db = load_rag_knowledge()
@@ -569,7 +570,7 @@ def _u_shaped_packing(chunks: List[Tuple[float, str, str]]) -> List[Tuple[float,
 # ─────────────────────────────────────────────────────────────
 # 7. 主检索入口 (Scope-Aware Hybrid RRF Retrieval)
 # ─────────────────────────────────────────────────────────────
-@st.cache_data(ttl=600)
+@cache_data(ttl=600)
 def retrieve_rag_context(query: str, top_k: int = 3) -> list:
     """Retrieve top-k most relevant regulation chunks using Scope-Aware Hybrid RRF (k=60).
 

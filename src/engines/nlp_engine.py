@@ -12,11 +12,12 @@ import pandas as pd
 import streamlit as st
 
 from src.config import DATA_FILES, resolve_path
+from src.core.runtime_adapter import cache_data, cache_resource
 
 logger = logging.getLogger("ultimateDESIGN")
 
 
-@st.cache_resource
+@cache_resource
 def _load_sentiment_lexicon() -> tuple[frozenset, frozenset]:
     """Fast sentiment dictionary tuned for urban-planning corpora."""
     pos_words = frozenset({
@@ -100,7 +101,7 @@ def classify_sentiment(texts: list[str]) -> tuple[list[str], list[float]]:
     return labels, scores
 
 
-@st.cache_data(ttl=600)
+@cache_data(ttl=600)
 def get_nlp_data() -> tuple[pd.DataFrame, list[tuple[str, int]]]:
     """Load NLP raw data and compute sentiment + word cloud."""
     nlp_path = resolve_path(str(DATA_FILES["nlp"]))

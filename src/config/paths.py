@@ -100,6 +100,6 @@ PAGE_ROUTES = {
     "12": "/03_数字图则与工程交付枢纽?sub=guideline",
     "13": "/03_数字图则与工程交付枢纽?sub=delivery",
     "14": "/01_全息空间诊断与数据沙盘?sub=datav",
-    "15": "/02_多主体博弈与空间AIGC工坊?sub=aigc",
-    "16": "/03_数字图则与工程交付枢纽?sub=delivery",
+    "15": "/02_多主体博弈与空间AIGC工坊?sub=aigc_studio",
+    "16": "/03_数字图则与工程交付枢纽?sub=skill",
 }

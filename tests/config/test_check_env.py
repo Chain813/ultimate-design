@@ -26,15 +26,16 @@ def test_check_package_missing():
 
 
 def test_critical_files_includes_all_pages():
-    """Verify the critical_files list includes key pages."""
+    """Verify the critical_files list includes the 3 workbenches, stage modules, and bigscreen."""
     import tools.check_env as mod
 
     source = inspect.getsource(mod.main)
-    assert "pages/00_数据准备与任务解读.py" in source
-    assert "pages/15_AIGC设计推演.py" in source
-    assert "pages/02_资料收集与现场调研.py" in source
-    assert "pages/13_成果表达.py" in source
-    assert "pages/14_数据大屏.py" in source
+    assert "pages/01_全息空间诊断与数据沙盘.py" in source
+    assert "pages/02_多主体博弈与空间AIGC工坊.py" in source
+    assert "pages/03_数字图则与工程交付枢纽.py" in source
+    assert "src/stages/stage15_aigc/page.py" in source
+    assert "src/stages/stage16_skills/page.py" in source
+    assert "assets/datav_bigscreen.html" in source
 
 
 def test_main_returns_exit_code():

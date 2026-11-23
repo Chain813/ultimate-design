@@ -16,14 +16,15 @@ from shapely.geometry import shape
 
 from src.config import DATA_FILES, SHP_FILES
 from src.config.runtime import resolve_path
+from src.core.runtime_adapter import cache_data, get_state
 
 logger = logging.getLogger("ultimateDESIGN")
 
 
 def _load_custom_site_fallback() -> dict[str, Any]:
-    """Load custom_site.json or session_state['custom_site_context'] if active."""
+    """Load custom_site.json or runtime_state/session_state['custom_site_context'] if active."""
     try:
-        cs = st.session_state.get("custom_site_context")
+        cs = get_state("custom_site_context")
         if cs and isinstance(cs, dict):
             return cs
     except Exception:
@@ -57,7 +58,7 @@ def _compute_geodesic_area_m2(geom_dict: dict[str, Any]) -> float:
 # Cached heavy data loaders
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def _load_spatial_merge() -> pd.DataFrame:
     """Cache the expensive Excel + CSV merge used for GVI/SVF metrics."""
     try:
@@ -72,7 +73,7 @@ def _load_spatial_merge() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def _load_nlp_data() -> pd.DataFrame:
     """Cache NLP sentiment CSV."""
     try:
@@ -120,7 +121,7 @@ def _diagnostics_from_candidate_plots(candidate_plots: list[dict[str, Any]], glo
     return results
 
 
-@st.cache_data(ttl=600)
+@cache_data(ttl=600)
 def get_plot_diagnostics() -> list:
     """Multi-dimensional diagnosis for each key plot.
 
@@ -285,7 +286,7 @@ def _spatial_means_in_bbox_vec(coords_tuple, col_arrays, bbox):
 # Policy compliance matrix
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@cache_data(ttl=1800, show_spinner=False)
 def generate_policy_matrix(proposal: str) -> list:
     """Retrieve relevant policy clauses and annotate compliance.
 

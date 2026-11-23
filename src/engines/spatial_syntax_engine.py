@@ -14,6 +14,8 @@ import pandas as pd
 import streamlit as st
 from shapely.geometry import LineString, Point, Polygon
 
+from src.core.runtime_adapter import cache_resource
+
 try:
     from scipy.sparse.csgraph import floyd_warshall as _scipy_floyd_warshall
 except Exception:
@@ -297,7 +299,7 @@ class SpatialSyntaxEngine:
         }
 
 
-@st.cache_resource
+@cache_resource
 def get_spatial_syntax_engine() -> SpatialSyntaxEngine:
     """Return a cached singleton instance of SpatialSyntaxEngine."""
     return SpatialSyntaxEngine()

@@ -12,6 +12,8 @@ from pathlib import Path
 
 import streamlit as st
 
+from src.core.runtime_adapter import delete_state, get_state, runtime_state, set_state
+
 LOG_FILE = Path("logs/llm_usage.json")
 
 def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, latency: float):
@@ -34,12 +36,17 @@ def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, lat
         "total_tokens": total_tokens,
     }
     
-    # Store in Streamlit session state for live update (cap at 100 entries)
-    if "llm_metrics" not in st.session_state:
-        st.session_state["llm_metrics"] = []
-    st.session_state["llm_metrics"].append(record)
-    if len(st.session_state["llm_metrics"]) > 100:
-        st.session_state["llm_metrics"] = st.session_state["llm_metrics"][-100:]
+    # Store in runtime state / Streamlit session state for live update (cap at 100 entries)
+    st_state = getattr(st, "session_state", None)
+    if isinstance(st_state, dict) and "llm_metrics" not in st_state:
+        delete_state("llm_metrics")
+    if "llm_metrics" not in runtime_state or not isinstance(get_state("llm_metrics"), list):
+        set_state("llm_metrics", [])
+    metrics_list = list(get_state("llm_metrics") or [])
+    metrics_list.append(record)
+    if len(metrics_list) > 100:
+        metrics_list = metrics_list[-100:]
+    set_state("llm_metrics", metrics_list)
     
     # Persist to disk
     try:
@@ -61,13 +68,17 @@ def log_llm_call(model: str, system_prompt: str, prompt: str, response: str, lat
 
 def get_llm_metrics():
     """Retrieve all LLM metrics from session state and disk."""
-    if st.session_state.get("llm_metrics"):
-        return st.session_state["llm_metrics"]
+    st_state = getattr(st, "session_state", None)
+    if isinstance(st_state, dict) and "llm_metrics" not in st_state:
+        delete_state("llm_metrics")
+    cached = get_state("llm_metrics")
+    if cached:
+        return cached
         
     if LOG_FILE.exists():
         try:
             records = json.loads(LOG_FILE.read_text(encoding="utf-8"))
-            st.session_state["llm_metrics"] = records
+            set_state("llm_metrics", records)
             return records
         except Exception:
             pass

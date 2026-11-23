@@ -6,19 +6,18 @@ Usage:
 
 import json
 import logging
+import urllib.parse
 
 import streamlit as st
 import yaml
 
 from src.config.runtime import resolve_path
+from src.core.runtime_adapter import cache_resource
 
 logger = logging.getLogger("ultimateDESIGN")
 
 
-import urllib.parse
-
-
-@st.cache_resource
+@cache_resource
 def load_global_config() -> dict:
     """Load config.yaml as a cached resource."""
     config = {}
@@ -49,11 +48,8 @@ def load_global_config() -> dict:
     return config
 
 
-@st.cache_resource
-def load_rag_knowledge() -> dict:
-    """Load the RAG knowledge base JSON as a cached resource."""
-    config = load_global_config()
-    rag_path_key = config.get("data", {}).get("rag_knowledge_path", "data/rag_knowledge.json")
+@cache_resource
+def _load_rag_knowledge_by_path(rag_path_key: str) -> dict:
     try:
         rag_path = resolve_path(rag_path_key)
         with rag_path.open("r", encoding="utf-8") as f:
@@ -61,3 +57,13 @@ def load_rag_knowledge() -> dict:
     except Exception:
         logger.warning("RAG knowledge file not found: %s", rag_path_key, exc_info=True)
         return {}
+
+
+def load_rag_knowledge() -> dict:
+    """Load the RAG knowledge base JSON as a cached resource."""
+    config = load_global_config()
+    rag_path_key = config.get("data", {}).get("rag_knowledge_path", "data/rag_knowledge.json")
+    return _load_rag_knowledge_by_path(rag_path_key)
+
+
+load_rag_knowledge.clear = _load_rag_knowledge_by_path.clear  # type: ignore[attr-defined]

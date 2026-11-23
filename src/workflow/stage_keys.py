@@ -11,6 +11,9 @@ Usage:
 
 class SK:
     """Stage Keys — 阶段数据总线键名常量"""
+    # Stage 04 现状分析
+    SPATIAL_SYNTAX = "spatial_syntax"
+
     # Stage 05 问题诊断
     DIAGNOSIS_REPORT = "diagnosis_report"
     MPI_RANKING = "mpi_ranking"

@@ -1,0 +1,74 @@
+{
+  "name": "ultimatedesign-desktop",
+  "version": "7.0.0",
+  "description": "UltimateDESIGN v7.0 Local Native Urban Design & Renewal Desktop Workstation",
+  "author": "UltimateDESIGN Team",
+  "main": "main.cjs",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "pack:dir": "electron-builder --win dir",
+    "pack:nsis": "electron-builder --win nsis",
+    "pack:all": "electron-builder --win dir nsis"
+  },
+  "build": {
+    "appId": "com.ultimatedesign.studio",
+    "productName": "UltimateDESIGN",
+    "copyright": "Copyright © 2026 UltimateDESIGN Urban Renewal Studio",
+    "asar": true,
+    "compression": "normal",
+    "directories": {
+      "buildResources": "build",
+      "output": "../../release"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "package.json",
+      "build/icon.ico",
+      "build/icon.png",
+      "frontend-dist/**/*"
+    ],
+    "fileAssociations": [
+      {
+        "ext": "udproj",
+        "name": "UltimateDESIGN 城市更新工程文件",
+        "description": "UltimateDESIGN Urban Renewal Spatial Workspace",
+        "role": "Editor"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "executableName": "UltimateDESIGN",
+      "requestedExecutionLevel": "asInvoker",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "UltimateDESIGN",
+      "artifactName": "UltimateDESIGN-Setup-${version}-x64.exe"
+    }
+  },
+  "devDependencies": {
+    "electron": "^35.0.0",
+    "electron-builder": "^26.8.1"
+  }
+}

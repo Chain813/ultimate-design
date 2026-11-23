@@ -18,6 +18,7 @@ __all__ = [
     "QualityAssessor",
     "SDPipeline",
     "SDResult",
+    "SpatialSyntaxEngine",
     "VersionStore",
     "build_expansion_prompt",
     "build_guideline_prompt",
@@ -33,6 +34,7 @@ __all__ = [
     "get_plot_diagnostics",
     "get_skyline_features",
     "get_spatial_data",
+    "get_spatial_syntax_engine",
     "is_demo_mode",
     "load_bge_micro_model",
     "load_global_config",
@@ -71,6 +73,8 @@ _LAZY_IMPORTS = {
     "call_llm_engine_stream": "src.engines.llm_engine",
     "generate_policy_matrix": "src.engines.site_diagnostic_engine",
     "get_plot_diagnostics": "src.engines.site_diagnostic_engine",
+    "SpatialSyntaxEngine": "src.engines.spatial_syntax_engine",
+    "get_spatial_syntax_engine": "src.engines.spatial_syntax_engine",
 }
 
 

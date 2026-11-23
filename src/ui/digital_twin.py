@@ -12,9 +12,10 @@ except ModuleNotFoundError:
 
 from src.config import DATA_FILES, GIS_FILES, STATIC_DIR
 from src.config import get_map_viewport as _base_get_map_viewport
-from src.config import get_static_url
+from src.config import get_site_name, get_static_url
 from src.config.runtime import resolve_path
 from src.engines.spatial_engine import get_hud_statistics, get_merged_poi_data, get_skyline_features
+from src.utils.runtime_flags import is_mobile_client
 
 
 def get_map_viewport() -> dict:
@@ -334,3 +335,145 @@ def render_digital_twin_map(height=650, key_suffix=""):
         components.html(html_template, height=height, scrolling=False)
     except Exception as e:
         st.error(f"地图组件核心加载失败: {e!s}")
+
+
+@st.cache_data(ttl=3600, max_entries=20)
+def _collect_datav_payload_cached(
+    site_name: str,
+    lu_path_str: str,
+    lu_mtime: float,
+    b_path_str: str,
+    b_mtime: float,
+    bnd_path_str: str,
+    bnd_mtime: float,
+) -> dict:
+    """一次性采集 sc-datav 大屏所需全部指标与图表数据，按基地名称与文件mtime缓存。"""
+    stats = get_hud_statistics()
+    skyline = get_skyline_features()
+
+    poi_list = []
+    try:
+        poi_df = get_merged_poi_data()
+        if not poi_df.empty and all(c in poi_df.columns for c in ("Name", "Lng", "Lat")):
+            poi_list = poi_df[["Name", "Lng", "Lat"]].head(80).to_dict(orient="records")
+    except Exception:
+        poi_list = []
+
+    landuse_chart = []
+    try:
+        import geopandas as gpd
+
+        lu_path = Path(lu_path_str)
+        if lu_path.exists():
+            gdf = gpd.read_file(str(lu_path))
+            type_col = next(
+                (c for c in ("Type", "type", "land_type", "landuse", "land_use") if c in gdf.columns),
+                None,
+            )
+            if type_col:
+                counts = gdf[type_col].astype(str).value_counts().head(8)
+                landuse_chart = [{"name": str(k), "value": int(v)} for k, v in counts.items()]
+    except Exception:
+        pass
+
+    height_chart = []
+    try:
+        import geopandas as gpd
+
+        b_path = Path(b_path_str)
+        bnd_path = Path(bnd_path_str)
+        if b_path.exists():
+            bbox = None
+            if bnd_path.exists():
+                try:
+                    bnd_gdf = gpd.read_file(str(bnd_path))
+                    if not bnd_gdf.empty:
+                        bbox = tuple(float(v) for v in bnd_gdf.total_bounds)
+                except Exception:
+                    bbox = None
+            try:
+                gdf = gpd.read_file(str(b_path), bbox=bbox) if bbox else gpd.read_file(str(b_path))
+            except Exception:
+                gdf = gpd.read_file(str(b_path))
+            col = next(
+                (c for c in ("Floor", "floor", "levels", "building:levels", "height", "Height") if c in gdf.columns),
+                None,
+            )
+            if col:
+                vals = pd.to_numeric(gdf[col], errors="coerce").dropna()
+                heights = vals if col in ("height", "Height") else vals * 3.5
+                bins = [0, 7, 14, 24, 50, 200]
+                labels = ["≤2F", "3-4F", "5-7F", "8-14F", "15F+"]
+                cats = pd.cut(heights, bins=bins, labels=labels)
+                vc = cats.value_counts().reindex(labels, fill_value=0)
+                height_chart = [{"name": str(n), "value": int(v)} for n, v in vc.items()]
+    except Exception:
+        pass
+
+    return {
+        "boundary_ha": stats.get("boundary_ha", "~170"),
+        "building_count": skyline.get("building_count", 0),
+        "poi_count": stats.get("poi_count", "N/A"),
+        "gvi_count": stats.get("gvi_count", "N/A"),
+        "max_height": skyline.get("max_height", 0),
+        "avg_height": skyline.get("avg_height", 0),
+        "high_rise_ratio": skyline.get("high_rise_ratio", 0),
+        "poi_list": poi_list,
+        "landuse_chart": landuse_chart,
+        "height_chart": height_chart,
+    }
+
+
+def collect_datav_payload() -> dict:
+    """采集当前激活基地的 sc-datav 综合大屏统计载荷。"""
+    lu_path = resolve_path(str(GIS_FILES["landuse"]))
+    b_path = resolve_path(str(GIS_FILES["buildings"]))
+    bnd_path = resolve_path(str(GIS_FILES["boundary"]))
+    return _collect_datav_payload_cached(
+        site_name=get_site_name(),
+        lu_path_str=str(lu_path),
+        lu_mtime=lu_path.stat().st_mtime if lu_path.exists() else 0.0,
+        b_path_str=str(b_path),
+        b_mtime=b_path.stat().st_mtime if b_path.exists() else 0.0,
+        bnd_path_str=str(bnd_path),
+        bnd_mtime=bnd_path.stat().st_mtime if bnd_path.exists() else 0.0,
+    )
+
+
+def render_datav_bigscreen(height_desktop: int = 880, height_mobile: int = 1650) -> None:
+    """渲染 sc-datav 风格全屏数据可视化看板（桌面与移动端响应式自适应）。"""
+    template_path = resolve_path("assets/datav_bigscreen.html")
+    if not template_path.exists():
+        st.error("大屏模板文件 assets/datav_bigscreen.html 不存在。")
+        return
+
+    payload = collect_datav_payload()
+    bound_data_json = json.dumps(load_map_data(str(resolve_path(str(GIS_FILES["boundary"]))))) or "null"
+    plots_data_json = json.dumps(load_map_data(str(resolve_path(str(GIS_FILES["plots"]))))) or "null"
+    building_url = _versioned_static_url("buildings.geojson")
+
+    html = template_path.read_text(encoding="utf-8")
+    html = html.replace("/*__SITE_NAME__*/", get_site_name())
+    html = html.replace(
+        '/*__DV_MAP_CONFIG__*/{"center": [125.34064, 43.90095], "zoom": 14.4, "pitch": 65.0, "bearing": 30.0}/*__END_MAP_CONFIG__*/',
+        json.dumps(get_map_viewport()),
+    )
+    html = html.replace("/*__DV_STATS__*/null/*__END__*/", json.dumps(payload, ensure_ascii=False))
+    html = html.replace("/*__DV_BOUNDARY__*/null/*__END__*/", bound_data_json)
+    html = html.replace("/*__DV_PLOTS__*/null/*__END__*/", plots_data_json)
+    html = html.replace("/*__DV_BUILDING_URL__*/null/*__END__*/", json.dumps(building_url))
+
+    is_mobile = is_mobile_client()
+    st.markdown(
+        """<style>
+        iframe[title="streamlit_app.components.v1.html"]{border:none !important; border-radius:16px !important;}
+        @media (max-width: 768px) {
+            iframe[title="streamlit_app.components.v1.html"] {
+                height: 1650px !important;
+            }
+        }
+        </style>""",
+        unsafe_allow_html=True,
+    )
+    iframe_height = height_mobile if is_mobile else height_desktop
+    components.html(html, height=iframe_height, scrolling=is_mobile)

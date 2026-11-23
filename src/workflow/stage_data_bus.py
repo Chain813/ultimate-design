@@ -14,6 +14,7 @@ from pathlib import Path
 import streamlit as st
 
 from src.config.runtime import resolve_path
+from src.core.runtime_adapter import delete_state, get_state, runtime_state, set_state
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -293,15 +294,29 @@ def _load_cache_from_disk() -> dict:
 
 
 def _bus() -> dict:
-    if "stage_bus" not in st.session_state:
-        st.session_state["stage_bus"] = _load_cache_from_disk()
-    return st.session_state["stage_bus"]
+    st_state = getattr(st, "session_state", None)
+    if isinstance(st_state, dict) and "stage_bus" not in st_state:
+        delete_state("stage_bus")
+    if "stage_bus" not in runtime_state or not isinstance(get_state("stage_bus"), dict):
+        set_state("stage_bus", _load_cache_from_disk())
+    return runtime_state["stage_bus"]
+
+
+def get_stage_bus() -> dict:
+    """返回当前活动工程的跨阶段数据总线字典。"""
+    return _bus()
+
+
+def clear_stage_bus() -> None:
+    """清空当前活动工程的内存跨阶段数据总线。"""
+    set_state("stage_bus", {})
 
 
 def save_stage_output(stage_code: str, key: str, data):
     """将本阶段的产出存入总线，供下游阶段读取。"""
     bus_dict = _bus()
     bus_dict[f"{stage_code}_{key}"] = data
+    set_state("stage_bus", bus_dict)
     _save_cache_to_disk(bus_dict)
 
 
@@ -610,10 +625,10 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
     if current_stage != "00":
         with st.expander("📋 AI 规划管线交接说明", expanded=False):
             cache_key = f"transition_summary_{current_stage}"
-            if cache_key not in st.session_state:
-                st.session_state[cache_key] = ""
+            if cache_key not in runtime_state:
+                set_state(cache_key, "")
                 
-            if st.session_state[cache_key] == "":
+            if get_state(cache_key, "") == "":
                 c1, c2 = st.columns([3, 1])
                 with c1:
                     st.caption("✨ AI 正在自动分析上游所有阶段的产出数据，提炼核心结论与本阶段的设计任务红线。")
@@ -621,12 +636,12 @@ def render_evidence_chain_bar(current_stage: str, required_stages: list[str]):
                     if st.button("🧠 提取并生成行动指南", key=f"btn_transition_{current_stage}", use_container_width=True):
                         with st.spinner("AI 正在深度解析上游决策链条..."):
                             summary = generate_stage_transition_summary(current_stage)
-                            st.session_state[cache_key] = summary
+                            set_state(cache_key, summary)
                             st.rerun()
             else:
-                st.markdown(st.session_state[cache_key])
+                st.markdown(get_state(cache_key, ""))
                 if st.button("🔄 重新提取生成", key=f"btn_re_transition_{current_stage}"):
-                    st.session_state[cache_key] = ""
+                    set_state(cache_key, "")
                     st.rerun()
 
 

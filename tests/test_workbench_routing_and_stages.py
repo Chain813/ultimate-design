@@ -103,10 +103,10 @@ def test_workbench_route_mappings_for_all_three_workbenches() -> None:
     assert "stage_bus_cache.json" in app_text
 
 
-def test_legacy_stage15_aigc_studio_root_and_custom_site(monkeypatch) -> None:
+def test_stage15_and_stage16_modules_root_and_custom_site(monkeypatch) -> None:
     st.session_state["_embedded_mode"] = True
     try:
-        spec = importlib.util.spec_from_file_location("stage15_mod", ROOT / "src/legacy_pages/15_AIGC设计推演.py")
+        spec = importlib.util.spec_from_file_location("stage15_mod", ROOT / "src/stages/stage15_aigc/page.py")
         assert spec and spec.loader
         mod15 = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(mod15)
@@ -120,6 +120,16 @@ def test_legacy_stage15_aigc_studio_root_and_custom_site(monkeypatch) -> None:
         assert "长春水产大市场" not in desc
         assert "伊通河" not in desc
         assert "南锣鼓巷更新片区" in desc
+
+        from src.stages.stage16_skills import page as mod16
+
+        assert callable(mod16.render_page)
+        scenarios = mod16.get_skill_conflict_scenarios("南锣鼓巷更新片区", "北京市")
+        joined = " ".join(scenarios.keys()) + " ".join(scenarios.values())
+        assert "伪满皇宫" not in joined
+        assert "伊通河" not in joined
+        assert "长春站" not in joined
+        assert "南锣鼓巷更新片区" in joined
     finally:
         st.session_state.pop("_embedded_mode", None)
 

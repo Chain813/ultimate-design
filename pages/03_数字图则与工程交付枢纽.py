@@ -7,8 +7,6 @@
 4. 制图与设计智能体 Skill 规范手册 (原 Stage 16)
 """
 
-from pathlib import Path
-
 import streamlit as st
 
 st.set_page_config(page_title="03 数字图则与工程交付枢纽", layout="wide", initial_sidebar_state="collapsed")
@@ -19,6 +17,7 @@ from src.stages.stage13_outputs.page import render_page as render_stage13_page
 from src.stages.stage12_guideline.page import render_page as render_stage12_page
 from src.stages.stage09_systems.page import render_page as render_stage09_page
 from src.stages.stage11_implementation.page import render_page as render_stage11_page
+from src.stages.stage16_skills.page import render_page as _render_stage16_skills_page
 
 
 WB3_OPTIONS = [
@@ -71,18 +70,8 @@ WB3_PARAM_TO_OPTION = {
 
 
 def render_stage16_page() -> None:
-    """安全嵌入执行 Stage 16 制图与设计智能体 Skill 手册，拦截内部重复的 st.set_page_config。"""
-    orig_set_page_config = st.set_page_config
-    try:
-        st.set_page_config = lambda *args, **kwargs: None
-        skill_page_path = Path(__file__).resolve().parents[1] / "src" / "legacy_pages" / "16_制图与设计智能体Skill手册.py"
-        if skill_page_path.exists():
-            code = compile(skill_page_path.read_text(encoding="utf-8"), str(skill_page_path), "exec")
-            exec(code, {"__name__": "__main__", "__file__": str(skill_page_path)})
-        else:
-            st.error(f"未找到 Stage 16 页面文件: {skill_page_path}")
-    finally:
-        st.set_page_config = orig_set_page_config
+    """执行 Stage 16 制图与设计智能体 Skill 手册页面。"""
+    _render_stage16_skills_page()
 
 
 def main():

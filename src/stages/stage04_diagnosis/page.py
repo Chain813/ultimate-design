@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -290,6 +291,234 @@ def render_target_plot_card(target_plot: dict[str, Any]) -> None:
 
 
 # ═══════════════════════════════════════════════════════════════
+# 1.5 空间句法与街区形态学量化测度接口
+# ═══════════════════════════════════════════════════════════════
+
+@st.cache_data(ttl=3600, max_entries=16)
+def _run_site_spatial_syntax_cached(
+    roads_path_str: str,
+    roads_mtime: float,
+    buildings_path_str: str,
+    buildings_mtime: float,
+    boundary_path_str: str,
+    boundary_mtime: float,
+    max_road_segments: int = 300,
+) -> dict[str, Any]:
+    """Cached implementation for DepthMapX spatial syntax & Momepy morphometrics."""
+    import geopandas as gpd
+
+    from src.engines.spatial_syntax_engine import (
+        _project_to_metric_gdf,
+        get_spatial_syntax_engine,
+    )
+
+    engine = get_spatial_syntax_engine()
+
+    boundary_gdf = gpd.GeoDataFrame()
+    site_area_m2: float | None = None
+    boundary_bbox = None
+    b_path = Path(boundary_path_str) if boundary_path_str else None
+    if b_path and b_path.exists():
+        try:
+            boundary_gdf = gpd.read_file(str(b_path))
+            if not boundary_gdf.empty:
+                boundary_gdf = boundary_gdf[
+                    boundary_gdf.geometry.notna() & ~boundary_gdf.geometry.is_empty
+                ].copy()
+            if not boundary_gdf.empty:
+                boundary_bbox = tuple(float(v) for v in boundary_gdf.total_bounds)
+                metric_area = float(_project_to_metric_gdf(boundary_gdf).geometry.area.sum())
+                if metric_area > 0:
+                    site_area_m2 = metric_area
+        except Exception:
+            logger.warning("空间句法边界读取失败: %s", b_path, exc_info=True)
+            boundary_gdf = gpd.GeoDataFrame()
+
+    buildings_gdf = gpd.GeoDataFrame()
+    bld_path = Path(buildings_path_str) if buildings_path_str else None
+    if bld_path and bld_path.exists():
+        try:
+            if boundary_bbox is not None:
+                try:
+                    buildings_gdf = gpd.read_file(str(bld_path), bbox=boundary_bbox)
+                except Exception:
+                    buildings_gdf = gpd.read_file(str(bld_path))
+            else:
+                buildings_gdf = gpd.read_file(str(bld_path))
+            if not buildings_gdf.empty:
+                buildings_gdf = buildings_gdf[
+                    buildings_gdf.geometry.notna() & ~buildings_gdf.geometry.is_empty
+                ].copy()
+        except Exception:
+            logger.warning("空间句法建筑读取失败: %s", bld_path, exc_info=True)
+            buildings_gdf = gpd.GeoDataFrame()
+
+    roads_gdf = gpd.GeoDataFrame()
+    rd_path = Path(roads_path_str) if roads_path_str else None
+    if rd_path and rd_path.exists():
+        try:
+            roads_gdf = gpd.read_file(str(rd_path))
+            if not roads_gdf.empty:
+                roads_gdf = roads_gdf[
+                    roads_gdf.geometry.notna() & ~roads_gdf.geometry.is_empty
+                ].copy()
+        except Exception:
+            logger.warning("空间句法路网读取失败: %s", rd_path, exc_info=True)
+            roads_gdf = gpd.GeoDataFrame()
+
+    if not roads_gdf.empty and len(roads_gdf) > max_road_segments:
+        try:
+            roads_metric = _project_to_metric_gdf(roads_gdf)
+            top_indices = roads_metric.geometry.length.nlargest(max_road_segments).index
+            roads_sample = roads_gdf.loc[top_indices].copy()
+        except Exception:
+            roads_sample = roads_gdf.head(max_road_segments).copy()
+    else:
+        roads_sample = roads_gdf
+
+    if not roads_sample.empty:
+        syntax_df = engine.analyze_network_syntax(roads_sample)
+        road_segment_count = int(len(syntax_df))
+        all_integ = [float(v) for v in syntax_df["Integration"].tolist()]
+        connected_integ = [v for v in all_integ if v < 1000.0]
+        target_integ = connected_integ if connected_integ else all_integ
+        mean_integration = round(sum(target_integ) / max(1, len(target_integ)), 4)
+        max_integration = round(max(target_integ), 4)
+        mean_depth = round(float(syntax_df["MeanDepth"].mean()), 4)
+        mean_choice = round(float(syntax_df["Choice"].mean()), 4)
+        integration_distribution = [
+            round(v, 4) for v in target_integ[:max_road_segments]
+        ]
+    else:
+        road_segment_count = 0
+        mean_integration = 0.0
+        max_integration = 0.0
+        mean_depth = 0.0
+        mean_choice = 0.0
+        integration_distribution = []
+
+    mc = engine.evaluate_microclimate(
+        buildings_gdf,
+        plots_gdf=boundary_gdf if not boundary_gdf.empty else None,
+        site_area_m2=site_area_m2,
+    )
+    morph = mc.get("morphometrics", {}) or {}
+
+    return {
+        "road_segment_count": road_segment_count,
+        "mean_integration": mean_integration,
+        "max_integration": max_integration,
+        "mean_depth": mean_depth,
+        "mean_choice": mean_choice,
+        "integration_distribution": integration_distribution,
+        "BCR": float(morph.get("BCR", 0.0)),
+        "FAR": float(morph.get("FAR", 0.0)),
+        "avg_height_m": float(morph.get("avg_height_m", 0.0)),
+        "aspect_ratio_HW": float(morph.get("aspect_ratio_HW", 0.0)),
+        "SVF": float(morph.get("SVF", 0.0)),
+        "site_area_m2": float(mc.get("site_area_m2", morph.get("site_area_m2", 0.0))),
+        "wind_comfort_index": float(mc.get("wind_comfort_index", 0.0)),
+        "solar_shadow_index": float(mc.get("solar_shadow_index", 0.0)),
+        "microclimate_grade": str(mc.get("microclimate_grade", "B")),
+        "recommendation": str(mc.get("recommendation", "")),
+    }
+
+
+def run_site_spatial_syntax(
+    roads_path: Path | None = None,
+    buildings_path: Path | None = None,
+    boundary_path: Path | None = None,
+    max_road_segments: int = 300,
+) -> dict[str, Any]:
+    """对当前激活场地运行 DepthMapX 路网空间句法与 Momepy 街区形态学量化测度。"""
+    from src.config import GIS_FILES
+    from src.config.runtime import resolve_path
+
+    r_path = Path(roads_path) if roads_path is not None else resolve_path(str(GIS_FILES["roads"]))
+    bld_path = Path(buildings_path) if buildings_path is not None else resolve_path(str(GIS_FILES["buildings"]))
+    bnd_path = Path(boundary_path) if boundary_path is not None else resolve_path(str(GIS_FILES["boundary"]))
+
+    return _run_site_spatial_syntax_cached(
+        roads_path_str=str(r_path),
+        roads_mtime=r_path.stat().st_mtime if r_path.exists() else 0.0,
+        buildings_path_str=str(bld_path),
+        buildings_mtime=bld_path.stat().st_mtime if bld_path.exists() else 0.0,
+        boundary_path_str=str(bnd_path),
+        boundary_mtime=bnd_path.stat().st_mtime if bnd_path.exists() else 0.0,
+        max_road_segments=max_road_segments,
+    )
+
+
+def _render_spatial_syntax_section() -> None:
+    """在工作台 01 现状底座下方渲染空间句法与街区形态学量化测度面板。"""
+    render_section_intro(
+        "空间句法与街区形态学测度",
+        "基于 DepthMapX 拓扑整合度与 Momepy 建筑形态学引擎，量化当前基址的路网可达性与微气候舒适度。",
+        eyebrow="Spatial Syntax & Morphometrics",
+    )
+
+    cached_syntax = load_stage_output("04", SK.SPATIAL_SYNTAX, None)
+    if st.button("🕸️ 运行空间句法与形态学量化测度", type="primary", key="btn_run_spatial_syntax", **stretch_width(st.button)):
+        with st.spinner("正在计算路网拓扑整合度 (DepthMapX) 与建筑形态指标 (Momepy)..."):
+            try:
+                syntax_res = run_site_spatial_syntax()
+                save_stage_output("04", SK.SPATIAL_SYNTAX, syntax_res)
+                cached_syntax = syntax_res
+                st.toast("✅ 空间句法与形态学测度已完成并写入数据总线！", icon="🕸️")
+            except Exception as exc:
+                st.error(f"空间句法测度失败：{exc}")
+
+    if isinstance(cached_syntax, dict) and cached_syntax:
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric(
+            "路网平均整合度 (Integration)",
+            f"{cached_syntax.get('mean_integration', 0.0):.3f}",
+            f"样本线段 {cached_syntax.get('road_segment_count', 0)} 条",
+        )
+        c2.metric(
+            "建筑覆盖率 (BCR)",
+            f"{cached_syntax.get('BCR', 0.0) * 100:.1f}%",
+            f"H/W 比 {cached_syntax.get('aspect_ratio_HW', 0.0):.2f}",
+        )
+        c3.metric(
+            "现状容积率 (FAR)",
+            f"{cached_syntax.get('FAR', 0.0):.2f}",
+            f"均高 {cached_syntax.get('avg_height_m', 0.0):.1f} m",
+        )
+        c4.metric(
+            "微气候评级 / SVF",
+            f"{cached_syntax.get('microclimate_grade', 'B')} 级",
+            f"SVF {cached_syntax.get('SVF', 0.0):.3f}",
+        )
+
+        dist_vals = cached_syntax.get("integration_distribution") or []
+        if dist_vals:
+            import plotly.express as px
+
+            df_hist = pd.DataFrame({"全局整合度 (Integration)": dist_vals})
+            fig_hist = px.histogram(
+                df_hist,
+                x="全局整合度 (Integration)",
+                nbins=20,
+                color_discrete_sequence=["#0071e3"],
+                height=320,
+            )
+            apply_plotly_theme(fig_hist, title="研究范围路网全局整合度分布直方图", height=320, showlegend=False)
+            st.plotly_chart(fig_hist, **stretch_width(st.plotly_chart))
+
+        rec_text = cached_syntax.get("recommendation", "")
+        if rec_text:
+            st.markdown(
+                f"""<div style="background:#ffffff; border:1px solid rgba(0,113,227,0.22); border-left:4px solid #0071e3; border-radius:10px; padding:12px 16px; margin:8px 0; color:#1d1d1f; font-size:13px;">
+                <strong style="color:#0071e3;">💡 空间形态与微气候优化建议：</strong>{rec_text}
+                </div>""",
+                unsafe_allow_html=True,
+            )
+    else:
+        st.info("💡 点击上方「🕸️ 运行空间句法与形态学量化测度」按钮，对当前基地路网与建筑形态进行实时拓扑与微气候量化测度。")
+
+
+# ═══════════════════════════════════════════════════════════════
 # 2. 页面主渲染逻辑
 # ═══════════════════════════════════════════════════════════════
 
@@ -370,6 +599,9 @@ def render_page() -> None:
 
         render_digital_twin_map(key_suffix="stage04")
         render_skyline_hud()
+
+        st.markdown("---")
+        _render_spatial_syntax_section()
 
         save_stage_output("04", "poi_count", stats.get("poi_count", 0))
         save_stage_output("04", "building_count", sky.get("building_count", 0))

@@ -6,6 +6,7 @@ import logging
 import streamlit as st
 
 from src.config import get_site_city, get_site_desc, get_site_district, get_site_name
+from src.core.runtime_adapter import delete_state, get_state, runtime_state, set_state
 from src.engines.llm_engine import call_llm_engine
 from src.engines.rag_engine import retrieve_rag_context
 
@@ -13,10 +14,16 @@ logger = logging.getLogger("ultimateDESIGN")
 
 def init_copilot_state():
     """Initialize session state variables for the global sidebar Copilot."""
-    if "copilot_history" not in st.session_state:
-        st.session_state["copilot_history"] = []
-    if "copilot_input" not in st.session_state:
-        st.session_state["copilot_input"] = ""
+    st_state = getattr(st, "session_state", None)
+    if isinstance(st_state, dict):
+        if "copilot_history" not in st_state:
+            delete_state("copilot_history")
+        if "copilot_input" not in st_state:
+            delete_state("copilot_input")
+    if "copilot_history" not in runtime_state:
+        set_state("copilot_history", [])
+    if "copilot_input" not in runtime_state:
+        set_state("copilot_input", "")
 
 
 def get_copilot_response(user_msg: str) -> str:
@@ -25,7 +32,7 @@ def get_copilot_response(user_msg: str) -> str:
     Saves the QA exchange to the history list in OpenAI format.
     """
     init_copilot_state()
-    history = st.session_state["copilot_history"]
+    history = list(get_state("copilot_history") or [])
 
     # 1. Retrieve RAG contexts for grounding
     rag_hits = retrieve_rag_context(user_msg, top_k=4)
@@ -36,7 +43,7 @@ def get_copilot_response(user_msg: str) -> str:
         )
 
     # 2. Gather current stage bus data
-    bus = st.session_state.get("stage_bus", {})
+    bus = get_state("stage_bus") or {}
     bus_summary = []
     for k, v in sorted(bus.items()):
         val_str = str(v)
@@ -94,9 +101,11 @@ def get_copilot_response(user_msg: str) -> str:
         response = f"⚠️ 对不起，AI 助理连接超时（{e}）。请检查您的网络设置或 DeepSeek API 密钥。"
 
     # 4. Commit to history (cap at 50 messages = 25 turns)
-    st.session_state["copilot_history"].append({"role": "user", "content": user_msg})
-    st.session_state["copilot_history"].append({"role": "assistant", "content": response})
-    if len(st.session_state["copilot_history"]) > 50:
-        st.session_state["copilot_history"] = st.session_state["copilot_history"][-50:]
+    cur_hist = list(get_state("copilot_history") or [])
+    cur_hist.append({"role": "user", "content": user_msg})
+    cur_hist.append({"role": "assistant", "content": response})
+    if len(cur_hist) > 50:
+        cur_hist = cur_hist[-50:]
+    set_state("copilot_history", cur_hist)
 
     return response

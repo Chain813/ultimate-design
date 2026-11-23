@@ -2,6 +2,43 @@
 
 本项目所有的核心重构与功能更新将记录在此。
 
+## [v7.0.0] - 2026-11-22
+### 🖥️ 本地原生专业桌面工作站与 DuckDB Spatial / rustworkx 高性能空间计算融合重构 (v7.0 Native Desktop Studio & High-Performance Spatial Engine)
+
+**四层本地原生桌面架构全面落地 (4-Layer Native Desktop Workstation Architecture)**
+* **Layer 1 · Electron 独立桌面可执行程序与前瞻性双体分离编译流水线 (`desktop/electron/` & `tools/build_desktop_release.py`)**：
+  * 新增 `desktop/electron/main.cjs`、`preload.cjs`、`package.json`、4× 超采样抗锯齿纯白底多分辨率 Windows 专属图标 `desktop/electron/build/icon.ico`（16–256px）及统一发布编译器 `tools/build_desktop_release.py`（同时保留原 Streamlit 入口 `启动_UltimateDESIGN.bat` 并存）；
+  * 通过 **`electron-builder`** 正式编译生成 **PE32+ 原生 GUI 可执行程序 `release/win-unpacked/UltimateDESIGN.exe`**（`SUBSYSTEM:WINDOWS`，零 CMD 黑框、内嵌专属图标与版本元数据、单实例锁、原生中文 Windows 菜单栏、自定义 `.udproj` 文件关联）、**标准 Windows 安装向导 `release/UltimateDESIGN-Setup-7.0.0-x64.exe`** 与根目录一键快捷入口 `UltimateDESIGN.lnk`；
+  * 前端产物整体打入二进制 `resources/app.asar` 并通过 Electron 特权本地协议 **`app://ultimatedesign/`** 实现 0ms 秒开（彻底脱离浏览器 URL 形态）；内置「跟随显示器原生高刷（120/144/240Hz）」与「**解除 VSync 帧率封顶（无上限满帧）**」双模切换开关及 3D 视口实时 FPS HUD；
+  * 建立面向未来的**三级 Sidecar 发现与数据解耦架构**：优先加载 Nuitka C 独立编译二进制 `ud-sidecar.exe`（`--compile-sidecar nuitka` 预留企业闭源交付）→ 嵌入式隔离运行时 → 便携 `WinPython`，支持独立副屏自动识别弹出 `sc-datav` 全屏驾驶舱窗口；
+* **Layer 2 · React 19 + MapLibre GL / Deck.GL + ECharts 5 专业规划前端 (`desktop/frontend/`)**：构建 Apple HIG Light 浅色高对比桌面框架 `AppShell.tsx`（固定磨砂顶栏、首页与三大工作台导航、17 阶段 `00`–`16` 完成度速达矩阵、DuckDB 多工程切换器、右侧全局混合 RAG SSE AI 副驾抽屉、左下角后台异步任务队列托盘 `JobTray`）与统一 3D 空间引擎 `SpatialMap3D.tsx`（MapLibre GL + Deck.GL `MapboxOverlay` 交错 WebGL2 渲染、11 图层开关、GPU `SunLight` 0–24h 实时日照阴影模拟、离线纯矢量底图自动兜底、3D 地块拾取与右侧雷达/MPI 面板双向联动）；全量实现 `HomeView.tsx`、`Workbench01View.tsx`、`Workbench02View.tsx`、`Workbench03View.tsx` 与 `DatavPopoutView.tsx`，100% 覆盖全部 17 个标准化规划阶段；
+* **Layer 3 · FastAPI 本地异步 Sidecar 服务 (`desktop/backend/`)**：新增 `desktop/backend/main.py`、`deps.py`、`job_manager.py` 及 7 大领域路由（`system.py`、`site_assets.py`、`diagnosis.py`、`strategy_plan.py`、`detail_aigc.py`、`delivery_skills.py`、`copilot.py`），提供 ORJSON 高速序列化、SSE 流式推流（AI 空间诊断、三主体三轮博弈、全局 RAG 副驾、公众听证会模拟）、本地动态 MVT `.pbf` 矢量瓦片服务、零拷贝二进制 `Float32Array` 缓冲流，以及后台异步作业线程池（Word 报告编译、AutoCAD 2000 DXF 导出、A3 图册拼装、SD ControlNet 生图、OSM 抓取）；
+* **Layer 4 · DuckDB Spatial + rustworkx 空间计算与多源融合内核 (`src/core/`)**：
+  * 新增 `src/core/runtime_adapter.py` 双模运行时适配层，对 `src/engines/`、`src/config/`、`src/workflow/`、`src/utils/` 等 16 个模块完成无损解耦，使既有 29 个 Python 领域引擎在 Streamlit 与 FastAPI Sidecar 双环境下 100% 兼容复用；
+  * 新增 `src/core/spatial_engine_v2.py`：引入 `DuckDB >= 1.4` + `spatial` 扩展构建 ACID 多工程隔离工作库（`data/projects/<project_id>/workspace.duckdb` + `cache_geoparquet/`），非破坏性挂载 110,289 栋建筑与 19 份多源统计表，通过向量化 C++ SIMD SQL 一键生成 `fused_plots` 18 维真实地块融合宽表，并原生支持 `ST_TileEnvelope` + `ST_AsMVTGeom` + `ST_AsMVT` 动态矢量瓦片生成；在新建、切换或删除工程时严格遵守 `SKILLS.md` Part 9 **永久保护 `data/rag_knowledge.json` 法规库只读不重置**；
+  * 引入 Rust 并行图算法引擎 **`rustworkx`**，彻底打破旧版 300 路段截断限制与孤立段 `100000.0` 异常值，毫秒级完成全路网 1,062+ 路段的多半径 DepthMapX 拓扑整合度（`R400m` / `R800m` / 全局 `R_n`）及真实最短路 Brandes 介数穿行度（`Choice`）计算；
+* **全量深度自检与性能/兼容性/隐私闭环修复**：
+  * 优化 `src/core/spatial_engine_v2.py`：消除查询热路径上多余的 `CREATE OR REPLACE TABLE` CRS 覆写循环（改为基于 `DESCRIBE` 类型比对的按需一次归一化），并启用 `fused_plots` 缓存表读取，实测 11 万栋建筑 z14 MVT 瓦片热响应 **3.5ms**、多源融合地块查询 **233ms**、二进制 GVI 流 **65.8ms**；
+  * 修复 `src/stages/stage07_strategy/page.py` 中 `_load_avatar_b64` 对 `Path("")` 误判 `.exists()` 引发 `PermissionError` 的隐藏缺陷（改为 `path.is_file()`），Streamlit 四大页面 `AppTest` 实测 **0 异常、0 错误** 100% 共存通过；
+  * 优化 `desktop/backend/main.py` 屏蔽 FastAPI 线程中无害的 Streamlit bare-mode 警告与废弃响应类警告；
+  * 彻底脱敏清理 `tools/archive/` 下 4 个历史归档脚本中残留的个人路径硬编码，全仓库个人路径扫描 **0 命中**；
+* **桌面端专项测试与性能优化**：修复 `desktop/backend/main.py` 静态路径 `/assets` 拦截构建产物的问题，新增 `tests/desktop/test_runtime_adapter.py`、`tests/desktop/test_spatial_engine_v2.py`、`tests/desktop/test_backend_api.py` 共 21 项内核、SPA 静态资产与全链路 API 集成测试，优化 `tools/secret_scan.py` 目录树剪枝遍历性能，全量自动化测试扩充至 **382 项 100% PASSED**。
+
+## [v6.5.0] - 2026-11-22
+### ✨ 全量架构体检、核心功能打通与代码库瘦身精炼 (v6.5 Architecture Refinement)
+
+**功能增添与核心链路打通 (4 Enhancements)**
+* **空间句法与形态学引擎正式接线**：在 `src/workflow/stage_keys.py` 注册 `SK.SPATIAL_SYNTAX` 并在 `src/engines/engine_registry.py` 导出 `SpatialSyntaxEngine` / `get_spatial_syntax_engine`；在 `src/stages/stage04_diagnosis/page.py` 新增 `run_site_spatial_syntax()`（含研究范围包围盒 `bbox` 快速读取优化与孤立断头线异常值过滤）与 `_render_spatial_syntax_section()`，在工作台 01 现状底座下方提供路网整合度（Integration/Choice）、建筑覆盖率（BCR）、容积率（FAR）、天空开敞度（SVF）与微气候评级实测及分布直方图；
+* **恢复 `sc-datav` 全屏态势监控大屏**：在 `src/ui/digital_twin.py` 新增 `collect_datav_payload()` 与 `render_datav_bigscreen()`，完整衔接 `assets/datav_bigscreen.html` 六项动态注入占位符与移动端/桌面端响应式高度切换；在 `pages/01_全息空间诊断与数据沙盘.py` 恢复「🖥️ sc-datav 综合态势大屏」与「🏙️ 轻量 3D 交互沙盘」双模切换；
+* **恢复工作台 01 资料治理三大实用工具**：在 `pages/01_全息空间诊断与数据沙盘.py` 资产页签底部回归「📑 规划文档语义萃取引擎 (MarkItDown)」、「🔍 16 类空间与业务数据在线质量体检」（升级为全球 WGS-84 合法经纬度校验，消除地域坐标硬编码）及「📍 街景采样点 4 方向实景巡检 (`carto-positron` 浅色底图)」；
+* **Stage 15 / 16 标准化晋升与自适应重构**：将 Stage 15 迁移至 `src/stages/stage15_aigc/page.py`（修正 `ROOT` 路径层级并消除模块导入副作用），将 Stage 16 重构迁移至 `src/stages/stage16_skills/page.py`（封装标准 `render_page()` 与零预设自适应冲突场景函数 `get_skill_conflict_scenarios()`），移除 `pages/03_数字图则与工程交付枢纽.py` 中的 `compile()+exec()` 注入并修正 `src/config/paths.py` 中 `PAGE_ROUTES["15"]`/`["16"]` 精确子页签路由。
+
+**冗余清理与代码库瘦身 (4 Reductions)**
+* **彻底移除旧版页面目录**：清理 `src/legacy_pages/` 目录下 15 个过渡空壳与旧版文件，同步更新 `tools/check_env.py`（22 项核心清单）与 `tools/startup_smoke.py`（14 项编译目标）；
+* **归档过渡期草稿加载器**：将零业务引用的 `src/engines/local_draft_loader.py` 归档至 `tools/archive/local_draft_loader.py`（配套 `tools/archive/__init__.py`），同步更新 `tests/unit/test_local_draft_loader.py`；
+* **清理 ~56.5MB 重复权重与演示视频**：删除 `tools/realesrgan-ncnn-vulkan/` 根目录下与 `models/` 子目录完全重复的 `.bin/.param` 模型副本及无关测试视频 `onepiece_demo.mp4`、`input*.jpg`（完整保留 `realesrgan-ncnn-vulkan.exe` 与 `models/`），清理 `tools/video_generator/output/` 下的临时成品视频；
+* **四份核心文档与测试集全面对齐**：新建 `tests/test_audit_v65_enhancements.py` 专项测试，同步更新 `README.md`、`README_EN.md`、`docs/WORKFLOW.md` 与 `CHANGELOG.md`，消除历史遗留的旧页面数与旧测试用例数描述，全量自动化测试扩充至 **361 项 100% PASSED**。
+
 ## [v6.4.0] - 2026-10-26
 ### 🚀 Apple HIG 浅色视觉重构、408-helper 级 RAG 架构升级与零预设全流程闭环 (v6.4 Major Upgrade)
 
@@ -85,7 +122,7 @@ equirements.txt；
 
 **全局隐私信息与个人主机绝对路径脱敏**：
 * 全量排查并修改了 [**`replace_weekly_figures_v4.py`**](file:///e:/AI-based-project/urban-platform/tools/replace_weekly_figures_v4.py)、[**`test_local_draft_loader.py`**](file:///e:/AI-based-project/urban-platform/tests/test_local_draft_loader.py)、[**`local_draft_loader.py`**](file:///e:/AI-based-project/urban-platform/src/engines/local_draft_loader.py)、[**`thesis_composer.py`**](file:///e:/AI-based-project/urban-platform/src/engines/thesis_composer.py)、[**`rebuild_all.py`**](file:///e:/AI-based-project/urban-platform/scripts/rebuild_all.py) 以及 [**`format_report.py`**](file:///e:/AI-based-project/urban-platform/scripts/format_report.py) 中的硬编码隐私路径；
-* 彻底清除了硬编码的 Windows 用户个人 profile ID（`C:\Users\23902\`）以及相关的个人毕设绝对目录，改用通用的 `os.path.expanduser("~")` 获取系统桌面路径，实现项目在任意 Windows 终端中运行的无感自适应与完全解耦；
+* 彻底清除了硬编码的 Windows 用户个人 profile ID（`C:\Users\<username>\`）以及相关的个人绝对目录，改用通用的 `os.path.expanduser("~")` 获取系统桌面路径，实现项目在任意 Windows 终端中运行的无感自适应与完全解耦；
 * 将 `rebuild_all.py` 内部硬编码的 Anaconda Python 解释器路径重构为 `sys.executable`，使其在跨虚拟环境下运行时能自动继承运行环境，消除 regression 隐患。
 
 **全局工作流说明文档对齐**：

@@ -6,11 +6,13 @@
 
 **AI 赋能下的城市设计与微更新规划决策支持平台**
 
-*Streamlit 全栈引擎 · 数据与逻辑解耦 · 17 逻辑阶段 · 3 核心工作台 · AIGC 空间对齐制图管线 · 端到端循证工作流*
+*Electron + React 19 原生桌面工作站 & Streamlit 双模引擎 · DuckDB Spatial + rustworkx 高性能空间融合 · 17 逻辑阶段 · 3 核心工作台 · AIGC 空间对齐制图管线*
 
 [![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python)](https://python.org)
+[![Electron](https://img.shields.io/badge/Desktop-Electron%20%2B%20React%2019-47848F?logo=electron)](./desktop/)
+[![DuckDB Spatial](https://img.shields.io/badge/Spatial-DuckDB%20%2B%20rustworkx-FFF000?logo=duckdb)](./src/core/spatial_engine_v2.py)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.55-FF4B4B?logo=streamlit)](https://streamlit.io)
-[![Tests](https://img.shields.io/badge/Tests-356%20passed-brightgreen?logo=pytest)](./tests/)
+[![Tests](https://img.shields.io/badge/Tests-382%20passed-brightgreen?logo=pytest)](./tests/)
 [![License](https://img.shields.io/badge/License-Academic-orange)]()
 
 </div>
@@ -19,10 +21,10 @@
 
 ## 🌟 项目概况
 
-UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**设计，支持导入任意城市的规划地块（自带长春伪满皇宫周边 170.2 公顷街区作为验证与实证案例）。它将城市更新设计拆解为 17 个标准化逻辑阶段 (00-16)，打通「GIS 数据采集 → LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与图则」的完整数字孪生工作流。
+UltimateDESIGN 是面向城乡规划与城市设计的 **本地原生专业桌面工作站（Electron + React 19 + MapLibre GL / Deck.GL + FastAPI + DuckDB Spatial & rustworkx）与 Streamlit 双模智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**与 **ACID 多工程空间数据库（`workspace.duckdb`）** 设计，支持无损创建与切换任意城市的规划地块工程（自带长春伪满皇宫周边 170.2 公顷街区、110,289 栋建筑作为实证示范工程）。它将城市更新设计拆解为 17 个标准化逻辑阶段 (00-16)，打通「多源 GIS 向量化空间融合 → 全路网空间句法与 LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与法定图则」的完整数字孪生工作流。
 
-> 🎉 **最新特性：开箱即用的免安装绿色版**
-> 现已支持基于 **WinPython 3.12+** 的全隔离便携式打包方案。所有环境依赖、GIS 底层 C++ 动态库全部封装于单一文件夹内，配合系统自带的 `安装向导_UltimateDESIGN.bat`，可实现**一键释放、防污染独立运行及自动生成快捷方式**，极大降低了项目向非技术型设计师分发的门槛。
+> 🎉 **最新特性：v7.0 独立 Windows 桌面可执行程序 (`UltimateDESIGN.exe` / NSIS 安装包) & 免安装绿色版**
+> 通过 `tools/build_desktop_release.py`（基于 `electron-builder` + `app.asar` + `app://ultimatedesign/` 本地特权协议）正式编译生成**无黑框独立桌面可执行程序 `release/win-unpacked/UltimateDESIGN.exe`**、**Windows 安装向导 `release/UltimateDESIGN-Setup-7.0.0-x64.exe`** 与根目录快捷入口 `UltimateDESIGN.lnk`（同时保留原 `启动_UltimateDESIGN.bat` Streamlit 模式并存）。底层采用 **DuckDB Spatial (C++ SIMD)** + **rustworkx (Rust 并行图算法)** + **原生 `ST_AsMVT` 矢量瓦片**，3D 引擎支持显示器原生高刷（120/144/240Hz）及**菜单栏一键解除 VSync 帧率封顶**，并支持**独立副屏自动识别弹出 `sc-datav` 全屏态势大屏**与 Nuitka C 原生二进制 Sidecar 演进。
 
 ---
 
@@ -40,7 +42,10 @@ UltimateDESIGN 是面向城乡规划与城市设计的 **Streamlit 全栈智慧�
 | **后台缓存预加载** | daemon 线程静默预热 37MB GeoJSON、RAG 模型等，页面切换秒开 |
 | **引擎懒加载** | `__getattr__` 模式延迟加载 pandas/numpy/PIL，启动速度提升 |
 | **录屏自动滑动组件** | 页面右下角常驻防穿帮录屏控制器，支持帧率级平滑像素滚动与快捷键交互 |
-| **356 项自动化测试** | Pytest 全覆盖 + CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
+| **空间句法与形态学** | 基于 `rustworkx` 全路网并行计算多半径 DepthMapX 拓扑整合度（R400m/R800m/Rn）与真实 Brandes 穿行度（Choice），彻底打破 300 路段上限 |
+| **DuckDB Spatial 空间融合** | 嵌入式 C++ SIMD 列式空间数据库，毫秒级完成 11 万栋建筑 × 用地 × 地块 × POI × GVI × 路网向量化空间连接与原生 `ST_AsMVT` 矢量瓦片直出 |
+| **sc-datav 全屏与副屏大屏** | 工作台 01 支持 `sc-datav` 全屏态势监控看板与 3D 沙盘双模切换，Electron 桌面端支持一键弹出独立副屏全屏窗口供双屏答辩投影 |
+| **382 项自动化测试** | Pytest 全覆盖（含桌面端空间融合内核与 FastAPI 7 大领域路由全链路集成测试）+ CI 集成 lint / 密钥扫描 / 冒烟测试 / 数据质量检查 |
 | **Apple HIG 浅色设计** | 遵循 Apple 人机交互指南（#f5f5f7 / #ffffff），全站高对比度与毛玻璃质感，内置可折叠 AI 规划副驾 |
 | **408-helper 级 RAG 架构** | 文档级上下文增强切片（Contextual Chunker）、父子块追溯、BM25 + 密集向量双路召回，100% 保留国家政策法规知识库 |
 | **专属研发规范与技能** | 根目录配备 [SKILLS.md](./SKILLS.md)，固化法规库持久化、CSS 对比度安全与多智能体并行守则 |
@@ -178,13 +183,13 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按前期/中期/后期及大屏展示浏览 17 个逻辑阶段（映射为 15 个物理页面）。
+平台默认运行于 `http://localhost:8501`，通过**顶部导航栏**按三大核心工作台（`01_全息空间诊断与数据沙盘`、`02_多主体博弈与空间AIGC工坊`、`03_数字图则与工程交付枢纽`）浏览 17 个逻辑阶段（00-16）。
 
 ### 🩺 3. 健康自检
 
 ```powershell
-python -m pytest                    # 238 项单元测试
-python tools/check_env.py           # 15 个物理页面完整性校验
+python -m pytest                    # 361 项单元测试
+python tools/check_env.py           # 3 大工作台与 10 大阶段模块完整性校验
 python tools/data_quality_check.py  # 数据质量评级
 python tools/secret_scan.py         # 敏感信息扫描
 ```
@@ -308,8 +313,8 @@ python scripts/render_gis_assets.py               # 矢量光栅化 (AIGC 底稿
 
 ```text
 ultimateDESIGN/
-├── app.py                              # 平台入口 / 首页 / 全局地图基底 (1 个页面)
-├── pages/                              # 14 个物理页面文件 (对应 00~16 共 17 个阶段)
+├── app.py                              # 平台入口 / 首页 / 全局地图基底 (1 个总控主页)
+├── pages/                              # 3 大核心工作台物理页面 (承载 00~16 共 17 个逻辑阶段)
 ├── src/                                # 核心领域代码
 │   ├── config/                         # 配置加载 / 路径注册 / 运行时常量
 │   │   ├── loader.py                   #   YAML 配置解析
@@ -329,10 +334,12 @@ ultimateDESIGN/
 │   │   ├── version_store.py            #   版本持久化 (PNG + JSON)
 │   │   ├── batch_exporter.py           #   图册级批量导出
 │   │   ├── spatial_engine.py           #   GIS 解析 / MPI 测度 / 天际线
+│   │   ├── spatial_syntax_engine.py    #   DepthMapX 空间句法 / Momepy 形态与微气候
 │   │   ├── guideline_prompt.py         #   导则生成 + RAG 检索
 │   │   ├── rag_engine.py              #   RAG 向量检索引擎
 │   │   ├── nlp_engine.py              #   NLP 文本分析
 │   │   └── site_diagnostic_engine.py  #   场地诊断引擎
+│   ├── stages/                         # 10 大标准化阶段模块 (stage04~stage16)
 │   ├── ui/                             # Streamlit UI 组件
 │   │   ├── app_shell.py               #   全局外壳 /导航 / 布局
 │   │   ├── design_system.py           #   原子设计系统
@@ -366,7 +373,7 @@ ultimateDESIGN/
 │   ├── secret_scan.py                 #   敏感信息扫描
 │   ├── startup_smoke.py              #   启动冒烟测试
 │   └── video_generator/              #   HyperFrames 视频工具 (Node.js)
-├── tests/                              # 40 个测试模块 / 238 项用例
+├── tests/                              # 67 个测试模块 / 361 项用例
 ├── data/                               # 数据资产 (数据与逻辑解耦)
 ├── static/                             # Streamlit 静态资源代理
 ├── assets/                             # CSS 样式 / WebGL 模板

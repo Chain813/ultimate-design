@@ -198,7 +198,7 @@ def render_page() -> None:
             _avatar_map[p["role_title"]] = _avatar_dir / p["avatar_file"]
 
         def _load_avatar_b64(path: Path) -> str:
-            if path.exists():
+            if path and path.is_file():
                 return base64.b64encode(path.read_bytes()).decode()
             return ""
 

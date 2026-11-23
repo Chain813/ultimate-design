@@ -128,7 +128,15 @@ static/atlas_structure.*
 tools/realesrgan-ncnn-vulkan/
 tools/*.zip
 
-# Portable Environments
+# Portable Environments & Desktop Compiled Releases
 WinPython/
 .runtime-packages/
+release/
+desktop/electron/frontend-dist/
+desktop/frontend/dist/
+data/projects/
+*.lnk
+*.tsbuildinfo
+!desktop/electron/build/
+!desktop/electron/build/*
 

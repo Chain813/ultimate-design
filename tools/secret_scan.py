@@ -1,6 +1,7 @@
 """Basic secret pattern scanner for repository and local env files."""
 
 import logging
+import os
 import re
 import sys
 from pathlib import Path
@@ -36,6 +37,8 @@ EXCLUDED_PARTS = {
     "WinPython",
     "build",
     "dist",
+    "release",
+    "frontend-dist",
 }
 EXCLUDED_PREFIXES = {
     "data/raw_images/",
@@ -52,11 +55,19 @@ def should_skip(path: Path, root: Path) -> bool:
     )
 
 
+def _iter_candidate_files(root: Path):
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = [d for d in dirnames if d not in EXCLUDED_PARTS]
+        base = Path(dirpath)
+        for fname in filenames:
+            yield base / fname
+
+
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     findings = []
 
-    for path in root.rglob("*"):
+    for path in _iter_candidate_files(root):
         if not path.is_file() or should_skip(path, root):
             continue
         rel = path.relative_to(root).as_posix()

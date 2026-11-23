@@ -7,7 +7,6 @@
 4. 空间 AIGC 推演工坊 (原 Stage 15)
 """
 
-from importlib import import_module
 from pathlib import Path
 
 import streamlit as st
@@ -19,6 +18,7 @@ from src.ui.design_system import render_page_banner, render_workbench_subnav
 from src.stages.stage07_strategy.page import render_page as render_stage07_page
 from src.stages.stage08_master_plan.page import render_page as render_stage08_page
 from src.stages.stage10_detail_design.page import render_page as render_stage10_page
+from src.stages.stage15_aigc.page import render_page as _render_stage15_aigc_page
 
 
 WB2_OPTIONS = [
@@ -135,9 +135,7 @@ def _render_stage06_quick_panel() -> None:
 
 def render_stage15_page() -> None:
     """加载并执行 Stage 15 空间 AIGC 推演工坊页面。"""
-    mod15 = import_module("src.legacy_pages.15_AIGC设计推演")
-    if hasattr(mod15, "render_page"):
-        mod15.render_page()
+    _render_stage15_aigc_page()
 
 
 def main():

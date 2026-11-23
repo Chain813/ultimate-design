@@ -18,14 +18,15 @@ import pandas as pd
 import streamlit as st
 
 from src.config import DATA_FILES, GIS_FILES, SHP_FILES, resolve_path
+from src.core.runtime_adapter import cache_data, get_state
 
 logger = logging.getLogger("ultimateDESIGN")
 
 
 def _load_active_custom_site() -> dict[str, Any]:
-    """Load active custom site context from session_state or config/custom_site.json."""
+    """Load active custom site context from runtime_state/session_state or config/custom_site.json."""
     try:
-        cs = st.session_state.get("custom_site_context")
+        cs = get_state("custom_site_context")
         if cs and isinstance(cs, dict) and cs.get("center"):
             return cs
     except Exception:
@@ -46,7 +47,7 @@ def _load_active_custom_site() -> dict[str, Any]:
 # POI dual-source fusion
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_merged_poi_data(usecols=None) -> pd.DataFrame:
     """Merge two POI sources and de-duplicate by rounded lat/lng + name."""
     df1 = _safe_read_csv(str(DATA_FILES["poi"]), usecols=usecols)
@@ -80,7 +81,7 @@ def _safe_read_csv(path: str, usecols: list[str] | None = None) -> pd.DataFrame:
 # HUD dynamic statistics
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=1800)
+@cache_data(ttl=1800)
 def get_hud_statistics() -> dict[str, Any]:
     """Aggregate live statistics for the HUD overlay."""
     stats: dict[str, Any] = {}
@@ -173,7 +174,7 @@ def _calc_boundary_ha(geojson_path: str) -> float | str:
 # Skyline morphology
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_skyline_features() -> dict[str, Any]:
     """Extract max height, avg height, high-rise ratio, building count."""
     features = {"max_height": 0, "avg_height": 0, "high_rise_ratio": 0, "building_count": 0}
@@ -279,7 +280,7 @@ def _project_for_geometry_ops(buildings, boundary):
 # Spatial GVI point data
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_spatial_data() -> pd.DataFrame:
     """Merge base spatial points with GVI analysis results."""
     base_path = resolve_path(str(DATA_FILES["points"]))
@@ -317,7 +318,7 @@ def get_spatial_data() -> pd.DataFrame:
 # Road, Rail and Landuse loading
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_road_network() -> "pd.DataFrame":
     """Load the clipped road network data."""
     try:
@@ -330,7 +331,7 @@ def get_road_network() -> "pd.DataFrame":
     return pd.DataFrame()
 
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_rail_network() -> "pd.DataFrame":
     """Load the clipped rail network data."""
     try:
@@ -343,7 +344,7 @@ def get_rail_network() -> "pd.DataFrame":
     return pd.DataFrame()
 
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_landuse_data() -> "pd.DataFrame":
     """Load the clipped landuse data with standardized colors."""
     try:

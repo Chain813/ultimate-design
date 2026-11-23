@@ -65,33 +65,33 @@ def main():
     print("\n[3/3] Checking critical data files...")
     critical_files = [
         "app.py",
+        "pages/01_全息空间诊断与数据沙盘.py",
+        "pages/02_多主体博弈与空间AIGC工坊.py",
+        "pages/03_数字图则与工程交付枢纽.py",
+        "src/stages/stage04_diagnosis/page.py",
+        "src/stages/stage07_strategy/page.py",
+        "src/stages/stage08_master_plan/page.py",
+        "src/stages/stage09_systems/page.py",
+        "src/stages/stage10_detail_design/page.py",
+        "src/stages/stage11_implementation/page.py",
+        "src/stages/stage12_guideline/page.py",
+        "src/stages/stage13_outputs/page.py",
+        "src/stages/stage15_aigc/page.py",
+        "src/stages/stage16_skills/page.py",
         "src/engines/engine_registry.py",
+        "src/engines/spatial_syntax_engine.py",
         "src/ui/app_shell.py",
         "src/workflow/city_design_workflow.py",
         "scripts/fetch_social_sentiment.py",
         "src/engines/urban_image_segmentation.py",
-        "pages/00_数据准备与任务解读.py",
-        "pages/02_资料收集与现场调研.py",
-        "pages/04_现状分析与问题诊断.py",
-        "pages/06_目标定位.py",
-        "pages/07_设计策略.py",
-        "pages/08_总体城市设计.py",
-        "pages/09_专项系统设计.py",
-        "pages/10_重点地段深化.py",
-        "pages/11_实施路径.py",
-        "pages/12_城市设计导则.py",
-        "pages/13_成果表达.py",
-        "pages/14_数据大屏.py",
-        "pages/15_AIGC设计推演.py",
-        "pages/16_制图与设计智能体Skill手册.py",
         "src/utils/geo_transform.py",
+        "assets/datav_bigscreen.html",
     ]
 
     missing_files = []
     for f in critical_files:
         target = project_root / f
-        legacy_target = project_root / "src" / "legacy_pages" / Path(f).name
-        if not target.exists() and not legacy_target.exists():
+        if not target.exists():
             missing_files.append(f)
 
     if missing_files:

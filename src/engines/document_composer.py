@@ -521,7 +521,7 @@ def generate_all_chapters(
     Returns:
         dict: {section_id: generated_text}
     """
-    import streamlit as st
+    from src.core.runtime_adapter import runtime_state as _rs  # noqa: F401
 
     if ctx is None:
         ctx = build_document_context()

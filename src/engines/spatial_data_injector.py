@@ -21,6 +21,7 @@ import pandas as pd
 import streamlit as st
 
 from src.config import DATA_FILES, GIS_FILES, get_site_city, get_site_district, get_site_name, resolve_path
+from src.core.runtime_adapter import cache_data
 
 logger = logging.getLogger("ultimateDESIGN")
 
@@ -85,7 +86,7 @@ def _build_dynamic_landuse_judgment(
 # 土地利用统计
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_landuse_summary() -> str:
     """读取土地利用矢量或自定义场地地块数据，统计各类用地面积占比，返回动态计算的可注入 LLM 文本。"""
     # 若激活了非长春的自定义场地且存在自定义 OSM 土地利用或 plots，优先使用自定义场地数据
@@ -191,7 +192,7 @@ def get_landuse_summary() -> str:
 # POI 空间摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_poi_summary() -> str:
     """汇总 POI 类型分布，返回可注入文本。"""
     try:
@@ -221,7 +222,7 @@ def get_poi_summary() -> str:
 # GVI / 街景品质摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_gvi_summary() -> str:
     """汇总 GVI 绿视率分析结果，返回可注入文本。"""
     try:
@@ -263,7 +264,7 @@ def get_gvi_summary() -> str:
 # 重点地块摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_key_plots_summary() -> str:
     """读取 Key_Plots_District.json，返回地块名称和面积列表。"""
     path = resolve_path(str(GIS_FILES["plots"]))
@@ -291,7 +292,7 @@ def get_key_plots_summary() -> str:
 # 建筑形态摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_building_summary() -> str:
     """汇总建筑形态统计。"""
     try:
@@ -314,7 +315,7 @@ def get_building_summary() -> str:
 # 交通流量摘要
 # ═══════════════════════════════════════════
 
-@st.cache_data(ttl=3600, max_entries=20)
+@cache_data(ttl=3600, max_entries=20)
 def get_traffic_summary() -> str:
     """汇总交通流量数据。"""
     try:
