@@ -181,6 +181,10 @@ export interface SystemSettingsPayload {
   llm_api_key?: string;
   llm_api_key_masked?: string;
   sd_api_url?: string;
+  baidu_ak?: string;
+  baidu_ak_masked?: string;
+  has_baidu_ak?: boolean;
+  streetview_dir?: string;
   amap_api_key?: string;
   amap_key_masked?: string;
   [key: string]: any;

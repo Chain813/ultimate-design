@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from desktop.backend.job_manager import JobContext, get_job_manager
 from src.config import GIS_FILES, ROOT_DIR, resolve_path
+from src.config.paths import get_writable_output_dir
 from src.config.site import (
     get_author_info,
     get_institution_info,
@@ -665,7 +666,7 @@ def post_stage12_export_docx(req: Stage12ExportDocxRequest | None = None) -> dic
     text_content = body.content or (saved_full if (isinstance(saved_full, str) and len(saved_full) > 200) else default_full)
     doc_title = body.title or f"{city}{site_name}更新规划设计·法定城市设计导则"
 
-    deliverables_dir = ROOT_DIR / "output" / "deliverables"
+    deliverables_dir = get_writable_output_dir() / "deliverables"
     deliverables_dir.mkdir(parents=True, exist_ok=True)
     safe_fname = body.filename or f"statutory_guideline_{int(time.time())}.docx"
     if not safe_fname.endswith(".docx"):
@@ -718,9 +719,9 @@ def get_stage13_drawings() -> dict[str, Any]:
 
     rendered_pngs: list[dict[str, Any]] = []
     for folder, url_prefix in [
-        (ROOT_DIR / "output" / "deliverables", "/output/deliverables"),
+        (get_writable_output_dir() / "deliverables", "/output/deliverables"),
         (ROOT_DIR / "static" / "atlas", "/static/atlas"),
-        (ROOT_DIR / "output" / "high_precision", "/output/high_precision"),
+        (get_writable_output_dir() / "high_precision", "/output/high_precision"),
         (ROOT_DIR / "static", "/static"),
     ]:
         if folder.exists():
@@ -745,7 +746,7 @@ def get_stage13_drawings() -> dict[str, Any]:
 @router.post("/stage13/render-drawing")
 def post_stage13_render_drawing(req: Stage13RenderDrawingRequest) -> dict[str, Any]:
     """Render a selected drawing (`dr_004`, `dr_014`, `dr_051`, etc.) and return image URL & file path."""
-    deliverables_dir = ROOT_DIR / "output" / "deliverables"
+    deliverables_dir = get_writable_output_dir() / "deliverables"
     deliverables_dir.mkdir(parents=True, exist_ok=True)
 
     cat_item = next(
@@ -793,7 +794,7 @@ def post_stage13_render_drawing(req: Stage13RenderDrawingRequest) -> dict[str, A
 @router.post("/stage13/compose-a3")
 def post_stage13_compose_a3(req: Stage13ComposeA3Request) -> dict[str, Any]:
     """Compose a standard A3 framed engineering drawing sheet via `frame_generator` and save to `output/deliverables/`."""
-    deliverables_dir = ROOT_DIR / "output" / "deliverables"
+    deliverables_dir = get_writable_output_dir() / "deliverables"
     deliverables_dir.mkdir(parents=True, exist_ok=True)
 
     city = get_site_city() or "长春市"
@@ -855,7 +856,7 @@ def post_stage13_export_dxf(req: Stage13ExportDxfRequest | None = None) -> dict[
     import geopandas as gpd
 
     body = req or Stage13ExportDxfRequest()
-    deliverables_dir = ROOT_DIR / "output" / "deliverables"
+    deliverables_dir = get_writable_output_dir() / "deliverables"
     deliverables_dir.mkdir(parents=True, exist_ok=True)
 
     safe_fname = body.filename or f"statutory_masterplan_AC1015_{int(time.time())}.dxf"
@@ -919,7 +920,7 @@ def post_stage13_export_dxf(req: Stage13ExportDxfRequest | None = None) -> dict[
 def post_stage13_compile_report(req: Stage13CompileReportRequest | None = None) -> dict[str, Any]:
     """Submit an async job via JobManager running `document_pipeline` (`light` or `full`) and saving `.docx` to `output/deliverables/`."""
     body = req or Stage13CompileReportRequest()
-    deliverables_dir = ROOT_DIR / "output" / "deliverables"
+    deliverables_dir = get_writable_output_dir() / "deliverables"
     deliverables_dir.mkdir(parents=True, exist_ok=True)
 
     a_info = get_author_info() or {}

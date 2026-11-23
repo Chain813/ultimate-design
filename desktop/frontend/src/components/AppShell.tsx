@@ -452,17 +452,30 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
     try {
       const payload: Record<string, any> = {
         llm_provider: settingsForm.llm_provider,
+        model: settingsForm.llm_model,
         llm_model: settingsForm.llm_model,
+        base_url: settingsForm.llm_base_url,
         llm_base_url: settingsForm.llm_base_url,
+        sd_url: settingsForm.sd_api_url,
         sd_api_url: settingsForm.sd_api_url,
       };
       if (settingsForm.llm_api_key && settingsForm.llm_api_key.trim()) {
+        payload.api_key = settingsForm.llm_api_key.trim();
         payload.llm_api_key = settingsForm.llm_api_key.trim();
       }
-      await apiPut("/api/v1/system/settings", payload);
+      if (settingsForm.baidu_ak && settingsForm.baidu_ak.trim()) {
+        payload.baidu_ak = settingsForm.baidu_ak.trim();
+      }
+      const saved = await apiPut<any>("/api/v1/system/settings", payload);
       await refreshSystemHud();
-      setSettingsFeedback("配置已加密保存并即时生效（密钥仅掩码存储于本地运行时）");
-      setSettingsForm((prev) => ({ ...prev, llm_api_key: "" }));
+      setSettingsFeedback("配置已保存至本机用户配置目录（~/.ultimatedesign/config.json）并即时生效");
+      setSettingsForm((prev) => ({
+        ...prev,
+        llm_api_key: "",
+        baidu_ak: "",
+        llm_api_key_masked: saved?.api_key_masked || prev.llm_api_key_masked,
+        baidu_ak_masked: saved?.baidu_ak_masked || prev.baidu_ak_masked,
+      }));
     } catch (err: any) {
       setSettingsFeedback(`保存失败：${err.message || String(err)}`);
     } finally {
@@ -1250,6 +1263,26 @@ export const AppShell: React.FC<AppShellProps> = ({ children }) => {
                     setSettingsForm((s) => ({ ...s, sd_api_url: e.target.value }))
                   }
                   placeholder="http://127.0.0.1:7860"
+                  className="w-full px-3 py-2 rounded-xl bg-[#f5f5f7] border border-black/12 text-[12.5px] text-[#1d1d1f]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[12px] font-semibold text-[#1d1d1f] mb-1">
+                  百度地图开放平台街景 AK (BYOK 自带密钥){" "}
+                  {settingsForm.baidu_ak_masked && (
+                    <span className="text-[11px] text-[#10b981] font-normal">
+                      (当前已配置: {settingsForm.baidu_ak_masked})
+                    </span>
+                  )}
+                </label>
+                <input
+                  type="password"
+                  value={settingsForm.baidu_ak || ""}
+                  onChange={(e) =>
+                    setSettingsForm((s) => ({ ...s, baidu_ak: e.target.value }))
+                  }
+                  placeholder="请前往 lbsyun.baidu.com 申请服务端 AK（安装包不预置个人街景与密钥）"
                   className="w-full px-3 py-2 rounded-xl bg-[#f5f5f7] border border-black/12 text-[12.5px] text-[#1d1d1f]"
                 />
               </div>

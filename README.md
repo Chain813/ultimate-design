@@ -23,8 +23,8 @@
 
 UltimateDESIGN 是面向城乡规划与城市设计的 **本地原生专业桌面工作站（Electron + React 19 + MapLibre GL / Deck.GL + FastAPI + DuckDB Spatial & rustworkx）与 Streamlit 双模智慧决策支持平台**。平台通过**数据与逻辑的彻底解耦**与 **ACID 多工程空间数据库（`workspace.duckdb`）** 设计，支持无损创建与切换任意城市的规划地块工程（自带长春伪满皇宫周边 170.2 公顷街区、110,289 栋建筑作为实证示范工程）。它将城市更新设计拆解为 17 个标准化逻辑阶段 (00-16)，打通「多源 GIS 向量化空间融合 → 全路网空间句法与 LLM 循证推演 → 矢量/光栅图纸绘制 → AIGC 意向重绘 → 智能化交付与法定图则」的完整数字孪生工作流。
 
-> 🎉 **最新特性：v7.0 独立 Windows 桌面可执行程序 (`UltimateDESIGN.exe` / NSIS 安装包) & 免安装绿色版**
-> 通过 `tools/build_desktop_release.py`（基于 `electron-builder` + `app.asar` + `app://ultimatedesign/` 本地特权协议）正式编译生成**无黑框独立桌面可执行程序 `release/win-unpacked/UltimateDESIGN.exe`**、**Windows 安装向导 `release/UltimateDESIGN-Setup-7.0.0-x64.exe`** 与根目录快捷入口 `UltimateDESIGN.lnk`（同时保留原 `启动_UltimateDESIGN.bat` Streamlit 模式并存）。底层采用 **DuckDB Spatial (C++ SIMD)** + **rustworkx (Rust 并行图算法)** + **原生 `ST_AsMVT` 矢量瓦片**，3D 引擎支持显示器原生高刷（120/144/240Hz）及**菜单栏一键解除 VSync 帧率封顶**，并支持**独立副屏自动识别弹出 `sc-datav` 全屏态势大屏**与 Nuitka C 原生二进制 Sidecar 演进。
+> 🎉 **最新特性：v7.0 全离线零遗漏 Windows 桌面安装包 (`UltimateDESIGN-Setup-7.0.0-x64.exe` · 448 MB) & 独立 `.exe`**
+> 通过 `tools/build_desktop_release.py`（基于 `electron-builder` + `app.asar` + `extraResources`）正式编译生成**无黑框独立桌面可执行程序 `release/win-unpacked/UltimateDESIGN.exe`** 与 **448 MB 全离线零依赖 Windows 安装包 `release/UltimateDESIGN-Setup-7.0.0-x64.exe`**（内置便携 Python 3.13 运行时、79.8 MB 全断网 DuckDB Spatial 扩展、核心底图/RAG/预烘焙 GeoParquet 缓存与 `Program Files` 只读权限 `%APPDATA%` 自动隔离；街景支持用户自带百度地图开放平台 AK 抓取或挂载本地街景目录，安装包零个人数据与密钥泄露；同时保留原 `启动_UltimateDESIGN.bat` Streamlit 模式并存）。底层采用 **DuckDB Spatial (C++ SIMD)** + **rustworkx (Rust 并行图算法)** + **原生 `ST_AsMVT` 矢量瓦片**，3D 引擎支持显示器原生高刷（120/144/240Hz）及**菜单栏一键解除 VSync 帧率封顶**，并支持**独立副屏自动识别弹出 `sc-datav` 全屏态势大屏**。
 
 ---
 

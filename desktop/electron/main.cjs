@@ -54,6 +54,7 @@ function resolveWorkspaceRoot() {
   if (app.isPackaged) {
     const exeDir = path.dirname(process.execPath);
     candidates.push(
+      path.join(process.resourcesPath, "workspace"),
       exeDir,
       path.resolve(exeDir, ".."),
       path.resolve(exeDir, "..", ".."),
@@ -80,6 +81,23 @@ function resolveWorkspaceRoot() {
     }
   }
   return path.resolve(__dirname, "..", "..");
+}
+
+function resolveWritableUserDataDir() {
+  if (process.env.UD_USER_DATA_DIR) {
+    return path.resolve(process.env.UD_USER_DATA_DIR);
+  }
+  const bundledWs = path.join(process.resourcesPath || "", "workspace");
+  if (app.isPackaged && fs.existsSync(bundledWs)) {
+    const dir = path.join(app.getPath("userData"), "workspace");
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (_err) {
+      // ignore
+    }
+    return dir;
+  }
+  return "";
 }
 
 function resolvePreferencesPath() {
@@ -305,6 +323,8 @@ function waitForSidecarHealth(port, timeoutMs = 45000) {
 
 function spawnSidecar(port) {
   const { command, args } = discoverSidecarCommand(port);
+  const writableUserDir = resolveWritableUserDataDir();
+  const bundledDuckdbExt = path.join(process.resourcesPath || "", "runtime", "duckdb_extensions");
   const env = {
     ...process.env,
     PYTHONNOUSERSITE: "1",
@@ -314,6 +334,8 @@ function spawnSidecar(port) {
     UD_PARENT_PID: String(process.pid),
     UD_PORT: String(port),
     UD_WORKSPACE_ROOT: repoRoot,
+    ...(writableUserDir ? { UD_USER_DATA_DIR: writableUserDir } : {}),
+    ...(fs.existsSync(bundledDuckdbExt) ? { UD_DUCKDB_EXT_DIR: bundledDuckdbExt } : {}),
   };
 
   sidecarProc = spawn(command, args, {
@@ -548,7 +570,8 @@ function buildNativeApplicationMenu() {
         {
           label: "打开工程输出目录 (output)",
           click: () => {
-            const outDir = path.join(repoRoot, "output");
+            const writableDir = resolveWritableUserDataDir();
+            const outDir = path.join(writableDir || repoRoot, "output");
             fs.mkdirSync(outDir, { recursive: true });
             shell.openPath(outDir);
           },

@@ -39,6 +39,7 @@ EXCLUDED_PARTS = {
     "dist",
     "release",
     "frontend-dist",
+    "bundled",
 }
 EXCLUDED_PREFIXES = {
     "data/raw_images/",

@@ -252,6 +252,9 @@ def get_settings() -> dict[str, Any]:
         or settings.get("OLLAMA_URL")
         or DEFAULT_SETTINGS["OLLAMA_URL"]
     )
+    raw_baidu = os.environ.get("BAIDU_MAP_AK") or settings.get("BAIDU_MAP_AK", "")
+    baidu_masked = _mask_api_key(raw_baidu)
+    streetview_dir = settings.get("STREETVIEW_DIR", "")
     model = os.environ.get("UD_LLM_MODEL") or runtime_state.get("llm_model") or "deepseek-v4-pro"
 
     return {
@@ -259,6 +262,10 @@ def get_settings() -> dict[str, Any]:
         "api_key": masked,
         "api_key_masked": masked,
         "has_api_key": bool(raw_key and raw_key.strip()),
+        "baidu_ak": baidu_masked,
+        "baidu_ak_masked": baidu_masked,
+        "has_baidu_ak": bool(raw_baidu and raw_baidu.strip()),
+        "streetview_dir": streetview_dir,
         "base_url": base_url,
         "api_url": base_url,
         "model": model,
@@ -309,17 +316,36 @@ def update_settings(payload: dict[str, Any] = Body(default_factory=dict)) -> dic
     )
     model = payload.get("model") or os.environ.get("UD_LLM_MODEL") or "deepseek-v4-pro"
 
+    existing_baidu = os.environ.get("BAIDU_MAP_AK") or current.get("BAIDU_MAP_AK", "")
+    incoming_baidu = payload.get("baidu_ak")
+    if incoming_baidu is None:
+        incoming_baidu = payload.get("BAIDU_MAP_AK")
+    if incoming_baidu is not None:
+        b_str = str(incoming_baidu).strip()
+        final_baidu = existing_baidu if "****" in b_str else b_str
+    else:
+        final_baidu = existing_baidu
+
+    streetview_dir = str(
+        payload.get("streetview_dir")
+        if payload.get("streetview_dir") is not None
+        else current.get("STREETVIEW_DIR", "")
+    ).strip()
+
     to_save = {
         "DEEPSEEK_API_KEY": final_key,
         "LLM_API_URL": str(base_url).strip(),
         "SD_WEBUI_URL": str(sd_url).strip(),
         "OLLAMA_URL": str(ollama_url).strip(),
+        "BAIDU_MAP_AK": final_baidu,
+        "STREETVIEW_DIR": streetview_dir,
     }
     save_user_settings(to_save)
 
     os.environ["LLM_API_URL"] = to_save["LLM_API_URL"]
     os.environ["SD_WEBUI_URL"] = to_save["SD_WEBUI_URL"]
     os.environ["OLLAMA_URL"] = to_save["OLLAMA_URL"]
+    os.environ["BAIDU_MAP_AK"] = to_save["BAIDU_MAP_AK"]
     os.environ["UD_LLM_MODEL"] = str(model).strip()
     runtime_state["llm_model"] = str(model).strip()
 
@@ -327,11 +353,16 @@ def update_settings(payload: dict[str, Any] = Body(default_factory=dict)) -> dic
         runtime_state["demo_mode"] = bool(payload["demo_mode"])
 
     masked = _mask_api_key(final_key)
+    baidu_masked = _mask_api_key(final_baidu)
     return {
         "status": "ok",
         "api_key": masked,
         "api_key_masked": masked,
         "has_api_key": bool(final_key),
+        "baidu_ak": baidu_masked,
+        "baidu_ak_masked": baidu_masked,
+        "has_baidu_ak": bool(final_baidu),
+        "streetview_dir": streetview_dir,
         "base_url": to_save["LLM_API_URL"],
         "api_url": to_save["LLM_API_URL"],
         "model": str(model).strip(),

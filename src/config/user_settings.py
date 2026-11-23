@@ -16,6 +16,8 @@ DEFAULT_SETTINGS = {
     "SD_WEBUI_URL": "http://127.0.0.1:7860",
     "LLM_API_URL": "https://api.deepseek.com/chat/completions",
     "OLLAMA_URL": "http://localhost:11434",
+    "BAIDU_MAP_AK": "",
+    "STREETVIEW_DIR": "",
 }
 
 
@@ -35,9 +37,11 @@ def load_user_settings() -> dict:
         except Exception:
             pass
 
-    # Backport DEEPSEEK_API_KEY to environment variables for dotenv/getenv compatibility
+    # Backport keys to environment variables for dotenv/getenv compatibility
     if settings.get("DEEPSEEK_API_KEY"):
         os.environ["DEEPSEEK_API_KEY"] = settings["DEEPSEEK_API_KEY"]
+    if settings.get("BAIDU_MAP_AK"):
+        os.environ["BAIDU_MAP_AK"] = settings["BAIDU_MAP_AK"]
 
     return settings
 

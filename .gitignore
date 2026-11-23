@@ -133,6 +133,7 @@ WinPython/
 .runtime-packages/
 release/
 desktop/electron/frontend-dist/
+desktop/electron/bundled/
 desktop/frontend/dist/
 data/projects/
 *.lnk

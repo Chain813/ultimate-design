@@ -2,6 +2,7 @@
 
 
 from pathlib import Path
+import os
 
 from .loader import load_global_config
 from .runtime import project_root
@@ -18,6 +19,40 @@ STATIC_DIR = ROOT_DIR / "static"
 DOCS_DIR = ROOT_DIR / "docs"
 META_DIR = DATA_DIR / "meta"
 STREETVIEW_DIR = DATA_DIR / "streetview"
+
+
+def get_writable_data_root() -> Path | None:
+    """Return isolated writable user data root when running as a packaged desktop app (e.g. under Program Files)."""
+    raw = os.environ.get("UD_USER_DATA_DIR", "").strip()
+    if raw:
+        p = Path(raw)
+        p.mkdir(parents=True, exist_ok=True)
+        return p
+    return None
+
+
+def get_writable_output_dir() -> Path:
+    """Return writable output directory (isolated in %APPDATA% when packaged, or repo/output in dev mode)."""
+    user_root = get_writable_data_root()
+    out = (user_root / "output") if user_root else (ROOT_DIR / "output")
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+
+def get_writable_projects_dir() -> Path:
+    """Return writable DuckDB multi-project directory."""
+    user_root = get_writable_data_root()
+    proj = (user_root / "projects") if user_root else (DATA_DIR / "projects")
+    proj.mkdir(parents=True, exist_ok=True)
+    return proj
+
+
+def get_writable_streetview_dir() -> Path:
+    """Return writable streetview storage directory for user-fetched BYOK Baidu Panorama images."""
+    user_root = get_writable_data_root()
+    sv = (user_root / "streetview") if user_root else STREETVIEW_DIR
+    sv.mkdir(parents=True, exist_ok=True)
+    return sv
 
 # Backward-compatible aliases
 SHP_DIR = GIS_DIR

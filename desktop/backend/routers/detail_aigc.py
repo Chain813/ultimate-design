@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from desktop.backend.job_manager import JobContext, get_job_manager
 from src.config import GIS_FILES, ROOT_DIR, resolve_path
+from src.config.paths import get_writable_output_dir
 from src.config.site import get_site_city, get_site_config, get_site_name
 from src.engines.drawing_prompt_engine import NEGATIVE_COMMON, get_drawing_profile
 from src.engines.llm_engine import call_llm_engine, call_llm_engine_stream
@@ -550,7 +551,7 @@ def _build_before_after_payload(
     # Resolve After image URL (latest AIGC render or renewal scheme asset)
     after_url = src.get("after_url")
     if not after_url:
-        aigc_dir = ROOT_DIR / "output" / "aigc"
+        aigc_dir = get_writable_output_dir() / "aigc"
         latest_aigc = None
         if aigc_dir.exists():
             pngs = sorted(aigc_dir.glob("*.png"), key=lambda p: p.stat().st_mtime, reverse=True)
@@ -640,7 +641,7 @@ def _scan_aigc_gallery_and_basemaps() -> tuple[list[dict[str, Any]], list[dict[s
     base_maps: list[dict[str, Any]] = []
     candidates = [
         ("GIS 规划范围现状底图", ROOT_DIR / "static" / "research_scope_2d.png", "/static/research_scope_2d.png"),
-        ("总体语义底稿图 (300DPI)", ROOT_DIR / "output" / "high_precision" / "总体语义底稿图_Masterplan_Semantic.png", "/output/high_precision/总体语义底稿图_Masterplan_Semantic.png"),
+        ("总体语义底稿图 (300DPI)", get_writable_output_dir() / "high_precision" / "总体语义底稿图_Masterplan_Semantic.png", "/output/high_precision/总体语义底稿图_Masterplan_Semantic.png"),
         ("重点地段空间诊断底图", ROOT_DIR / "assets" / "03_spatial_diagnosis.png", "/assets/03_spatial_diagnosis.png"),
         ("AIGC 街区微更新示范参考", ROOT_DIR / "assets" / "05_design_inference.png", "/assets/05_design_inference.png"),
     ]
@@ -648,7 +649,7 @@ def _scan_aigc_gallery_and_basemaps() -> tuple[list[dict[str, Any]], list[dict[s
         if path.exists():
             base_maps.append({"name": label, "file_path": str(path), "url": url})
 
-    previews_dir = ROOT_DIR / "output" / "aigc" / "previews"
+    previews_dir = get_writable_output_dir() / "aigc" / "previews"
     if previews_dir.exists():
         for p in sorted(previews_dir.glob("*.png"), key=lambda x: x.stat().st_mtime, reverse=True)[:6]:
             base_maps.append(
@@ -660,7 +661,7 @@ def _scan_aigc_gallery_and_basemaps() -> tuple[list[dict[str, Any]], list[dict[s
             )
 
     gallery: list[dict[str, Any]] = []
-    aigc_dir = ROOT_DIR / "output" / "aigc"
+    aigc_dir = get_writable_output_dir() / "aigc"
     if aigc_dir.exists():
         for p in sorted(aigc_dir.glob("*.png"), key=lambda x: x.stat().st_mtime, reverse=True)[:16]:
             gallery.append(
@@ -720,7 +721,7 @@ def get_stage15_config() -> dict[str, Any]:
 
 def _synthesize_conditioning_image(mode: str, view_preset: str, plot_name: str | None, width: int, height: int) -> tuple[Path, dict[str, Any]]:
     """Generate GIS white-model / depth / canny conditioning preview image and save to `output/aigc/previews/`."""
-    out_dir = ROOT_DIR / "output" / "aigc" / "previews"
+    out_dir = get_writable_output_dir() / "aigc" / "previews"
     out_dir.mkdir(parents=True, exist_ok=True)
     safe_mode = re.sub(r"[^a-zA-Z0-9_-]", "_", mode or "white_model")
     out_path = out_dir / f"cn_{safe_mode}_{view_preset}_{width}x{height}.png"
@@ -968,7 +969,7 @@ def _render_architectural_concept_fallback(
 def post_stage15_render(req: Stage15RenderRequest) -> dict[str, Any]:
     """Submit an async job via JobManager calling `stable_diffusion_engine` with deterministic architectural synthesis fallback."""
     tp, _ = _resolve_target_plot_and_candidates()
-    aigc_dir = ROOT_DIR / "output" / "aigc"
+    aigc_dir = get_writable_output_dir() / "aigc"
     aigc_dir.mkdir(parents=True, exist_ok=True)
     seed_val = req.seed if req.seed >= 0 else int(time.time() * 1000) % 1000000
     filename = f"aigc_{seed_val}_{int(time.time())}.png"

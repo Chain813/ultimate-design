@@ -6,6 +6,7 @@ import inspect
 import io
 import json
 import logging
+import os
 from pathlib import Path
 import re
 import tempfile
@@ -606,10 +607,37 @@ async def extract_document_markitdown(request: Request) -> dict[str, Any]:
                 pass
 
 
+def _resolve_streetview_root() -> Path:
+    """Resolve active streetview directory: user-configured folder -> writable user dir -> repo data/streetview."""
+    from src.config.paths import get_writable_streetview_dir
+    from src.config.user_settings import load_user_settings
+
+    settings = load_user_settings()
+    custom_dir = str(settings.get("STREETVIEW_DIR") or "").strip()
+    if custom_dir:
+        p = Path(custom_dir)
+        if p.exists() and p.is_dir():
+            return p.resolve()
+
+    writable_sv = get_writable_streetview_dir().resolve()
+    if writable_sv.exists() and any(d.is_dir() and d.name.startswith("Point_") for d in writable_sv.iterdir()):
+        return writable_sv
+
+    repo_sv = STREETVIEW_DIR.resolve()
+    if repo_sv.exists() and any(d.is_dir() and d.name.startswith("Point_") for d in repo_sv.iterdir()):
+        return repo_sv
+
+    return writable_sv
+
+
 @router.get("/streetview/points")
 def list_streetview_points() -> dict[str, Any]:
-    """Scan data/streetview/ + GVI_Results_Analysis.csv + coordinate table for 4-direction streetview inspection."""
-    sv_root = STREETVIEW_DIR.resolve()
+    """Scan active streetview directory + GVI_Results_Analysis.csv + coordinate table for 4-direction streetview inspection."""
+    from src.config.user_settings import load_user_settings
+
+    sv_root = _resolve_streetview_root()
+    settings = load_user_settings()
+    has_baidu_ak = bool((os.environ.get("BAIDU_MAP_AK") or settings.get("BAIDU_MAP_AK") or "").strip())
 
     # Load coordinates from Changchun_Precise_Points.csv or .xlsx
     coords_by_id: dict[int, tuple[float, float]] = {}
@@ -707,6 +735,112 @@ def list_streetview_points() -> dict[str, Any]:
         "status": "ok",
         "count": len(points_list),
         "points": points_list,
+        "streetview_dir": str(sv_root),
+        "has_baidu_ak": has_baidu_ak,
+        "baidu_portal_url": "https://lbsyun.baidu.com/apiconsole/key#/home",
+    }
+
+
+@router.post("/streetview/set-folder")
+def set_streetview_folder(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    """Mount a user-selected local streetview folder (containing Point_* subdirectories)."""
+    from src.config.user_settings import load_user_settings, save_user_settings
+
+    folder = str(payload.get("folder_path") or payload.get("path") or "").strip()
+    if not folder:
+        raise HTTPException(status_code=400, detail="请提供有效的本地街景文件夹路径")
+    p = Path(folder)
+    if not p.exists() or not p.is_dir():
+        raise HTTPException(status_code=404, detail=f"目录不存在: {folder}")
+
+    settings = load_user_settings()
+    settings["STREETVIEW_DIR"] = str(p.resolve())
+    save_user_settings(settings)
+    return {
+        "status": "ok",
+        "streetview_dir": str(p.resolve()),
+        "message": f"已挂载本地街景目录: {p.resolve()}",
+    }
+
+
+@router.post("/streetview/fetch")
+def fetch_baidu_streetview(payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
+    """Fetch 4-direction (0/90/180/270 deg) streetview images via user's own Baidu Map AK (BYOK)."""
+    import requests
+    from src.config.paths import get_writable_streetview_dir
+    from src.config.user_settings import load_user_settings, save_user_settings
+
+    settings = load_user_settings()
+    ak = str(payload.get("ak") or payload.get("baidu_ak") or "").strip()
+    if ak and "****" not in ak:
+        settings["BAIDU_MAP_AK"] = ak
+        save_user_settings(settings)
+        os.environ["BAIDU_MAP_AK"] = ak
+    else:
+        ak = str(os.environ.get("BAIDU_MAP_AK") or settings.get("BAIDU_MAP_AK") or "").strip()
+
+    if not ak:
+        raise HTTPException(
+            status_code=400,
+            detail="尚未配置百度地图开放平台街景 AK。请前往 https://lbsyun.baidu.com/apiconsole/key#/home 申请免费服务端 AK 后填入此处。",
+        )
+
+    try:
+        lon = float(payload.get("lon", payload.get("lng", 125.3245)))
+        lat = float(payload.get("lat", 43.8868))
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail="经纬度格式无效") from exc
+
+    sv_root = get_writable_streetview_dir().resolve()
+    existing_nums = [
+        int(re.sub(r"\D", "", d.name) or "0")
+        for d in sv_root.iterdir()
+        if d.is_dir() and d.name.startswith("Point_")
+    ] if sv_root.exists() else []
+    next_id = max(existing_nums, default=0) + 1
+    raw_pid = str(payload.get("point_id") or "").strip()
+    folder_name = raw_pid if raw_pid.startswith("Point_") else (f"Point_{raw_pid}" if raw_pid.isdigit() else f"Point_{next_id}")
+    target_dir = sv_root / folder_name
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    headings = payload.get("headings") or [0, 90, 180, 270]
+    saved_files: list[str] = []
+    errors: list[str] = []
+
+    for h in headings:
+        h_int = int(h) % 360
+        url = (
+            "https://api.map.baidu.com/panorama/v2"
+            f"?ak={ak}&width=800&height=450&location={lon:.6f},{lat:.6f}"
+            f"&fov=90&heading={h_int}&coordtype=wgs84ll"
+        )
+        try:
+            resp = requests.get(url, timeout=12)
+            ctype = resp.headers.get("content-type", "").lower()
+            if resp.status_code == 200 and ctype.startswith("image/") and len(resp.content) > 2048:
+                out_file = target_dir / f"heading_{h_int}.jpg"
+                out_file.write_bytes(resp.content)
+                saved_files.append(out_file.name)
+            else:
+                snippet = resp.text[:160] if not ctype.startswith("image/") else f"HTTP {resp.status_code}"
+                errors.append(f"{h_int}°: {snippet}")
+        except Exception as exc:
+            errors.append(f"{h_int}°: {exc}")
+
+    if not saved_files:
+        raise HTTPException(
+            status_code=502,
+            detail=f"百度街景抓取失败（请核对 AK 权限及坐标周边是否有街景覆盖）：{'; '.join(errors[:2])}",
+        )
+
+    return {
+        "status": "ok",
+        "folder": folder_name,
+        "lon": lon,
+        "lat": lat,
+        "saved_files": saved_files,
+        "warnings": errors,
+        "streetview_dir": str(sv_root),
     }
 
 
@@ -716,7 +850,7 @@ def get_streetview_image(point_folder: str, filename: str) -> FileResponse:
     if ".." in point_folder or ".." in filename or "/" in point_folder or "\\" in point_folder:
         raise HTTPException(status_code=400, detail="非法路径访问")
 
-    sv_root = STREETVIEW_DIR.resolve()
+    sv_root = _resolve_streetview_root()
     folder_name = point_folder if point_folder.startswith("Point_") else f"Point_{point_folder}"
     folder_path = (sv_root / folder_name).resolve()
     if not folder_path.exists() and (sv_root / point_folder).resolve().exists():

@@ -31,6 +31,7 @@ import {
   apiUpload,
   buildApiUrl,
   openDatavPopout,
+  pickLocalDirectory,
   pickLocalFile,
   resolveDroppedFilePath,
   streamSSE,
@@ -249,6 +250,13 @@ export const Workbench01View: React.FC = () => {
 
   const [streetviewPoints, setStreetviewPoints] = useState<StreetviewPointItem[]>([]);
   const [selectedSvPointId, setSelectedSvPointId] = useState<string>("Point_1");
+  const [baiduAkInput, setBaiduAkInput] = useState<string>("");
+  const [svHasBaiduAk, setSvHasBaiduAk] = useState<boolean>(false);
+  const [svDirPath, setSvDirPath] = useState<string>("");
+  const [svFetchLon, setSvFetchLon] = useState<string>("125.3245");
+  const [svFetchLat, setSvFetchLat] = useState<string>("43.8868");
+  const [svFetching, setSvFetching] = useState<boolean>(false);
+  const [svFeedback, setSvFeedback] = useState<string>("");
 
   // Stage 14: Datav dual mode
   const [datavMode, setDatavMode] = useState<"bigscreen" | "skyline3d">("bigscreen");
@@ -595,13 +603,17 @@ export const Workbench01View: React.FC = () => {
       }
 
       if (svRes.status === "fulfilled" && svRes.value) {
+        setSvHasBaiduAk(Boolean(svRes.value?.has_baidu_ak));
+        if (svRes.value?.streetview_dir) {
+          setSvDirPath(String(svRes.value.streetview_dir));
+        }
         const pts: StreetviewPointItem[] = Array.isArray(svRes.value?.points)
           ? svRes.value.points
           : Array.isArray(svRes.value)
           ? svRes.value
           : [];
+        setStreetviewPoints(pts);
         if (pts.length > 0) {
-          setStreetviewPoints(pts);
           const firstId = pts[0].id || pts[0].point_id || "Point_1";
           setSelectedSvPointId(String(firstId));
         }
@@ -2097,32 +2109,147 @@ export const Workbench01View: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4-Direction Streetview Image Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {streetviewDirections.map((item) => (
-                  <div
-                    key={item.code}
-                    className="rounded-xl bg-[#f5f5f7] border border-slate-200/90 overflow-hidden flex flex-col"
-                  >
-                    <div className="px-3 py-1.5 bg-white border-b border-slate-200/80 flex items-center justify-between">
-                      <span className="text-xs font-bold text-[#1d1d1f]">
-                        {item.label}
-                      </span>
-                      <span className="text-[11px] font-mono text-[#0071e3] font-semibold">
-                        {selectedSvPointId} · {item.code}
-                      </span>
-                    </div>
-                    <div className="relative h-44 bg-slate-900 flex items-center justify-center overflow-hidden">
-                      <img
-                        src={item.url}
-                        alt={`${selectedSvPointId}-${item.code}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
+              {/* BYOK Baidu Streetview AK Fetcher & Local Folder Mount Bar */}
+              <div className="rounded-xl bg-[#f5f5f7] border border-slate-200/90 p-3 space-y-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-[#1d1d1f] font-semibold">
+                    <span>百度地图全景街景接入 (BYOK 自带 AK)</span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        svHasBaiduAk
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-amber-100 text-amber-800"
+                      }`}
+                    >
+                      {svHasBaiduAk ? "已配置百度 AK" : "需申请百度地图开放平台 AK"}
+                    </span>
                   </div>
-                ))}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const picked = await pickLocalDirectory("选择本地四向街景目录 (含 Point_* 子目录)");
+                      if (!picked) return;
+                      try {
+                        const r = await apiPost<any>("/api/v1/assets/streetview/set-folder", {
+                          folder_path: picked,
+                        });
+                        setSvFeedback(r?.message || `已挂载街景目录: ${picked}`);
+                        await loadAssetsCatalogAndStreetview();
+                      } catch (err: any) {
+                        setSvFeedback(`挂载失败: ${err?.message || String(err)}`);
+                      }
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 border border-slate-300 text-[11px] font-semibold text-[#1d1d1f]"
+                  >
+                    挂载本地街景文件夹
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-2">
+                  <input
+                    type="password"
+                    value={baiduAkInput}
+                    onChange={(e) => setBaiduAkInput(e.target.value)}
+                    placeholder={
+                      svHasBaiduAk
+                        ? "已保存百度 AK（输入新 AK 可覆盖，或留空直接使用已保存密钥）"
+                        : "请前往 lbsyun.baidu.com 申请百度地图服务端 AK 后粘贴至此"
+                    }
+                    className="md:col-span-5 px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs text-[#1d1d1f]"
+                  />
+                  <input
+                    type="text"
+                    value={svFetchLon}
+                    onChange={(e) => setSvFetchLon(e.target.value)}
+                    placeholder="经度 Lon"
+                    className="md:col-span-2 px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-mono text-[#1d1d1f]"
+                  />
+                  <input
+                    type="text"
+                    value={svFetchLat}
+                    onChange={(e) => setSvFetchLat(e.target.value)}
+                    placeholder="纬度 Lat"
+                    className="md:col-span-2 px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 text-xs font-mono text-[#1d1d1f]"
+                  />
+                  <button
+                    type="button"
+                    disabled={svFetching}
+                    onClick={async () => {
+                      setSvFetching(true);
+                      setSvFeedback("");
+                      try {
+                        const r = await apiPost<any>("/api/v1/assets/streetview/fetch", {
+                          ak: baiduAkInput.trim() || undefined,
+                          lon: Number(svFetchLon),
+                          lat: Number(svFetchLat),
+                        });
+                        setSvFeedback(
+                          `成功通过百度地图抓取 ${r.folder} 共 ${r.saved_files?.length || 0} 张高清街景`
+                        );
+                        setBaiduAkInput("");
+                        await loadAssetsCatalogAndStreetview();
+                        if (r.folder) setSelectedSvPointId(r.folder);
+                      } catch (err: any) {
+                        setSvFeedback(err?.message || String(err));
+                      } finally {
+                        setSvFetching(false);
+                      }
+                    }}
+                    className="md:col-span-3 px-3 py-1.5 rounded-lg bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-semibold disabled:opacity-60"
+                  >
+                    {svFetching ? "正在抓取 4 向街景..." : "在线抓取 4 向街景"}
+                  </button>
+                </div>
+
+                {(svFeedback || svDirPath) && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#515154]">
+                    <span className="truncate">
+                      {svFeedback || `当前街景工作目录: ${svDirPath}`}
+                    </span>
+                    <span className="text-[10.5px] text-[#0071e3]">
+                      开放平台申请地址: lbsyun.baidu.com
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* 4-Direction Streetview Image Grid */}
+              {streetviewPoints.length === 0 ? (
+                <div className="rounded-xl bg-[#f5f5f7] border border-dashed border-slate-300 p-6 text-center space-y-2">
+                  <div className="text-sm font-bold text-[#1d1d1f]">
+                    当前街景图库为空（安装包不内置示范街景与个人密钥）
+                  </div>
+                  <p className="text-xs text-[#515154] max-w-xl mx-auto leading-relaxed">
+                    请先前往百度地图开放平台（lbsyun.baidu.com）免费申请个人服务端 AK 并填入上方输入框一键抓取目标地块 0°/90°/180°/270° 四向高清街景，或直接点击「挂载本地街景文件夹」导入已有实地调研照片。
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {streetviewDirections.map((item) => (
+                    <div
+                      key={item.code}
+                      className="rounded-xl bg-[#f5f5f7] border border-slate-200/90 overflow-hidden flex flex-col"
+                    >
+                      <div className="px-3 py-1.5 bg-white border-b border-slate-200/80 flex items-center justify-between">
+                        <span className="text-xs font-bold text-[#1d1d1f]">
+                          {item.label}
+                        </span>
+                        <span className="text-[11px] font-mono text-[#0071e3] font-semibold">
+                          {selectedSvPointId} · {item.code}
+                        </span>
+                      </div>
+                      <div className="relative h-44 bg-slate-900 flex items-center justify-center overflow-hidden">
+                        <img
+                          src={item.url}
+                          alt={`${selectedSvPointId}-${item.code}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         </div>

@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 import json
 import logging
 import math
+import os
 from pathlib import Path
 import re
 import shutil
@@ -26,7 +27,16 @@ import numpy as np
 import pandas as pd
 from scipy.spatial import cKDTree
 
-from src.config.paths import CSV_DIR, DATA_DIR, DATA_FILES, GIS_DIR, GIS_FILES, ROOT_DIR, STATIC_DIR
+from src.config.paths import (
+    CSV_DIR,
+    DATA_DIR,
+    DATA_FILES,
+    GIS_DIR,
+    GIS_FILES,
+    ROOT_DIR,
+    STATIC_DIR,
+    get_writable_projects_dir,
+)
 from src.core.runtime_adapter import (
     clear_all_caches,
     get_active_project_id,
@@ -152,7 +162,7 @@ class SpatialEngineV2:
     """DuckDB Spatial + GeoParquet + rustworkx + MVT engine with multi-project ACID isolation."""
 
     def __init__(self, projects_root: Path | None = None) -> None:
-        self.projects_root = Path(projects_root) if projects_root else PROJECTS_ROOT
+        self.projects_root = Path(projects_root) if projects_root else get_writable_projects_dir()
         self.registry_path = self.projects_root / "registry.json"
         self._lock = threading.RLock()
         self._project_locks: dict[str, threading.RLock] = {}
@@ -253,8 +263,18 @@ class SpatialEngineV2:
     def _project_dir(self, project_id: str) -> Path:
         pdir = self.projects_root / project_id
         pdir.mkdir(parents=True, exist_ok=True)
-        (pdir / "cache_geoparquet").mkdir(parents=True, exist_ok=True)
+        pq_dir = pdir / "cache_geoparquet"
+        pq_dir.mkdir(parents=True, exist_ok=True)
         (pdir / "raw").mkdir(parents=True, exist_ok=True)
+        # If running with isolated UD_USER_DATA_DIR, seed pre-baked default GeoParquet cache once for instant offline boot
+        if project_id == DEFAULT_PROJECT_ID and not any(pq_dir.glob("*.parquet")):
+            bundled_pq = DATA_DIR / "projects" / DEFAULT_PROJECT_ID / "cache_geoparquet"
+            if bundled_pq.exists() and bundled_pq.resolve() != pq_dir.resolve():
+                for src_pq in bundled_pq.glob("*.parquet"):
+                    try:
+                        shutil.copy2(src_pq, pq_dir / src_pq.name)
+                    except Exception:
+                        pass
         return pdir
 
     def _duckdb_path(self, project_id: str) -> Path:
@@ -262,6 +282,39 @@ class SpatialEngineV2:
 
     def _parquet_dir(self, project_id: str) -> Path:
         return self._project_dir(project_id) / "cache_geoparquet"
+
+    def _load_spatial_extension(self, conn: duckdb.DuckDBPyConnection) -> None:
+        """Load DuckDB spatial extension with bundled offline extension priority (zero internet needed)."""
+        ext_dir_candidates: list[Path] = []
+        env_ext = os.environ.get("UD_DUCKDB_EXT_DIR", "").strip()
+        if env_ext:
+            ext_dir_candidates.append(Path(env_ext))
+        # Co-located bundled runtime sibling (`resources/runtime/duckdb_extensions`)
+        exe_ext = Path(sys.executable).resolve().parent.parent / "duckdb_extensions"
+        ext_dir_candidates.append(exe_ext)
+
+        for ext_dir in ext_dir_candidates:
+            if not ext_dir.exists():
+                continue
+            posix_dir = str(ext_dir.resolve()).replace("\\", "/")
+            try:
+                conn.execute(f"SET extension_directory = '{posix_dir}';")
+                conn.execute("LOAD spatial;")
+                return
+            except Exception:
+                # Fallback: load exact .duckdb_extension binary path directly
+                for ext_file in ext_dir.rglob("spatial.duckdb_extension"):
+                    try:
+                        posix_file = str(ext_file.resolve()).replace("\\", "/")
+                        conn.execute(f"LOAD '{posix_file}';")
+                        return
+                    except Exception:
+                        pass
+
+        try:
+            conn.execute("LOAD spatial;")
+        except Exception:
+            conn.execute("INSTALL spatial; LOAD spatial;")
 
     def _get_connection(self, project_id: str) -> duckdb.DuckDBPyConnection:
         with self._lock:
@@ -277,10 +330,7 @@ class SpatialEngineV2:
                     project_id,
                 )
                 conn = duckdb.connect(":memory:")
-            try:
-                conn.execute("LOAD spatial;")
-            except Exception:
-                conn.execute("INSTALL spatial; LOAD spatial;")
+            self._load_spatial_extension(conn)
             self._connections[project_id] = conn
             return conn
 

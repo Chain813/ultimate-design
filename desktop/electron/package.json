@@ -29,6 +29,22 @@
       "build/icon.png",
       "frontend-dist/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "bundled/workspace",
+        "to": "workspace",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "bundled/runtime",
+        "to": "runtime",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
     "fileAssociations": [
       {
         "ext": "udproj",

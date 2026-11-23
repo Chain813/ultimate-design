@@ -13,6 +13,7 @@ from pathlib import Path
 
 import streamlit as st
 
+from src.config.paths import get_writable_output_dir
 from src.config.runtime import resolve_path
 from src.core.runtime_adapter import delete_state, get_state, runtime_state, set_state
 
@@ -23,7 +24,7 @@ _last_written_hash: str = ""
 
 
 def _get_cache_path() -> Path:
-    cache_path = resolve_path("output/stage_bus_cache.json")
+    cache_path = get_writable_output_dir() / "stage_bus_cache.json"
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     return cache_path
 

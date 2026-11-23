@@ -32,7 +32,7 @@ from desktop.backend.routers import (
     strategy_plan,
     system,
 )
-from src.config.paths import ROOT_DIR
+from src.config.paths import ROOT_DIR, get_writable_output_dir
 
 logger = logging.getLogger("ultimateDESIGN.backend.main")
 
@@ -92,16 +92,15 @@ def _start_parent_watchdog_if_configured() -> None:
 
 
 def _ensure_static_directories() -> None:
-    """Ensure required output and static directories exist before mounting."""
-    for rel in (
-        "static",
-        "output",
-        "output/deliverables",
-        "output/aigc",
-        "output/aigc/previews",
-        "assets",
-    ):
-        (ROOT_DIR / rel).mkdir(parents=True, exist_ok=True)
+    """Ensure writable output directories exist (safe even when ROOT_DIR is read-only under Program Files)."""
+    out_dir = get_writable_output_dir()
+    for sub in ("deliverables", "aigc", "aigc/previews"):
+        (out_dir / sub).mkdir(parents=True, exist_ok=True)
+    for rel in ("static", "assets"):
+        try:
+            (ROOT_DIR / rel).mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
 
 
 @asynccontextmanager
@@ -183,7 +182,7 @@ def create_app() -> FastAPI:
 
     # 3. Static Asset Directory Mounts
     static_dir = ROOT_DIR / "static"
-    output_dir = ROOT_DIR / "output"
+    output_dir = get_writable_output_dir()
     legacy_assets_dir = ROOT_DIR / "assets"
 
     if static_dir.exists():
