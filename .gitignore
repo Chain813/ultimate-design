@@ -20,7 +20,10 @@ data/streetview/
 data/raw_images/
 data/raw/
 data/template_assets/
-archive/
+/archive/
+tools/archive/*
+!tools/archive/__init__.py
+!tools/archive/local_draft_loader.py
 data/gis/raw/road_network.json
 data/gis/raw/rail_network.json
 

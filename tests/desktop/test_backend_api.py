@@ -139,14 +139,16 @@ def test_02_assets_catalog_quality_and_streetview(client: TestClient) -> None:
     assert qc_data["total"] == 16
     assert isinstance(qc_data["items"], list)
 
-    # 3. /api/v1/assets/streetview/points
+    # 3. /api/v1/assets/streetview/points (supports both local dataset and clean BYOK CI environments)
     r_sv = client.get("/api/v1/assets/streetview/points")
     assert r_sv.status_code == 200
     sv_data = r_sv.json()
     assert sv_data["status"] == "ok"
-    assert sv_data["count"] > 0
-    first_pt = sv_data["points"][0]
-    assert "gvi" in first_pt and "svf" in first_pt and "image_urls" in first_pt
+    assert isinstance(sv_data["points"], list)
+    assert "baidu_portal_url" in sv_data
+    if sv_data["count"] > 0:
+        first_pt = sv_data["points"][0]
+        assert "gvi" in first_pt and "svf" in first_pt and "image_urls" in first_pt
 
 
 def test_03_diagnosis_fused_plots_mpi_syntax_mvt_binary_and_datav(client: TestClient) -> None:

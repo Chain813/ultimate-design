@@ -21,11 +21,13 @@ engines:
 
     monkeypatch.setattr("src.config.loader.resolve_path", mock_resolve)
     
-    # Clear the st.cache_resource cache before testing
+    # Clear the cache before AND after testing so temporary config never poisons later tests
     load_global_config.clear()
-    
-    config = load_global_config()
-    
-    llm = config.get("engines", {}).get("llm", {})
-    assert llm.get("api_url") == "https://api.deepseek.com/chat/completions" # Fell back
-    assert llm.get("timeout") == 600 # Clamped from 9999
+    try:
+        config = load_global_config()
+
+        llm = config.get("engines", {}).get("llm", {})
+        assert llm.get("api_url") == "https://api.deepseek.com/chat/completions"  # Fell back
+        assert llm.get("timeout") == 600  # Clamped from 9999
+    finally:
+        load_global_config.clear()
