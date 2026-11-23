@@ -20,7 +20,7 @@
 * **GitHub Actions CI 全绿修复 (`lint` / `test` / `smoke` 3/3 全通过)**：
   * 修复 `tests/config/test_config_validation.py` 中 `load_global_config` 临时配置测试未在 `finally` 中清缓存导致同进程后续 `test_guideline_prompt.py` 命中污染缓存的历史缺陷；
   * 修正 `.gitignore` 中未锚定的 `archive/` 规则改为 `/archive/` + `tools/archive/*` 并显式放行 `tools/archive/__init__.py` 与 `tools/archive/local_draft_loader.py` 入库，消除 CI 中 `ModuleNotFoundError: No module named 'tools.archive'`；
-  * 优化 `tests/desktop/test_backend_api.py` 街景接口断言，全面适配无内置示范街景的 BYOK / CI 干净环境；
+  * 优化 `tests/desktop/test_backend_api.py` 街景接口断言及 `tests/test_audit_v65_enhancements.py` 本地可选 Real-ESRGAN 二进制存在性判断，全面适配无本地忽略二进制的 Ubuntu GitHub Actions CI 环境；
 * **零遗漏全离线自包含安装包与 BYOK 百度街景接入 (`v7.0.1` 打包强化)**：
   * 升级 `tools/build_desktop_release.py` 与 `desktop/electron/package.json`（`extraResources`）：全量打入前端 `app.asar`、完整后端与 29 个领域引擎、精简核心 GIS/CSV/RAG/预烘焙 GeoParquet 缓存（94.3 MB，严格剔除 7.9 GB 原始废档与 `.env`/个人配置）、便携 Python 3.13 空间运行时及 **79.8 MB 离线 DuckDB `spatial.duckdb_extension`**，产出仅 **448.1 MB** 的全断网零依赖 Windows 安装包 `UltimateDESIGN-Setup-7.0.0-x64.exe`；
   * 改造 `src/config/paths.py`、`src/core/spatial_engine_v2.py`、`src/workflow/stage_data_bus.py` 与 `desktop/electron/main.cjs`，支持 `UD_USER_DATA_DIR`（`%APPDATA%\UltimateDESIGN\workspace`）只读权限隔离与 `UD_DUCKDB_EXT_DIR` 全断网扩展直载，安装至只读 `Program Files` 亦可零权限报错读写 DuckDB 工程与导出 DXF/Word；

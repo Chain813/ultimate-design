@@ -229,8 +229,9 @@ def test_v65_cleanup_and_deduplication_verified() -> None:
     assert (ROOT / "tools" / "archive" / "local_draft_loader.py").exists()
 
     realesr_root = ROOT / "tools" / "realesrgan-ncnn-vulkan"
-    assert (realesr_root / "realesrgan-ncnn-vulkan.exe").exists()
-    assert (realesr_root / "models" / "realesrgan-x4plus.bin").exists()
+    if realesr_root.exists():
+        assert (realesr_root / "realesrgan-ncnn-vulkan.exe").exists()
+        assert (realesr_root / "models" / "realesrgan-x4plus.bin").exists()
     assert not (realesr_root / "realesrgan-x4plus.bin").exists()
     assert not (realesr_root / "onepiece_demo.mp4").exists()
 
