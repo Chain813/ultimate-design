@@ -1,15 +1,29 @@
 name: Release
 
+# Strictly triggered ONLY by explicit version tags (`v*`) or manual dispatch.
+# Routine pushes to `main` NEVER trigger releases or bump version numbers.
 on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to attach assets to (leave empty for dry-run build only)'
+        required: false
+        type: string
+      force_rebuild:
+        description: 'Rebuild & overwrite Windows installer even if one already exists on this release'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  skeleton:
+    name: Source Skeleton Archive (Ubuntu)
     runs-on: ubuntu-latest
 
     steps:
@@ -21,19 +35,116 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Build Skeleton Package
         run: python scripts/package_skeleton.py
 
-      - name: Create Release
+      - name: Attach Skeleton Archive to Release
+        if: github.event_name == 'push' || inputs.tag != ''
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
           files: |
             ultimate_design_skeleton.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  windows-desktop:
+    name: Standalone Windows Offline Installer (NSIS)
+    runs-on: windows-latest
+
+    steps:
+      - name: Resolve Release Tag & Check Existing Installer
+        id: check
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = if ("${{ github.event_name }}" -eq "push") { "${{ github.ref_name }}" } else { "${{ inputs.tag }}" }
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+          $force = "${{ inputs.force_rebuild }}" -eq "true"
+          $skip = "false"
+          if ($tag -and -not $force) {
+            $assetsJson = gh release view $tag -R "${{ github.repository }}" --json assets 2>$null
+            if ($LASTEXITCODE -eq 0 -and $assetsJson) {
+              $assets = ($assetsJson | ConvertFrom-Json).assets
+              $hasSetup = $assets | Where-Object { $_.name -like "UltimateDESIGN-Setup-*-x64.exe" }
+              if ($hasSetup) {
+                Write-Host "Verified Windows installer already attached to $tag ($($hasSetup.name)); skipping cloud rebuild to preserve verified SHA-256."
+                $skip = "true"
+              }
+            }
+          }
+          echo "skip=$skip" >> $env:GITHUB_OUTPUT
+
+      - name: Checkout
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.13
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Setup Node.js 24 & pnpm
+        if: steps.check.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: Enable pnpm
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: corepack enable; corepack prepare pnpm@latest --activate
+
+      - name: Install Python Spatial Runtime Dependencies
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -c "import duckdb; c = duckdb.connect(':memory:'); c.execute('INSTALL spatial; LOAD spatial;'); c.close(); print('DuckDB spatial extension ready')"
+
+      - name: Pre-bake Core GeoParquet Cache
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          python -c "from src.core.spatial_engine_v2 import get_spatial_engine_v2; get_spatial_engine_v2().ensure_loaded(); print('GeoParquet cache warmed')"
+
+      - name: Install Frontend & Electron Dependencies
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          pnpm --dir desktop/frontend install --frozen-lockfile
+          npm --prefix desktop/electron install
+
+      - name: Compile Zero-Omission Offline Windows NSIS Installer
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: python tools/build_desktop_release.py --target nsis
+
+      - name: Generate SHA256SUMS.txt
+        if: steps.check.outputs.skip != 'true'
+        shell: pwsh
+        run: |
+          $lines = Get-ChildItem release/UltimateDESIGN-Setup-*-x64.exe, release/UltimateDESIGN-Setup-*-x64.exe.blockmap -ErrorAction SilentlyContinue | ForEach-Object {
+            $h = (Get-FileHash -Algorithm SHA256 -Path $_.FullName).Hash.ToLower()
+            "$h  $($_.Name)"
+          }
+          $lines | Set-Content -Path release/SHA256SUMS.txt -Encoding ascii
+          Get-Content release/SHA256SUMS.txt
+
+      - name: Upload Windows Installer & Checksums to Release
+        if: steps.check.outputs.skip != 'true' && steps.check.outputs.tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.check.outputs.tag }}
+          files: |
+            release/UltimateDESIGN-Setup-*-x64.exe
+            release/UltimateDESIGN-Setup-*-x64.exe.blockmap
+            release/SHA256SUMS.txt
           draft: false
           prerelease: false
         env:

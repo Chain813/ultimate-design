@@ -226,8 +226,23 @@ def stage_standalone_workspace() -> None:
     print(f"[BUILD] Staged standalone workspace: {ws_mb:.1f} MB (clean, zero personal data)")
 
 
-def stage_standalone_runtime(skip_sync: bool = False) -> None:
-    """Stage portable Python 3.13 spatial runtime + air-gapped offline DuckDB spatial extension."""
+def _resolve_python_runtime_dir(explicit_dir: str | None = None) -> Path:
+    """Resolve portable Python runtime directory: --python-dir > WinPython/python > sys.base_prefix."""
+    candidates: list[Path] = []
+    if explicit_dir:
+        candidates.append(Path(explicit_dir).expanduser().resolve())
+    candidates.append(REPO_ROOT / "WinPython" / "python")
+    candidates.append(Path(sys.base_prefix).resolve())
+
+    for cand in candidates:
+        if (cand / "python.exe").exists():
+            return cand
+    searched = ", ".join(str(c) for c in candidates)
+    raise RuntimeError(f"未找到可用 Windows Python 运行时 (python.exe)，已探测路径: {searched}")
+
+
+def stage_standalone_runtime(skip_sync: bool = False, python_dir: str | None = None) -> None:
+    """Stage portable Python spatial runtime + air-gapped offline DuckDB spatial extension."""
     py_dst = BUNDLED_RUNTIME / "python"
     ext_dst = BUNDLED_RUNTIME / "duckdb_extensions"
 
@@ -235,11 +250,8 @@ def stage_standalone_runtime(skip_sync: bool = False) -> None:
         print("[BUILD] Reusing already staged runtime (--skip-runtime-sync).")
         return
 
-    winpy_src = REPO_ROOT / "WinPython" / "python"
-    if not (winpy_src / "python.exe").exists():
-        raise RuntimeError(f"未找到便携 WinPython 运行时: {winpy_src}")
-
-    print("[BUILD] Syncing portable Python 3.13 spatial runtime (robocopy /MT:16)...")
+    winpy_src = _resolve_python_runtime_dir(python_dir)
+    print(f"[BUILD] Syncing portable Python spatial runtime from {winpy_src} (robocopy /MT:16)...")
     _robocopy(
         winpy_src,
         py_dst,
@@ -247,8 +259,20 @@ def stage_standalone_runtime(skip_sync: bool = False) -> None:
         exclude_files=["*.pyc", "*.pyo", "*.pdb"],
     )
 
-    # Copy offline DuckDB spatial extension from ~/.duckdb/extensions
+    # Ensure offline DuckDB spatial extension exists in ~/.duckdb/extensions before bundling
     duckdb_home_ext = Path.home() / ".duckdb" / "extensions"
+    if not (duckdb_home_ext.exists() and any(duckdb_home_ext.rglob("spatial.duckdb_extension"))):
+        print("[BUILD] Downloading DuckDB spatial extension for air-gapped bundling...")
+        _run(
+            [
+                str(winpy_src / "python.exe"),
+                "-c",
+                "import duckdb; c = duckdb.connect(':memory:'); c.execute('INSTALL spatial'); c.close()",
+            ],
+            cwd=REPO_ROOT,
+            check=False,
+        )
+
     if duckdb_home_ext.exists() and any(duckdb_home_ext.rglob("spatial.duckdb_extension")):
         _robocopy(duckdb_home_ext, ext_dst)
         print(f"[BUILD] Bundled offline DuckDB spatial extension -> {ext_dst}")
@@ -265,11 +289,13 @@ def run_electron_builder(target: str) -> None:
         raise RuntimeError(f"未检测到 electron-builder ({eb_bin})，请先在 desktop/electron 执行 npm install。")
 
     env = os.environ.copy()
-    env.setdefault("ELECTRON_MIRROR", "https://npmmirror.com/mirrors/electron/")
-    env.setdefault(
-        "ELECTRON_BUILDER_BINARIES_MIRROR",
-        "https://npmmirror.com/mirrors/electron-builder-binaries/",
-    )
+    # Use domestic npmmirror acceleration locally, while letting GitHub Actions / CI pull from GitHub directly
+    if not env.get("CI"):
+        env.setdefault("ELECTRON_MIRROR", "https://npmmirror.com/mirrors/electron/")
+        env.setdefault(
+            "ELECTRON_BUILDER_BINARIES_MIRROR",
+            "https://npmmirror.com/mirrors/electron-builder-binaries/",
+        )
 
     target_args = {
         "dir": ["--win", "dir"],
@@ -319,6 +345,11 @@ def main() -> int:
         action="store_true",
         help="复用已同步的 desktop/electron/bundled/runtime",
     )
+    parser.add_argument(
+        "--python-dir",
+        default=None,
+        help="可选：显式指定待内嵌的 Windows Python 根目录（默认优先 WinPython/python，回退 sys.base_prefix）",
+    )
     args = parser.parse_args()
 
     print("=" * 74)
@@ -328,7 +359,7 @@ def main() -> int:
     build_frontend(skip=args.skip_frontend)
     sync_frontend_into_electron()
     stage_standalone_workspace()
-    stage_standalone_runtime(skip_sync=args.skip_runtime_sync)
+    stage_standalone_runtime(skip_sync=args.skip_runtime_sync, python_dir=args.python_dir)
     run_electron_builder(args.target)
 
     unpacked_exe = RELEASE_DIR / "win-unpacked" / "UltimateDESIGN.exe"

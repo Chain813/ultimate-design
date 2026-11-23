@@ -84,10 +84,11 @@ def should_ignore(rel_path_str: str, rules: list) -> bool:
     
     # 1. 快速检查组件中是否包含已知的被忽略目录
     ignored_dirs = {
-        ".git", ".venv", "venv", "__pycache__", ".pytest_cache", 
-        ".ruff_cache", ".claude", ".gemini", "logs", "output", 
+        ".git", ".venv", "venv", "__pycache__", ".pytest_cache",
+        ".ruff_cache", ".claude", ".gemini", "logs", "output",
         "scratch", ".runtime-packages", ".superpowers", ".idea", ".codegraph",
-        "exhibition_boards", "extracted_images", "extracted_pptx_images", "project_video", "附件"
+        "exhibition_boards", "extracted_images", "extracted_pptx_images", "project_video", "附件",
+        "node_modules", "release", "WinPython", "frontend-dist", "bundled",
     }
     for p in parts:
         if p in ignored_dirs:

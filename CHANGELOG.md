@@ -17,10 +17,11 @@
   * 新增 `src/core/runtime_adapter.py` 双模运行时适配层，对 `src/engines/`、`src/config/`、`src/workflow/`、`src/utils/` 等 16 个模块完成无损解耦，使既有 29 个 Python 领域引擎在 Streamlit 与 FastAPI Sidecar 双环境下 100% 兼容复用；
   * 新增 `src/core/spatial_engine_v2.py`：引入 `DuckDB >= 1.4` + `spatial` 扩展构建 ACID 多工程隔离工作库（`data/projects/<project_id>/workspace.duckdb` + `cache_geoparquet/`），非破坏性挂载 110,289 栋建筑与 19 份多源统计表，通过向量化 C++ SIMD SQL 一键生成 `fused_plots` 18 维真实地块融合宽表，并原生支持 `ST_TileEnvelope` + `ST_AsMVTGeom` + `ST_AsMVT` 动态矢量瓦片生成；在新建、切换或删除工程时严格遵守 `SKILLS.md` Part 9 **永久保护 `data/rag_knowledge.json` 法规库只读不重置**；
   * 引入 Rust 并行图算法引擎 **`rustworkx`**，彻底打破旧版 300 路段截断限制与孤立段 `100000.0` 异常值，毫秒级完成全路网 1,062+ 路段的多半径 DepthMapX 拓扑整合度（`R400m` / `R800m` / 全局 `R_n`）及真实最短路 Brandes 介数穿行度（`Choice`）计算；
-* **GitHub Actions CI 全绿修复 (`lint` / `test` / `smoke` 3/3 全通过)**：
+* **GitHub Actions CI 全绿修复 (`lint` / `test` / `smoke` 3/3 全通过) 与双轨里程碑 Release 流水线升级**：
   * 修复 `tests/config/test_config_validation.py` 中 `load_global_config` 临时配置测试未在 `finally` 中清缓存导致同进程后续 `test_guideline_prompt.py` 命中污染缓存的历史缺陷；
   * 修正 `.gitignore` 中未锚定的 `archive/` 规则改为 `/archive/` + `tools/archive/*` 并显式放行 `tools/archive/__init__.py` 与 `tools/archive/local_draft_loader.py` 入库，消除 CI 中 `ModuleNotFoundError: No module named 'tools.archive'`；
   * 优化 `tests/desktop/test_backend_api.py` 街景接口断言及 `tests/test_audit_v65_enhancements.py` 本地可选 Real-ESRGAN 二进制存在性判断，全面适配无本地忽略二进制的 Ubuntu GitHub Actions CI 环境；
+  * 升级 `.github/workflows/release.yml` 与 `tools/build_desktop_release.py`（支持 `--python-dir` / `sys.base_prefix` 自动回退、CI 自动拉取 DuckDB `spatial` 扩展与无国内镜像直连），建立严格锁定 **`v*` 标签 / 手动触发**（日常提交零触发）的双轨 Release 流水线：同步产出 Ubuntu 源码骨架包与 `windows-latest` 全离线 NSIS 安装包及 `SHA256SUMS.txt` 校验文件；
 * **零遗漏全离线自包含安装包与 BYOK 百度街景接入 (`v7.0.1` 打包强化)**：
   * 升级 `tools/build_desktop_release.py` 与 `desktop/electron/package.json`（`extraResources`）：全量打入前端 `app.asar`、完整后端与 29 个领域引擎、精简核心 GIS/CSV/RAG/预烘焙 GeoParquet 缓存（94.3 MB，严格剔除 7.9 GB 原始废档与 `.env`/个人配置）、便携 Python 3.13 空间运行时及 **79.8 MB 离线 DuckDB `spatial.duckdb_extension`**，产出仅 **448.1 MB** 的全断网零依赖 Windows 安装包 `UltimateDESIGN-Setup-7.0.0-x64.exe`；
   * 改造 `src/config/paths.py`、`src/core/spatial_engine_v2.py`、`src/workflow/stage_data_bus.py` 与 `desktop/electron/main.cjs`，支持 `UD_USER_DATA_DIR`（`%APPDATA%\UltimateDESIGN\workspace`）只读权限隔离与 `UD_DUCKDB_EXT_DIR` 全断网扩展直载，安装至只读 `Program Files` 亦可零权限报错读写 DuckDB 工程与导出 DXF/Word；
